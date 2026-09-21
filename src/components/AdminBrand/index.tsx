@@ -7,7 +7,7 @@ export const AdminLogo: React.FC = () => (
     <div
       style={{
         color: 'var(--plumpose-ink-soft)',
-        fontFamily: 'var(--font-jost, sans-serif)',
+        fontFamily: 'var(--plumpose-body, sans-serif)',
         fontSize: '.6rem',
         letterSpacing: '.28em',
         marginTop: '.5rem',
@@ -19,5 +19,18 @@ export const AdminLogo: React.FC = () => (
   </div>
 )
 
-/** Small mark shown in the admin nav. */
-export const AdminIcon: React.FC = () => <span className="plumpose-mark plumpose-mark--small">p</span>
+/**
+ * The mark in the breadcrumb. It sits in a narrow slot, so a wordmark gets
+ * truncated to "p…" — a compact monogram is the only thing that fits and
+ * still looks deliberate.
+ */
+export const AdminIcon: React.FC = () => (
+  <span
+    aria-label="plumpose"
+    className="plumpose-mark plumpose-mark--small"
+    title="plumpose"
+    style={{ display: 'inline-block', lineHeight: 1 }}
+  >
+    p
+  </span>
+)

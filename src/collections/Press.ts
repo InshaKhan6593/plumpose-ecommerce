@@ -31,6 +31,6 @@ export const Press: CollectionConfig = {
     { name: 'url', type: 'text', label: 'Link to the article' },
     { name: 'date', type: 'date', required: true },
     { name: 'logo', type: 'upload', relationTo: 'media' },
-    { name: 'published', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
+    { name: 'published', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
   ],
 }

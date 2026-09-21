@@ -72,23 +72,23 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
-    pages: Page;
-    categories: Category;
-    media: Media;
+    discountCodes: DiscountCode;
+    spinSegments: SpinSegment;
     projects: Project;
     faqs: Faq;
     press: Press;
     spotted: Spotted;
     reviews: Review;
     subscribers: Subscriber;
+    pages: Page;
+    categories: Category;
+    media: Media;
     personalisationOptions: PersonalisationOption;
     shippingZones: ShippingZone;
     shippingCities: ShippingCity;
     countries: Country;
     currencies: Currency;
-    discountCodes: DiscountCode;
-    spinSegments: SpinSegment;
+    users: User;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -118,23 +118,23 @@ export interface Config {
     };
   };
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
-    pages: PagesSelect<false> | PagesSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
+    discountCodes: DiscountCodesSelect<false> | DiscountCodesSelect<true>;
+    spinSegments: SpinSegmentsSelect<false> | SpinSegmentsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
     press: PressSelect<false> | PressSelect<true>;
     spotted: SpottedSelect<false> | SpottedSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
     personalisationOptions: PersonalisationOptionsSelect<false> | PersonalisationOptionsSelect<true>;
     shippingZones: ShippingZonesSelect<false> | ShippingZonesSelect<true>;
     shippingCities: ShippingCitiesSelect<false> | ShippingCitiesSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
     currencies: CurrenciesSelect<false> | CurrenciesSelect<true>;
-    discountCodes: DiscountCodesSelect<false> | DiscountCodesSelect<true>;
-    spinSegments: SpinSegmentsSelect<false> | SpinSegmentsSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -210,92 +210,35 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
+ * via the `definition` "discountCodes".
  */
-export interface User {
+export interface DiscountCode {
   id: number;
-  name?: string | null;
-  roles?: ('admin' | 'staff' | 'customer')[] | null;
-  orders?: {
-    docs?: (number | Order)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  cart?: {
-    docs?: (number | Cart)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  addresses?: {
-    docs?: (number | Address)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  items?:
-    | {
-        product?: (number | null) | Product;
-        variant?: (number | null) | Variant;
-        quantity: number;
-        id?: string | null;
-      }[]
-    | null;
-  shippingAddress?: {
-    title?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    company?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postalCode?: string | null;
-    country?: string | null;
-    phone?: string | null;
-  };
-  customer?: (number | null) | User;
-  customerEmail?: string | null;
-  transactions?: (number | Transaction)[] | null;
-  status?: OrderStatus;
-  amount?: number | null;
-  currency?: 'QAR' | null;
-  accessToken?: string | null;
-  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
-  trackingNumber?: string | null;
+  code: string;
+  type: 'percent' | 'fixed' | 'freeShipping';
   /**
-   * Internal only. Never shown to the customer.
+   * Percentage (e.g. 10) or amount in QAR (e.g. 100).
    */
-  adminNotes?: string | null;
+  value?: number | null;
+  minSpendQar?: number | null;
   /**
-   * Order is a gift — include a card, omit the invoice.
+   * Total uses allowed. Leave empty for unlimited.
    */
-  gift?: boolean | null;
-  giftNote?: string | null;
+  usageLimit?: number | null;
+  perCustomerLimit?: number | null;
+  usageCount?: number | null;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  /**
+   * Leave empty to apply to everything.
+   */
+  appliesTo?: (number | Product)[] | null;
+  source?: ('manual' | 'spinWheel') | null;
+  /**
+   * Set when the code came from the wheel.
+   */
+  issuedToEmail?: string | null;
+  active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1061,123 +1004,33 @@ export interface Variant {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Prizes on the first-visit wheel. Weight controls how often each is won.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "transactions".
+ * via the `definition` "spinSegments".
  */
-export interface Transaction {
+export interface SpinSegment {
   id: number;
-  items?:
-    | {
-        product?: (number | null) | Product;
-        variant?: (number | null) | Variant;
-        quantity: number;
-        id?: string | null;
-      }[]
-    | null;
-  billingAddress?: {
-    title?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    company?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postalCode?: string | null;
-    country?: string | null;
-    phone?: string | null;
-  };
-  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'expired' | 'refunded';
-  customer?: (number | null) | User;
-  customerEmail?: string | null;
-  order?: (number | null) | Order;
-  cart?: (number | null) | Cart;
-  amount?: number | null;
-  currency?: 'QAR' | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "carts".
- */
-export interface Cart {
-  id: number;
-  items?:
-    | {
-        product?: (number | null) | Product;
-        variant?: (number | null) | Variant;
-        quantity: number;
-        id?: string | null;
-      }[]
-    | null;
-  secret?: string | null;
-  customer?: (number | null) | User;
-  purchasedAt?: string | null;
-  status?: ('active' | 'purchased' | 'abandoned') | null;
-  subtotal?: number | null;
-  currency?: 'QAR' | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "addresses".
- */
-export interface Address {
-  id: number;
-  customer?: (number | null) | User;
-  title?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  company?: string | null;
-  addressLine1?: string | null;
-  addressLine2?: string | null;
-  city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
-  country:
-    | 'US'
-    | 'GB'
-    | 'CA'
-    | 'AU'
-    | 'AT'
-    | 'BE'
-    | 'BR'
-    | 'BG'
-    | 'CY'
-    | 'CZ'
-    | 'DK'
-    | 'EE'
-    | 'FI'
-    | 'FR'
-    | 'DE'
-    | 'GR'
-    | 'HK'
-    | 'HU'
-    | 'IN'
-    | 'IE'
-    | 'IT'
-    | 'JP'
-    | 'LV'
-    | 'LT'
-    | 'LU'
-    | 'MY'
-    | 'MT'
-    | 'MX'
-    | 'NL'
-    | 'NZ'
-    | 'NO'
-    | 'PL'
-    | 'PT'
-    | 'RO'
-    | 'SG'
-    | 'SK'
-    | 'SI'
-    | 'ES'
-    | 'SE'
-    | 'CH';
-  phone?: string | null;
+  _order?: string | null;
+  /**
+   * Shown on the wheel, e.g. "10% off".
+   */
+  label: string;
+  rewardType: 'percent' | 'fixed' | 'freeShipping' | 'rollAgain';
+  rewardValue?: number | null;
+  /**
+   * Relative chance of winning. Higher wins more often.
+   */
+  weight: number;
+  /**
+   * Segment background, e.g. #f6f4f0
+   */
+  colour?: string | null;
+  /**
+   * How many days the issued code stays valid.
+   */
+  expiryDays?: number | null;
+  active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1443,66 +1296,213 @@ export interface Currency {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "discountCodes".
+ * via the `definition` "users".
  */
-export interface DiscountCode {
+export interface User {
   id: number;
-  code: string;
-  type: 'percent' | 'fixed' | 'freeShipping';
+  name?: string | null;
+  roles?: ('admin' | 'staff' | 'customer')[] | null;
+  orders?: {
+    docs?: (number | Order)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  cart?: {
+    docs?: (number | Cart)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  addresses?: {
+    docs?: (number | Address)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        variant?: (number | null) | Variant;
+        quantity: number;
+        id?: string | null;
+      }[]
+    | null;
+  shippingAddress?: {
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    company?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
+  customer?: (number | null) | User;
+  customerEmail?: string | null;
+  transactions?: (number | Transaction)[] | null;
+  status?: OrderStatus;
+  amount?: number | null;
+  currency?: 'QAR' | null;
+  accessToken?: string | null;
+  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
+  trackingNumber?: string | null;
   /**
-   * Percentage (e.g. 10) or amount in QAR (e.g. 100).
+   * Internal only. Never shown to the customer.
    */
-  value?: number | null;
-  minSpendQar?: number | null;
+  adminNotes?: string | null;
   /**
-   * Total uses allowed. Leave empty for unlimited.
+   * Order is a gift — include a card, omit the invoice.
    */
-  usageLimit?: number | null;
-  perCustomerLimit?: number | null;
-  usageCount?: number | null;
-  startsAt?: string | null;
-  expiresAt?: string | null;
-  /**
-   * Leave empty to apply to everything.
-   */
-  appliesTo?: (number | Product)[] | null;
-  source?: ('manual' | 'spinWheel') | null;
-  /**
-   * Set when the code came from the wheel.
-   */
-  issuedToEmail?: string | null;
-  active?: boolean | null;
+  gift?: boolean | null;
+  giftNote?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Prizes on the first-visit wheel. Weight controls how often each is won.
- *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "spinSegments".
+ * via the `definition` "transactions".
  */
-export interface SpinSegment {
+export interface Transaction {
   id: number;
-  _order?: string | null;
-  /**
-   * Shown on the wheel, e.g. "10% off".
-   */
-  label: string;
-  rewardType: 'percent' | 'fixed' | 'freeShipping' | 'rollAgain';
-  rewardValue?: number | null;
-  /**
-   * Relative chance of winning. Higher wins more often.
-   */
-  weight: number;
-  /**
-   * Segment background, e.g. #f6f4f0
-   */
-  colour?: string | null;
-  /**
-   * How many days the issued code stays valid.
-   */
-  expiryDays?: number | null;
-  active?: boolean | null;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        variant?: (number | null) | Variant;
+        quantity: number;
+        id?: string | null;
+      }[]
+    | null;
+  billingAddress?: {
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    company?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
+  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'expired' | 'refunded';
+  customer?: (number | null) | User;
+  customerEmail?: string | null;
+  order?: (number | null) | Order;
+  cart?: (number | null) | Cart;
+  amount?: number | null;
+  currency?: 'QAR' | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "carts".
+ */
+export interface Cart {
+  id: number;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        variant?: (number | null) | Variant;
+        quantity: number;
+        id?: string | null;
+      }[]
+    | null;
+  secret?: string | null;
+  customer?: (number | null) | User;
+  purchasedAt?: string | null;
+  status?: ('active' | 'purchased' | 'abandoned') | null;
+  subtotal?: number | null;
+  currency?: 'QAR' | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "addresses".
+ */
+export interface Address {
+  id: number;
+  customer?: (number | null) | User;
+  title?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  company?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country:
+    | 'US'
+    | 'GB'
+    | 'CA'
+    | 'AU'
+    | 'AT'
+    | 'BE'
+    | 'BR'
+    | 'BG'
+    | 'CY'
+    | 'CZ'
+    | 'DK'
+    | 'EE'
+    | 'FI'
+    | 'FR'
+    | 'DE'
+    | 'GR'
+    | 'HK'
+    | 'HU'
+    | 'IN'
+    | 'IE'
+    | 'IT'
+    | 'JP'
+    | 'LV'
+    | 'LT'
+    | 'LU'
+    | 'MY'
+    | 'MT'
+    | 'MX'
+    | 'NL'
+    | 'NZ'
+    | 'NO'
+    | 'PL'
+    | 'PT'
+    | 'RO'
+    | 'SG'
+    | 'SK'
+    | 'SI'
+    | 'ES'
+    | 'SE'
+    | 'CH';
+  phone?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1548,20 +1548,12 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'discountCodes';
+        value: number | DiscountCode;
       } | null)
     | ({
-        relationTo: 'pages';
-        value: number | Page;
-      } | null)
-    | ({
-        relationTo: 'categories';
-        value: number | Category;
-      } | null)
-    | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'spinSegments';
+        value: number | SpinSegment;
       } | null)
     | ({
         relationTo: 'projects';
@@ -1588,6 +1580,18 @@ export interface PayloadLockedDocument {
         value: number | Subscriber;
       } | null)
     | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
         relationTo: 'personalisationOptions';
         value: number | PersonalisationOption;
       } | null)
@@ -1608,12 +1612,8 @@ export interface PayloadLockedDocument {
         value: number | Currency;
       } | null)
     | ({
-        relationTo: 'discountCodes';
-        value: number | DiscountCode;
-      } | null)
-    | ({
-        relationTo: 'spinSegments';
-        value: number | SpinSegment;
+        relationTo: 'users';
+        value: number | User;
       } | null)
     | ({
         relationTo: 'forms';
@@ -1699,31 +1699,138 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
+ * via the `definition` "discountCodes_select".
  */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  roles?: T;
-  orders?: T;
-  cart?: T;
-  addresses?: T;
+export interface DiscountCodesSelect<T extends boolean = true> {
+  code?: T;
+  type?: T;
+  value?: T;
+  minSpendQar?: T;
+  usageLimit?: T;
+  perCustomerLimit?: T;
+  usageCount?: T;
+  startsAt?: T;
+  expiresAt?: T;
+  appliesTo?: T;
+  source?: T;
+  issuedToEmail?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "spinSegments_select".
+ */
+export interface SpinSegmentsSelect<T extends boolean = true> {
+  _order?: T;
+  label?: T;
+  rewardType?: T;
+  rewardValue?: T;
+  weight?: T;
+  colour?: T;
+  expiryDays?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  _order?: T;
+  title?: T;
+  category?: T;
+  brandName?: T;
+  summary?: T;
+  description?: T;
+  coverImage?: T;
+  gallery?:
     | T
     | {
+        image?: T;
         id?: T;
-        createdAt?: T;
-        expiresAt?: T;
       };
+  published?: T;
+  generateSlug?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  _order?: T;
+  question?: T;
+  answer?: T;
+  category?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "press_select".
+ */
+export interface PressSelect<T extends boolean = true> {
+  _order?: T;
+  publication?: T;
+  headline?: T;
+  excerpt?: T;
+  url?: T;
+  date?: T;
+  logo?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "spotted_select".
+ */
+export interface SpottedSelect<T extends boolean = true> {
+  _order?: T;
+  image?: T;
+  instagramHandle?: T;
+  caption?: T;
+  postUrl?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  product?: T;
+  name?: T;
+  email?: T;
+  rating?: T;
+  title?: T;
+  body?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers_select".
+ */
+export interface SubscribersSelect<T extends boolean = true> {
+  email?: T;
+  source?: T;
+  unsubscribed?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2003,104 +2110,6 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "projects_select".
- */
-export interface ProjectsSelect<T extends boolean = true> {
-  _order?: T;
-  title?: T;
-  category?: T;
-  brandName?: T;
-  summary?: T;
-  description?: T;
-  coverImage?: T;
-  gallery?:
-    | T
-    | {
-        image?: T;
-        id?: T;
-      };
-  published?: T;
-  generateSlug?: T;
-  slug?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "faqs_select".
- */
-export interface FaqsSelect<T extends boolean = true> {
-  _order?: T;
-  question?: T;
-  answer?: T;
-  category?: T;
-  published?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "press_select".
- */
-export interface PressSelect<T extends boolean = true> {
-  _order?: T;
-  publication?: T;
-  headline?: T;
-  excerpt?: T;
-  url?: T;
-  date?: T;
-  logo?: T;
-  published?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "spotted_select".
- */
-export interface SpottedSelect<T extends boolean = true> {
-  _order?: T;
-  image?: T;
-  instagramHandle?: T;
-  caption?: T;
-  postUrl?: T;
-  status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "reviews_select".
- */
-export interface ReviewsSelect<T extends boolean = true> {
-  product?: T;
-  name?: T;
-  email?: T;
-  rating?: T;
-  title?: T;
-  body?: T;
-  status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "subscribers_select".
- */
-export interface SubscribersSelect<T extends boolean = true> {
-  email?: T;
-  source?: T;
-  unsubscribed?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "personalisationOptions_select".
  */
 export interface PersonalisationOptionsSelect<T extends boolean = true> {
@@ -2172,40 +2181,31 @@ export interface CurrenciesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "discountCodes_select".
+ * via the `definition` "users_select".
  */
-export interface DiscountCodesSelect<T extends boolean = true> {
-  code?: T;
-  type?: T;
-  value?: T;
-  minSpendQar?: T;
-  usageLimit?: T;
-  perCustomerLimit?: T;
-  usageCount?: T;
-  startsAt?: T;
-  expiresAt?: T;
-  appliesTo?: T;
-  source?: T;
-  issuedToEmail?: T;
-  active?: T;
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  roles?: T;
+  orders?: T;
+  cart?: T;
+  addresses?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "spinSegments_select".
- */
-export interface SpinSegmentsSelect<T extends boolean = true> {
-  _order?: T;
-  label?: T;
-  rewardType?: T;
-  rewardValue?: T;
-  weight?: T;
-  colour?: T;
-  expiryDays?: T;
-  active?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

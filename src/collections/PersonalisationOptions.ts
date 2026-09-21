@@ -61,6 +61,6 @@ export const PersonalisationOptions: CollectionConfig = {
         description: 'SVG path data on a 24x24 grid.',
       },
     },
-    { name: 'active', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
+    { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
   ],
 }

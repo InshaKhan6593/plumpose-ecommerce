@@ -48,6 +48,8 @@ export default buildConfig({
       /** The client's own dashboard — orders today, fulfilment queue, low stock. */
       beforeDashboard: ['@/components/BeforeDashboard#BeforeDashboard'],
       beforeLogin: ['@/components/BeforeLogin#BeforeLogin'],
+      /** Products and Orders pinned above the plugin's collection ordering. */
+      beforeNavLinks: ['@/components/AdminQuickLinks#AdminQuickLinks'],
       graphics: {
         Icon: '@/components/AdminBrand#AdminIcon',
         Logo: '@/components/AdminBrand#AdminLogo',
@@ -63,26 +65,33 @@ export default buildConfig({
     theme: 'light',
     user: Users.slug,
   },
+  /**
+   * Order matters: Payload builds the sidebar groups in the order their
+   * collections first appear. The client lives in Shop, so it comes first
+   * and Users comes last.
+   */
   collections: [
-    Users,
-    Pages,
-    Categories,
-    Media,
-    // plumpose — content the client manages herself
+    // Shop — the daily work
+    DiscountCodes,
+    SpinSegments,
+    // Content — what she publishes
     Projects,
     FAQs,
     Press,
     Spotted,
     Reviews,
     Subscribers,
-    // plumpose — shop configuration ported from the old hardcoded files
+    Pages,
+    Categories,
+    Media,
+    // Shop settings — set once, adjusted rarely
     PersonalisationOptions,
     ShippingZones,
     ShippingCities,
     Countries,
     Currencies,
-    DiscountCodes,
-    SpinSegments,
+    // Users — least-visited
+    Users,
   ],
   db: postgresAdapter({
     pool: {

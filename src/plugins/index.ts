@@ -43,8 +43,12 @@ export const plugins: Plugin[] = [
         update: isAdmin,
       },
       admin: {
+        defaultColumns: ['id', 'form', 'createdAt'],
         group: 'Content',
+        useAsTitle: 'id',
       },
+      defaultSort: '-createdAt',
+      labels: { singular: 'Enquiry', plural: 'Enquiries' },
     },
     formOverrides: {
       access: {
@@ -54,7 +58,9 @@ export const plugins: Plugin[] = [
         create: isAdmin,
       },
       admin: {
+        defaultColumns: ['title', 'updatedAt'],
         group: 'Content',
+        useAsTitle: 'title',
       },
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
@@ -102,6 +108,9 @@ export const plugins: Plugin[] = [
           ...defaultCollection?.admin,
           defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'fulfilment', 'createdAt'],
           group: 'Shop',
+          listSearchableFields: ['customerEmail'],
+          /** Rows were titled by createdAt, so every order looked the same. */
+          useAsTitle: 'customerEmail',
         },
         fields: [
           /**
@@ -246,6 +255,7 @@ export const plugins: Plugin[] = [
           defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'order', 'createdAt'],
           group: 'Shop',
           listSearchableFields: ['customerEmail'],
+          useAsTitle: 'customerEmail',
         },
       }),
     },

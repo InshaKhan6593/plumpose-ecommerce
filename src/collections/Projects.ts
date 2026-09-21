@@ -60,7 +60,7 @@ export const Projects: CollectionConfig = {
       fields: [{ name: 'image', type: 'upload', relationTo: 'media', required: true }],
       labels: { singular: 'Image', plural: 'Gallery' },
     },
-    { name: 'published', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: false },
+    { name: 'published', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: false },
     slugField(),
   ],
 }

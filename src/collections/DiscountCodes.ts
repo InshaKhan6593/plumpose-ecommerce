@@ -95,6 +95,6 @@ export const DiscountCodes: CollectionConfig = {
       type: 'email',
       admin: { description: 'Set when the code came from the wheel.', position: 'sidebar' },
     },
-    { name: 'active', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
+    { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
   ],
 }

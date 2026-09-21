@@ -277,16 +277,56 @@ textarea,
 
 /* ---------------------------------------------------------------- misc --- */
 
-.dashboard__group-name {
-  color: var(--plumpose-ink-faint);
-  font-size: 0.62rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+/* ----------------------------------------------------------- dashboard --- */
+
+/**
+ * Payload's default dashboard repeats the entire sidebar as a grid of cards.
+ * The quick-create buttons are genuinely useful, so the grid stays — but it
+ * is demoted so the real numbers above it lead, instead of competing with
+ * seventeen identical tiles.
+ */
+.dashboard {
+  &__label,
+  &__group-name {
+    color: var(--plumpose-ink-faint);
+    font-family: var(--plumpose-body);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    margin-top: 2rem;
+    text-transform: uppercase;
+  }
+
+  &__card {
+    background-color: var(--plumpose-paper);
+    border: 1px solid var(--plumpose-line-soft);
+    border-radius: var(--style-radius-m);
+    transition:
+      border-color 0.18s ease,
+      background-color 0.18s ease;
+
+    &:hover {
+      background-color: var(--plumpose-paper-2);
+      border-color: var(--plumpose-line);
+    }
+  }
+
+  &__card-title {
+    font-family: var(--plumpose-body);
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
 }
 
-.dashboard__card-title {
-  font-family: var(--plumpose-display);
-  font-weight: 400;
+/* Payload's own h1 on the dashboard duplicates our "Good day." heading */
+.dashboard > .dashboard__wrap > h1 {
+  display: none;
+}
+
+/* Drag handles for orderable lists — quiet until hovered */
+.sort-row,
+.sort-header {
+  color: var(--plumpose-ink-faint);
 }
 
 /* Login and create-first-user screens */

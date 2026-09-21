@@ -25,7 +25,9 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   admin: {
     ...defaultCollection?.admin,
     /** What she needs to see at a glance: what it is, what it costs, is it live. */
-    defaultColumns: ['title', 'priceInQAR', 'inventory', '_status', 'categories', 'updatedAt'],
+    /* inventory is per-variant, so it reads 0 here — variants carry stock */
+    defaultColumns: ['title', 'priceInQAR', 'colour', '_status', 'categories', 'updatedAt'],
+    group: 'Shop',
     listSearchableFields: ['title', 'slug', 'colour', 'fabric'],
     pagination: { defaultLimit: 25, limits: [10, 25, 50, 100] },
     livePreview: {
