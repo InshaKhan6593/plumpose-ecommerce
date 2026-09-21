@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { autoKey } from '@/fields/autoKey'
 
 /**
  * Qatar delivery is priced by city rather than by zone.
@@ -12,7 +13,7 @@ export const ShippingCities: CollectionConfig = {
   orderable: true,
   labels: { singular: 'Qatar city', plural: 'Qatar delivery' },
   admin: {
-    defaultColumns: ['name', 'key', 'feeQar', 'active'],
+    defaultColumns: ['name', 'feeQar', 'active'],
     group: 'Shop settings',
     useAsTitle: 'name',
   },
@@ -24,7 +25,7 @@ export const ShippingCities: CollectionConfig = {
   },
   fields: [
     { name: 'name', type: 'text', required: true },
-    { name: 'key', type: 'text', required: true, unique: true },
+    autoKey('name'),
     { name: 'feeQar', type: 'number', label: 'Delivery fee (QAR)', min: 0, required: true },
     { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
   ],

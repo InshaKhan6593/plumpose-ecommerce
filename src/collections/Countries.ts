@@ -37,7 +37,7 @@ export const Countries: CollectionConfig = {
     {
       name: 'code',
       type: 'text',
-      admin: { description: 'ISO 3166-1 alpha-2, e.g. QA.' },
+      admin: { description: 'The two-letter country code, for example QA.' },
       index: true,
       maxLength: 2,
       required: true,
@@ -46,15 +46,21 @@ export const Countries: CollectionConfig = {
     {
       name: 'currencyCode',
       type: 'text',
-      admin: { description: 'ISO 4217 code used to display prices, e.g. QAR.' },
+      admin: { description: 'The currency prices are shown in here, for example QAR.' },
+      label: 'Shown in currency',
       maxLength: 3,
       required: true,
     },
     {
       name: 'zoneKey',
       type: 'text',
-      admin: { description: 'Matches a Shipping zone key, or "qatar" for domestic.' },
+      admin: {
+        description:
+          'Which delivery zone this country is priced from. Change this and delivery costs change.',
+        readOnly: true,
+      },
       index: true,
+      label: 'Delivery zone',
       required: true,
     },
     {

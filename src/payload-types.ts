@@ -249,6 +249,9 @@ export interface DiscountCode {
 export interface Product {
   id: number;
   title: string;
+  /**
+   * The main description shown under the product name. Two or three sentences reads best.
+   */
   description?: {
     root: {
       type: string;
@@ -264,13 +267,22 @@ export interface Product {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * The photographs shown on the product page. Drag to reorder — the first one is the main image.
+   */
   gallery?:
     | {
         image: number | Media;
+        /**
+         * Leave empty to show this photo for every size. Set it to show the photo only when that size is chosen.
+         */
         variantOption?: (number | null) | VariantOption;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Optional extra sections shown further down the product page, such as a story about the print. Most products do not need any.
+   */
   layout?: (CallToActionBlock | ContentBlock | MediaBlock)[] | null;
   /**
    * Shown under the product name, e.g. "in 22-momme Silk".
@@ -368,11 +380,17 @@ export interface Product {
     image?: (number | null) | Media;
     description?: string | null;
   };
+  /**
+   * Which collection this piece belongs to, for example Resort 2026.
+   */
   categories?: (number | Category)[] | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
+  /**
+   * Made from the title. Only change it before publishing — editing it later breaks existing links.
+   */
   slug: string;
   updatedAt: string;
   createdAt: string;
@@ -1077,6 +1095,9 @@ export interface Project {
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
+  /**
+   * Made from the title. Only change it before publishing — editing it later breaks existing links.
+   */
   slug: string;
   updatedAt: string;
   createdAt: string;
@@ -1191,16 +1212,16 @@ export interface PersonalisationOption {
   type: 'placement' | 'style' | 'symbol' | 'thread';
   name: string;
   /**
-   * Lowercase identifier, e.g. "cuff".
+   * Used internally to link this record to the rest of the site. Generated automatically.
    */
-  key: string;
+  key?: string | null;
   note?: string | null;
   /**
-   * Thread colour, e.g. #BD9540
+   * A colour code, for example #BD9540. Your developer can help if unsure.
    */
   hex?: string | null;
   /**
-   * SVG path data on a 24x24 grid.
+   * The drawing itself. Ask your developer to change this — it is not something you edit by hand.
    */
   svgPath?: string | null;
   active?: boolean | null;
@@ -1215,7 +1236,10 @@ export interface ShippingZone {
   id: number;
   _order?: string | null;
   name: string;
-  key: string;
+  /**
+   * Used internally to link this record to the rest of the site. Generated automatically.
+   */
+  key?: string | null;
   feeQar: number;
   active?: boolean | null;
   updatedAt: string;
@@ -1229,7 +1253,10 @@ export interface ShippingCity {
   id: number;
   _order?: string | null;
   name: string;
-  key: string;
+  /**
+   * Used internally to link this record to the rest of the site. Generated automatically.
+   */
+  key?: string | null;
   feeQar: number;
   active?: boolean | null;
   updatedAt: string;
@@ -1245,15 +1272,15 @@ export interface Country {
   id: number;
   name: string;
   /**
-   * ISO 3166-1 alpha-2, e.g. QA.
+   * The two-letter country code, for example QA.
    */
   code: string;
   /**
-   * ISO 4217 code used to display prices, e.g. QAR.
+   * The currency prices are shown in here, for example QAR.
    */
   currencyCode: string;
   /**
-   * Matches a Shipping zone key, or "qatar" for domestic.
+   * Which delivery zone this country is priced from. Change this and delivery costs change.
    */
   zoneKey: string;
   /**

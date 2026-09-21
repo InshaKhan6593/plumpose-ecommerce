@@ -1,8 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
-import { slugField } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { webAddress } from '@/fields/webAddress'
 
 /**
  * "Made for You" — bespoke and collaboration work shown outside the
@@ -61,6 +61,6 @@ export const Projects: CollectionConfig = {
       labels: { singular: 'Image', plural: 'Gallery' },
     },
     { name: 'published', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: false },
-    slugField(),
+    webAddress(),
   ],
 }

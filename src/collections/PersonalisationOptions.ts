@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { autoKey } from '@/fields/autoKey'
 
 /**
  * Hand-embroidery options. Ported from netlify/lib/personalisation.mjs on the
@@ -36,13 +37,7 @@ export const PersonalisationOptions: CollectionConfig = {
       required: true,
     },
     { name: 'name', type: 'text', required: true },
-    {
-      name: 'key',
-      type: 'text',
-      admin: { description: 'Lowercase identifier, e.g. "cuff".' },
-      required: true,
-      unique: true,
-    },
+    autoKey('name'),
     { name: 'note', type: 'text' },
     {
       name: 'hex',
@@ -50,7 +45,7 @@ export const PersonalisationOptions: CollectionConfig = {
       admin: {
         components: { Cell: '@/components/admin/SwatchCell#SwatchCell' },
         condition: (data) => data?.type === 'thread',
-        description: 'Thread colour, e.g. #BD9540',
+        description: 'A colour code, for example #BD9540. Your developer can help if unsure.',
       },
     },
     {
@@ -58,8 +53,11 @@ export const PersonalisationOptions: CollectionConfig = {
       type: 'textarea',
       admin: {
         condition: (data) => data?.type === 'symbol',
-        description: 'SVG path data on a 24x24 grid.',
+        description:
+          'The drawing itself. Ask your developer to change this — it is not something you edit by hand.',
+        readOnly: true,
       },
+      label: 'Motif drawing',
     },
     { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
   ],

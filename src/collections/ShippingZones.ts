@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { autoKey } from '@/fields/autoKey'
 
 /**
  * International delivery zones. Ported from netlify/lib/shipping.mjs.
@@ -12,7 +13,7 @@ export const ShippingZones: CollectionConfig = {
   orderable: true,
   labels: { singular: 'Shipping zone', plural: 'Shipping zones' },
   admin: {
-    defaultColumns: ['name', 'key', 'feeQar', 'active'],
+    defaultColumns: ['name', 'feeQar', 'active'],
     group: 'Shop settings',
     useAsTitle: 'name',
   },
@@ -24,7 +25,7 @@ export const ShippingZones: CollectionConfig = {
   },
   fields: [
     { name: 'name', type: 'text', required: true },
-    { name: 'key', type: 'text', required: true, unique: true },
+    autoKey('name'),
     { name: 'feeQar', type: 'number', label: 'Delivery fee (QAR)', min: 0, required: true },
     { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
   ],

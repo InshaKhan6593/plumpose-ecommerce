@@ -1,9 +1,10 @@
 import { CallToAction } from '@/blocks/CallToAction/config'
 import { Content } from '@/blocks/Content/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
-import { slugField } from 'payload'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
+
+import { webAddress } from '@/fields/webAddress'
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -79,12 +80,22 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   ]
                 },
               }),
-              label: false,
+              admin: {
+                description:
+                  'The main description shown under the product name. Two or three sentences reads best.',
+              },
+              label: 'Description',
               required: false,
             },
             {
               name: 'gallery',
               type: 'array',
+              admin: {
+                description:
+                  'The photographs shown on the product page. Drag to reorder — the first one is the main image.',
+              },
+              label: 'Photos',
+              labels: { singular: 'Photo', plural: 'Photos' },
               minRows: 1,
               fields: [
                 {
@@ -97,7 +108,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   name: 'variantOption',
                   type: 'relationship',
                   relationTo: 'variantOptions',
+                  label: 'Only show for',
                   admin: {
+                    description:
+                      'Leave empty to show this photo for every size. Set it to show the photo only when that size is chosen.',
                     condition: (data) => {
                       return data?.enableVariants === true && data?.variantTypes?.length > 0
                     },
@@ -140,10 +154,16 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
             {
               name: 'layout',
               type: 'blocks',
+              admin: {
+                description:
+                  'Optional extra sections shown further down the product page, such as a story about the print. Most products do not need any.',
+              },
               blocks: [CallToAction, Content, MediaBlock],
+              label: 'Extra page sections',
+              labels: { singular: 'Section', plural: 'Sections' },
             },
           ],
-          label: 'Content',
+          label: 'Description & photos',
         },
         {
           /**
@@ -245,11 +265,11 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               relationTo: 'products',
             },
           ],
-          label: 'Product Details',
+          label: 'Price & sizes',
         },
         {
           name: 'meta',
-          label: 'SEO',
+          label: 'Google & sharing',
           fields: [
             OverviewField({
               titlePath: 'meta.title',
@@ -280,12 +300,14 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       name: 'categories',
       type: 'relationship',
       admin: {
+        description: 'Which collection this piece belongs to, for example Resort 2026.',
         position: 'sidebar',
         sortOptions: 'title',
       },
+      label: 'Collection',
       hasMany: true,
       relationTo: 'categories',
     },
-    slugField(),
+    webAddress(),
   ],
 })
