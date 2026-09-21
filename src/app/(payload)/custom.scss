@@ -233,6 +233,31 @@ textarea,
   }
 }
 
+/* --------------------------------------------------------- price input --- */
+
+/**
+ * The ecommerce plugin renders the currency symbol absolutely positioned at
+ * left: 10px, then pads the input by 22.75px — enough for a one-character
+ * symbol like $ or £. "QAR" is 28px wide, so it ran straight through the
+ * number: "QA|399.00".
+ *
+ * Pad past the symbol and give the field room for a five-figure price.
+ */
+.formattedPriceContainer {
+  .formattedPriceCurrencySymbol {
+    color: var(--plumpose-ink-soft);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+
+  .formattedPriceInput {
+    font-variant-numeric: tabular-nums;
+    min-width: 190px;
+    padding-left: 48px;
+  }
+}
+
 /* ------------------------------------------------------------- buttons --- */
 
 .btn {

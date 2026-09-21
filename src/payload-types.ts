@@ -362,7 +362,13 @@ export interface Product {
    */
   personalisationEnabled?: boolean | null;
   inventory?: number | null;
+  /**
+   * Tick this if the piece is made in more than one size or colour.
+   */
   enableVariants?: boolean | null;
+  /**
+   * Which options this piece is offered in — for example Size.
+   */
   variantTypes?: (number | VariantType)[] | null;
   variants?: {
     docs?: (number | Variant)[];

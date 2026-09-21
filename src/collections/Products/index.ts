@@ -226,7 +226,14 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
              * "139900" without a Cell. PriceCell formats it as QAR 1,399.00.
              */
             ...(defaultCollection.fields.map((field) => {
-              if ('name' in field && String(field.name).startsWith('priceIn')) {
+              if (!('name' in field)) return field
+              const name = String(field.name)
+
+              /**
+               * Money is stored in minor units, so a price column renders as
+               * "139900" without a Cell. PriceCell formats it as QAR 1,399.00.
+               */
+              if (name.startsWith('priceIn') && !name.endsWith('Enabled')) {
                 return {
                   ...field,
                   admin: {
@@ -240,6 +247,38 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   },
                 }
               }
+
+              /** The plugin's own labels are written for developers. */
+              const relabel: Record<string, { description?: string; label: string }> = {
+                enableVariants: {
+                  description:
+                    'Tick this if the piece is made in more than one size or colour.',
+                  label: 'This piece comes in different sizes',
+                },
+                priceInQAREnabled: { label: 'Set a price' },
+                relatedProducts: {
+                  description: 'Shown at the bottom of the product page as suggestions.',
+                  label: 'You may also like',
+                },
+                variantTypes: {
+                  description: 'Which options this piece is offered in — for example Size.',
+                  label: 'Options offered',
+                },
+              }
+
+              if (relabel[name]) {
+                return {
+                  ...field,
+                  admin: {
+                    ...('admin' in field ? field.admin : {}),
+                    ...(relabel[name].description
+                      ? { description: relabel[name].description }
+                      : {}),
+                  },
+                  label: relabel[name].label,
+                }
+              }
+
               return field
             }) as typeof defaultCollection.fields),
             {
@@ -262,6 +301,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                 }
               },
               hasMany: true,
+              label: 'You may also like',
               relationTo: 'products',
             },
           ],

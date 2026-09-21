@@ -15,6 +15,7 @@
     "lint:fix": "cross-env NODE_OPTIONS=--no-deprecation eslint . --fix",
     "audit:admin": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/audit-admin.ts",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "shoot:one": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/shoot-one.ts",
     "shoot:admin": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/shoot-admin.ts",
     "seed": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx src/seed/run.ts",
     "reinstall": "cross-env NODE_OPTIONS=--no-deprecation rm -rf node_modules && rm pnpm-lock.yaml && pnpm --ignore-workspace install",
