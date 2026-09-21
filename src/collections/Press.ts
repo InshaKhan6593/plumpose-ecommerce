@@ -4,6 +4,11 @@ import { adminOnly } from '@/access/adminOnly'
 
 export const Press: CollectionConfig = {
   slug: 'press',
+  /** Soft delete — a mistaken delete here costs real work to recreate. */
+  trash: true,
+  defaultSort: '-date',
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'Press item', plural: 'Press' },
   admin: {
     defaultColumns: ['headline', 'publication', 'date', 'published'],
@@ -27,6 +32,5 @@ export const Press: CollectionConfig = {
     { name: 'date', type: 'date', required: true },
     { name: 'logo', type: 'upload', relationTo: 'media' },
     { name: 'published', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
   ],
 }

@@ -9,6 +9,7 @@ import { publicAccess } from '@/access/publicAccess'
  */
 export const Subscribers: CollectionConfig = {
   slug: 'subscribers',
+  defaultSort: '-createdAt',
   admin: {
     defaultColumns: ['email', 'source', 'createdAt'],
     group: 'Content',

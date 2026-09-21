@@ -8,9 +8,11 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const PersonalisationOptions: CollectionConfig = {
   slug: 'personalisationOptions',
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'Personalisation option', plural: 'Personalisation' },
   admin: {
-    defaultColumns: ['name', 'type', 'active', 'sortOrder'],
+    defaultColumns: ['name', 'type', 'hex', 'active'],
     description: 'Where embroidery can go, which motifs and thread colours are offered.',
     group: 'Shop settings',
     useAsTitle: 'name',
@@ -46,6 +48,7 @@ export const PersonalisationOptions: CollectionConfig = {
       name: 'hex',
       type: 'text',
       admin: {
+        components: { Cell: '@/components/admin/SwatchCell#SwatchCell' },
         condition: (data) => data?.type === 'thread',
         description: 'Thread colour, e.g. #BD9540',
       },
@@ -59,6 +62,5 @@ export const PersonalisationOptions: CollectionConfig = {
       },
     },
     { name: 'active', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
   ],
 }

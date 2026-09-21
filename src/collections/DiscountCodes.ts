@@ -11,6 +11,7 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const DiscountCodes: CollectionConfig = {
   slug: 'discountCodes',
+  defaultSort: '-createdAt',
   labels: { singular: 'Discount code', plural: 'Discount codes' },
   admin: {
     defaultColumns: ['code', 'type', 'value', 'usageCount', 'active', 'expiresAt'],

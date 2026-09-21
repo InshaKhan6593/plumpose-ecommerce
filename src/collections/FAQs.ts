@@ -4,9 +4,13 @@ import { adminOnly } from '@/access/adminOnly'
 
 export const FAQs: CollectionConfig = {
   slug: 'faqs',
+  /** Soft delete — a mistaken delete here costs real work to recreate. */
+  trash: true,
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'FAQ', plural: 'FAQs' },
   admin: {
-    defaultColumns: ['question', 'category', 'published', 'sortOrder'],
+    defaultColumns: ['question', 'category', 'published'],
     group: 'Content',
     useAsTitle: 'question',
   },
@@ -35,6 +39,5 @@ export const FAQs: CollectionConfig = {
       ],
     },
     { name: 'published', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
   ],
 }

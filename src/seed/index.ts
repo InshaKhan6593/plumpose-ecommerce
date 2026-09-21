@@ -90,6 +90,33 @@ async function upsertMedia(payload: Payload, file: string, alt: string): Promise
 export async function seed(payload: Payload): Promise<void> {
   const c: SeedResult = { created: 0, skipped: 0 }
 
+  /* -------------------------------------------------------- dev admin user
+     A local development login so the admin can be opened without clicking
+     through "create first user" after every schema reset. Development only —
+     this is skipped entirely when NODE_ENV is production, and the credentials
+     are deliberately throwaway. The real account is created by the client. */
+  if (process.env.NODE_ENV !== 'production') {
+    const devUser = await payload.find({
+      collection: 'users',
+      depth: 0,
+      limit: 1,
+      where: { email: { equals: 'dev@plumpose.local' } },
+    })
+    if (devUser.docs.length === 0) {
+      await payload.create({
+        collection: 'users',
+        data: {
+          email: 'dev@plumpose.local',
+          name: 'Development',
+          password: 'devpassword',
+          roles: ['admin'],
+        } as any,
+      })
+      c.created++
+      log('dev admin created — dev@plumpose.local (local fixture, never seeded in production)')
+    }
+  }
+
   // ---------------------------------------------------------------- media
   log('media…')
   const images: Record<string, any> = {}
@@ -228,7 +255,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'personalisationOptions',
       { key: { equals: key } },
-      { key, name, type: 'placement', sortOrder: i, active: true },
+      { key, name, type: 'placement', active: true },
       c,
     )
   }
@@ -243,7 +270,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'personalisationOptions',
       { key: { equals: key } },
-      { key, name, note, type: 'style', sortOrder: i, active: true },
+      { key, name, note, type: 'style', active: true },
       c,
     )
   }
@@ -271,7 +298,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'personalisationOptions',
       { key: { equals: key } },
-      { key, name, svgPath, type: 'symbol', sortOrder: i, active: true },
+      { key, name, svgPath, type: 'symbol', active: true },
       c,
     )
   }
@@ -288,7 +315,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'personalisationOptions',
       { key: { equals: key } },
-      { key, name, hex, type: 'thread', sortOrder: i, active: true },
+      { key, name, hex, type: 'thread', active: true },
       c,
     )
   }
@@ -315,7 +342,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'shippingCities',
       { key: { equals: key } },
-      { key, name, feeQar, sortOrder: i, active: true },
+      { key, name, feeQar, active: true },
       c,
     )
   }
@@ -337,7 +364,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'shippingZones',
       { key: { equals: key } },
-      { key, name, feeQar, sortOrder: i, active: true },
+      { key, name, feeQar, active: true },
       c,
     )
   }
@@ -387,7 +414,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'spinSegments',
       { label: { equals: label } },
-      { label, rewardType, rewardValue, weight, colour, expiryDays: 30, sortOrder: i, active: true },
+      { label, rewardType, rewardValue, weight, colour, expiryDays: 30, active: true },
       c,
     )
   }
@@ -431,7 +458,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'faqs',
       { question: { equals: question } },
-      { question, category, answer: para(answer), sortOrder: i, published: true },
+      { question, category, answer: para(answer), published: true },
       c,
     )
   }

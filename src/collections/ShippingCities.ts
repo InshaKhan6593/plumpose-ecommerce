@@ -8,6 +8,8 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const ShippingCities: CollectionConfig = {
   slug: 'shippingCities',
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'Qatar city', plural: 'Qatar delivery' },
   admin: {
     defaultColumns: ['name', 'key', 'feeQar', 'active'],
@@ -25,6 +27,5 @@ export const ShippingCities: CollectionConfig = {
     { name: 'key', type: 'text', required: true, unique: true },
     { name: 'feeQar', type: 'number', label: 'Delivery fee (QAR)', min: 0, required: true },
     { name: 'active', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
   ],
 }

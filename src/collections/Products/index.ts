@@ -199,7 +199,27 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         },
         {
           fields: [
-            ...defaultCollection.fields,
+            /**
+             * Money is stored in minor units, so a price column renders as
+             * "139900" without a Cell. PriceCell formats it as QAR 1,399.00.
+             */
+            ...(defaultCollection.fields.map((field) => {
+              if ('name' in field && String(field.name).startsWith('priceIn')) {
+                return {
+                  ...field,
+                  admin: {
+                    ...('admin' in field ? field.admin : {}),
+                    components: {
+                      ...('admin' in field && field.admin && 'components' in field.admin
+                        ? field.admin.components
+                        : {}),
+                      Cell: '@/components/admin/PriceCell#PriceCell',
+                    },
+                  },
+                }
+              }
+              return field
+            }) as typeof defaultCollection.fields),
             {
               name: 'relatedProducts',
               type: 'relationship',

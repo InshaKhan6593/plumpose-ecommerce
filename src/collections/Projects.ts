@@ -10,9 +10,13 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const Projects: CollectionConfig = {
   slug: 'projects',
+  /** Soft delete — a mistaken delete here costs real work to recreate. */
+  trash: true,
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'Project', plural: 'Made for You' },
   admin: {
-    defaultColumns: ['title', 'category', 'published', 'sortOrder'],
+    defaultColumns: ['title', 'category', 'published'],
     description: 'Bridal, bespoke, special embroidery and brand collaborations.',
     group: 'Content',
     useAsTitle: 'title',
@@ -57,7 +61,6 @@ export const Projects: CollectionConfig = {
       labels: { singular: 'Image', plural: 'Gallery' },
     },
     { name: 'published', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: false },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
     slugField(),
   ],
 }

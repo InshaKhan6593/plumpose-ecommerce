@@ -15,6 +15,7 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const Currencies: CollectionConfig = {
   slug: 'currencies',
+  defaultSort: 'code',
   labels: { singular: 'Currency', plural: 'Currencies' },
   admin: {
     defaultColumns: ['code', 'name', 'symbol', 'priceOverride', 'rate', 'updatedAt'],

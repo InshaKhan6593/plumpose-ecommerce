@@ -16,6 +16,7 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const Countries: CollectionConfig = {
   slug: 'countries',
+  defaultSort: 'name',
   labels: { singular: 'Country', plural: 'Countries' },
   admin: {
     defaultColumns: ['name', 'code', 'currencyCode', 'zoneKey', 'blockedReason'],

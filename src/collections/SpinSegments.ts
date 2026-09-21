@@ -11,6 +11,8 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const SpinSegments: CollectionConfig = {
   slug: 'spinSegments',
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'Wheel segment', plural: 'Reward wheel' },
   admin: {
     defaultColumns: ['label', 'rewardType', 'rewardValue', 'weight', 'active'],
@@ -71,6 +73,5 @@ export const SpinSegments: CollectionConfig = {
       defaultValue: 30,
     },
     { name: 'active', type: 'checkbox', admin: { position: 'sidebar' }, defaultValue: true },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
   ],
 }

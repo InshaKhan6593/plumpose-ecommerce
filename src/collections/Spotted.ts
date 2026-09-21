@@ -8,6 +8,11 @@ import { adminOnly } from '@/access/adminOnly'
  */
 export const Spotted: CollectionConfig = {
   slug: 'spotted',
+  /** Soft delete — a mistaken delete here costs real work to recreate. */
+  trash: true,
+  defaultSort: '-createdAt',
+  /** Drag-and-drop ordering in the list view — no sortOrder field to type into. */
+  orderable: true,
   labels: { singular: 'Spotted post', plural: 'Spotted' },
   admin: {
     defaultColumns: ['instagramHandle', 'status', 'createdAt'],
@@ -46,6 +51,5 @@ export const Spotted: CollectionConfig = {
       ],
       required: true,
     },
-    { name: 'sortOrder', type: 'number', admin: { position: 'sidebar' }, defaultValue: 0 },
   ],
 }

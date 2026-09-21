@@ -1189,6 +1189,7 @@ export interface Address {
  */
 export interface Project {
   id: number;
+  _order?: string | null;
   title: string;
   category: 'bridal' | 'bespoke' | 'embroidery' | 'collaboration' | 'other';
   /**
@@ -1219,7 +1220,6 @@ export interface Project {
       }[]
     | null;
   published?: boolean | null;
-  sortOrder?: number | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -1227,6 +1227,7 @@ export interface Project {
   slug: string;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1234,6 +1235,7 @@ export interface Project {
  */
 export interface Faq {
   id: number;
+  _order?: string | null;
   question: string;
   answer: {
     root: {
@@ -1252,9 +1254,9 @@ export interface Faq {
   };
   category?: ('orders' | 'delivery' | 'returns' | 'personalisation' | 'care') | null;
   published?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1262,6 +1264,7 @@ export interface Faq {
  */
 export interface Press {
   id: number;
+  _order?: string | null;
   publication: string;
   headline: string;
   excerpt?: string | null;
@@ -1269,9 +1272,9 @@ export interface Press {
   date: string;
   logo?: (number | null) | Media;
   published?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * Customer photos. Only approved posts appear on the site.
@@ -1281,6 +1284,7 @@ export interface Press {
  */
 export interface Spotted {
   id: number;
+  _order?: string | null;
   image: number | Media;
   /**
    * Including the @.
@@ -1289,9 +1293,9 @@ export interface Spotted {
   caption?: string | null;
   postUrl?: string | null;
   status: 'pending' | 'approved' | 'rejected';
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1308,6 +1312,7 @@ export interface Review {
   status: 'pending' | 'approved' | 'rejected';
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1329,6 +1334,7 @@ export interface Subscriber {
  */
 export interface PersonalisationOption {
   id: number;
+  _order?: string | null;
   type: 'placement' | 'style' | 'symbol' | 'thread';
   name: string;
   /**
@@ -1345,7 +1351,6 @@ export interface PersonalisationOption {
    */
   svgPath?: string | null;
   active?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1355,11 +1360,11 @@ export interface PersonalisationOption {
  */
 export interface ShippingZone {
   id: number;
+  _order?: string | null;
   name: string;
   key: string;
   feeQar: number;
   active?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1369,11 +1374,11 @@ export interface ShippingZone {
  */
 export interface ShippingCity {
   id: number;
+  _order?: string | null;
   name: string;
   key: string;
   feeQar: number;
   active?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1478,6 +1483,7 @@ export interface DiscountCode {
  */
 export interface SpinSegment {
   id: number;
+  _order?: string | null;
   /**
    * Shown on the wheel, e.g. "10% off".
    */
@@ -1497,7 +1503,6 @@ export interface SpinSegment {
    */
   expiryDays?: number | null;
   active?: boolean | null;
-  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2001,6 +2006,7 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "projects_select".
  */
 export interface ProjectsSelect<T extends boolean = true> {
+  _order?: T;
   title?: T;
   category?: T;
   brandName?: T;
@@ -2014,30 +2020,32 @@ export interface ProjectsSelect<T extends boolean = true> {
         id?: T;
       };
   published?: T;
-  sortOrder?: T;
   generateSlug?: T;
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faqs_select".
  */
 export interface FaqsSelect<T extends boolean = true> {
+  _order?: T;
   question?: T;
   answer?: T;
   category?: T;
   published?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "press_select".
  */
 export interface PressSelect<T extends boolean = true> {
+  _order?: T;
   publication?: T;
   headline?: T;
   excerpt?: T;
@@ -2045,23 +2053,24 @@ export interface PressSelect<T extends boolean = true> {
   date?: T;
   logo?: T;
   published?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "spotted_select".
  */
 export interface SpottedSelect<T extends boolean = true> {
+  _order?: T;
   image?: T;
   instagramHandle?: T;
   caption?: T;
   postUrl?: T;
   status?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2077,6 +2086,7 @@ export interface ReviewsSelect<T extends boolean = true> {
   status?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2094,6 +2104,7 @@ export interface SubscribersSelect<T extends boolean = true> {
  * via the `definition` "personalisationOptions_select".
  */
 export interface PersonalisationOptionsSelect<T extends boolean = true> {
+  _order?: T;
   type?: T;
   name?: T;
   key?: T;
@@ -2101,7 +2112,6 @@ export interface PersonalisationOptionsSelect<T extends boolean = true> {
   hex?: T;
   svgPath?: T;
   active?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2110,11 +2120,11 @@ export interface PersonalisationOptionsSelect<T extends boolean = true> {
  * via the `definition` "shippingZones_select".
  */
 export interface ShippingZonesSelect<T extends boolean = true> {
+  _order?: T;
   name?: T;
   key?: T;
   feeQar?: T;
   active?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2123,11 +2133,11 @@ export interface ShippingZonesSelect<T extends boolean = true> {
  * via the `definition` "shippingCities_select".
  */
 export interface ShippingCitiesSelect<T extends boolean = true> {
+  _order?: T;
   name?: T;
   key?: T;
   feeQar?: T;
   active?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2186,6 +2196,7 @@ export interface DiscountCodesSelect<T extends boolean = true> {
  * via the `definition` "spinSegments_select".
  */
 export interface SpinSegmentsSelect<T extends boolean = true> {
+  _order?: T;
   label?: T;
   rewardType?: T;
   rewardValue?: T;
@@ -2193,7 +2204,6 @@ export interface SpinSegmentsSelect<T extends boolean = true> {
   colour?: T;
   expiryDays?: T;
   active?: T;
-  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }

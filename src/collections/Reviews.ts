@@ -9,6 +9,9 @@ import { publicAccess } from '@/access/publicAccess'
  */
 export const Reviews: CollectionConfig = {
   slug: 'reviews',
+  /** Soft delete — a mistaken delete here costs real work to recreate. */
+  trash: true,
+  defaultSort: '-createdAt',
   admin: {
     defaultColumns: ['name', 'rating', 'product', 'status', 'createdAt'],
     group: 'Content',
