@@ -14,6 +14,7 @@ import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
+import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
@@ -90,8 +91,37 @@ export const plugins: Plugin[] = [
     orders: {
       ordersCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        access: {
+          ...defaultCollection.access,
+          /** Orders are archived, never deleted — they are financial records. */
+          delete: () => false,
+          /** Staff may work through orders; only admins see everything else. */
+          update: isAdminOrStaff,
+        },
+        admin: {
+          ...defaultCollection?.admin,
+          defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'fulfilment', 'createdAt'],
+          group: 'Shop',
+        },
         fields: [
-          ...defaultCollection.fields,
+          /**
+           * Money and payment state are locked at field level. See
+           * @/access/isAdminOrStaff — the gateway is the source of truth and a
+           * hand-edited total breaks reconciliation against SkipCash.
+           */
+          ...(defaultCollection.fields.map((field) => {
+            if (
+              'name' in field &&
+              ['amount', 'currency', 'status', 'transactions'].includes(field.name as string)
+            ) {
+              return {
+                ...field,
+                access: { ...('access' in field ? field.access : {}), update: neverEditable },
+                admin: { ...('admin' in field ? field.admin : {}), readOnly: true },
+              }
+            }
+            return field
+          }) as typeof defaultCollection.fields),
           {
             name: 'accessToken',
             type: 'text',
@@ -111,6 +141,41 @@ export const plugins: Plugin[] = [
                 },
               ],
             },
+          },
+          /* ---- what the client and her staff CAN change ---- */
+          {
+            name: 'fulfilment',
+            type: 'select',
+            admin: { position: 'sidebar' },
+            defaultValue: 'unfulfilled',
+            options: [
+              { label: 'Awaiting fulfilment', value: 'unfulfilled' },
+              { label: 'In the atelier', value: 'inAtelier' },
+              { label: 'Shipped', value: 'shipped' },
+              { label: 'Delivered', value: 'delivered' },
+            ],
+          },
+          {
+            name: 'trackingNumber',
+            type: 'text',
+            admin: { position: 'sidebar' },
+          },
+          {
+            name: 'adminNotes',
+            type: 'textarea',
+            admin: { description: 'Internal only. Never shown to the customer.' },
+          },
+          {
+            name: 'gift',
+            type: 'checkbox',
+            admin: { description: 'Order is a gift — include a card, omit the invoice.' },
+            defaultValue: false,
+          },
+          {
+            name: 'giftNote',
+            type: 'textarea',
+            admin: { condition: (data) => data?.gift === true },
+            maxLength: 200,
           },
         ],
       }),

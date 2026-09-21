@@ -1,0 +1,1430 @@
+[
+  {
+    "code": "AF",
+    "name": "Afghanistan",
+    "currencyCode": "AFN",
+    "zoneKey": "world",
+    "blockedReason": "No reliable carrier service"
+  },
+  {
+    "code": "AL",
+    "name": "Albania",
+    "currencyCode": "ALL",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "DZ",
+    "name": "Algeria",
+    "currencyCode": "DZD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "AD",
+    "name": "Andorra",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "AO",
+    "name": "Angola",
+    "currencyCode": "AOA",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "AG",
+    "name": "Antigua and Barbuda",
+    "currencyCode": "XCD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "AR",
+    "name": "Argentina",
+    "currencyCode": "ARS",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "AM",
+    "name": "Armenia",
+    "currencyCode": "AMD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "AU",
+    "name": "Australia",
+    "currencyCode": "AUD",
+    "zoneKey": "oceania",
+    "blockedReason": null
+  },
+  {
+    "code": "AT",
+    "name": "Austria",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "AZ",
+    "name": "Azerbaijan",
+    "currencyCode": "AZN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BS",
+    "name": "Bahamas",
+    "currencyCode": "BSD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "currencyCode": "BHD",
+    "zoneKey": "bahrain",
+    "blockedReason": null
+  },
+  {
+    "code": "BD",
+    "name": "Bangladesh",
+    "currencyCode": "BDT",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BB",
+    "name": "Barbados",
+    "currencyCode": "BBD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BY",
+    "name": "Belarus",
+    "currencyCode": "BYN",
+    "zoneKey": "europe",
+    "blockedReason": "Sanctions — carrier services from Qatar are suspended"
+  },
+  {
+    "code": "BE",
+    "name": "Belgium",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "BZ",
+    "name": "Belize",
+    "currencyCode": "BZD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BJ",
+    "name": "Benin",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BT",
+    "name": "Bhutan",
+    "currencyCode": "BTN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BO",
+    "name": "Bolivia",
+    "currencyCode": "BOB",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BA",
+    "name": "Bosnia and Herzegovina",
+    "currencyCode": "BAM",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "BW",
+    "name": "Botswana",
+    "currencyCode": "BWP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "currencyCode": "BRL",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BN",
+    "name": "Brunei",
+    "currencyCode": "BND",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "BG",
+    "name": "Bulgaria",
+    "currencyCode": "BGN",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "BF",
+    "name": "Burkina Faso",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": "Security — carrier services are suspended"
+  },
+  {
+    "code": "BI",
+    "name": "Burundi",
+    "currencyCode": "BIF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KH",
+    "name": "Cambodia",
+    "currencyCode": "KHR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CM",
+    "name": "Cameroon",
+    "currencyCode": "XAF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "currencyCode": "CAD",
+    "zoneKey": "americas",
+    "blockedReason": null
+  },
+  {
+    "code": "CV",
+    "name": "Cape Verde",
+    "currencyCode": "CVE",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CF",
+    "name": "Central African Republic",
+    "currencyCode": "XAF",
+    "zoneKey": "world",
+    "blockedReason": "Conflict — no reliable carrier service"
+  },
+  {
+    "code": "TD",
+    "name": "Chad",
+    "currencyCode": "XAF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CL",
+    "name": "Chile",
+    "currencyCode": "CLP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CN",
+    "name": "China",
+    "currencyCode": "CNY",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CO",
+    "name": "Colombia",
+    "currencyCode": "COP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KM",
+    "name": "Comoros",
+    "currencyCode": "KMF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CR",
+    "name": "Costa Rica",
+    "currencyCode": "CRC",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "HR",
+    "name": "Croatia",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "CU",
+    "name": "Cuba",
+    "currencyCode": "CUP",
+    "zoneKey": "world",
+    "blockedReason": "Under comprehensive international sanctions"
+  },
+  {
+    "code": "CY",
+    "name": "Cyprus",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "CZ",
+    "name": "Czechia",
+    "currencyCode": "CZK",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "DK",
+    "name": "Denmark",
+    "currencyCode": "DKK",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "DJ",
+    "name": "Djibouti",
+    "currencyCode": "DJF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "DM",
+    "name": "Dominica",
+    "currencyCode": "XCD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "DO",
+    "name": "Dominican Republic",
+    "currencyCode": "DOP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "CD",
+    "name": "DR Congo",
+    "currencyCode": "CDF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "EC",
+    "name": "Ecuador",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "EG",
+    "name": "Egypt",
+    "currencyCode": "EGP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SV",
+    "name": "El Salvador",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GQ",
+    "name": "Equatorial Guinea",
+    "currencyCode": "XAF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "ER",
+    "name": "Eritrea",
+    "currencyCode": "ERN",
+    "zoneKey": "world",
+    "blockedReason": "No reliable carrier service"
+  },
+  {
+    "code": "EE",
+    "name": "Estonia",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "SZ",
+    "name": "Eswatini",
+    "currencyCode": "SZL",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "ET",
+    "name": "Ethiopia",
+    "currencyCode": "ETB",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "FJ",
+    "name": "Fiji",
+    "currencyCode": "FJD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "FI",
+    "name": "Finland",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "FR",
+    "name": "France",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "GA",
+    "name": "Gabon",
+    "currencyCode": "XAF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GM",
+    "name": "Gambia",
+    "currencyCode": "GMD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GE",
+    "name": "Georgia",
+    "currencyCode": "GEL",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "DE",
+    "name": "Germany",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "GH",
+    "name": "Ghana",
+    "currencyCode": "GHS",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GI",
+    "name": "Gibraltar",
+    "currencyCode": "GIP",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "GR",
+    "name": "Greece",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "GD",
+    "name": "Grenada",
+    "currencyCode": "XCD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GT",
+    "name": "Guatemala",
+    "currencyCode": "GTQ",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GG",
+    "name": "Guernsey",
+    "currencyCode": "GBP",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "GN",
+    "name": "Guinea",
+    "currencyCode": "GNF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GW",
+    "name": "Guinea-Bissau",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "GY",
+    "name": "Guyana",
+    "currencyCode": "GYD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "HT",
+    "name": "Haiti",
+    "currencyCode": "HTG",
+    "zoneKey": "world",
+    "blockedReason": "Security — carrier services are suspended"
+  },
+  {
+    "code": "HN",
+    "name": "Honduras",
+    "currencyCode": "HNL",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "HK",
+    "name": "Hong Kong",
+    "currencyCode": "HKD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "HU",
+    "name": "Hungary",
+    "currencyCode": "HUF",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "IS",
+    "name": "Iceland",
+    "currencyCode": "ISK",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "IN",
+    "name": "India",
+    "currencyCode": "INR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "ID",
+    "name": "Indonesia",
+    "currencyCode": "IDR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "IR",
+    "name": "Iran",
+    "currencyCode": "IRR",
+    "zoneKey": "world",
+    "blockedReason": "Under comprehensive international sanctions"
+  },
+  {
+    "code": "IQ",
+    "name": "Iraq",
+    "currencyCode": "IQD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "IE",
+    "name": "Ireland",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "IM",
+    "name": "Isle of Man",
+    "currencyCode": "GBP",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "IL",
+    "name": "Israel",
+    "currencyCode": "ILS",
+    "zoneKey": "world",
+    "blockedReason": "No shipping route from Qatar"
+  },
+  {
+    "code": "IT",
+    "name": "Italy",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "CI",
+    "name": "Ivory Coast",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "JM",
+    "name": "Jamaica",
+    "currencyCode": "JMD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "JP",
+    "name": "Japan",
+    "currencyCode": "JPY",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "JE",
+    "name": "Jersey",
+    "currencyCode": "GBP",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "JO",
+    "name": "Jordan",
+    "currencyCode": "JOD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KZ",
+    "name": "Kazakhstan",
+    "currencyCode": "KZT",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "currencyCode": "KES",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KI",
+    "name": "Kiribati",
+    "currencyCode": "AUD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "XK",
+    "name": "Kosovo",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "currencyCode": "KWD",
+    "zoneKey": "kuwait",
+    "blockedReason": null
+  },
+  {
+    "code": "KG",
+    "name": "Kyrgyzstan",
+    "currencyCode": "KGS",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "LA",
+    "name": "Laos",
+    "currencyCode": "LAK",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "LV",
+    "name": "Latvia",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "LB",
+    "name": "Lebanon",
+    "currencyCode": "LBP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "LS",
+    "name": "Lesotho",
+    "currencyCode": "LSL",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "LR",
+    "name": "Liberia",
+    "currencyCode": "LRD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "LY",
+    "name": "Libya",
+    "currencyCode": "LYD",
+    "zoneKey": "world",
+    "blockedReason": "No reliable carrier service"
+  },
+  {
+    "code": "LI",
+    "name": "Liechtenstein",
+    "currencyCode": "CHF",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "LT",
+    "name": "Lithuania",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "LU",
+    "name": "Luxembourg",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "MO",
+    "name": "Macau",
+    "currencyCode": "MOP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MG",
+    "name": "Madagascar",
+    "currencyCode": "MGA",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MW",
+    "name": "Malawi",
+    "currencyCode": "MWK",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MY",
+    "name": "Malaysia",
+    "currencyCode": "MYR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MV",
+    "name": "Maldives",
+    "currencyCode": "MVR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "ML",
+    "name": "Mali",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": "Security — carrier services are suspended"
+  },
+  {
+    "code": "MT",
+    "name": "Malta",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "MH",
+    "name": "Marshall Islands",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MR",
+    "name": "Mauritania",
+    "currencyCode": "MRU",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MU",
+    "name": "Mauritius",
+    "currencyCode": "MUR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "currencyCode": "MXN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "FM",
+    "name": "Micronesia",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MD",
+    "name": "Moldova",
+    "currencyCode": "MDL",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "MC",
+    "name": "Monaco",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "MN",
+    "name": "Mongolia",
+    "currencyCode": "MNT",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "ME",
+    "name": "Montenegro",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "MA",
+    "name": "Morocco",
+    "currencyCode": "MAD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MZ",
+    "name": "Mozambique",
+    "currencyCode": "MZN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "MM",
+    "name": "Myanmar",
+    "currencyCode": "MMK",
+    "zoneKey": "world",
+    "blockedReason": "Sanctions — service is not reliable"
+  },
+  {
+    "code": "NA",
+    "name": "Namibia",
+    "currencyCode": "NAD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "NR",
+    "name": "Nauru",
+    "currencyCode": "AUD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "NP",
+    "name": "Nepal",
+    "currencyCode": "NPR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "NL",
+    "name": "Netherlands",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "NZ",
+    "name": "New Zealand",
+    "currencyCode": "NZD",
+    "zoneKey": "oceania",
+    "blockedReason": null
+  },
+  {
+    "code": "NI",
+    "name": "Nicaragua",
+    "currencyCode": "NIO",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "NE",
+    "name": "Niger",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": "Security — carrier services are suspended"
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "currencyCode": "NGN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KP",
+    "name": "North Korea",
+    "currencyCode": "QAR",
+    "zoneKey": "world",
+    "blockedReason": "Under comprehensive international sanctions"
+  },
+  {
+    "code": "MK",
+    "name": "North Macedonia",
+    "currencyCode": "MKD",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "NO",
+    "name": "Norway",
+    "currencyCode": "NOK",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "currencyCode": "OMR",
+    "zoneKey": "oman",
+    "blockedReason": null
+  },
+  {
+    "code": "PK",
+    "name": "Pakistan",
+    "currencyCode": "PKR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PW",
+    "name": "Palau",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PS",
+    "name": "Palestine",
+    "currencyCode": "JOD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PA",
+    "name": "Panama",
+    "currencyCode": "PAB",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PG",
+    "name": "Papua New Guinea",
+    "currencyCode": "PGK",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PY",
+    "name": "Paraguay",
+    "currencyCode": "PYG",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PE",
+    "name": "Peru",
+    "currencyCode": "PEN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PH",
+    "name": "Philippines",
+    "currencyCode": "PHP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "PL",
+    "name": "Poland",
+    "currencyCode": "PLN",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "PT",
+    "name": "Portugal",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "PR",
+    "name": "Puerto Rico",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "currencyCode": "QAR",
+    "zoneKey": "qatar",
+    "blockedReason": null
+  },
+  {
+    "code": "CG",
+    "name": "Republic of the Congo",
+    "currencyCode": "XAF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "RO",
+    "name": "Romania",
+    "currencyCode": "RON",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "RU",
+    "name": "Russia",
+    "currencyCode": "RUB",
+    "zoneKey": "europe",
+    "blockedReason": "Sanctions — carrier services from Qatar are suspended"
+  },
+  {
+    "code": "RW",
+    "name": "Rwanda",
+    "currencyCode": "RWF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KN",
+    "name": "Saint Kitts and Nevis",
+    "currencyCode": "XCD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "LC",
+    "name": "Saint Lucia",
+    "currencyCode": "XCD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "VC",
+    "name": "Saint Vincent and the Grenadines",
+    "currencyCode": "XCD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "WS",
+    "name": "Samoa",
+    "currencyCode": "WST",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SM",
+    "name": "San Marino",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "ST",
+    "name": "São Tomé and Príncipe",
+    "currencyCode": "STN",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SA",
+    "name": "Saudi Arabia",
+    "currencyCode": "SAR",
+    "zoneKey": "saudi",
+    "blockedReason": null
+  },
+  {
+    "code": "SN",
+    "name": "Senegal",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "RS",
+    "name": "Serbia",
+    "currencyCode": "RSD",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "SC",
+    "name": "Seychelles",
+    "currencyCode": "SCR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SL",
+    "name": "Sierra Leone",
+    "currencyCode": "SLE",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "currencyCode": "SGD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SK",
+    "name": "Slovakia",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "SI",
+    "name": "Slovenia",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "SB",
+    "name": "Solomon Islands",
+    "currencyCode": "SBD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SO",
+    "name": "Somalia",
+    "currencyCode": "SOS",
+    "zoneKey": "world",
+    "blockedReason": "No reliable carrier service"
+  },
+  {
+    "code": "ZA",
+    "name": "South Africa",
+    "currencyCode": "ZAR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "KR",
+    "name": "South Korea",
+    "currencyCode": "KRW",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SS",
+    "name": "South Sudan",
+    "currencyCode": "SSP",
+    "zoneKey": "world",
+    "blockedReason": "Conflict — no reliable carrier service"
+  },
+  {
+    "code": "ES",
+    "name": "Spain",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "LK",
+    "name": "Sri Lanka",
+    "currencyCode": "LKR",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SD",
+    "name": "Sudan",
+    "currencyCode": "SDG",
+    "zoneKey": "world",
+    "blockedReason": "Conflict — no reliable carrier service"
+  },
+  {
+    "code": "SR",
+    "name": "Suriname",
+    "currencyCode": "SRD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "SE",
+    "name": "Sweden",
+    "currencyCode": "SEK",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "CH",
+    "name": "Switzerland",
+    "currencyCode": "CHF",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "SY",
+    "name": "Syria",
+    "currencyCode": "SYP",
+    "zoneKey": "world",
+    "blockedReason": "Under comprehensive international sanctions"
+  },
+  {
+    "code": "TW",
+    "name": "Taiwan",
+    "currencyCode": "TWD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TJ",
+    "name": "Tajikistan",
+    "currencyCode": "TJS",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TZ",
+    "name": "Tanzania",
+    "currencyCode": "TZS",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TH",
+    "name": "Thailand",
+    "currencyCode": "THB",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TL",
+    "name": "Timor-Leste",
+    "currencyCode": "USD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TG",
+    "name": "Togo",
+    "currencyCode": "XOF",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TO",
+    "name": "Tonga",
+    "currencyCode": "TOP",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TT",
+    "name": "Trinidad and Tobago",
+    "currencyCode": "TTD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TN",
+    "name": "Tunisia",
+    "currencyCode": "TND",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TR",
+    "name": "Türkiye",
+    "currencyCode": "TRY",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TM",
+    "name": "Turkmenistan",
+    "currencyCode": "TMT",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "TV",
+    "name": "Tuvalu",
+    "currencyCode": "AUD",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "UG",
+    "name": "Uganda",
+    "currencyCode": "UGX",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "UA",
+    "name": "Ukraine",
+    "currencyCode": "UAH",
+    "zoneKey": "europe",
+    "blockedReason": "Conflict — carrier services are suspended"
+  },
+  {
+    "code": "AE",
+    "name": "United Arab Emirates",
+    "currencyCode": "AED",
+    "zoneKey": "uae",
+    "blockedReason": null
+  },
+  {
+    "code": "GB",
+    "name": "United Kingdom",
+    "currencyCode": "GBP",
+    "zoneKey": "uk",
+    "blockedReason": null
+  },
+  {
+    "code": "US",
+    "name": "United States",
+    "currencyCode": "USD",
+    "zoneKey": "americas",
+    "blockedReason": null
+  },
+  {
+    "code": "UY",
+    "name": "Uruguay",
+    "currencyCode": "UYU",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "UZ",
+    "name": "Uzbekistan",
+    "currencyCode": "UZS",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "VU",
+    "name": "Vanuatu",
+    "currencyCode": "VUV",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "VA",
+    "name": "Vatican City",
+    "currencyCode": "EUR",
+    "zoneKey": "europe",
+    "blockedReason": null
+  },
+  {
+    "code": "VE",
+    "name": "Venezuela",
+    "currencyCode": "VES",
+    "zoneKey": "world",
+    "blockedReason": "Sanctions — service is not reliable"
+  },
+  {
+    "code": "VN",
+    "name": "Vietnam",
+    "currencyCode": "VND",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "YE",
+    "name": "Yemen",
+    "currencyCode": "YER",
+    "zoneKey": "world",
+    "blockedReason": "Conflict — no reliable carrier service"
+  },
+  {
+    "code": "ZM",
+    "name": "Zambia",
+    "currencyCode": "ZMW",
+    "zoneKey": "world",
+    "blockedReason": null
+  },
+  {
+    "code": "ZW",
+    "name": "Zimbabwe",
+    "currencyCode": "BWP",
+    "zoneKey": "world",
+    "blockedReason": null
+  }
+]

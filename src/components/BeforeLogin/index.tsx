@@ -2,12 +2,12 @@ import React from 'react'
 
 export const BeforeLogin: React.FC = () => {
   return (
-    <div>
-      <p>
-        <b>Welcome to your dashboard!</b>
-        {' This is where site admins will log in to manage your store. Customers will need to '}
-        <a href={`${process.env.PAYLOAD_PUBLIC_SERVER_URL}/login`}>log in to the site instead</a>
-        {' to access their user account, order history, and more.'}
+    <div style={{ marginBottom: '1.5rem' }}>
+      <p style={{ margin: 0 }}>
+        <strong>plumpose</strong> — sign in to manage products, orders and the site.
+      </p>
+      <p style={{ color: 'var(--theme-elevation-500)', fontSize: '.85rem', margin: '.4rem 0 0' }}>
+        Customers sign in on the website itself, not here.
       </p>
     </div>
   )

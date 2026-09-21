@@ -1,10 +1,74 @@
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
+/**
+ * plumpose — admin panel styling.
+ *
+ * The admin is the client's daily tool, so it is branded to match the site:
+ * the same warm paper ground, the same ink, the same display face. Payload
+ * exposes its palette as `--theme-elevation-*`, so overriding those recolours
+ * the whole panel rather than patching individual screens.
+ */
+
+:root {
+  /* plumpose brand, mirrored from the storefront tokens */
+  --plumpose-paper: #ffffff;
+  --plumpose-paper-2: #f6f4f0;
+  --plumpose-ink: #1b1815;
+  --plumpose-ink-soft: #7a736a;
+  --plumpose-line: rgba(27, 24, 21, 0.16);
+  --plumpose-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  /* Payload theme hooks */
+  --theme-bg: var(--plumpose-paper);
+  --theme-text: var(--plumpose-ink);
+  --theme-success-500: #4b6b54;
+  --theme-error-500: #9c1c25;
+
+  /* Squarer corners — matches the storefront's restraint */
+  --style-radius-s: 2px;
+  --style-radius-m: 2px;
+  --style-radius-l: 3px;
+}
+
+/* Dashboard, list and edit views sit on the warm ground rather than pure white */
+.template-default,
+.template-minimal {
+  background-color: var(--plumpose-paper-2);
+}
+
+/* Headings in the house display face */
+.dashboard h1,
+.collection-list h1,
+.doc-header__title,
+.step-nav {
+  font-family: var(--plumpose-display);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+/* Sidebar group labels — small caps, like the site's section labels */
+.nav__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--plumpose-ink-soft);
+}
+
+/* Tables read as editorial rather than spreadsheet */
+.table {
+  thead th {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+}
+
+/* The brand mark in the nav and on the login screen */
+.plumpose-mark {
+  font-family: var(--plumpose-display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+
+  &--small {
+    font-size: 1rem;
+  }
 }

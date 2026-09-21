@@ -1,0 +1,1306 @@
+[
+  {
+    "code": "AED",
+    "name": "UAE Dirham",
+    "symbol": "AED",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1410
+  },
+  {
+    "code": "AFN",
+    "name": "Afghan Afghani",
+    "symbol": "AFN",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 25000
+  },
+  {
+    "code": "ALL",
+    "name": "Albanian Lek",
+    "symbol": "ALL",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 30500
+  },
+  {
+    "code": "AMD",
+    "name": "Armenian Dram",
+    "symbol": "AMD",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 140000
+  },
+  {
+    "code": "ANG",
+    "name": "Netherlands Antillean Guilder",
+    "symbol": "ANG",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 690
+  },
+  {
+    "code": "AOA",
+    "name": "Angolan Kwanza",
+    "symbol": "AOA",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 355000
+  },
+  {
+    "code": "ARS",
+    "name": "Argentine Peso",
+    "symbol": "ARS",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 580000
+  },
+  {
+    "code": "AUD",
+    "name": "Australian Dollar",
+    "symbol": "A$",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 535
+  },
+  {
+    "code": "AWG",
+    "name": "Aruban Florin",
+    "symbol": "AWG",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 690
+  },
+  {
+    "code": "AZN",
+    "name": "Azerbaijani Manat",
+    "symbol": "AZN",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 655
+  },
+  {
+    "code": "BAM",
+    "name": "Bosnia-Herzegovina Mark",
+    "symbol": "BAM",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 650
+  },
+  {
+    "code": "BBD",
+    "name": "Barbadian Dollar",
+    "symbol": "BBD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 770
+  },
+  {
+    "code": "BDT",
+    "name": "Bangladeshi Taka",
+    "symbol": "BDT",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 47500
+  },
+  {
+    "code": "BGN",
+    "name": "Bulgarian Lev",
+    "symbol": "BGN",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 650
+  },
+  {
+    "code": "BHD",
+    "name": "Bahraini Dinar",
+    "symbol": "BHD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 145
+  },
+  {
+    "code": "BIF",
+    "name": "Burundian Franc",
+    "symbol": "BIF",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1150000
+  },
+  {
+    "code": "BMD",
+    "name": "Bermudian Dollar",
+    "symbol": "BMD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 385
+  },
+  {
+    "code": "BND",
+    "name": "Brunei Dollar",
+    "symbol": "BND",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 485
+  },
+  {
+    "code": "BOB",
+    "name": "Bolivian Boliviano",
+    "symbol": "BOB",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 4840
+  },
+  {
+    "code": "BRL",
+    "name": "Brazilian Real",
+    "symbol": "BRL",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1960
+  },
+  {
+    "code": "BSD",
+    "name": "Bahamian Dollar",
+    "symbol": "BSD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 385
+  },
+  {
+    "code": "BTN",
+    "name": "Bhutanese Ngultrum",
+    "symbol": "BTN",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 36500
+  },
+  {
+    "code": "BWP",
+    "name": "Botswanan Pula",
+    "symbol": "BWP",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 5350
+  },
+  {
+    "code": "BYN",
+    "name": "Belarusian Ruble",
+    "symbol": "BYN",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1170
+  },
+  {
+    "code": "BZD",
+    "name": "Belize Dollar",
+    "symbol": "BZD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 770
+  },
+  {
+    "code": "CAD",
+    "name": "Canadian Dollar",
+    "symbol": "CA$",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 535
+  },
+  {
+    "code": "CDF",
+    "name": "Congolese Franc",
+    "symbol": "CDF",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 885000
+  },
+  {
+    "code": "CHF",
+    "name": "Swiss Franc",
+    "symbol": "CHF",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 315
+  },
+  {
+    "code": "CLP",
+    "name": "Chilean Peso",
+    "symbol": "CLP",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 360000
+  },
+  {
+    "code": "CNY",
+    "name": "Chinese Yuan",
+    "symbol": "CN¥",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2590
+  },
+  {
+    "code": "COP",
+    "name": "Colombian Peso",
+    "symbol": "COP",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1190000
+  },
+  {
+    "code": "CRC",
+    "name": "Costa Rican Colón",
+    "symbol": "CRC",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 175000
+  },
+  {
+    "code": "CUP",
+    "name": "Cuban Peso",
+    "symbol": "CUP",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 9220
+  },
+  {
+    "code": "CVE",
+    "name": "Cape Verdean Escudo",
+    "symbol": "CVE",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 36500
+  },
+  {
+    "code": "CZK",
+    "name": "Czech Koruna",
+    "symbol": "CZK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 8030
+  },
+  {
+    "code": "DJF",
+    "name": "Djiboutian Franc",
+    "symbol": "DJF",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 68500
+  },
+  {
+    "code": "DKK",
+    "name": "Danish Krone",
+    "symbol": "DKK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2480
+  },
+  {
+    "code": "DOP",
+    "name": "Dominican Peso",
+    "symbol": "DOP",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 22500
+  },
+  {
+    "code": "DZD",
+    "name": "Algerian Dinar",
+    "symbol": "DZD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 51000
+  },
+  {
+    "code": "EGP",
+    "name": "Egyptian Pound",
+    "symbol": "E£",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 19700
+  },
+  {
+    "code": "ERN",
+    "name": "Eritrean Nakfa",
+    "symbol": "ERN",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 5770
+  },
+  {
+    "code": "ETB",
+    "name": "Ethiopian Birr",
+    "symbol": "ETB",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 62000
+  },
+  {
+    "code": "EUR",
+    "name": "Euro",
+    "symbol": "€",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 330
+  },
+  {
+    "code": "FJD",
+    "name": "Fijian Dollar",
+    "symbol": "FJD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 855
+  },
+  {
+    "code": "FKP",
+    "name": "Falkland Islands Pound",
+    "symbol": "FKP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "FOK",
+    "name": "Faroese Króna",
+    "symbol": "FOK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2480
+  },
+  {
+    "code": "GBP",
+    "name": "Pound Sterling",
+    "symbol": "£",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "GEL",
+    "name": "Georgian Lari",
+    "symbol": "GEL",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1000
+  },
+  {
+    "code": "GGP",
+    "name": "Guernsey Pound",
+    "symbol": "GGP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "GHS",
+    "name": "Ghanaian Cedi",
+    "symbol": "GHS",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 4390
+  },
+  {
+    "code": "GIP",
+    "name": "Gibraltar Pound",
+    "symbol": "GIP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "GMD",
+    "name": "Gambian Dalasi",
+    "symbol": "GMD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 28500
+  },
+  {
+    "code": "GNF",
+    "name": "Guinean Franc",
+    "symbol": "GNF",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 3380000
+  },
+  {
+    "code": "GTQ",
+    "name": "Guatemalan Quetzal",
+    "symbol": "GTQ",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2940
+  },
+  {
+    "code": "GYD",
+    "name": "Guyanaese Dollar",
+    "symbol": "GYD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 80500
+  },
+  {
+    "code": "HKD",
+    "name": "Hong Kong Dollar",
+    "symbol": "HK$",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3000
+  },
+  {
+    "code": "HNL",
+    "name": "Honduran Lempira",
+    "symbol": "HNL",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 10500
+  },
+  {
+    "code": "HRK",
+    "name": "Croatian Kuna",
+    "symbol": "HRK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2500
+  },
+  {
+    "code": "HTG",
+    "name": "Haitian Gourde",
+    "symbol": "HTG",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 50000
+  },
+  {
+    "code": "HUF",
+    "name": "Hungarian Forint",
+    "symbol": "HUF",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 120000
+  },
+  {
+    "code": "IDR",
+    "name": "Indonesian Rupiah",
+    "symbol": "IDR",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 6770000
+  },
+  {
+    "code": "ILS",
+    "name": "Israeli Shekel",
+    "symbol": "ILS",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1170
+  },
+  {
+    "code": "IMP",
+    "name": "Manx Pound",
+    "symbol": "IMP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "INR",
+    "name": "Indian Rupee",
+    "symbol": "₹",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 36700
+  },
+  {
+    "code": "IQD",
+    "name": "Iraqi Dinar",
+    "symbol": "IQD",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 505000
+  },
+  {
+    "code": "IRR",
+    "name": "Iranian Rial",
+    "symbol": "IRR",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 585080000
+  },
+  {
+    "code": "ISK",
+    "name": "Icelandic Króna",
+    "symbol": "ISK",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 46500
+  },
+  {
+    "code": "JEP",
+    "name": "Jersey Pound",
+    "symbol": "JEP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "JMD",
+    "name": "Jamaican Dollar",
+    "symbol": "JMD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 60500
+  },
+  {
+    "code": "JOD",
+    "name": "Jordanian Dinar",
+    "symbol": "JOD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 275
+  },
+  {
+    "code": "JPY",
+    "name": "Japanese Yen",
+    "symbol": "¥",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 59000
+  },
+  {
+    "code": "KES",
+    "name": "Kenyan Shilling",
+    "symbol": "KES",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 50000
+  },
+  {
+    "code": "KGS",
+    "name": "Kyrgystani Som",
+    "symbol": "KGS",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 33500
+  },
+  {
+    "code": "KHR",
+    "name": "Cambodian Riel",
+    "symbol": "KHR",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1550000
+  },
+  {
+    "code": "KID",
+    "name": "Kiribati Dollar",
+    "symbol": "KID",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 535
+  },
+  {
+    "code": "KMF",
+    "name": "Comorian Franc",
+    "symbol": "KMF",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 165000
+  },
+  {
+    "code": "KRW",
+    "name": "South Korean Won",
+    "symbol": "KRW",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 515000
+  },
+  {
+    "code": "KWD",
+    "name": "Kuwaiti Dinar",
+    "symbol": "KWD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 120
+  },
+  {
+    "code": "KYD",
+    "name": "Cayman Islands Dollar",
+    "symbol": "KYD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 320
+  },
+  {
+    "code": "KZT",
+    "name": "Kazakhstani Tenge",
+    "symbol": "KZT",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 175000
+  },
+  {
+    "code": "LAK",
+    "name": "Laotian Kip",
+    "symbol": "LAK",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 8530000
+  },
+  {
+    "code": "LBP",
+    "name": "Lebanese Pound",
+    "symbol": "LBP",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 34400000
+  },
+  {
+    "code": "LKR",
+    "name": "Sri Lankan Rupee",
+    "symbol": "LKR",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 125000
+  },
+  {
+    "code": "LRD",
+    "name": "Liberian Dollar",
+    "symbol": "LRD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 67000
+  },
+  {
+    "code": "LSL",
+    "name": "Lesotho Loti",
+    "symbol": "LSL",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 6200
+  },
+  {
+    "code": "LYD",
+    "name": "Libyan Dinar",
+    "symbol": "LYD",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2430
+  },
+  {
+    "code": "MAD",
+    "name": "Moroccan Dirham",
+    "symbol": "MAD",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3610
+  },
+  {
+    "code": "MDL",
+    "name": "Moldovan Leu",
+    "symbol": "MDL",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 6630
+  },
+  {
+    "code": "MGA",
+    "name": "Malagasy Ariary",
+    "symbol": "MGA",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1660000
+  },
+  {
+    "code": "MKD",
+    "name": "Macedonian Denar",
+    "symbol": "MKD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 20500
+  },
+  {
+    "code": "MMK",
+    "name": "Myanmar Kyat",
+    "symbol": "MMK",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 810000
+  },
+  {
+    "code": "MNT",
+    "name": "Mongolian Tugrik",
+    "symbol": "MNT",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1390000
+  },
+  {
+    "code": "MOP",
+    "name": "Macanese Pataca",
+    "symbol": "MOP",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3100
+  },
+  {
+    "code": "MRU",
+    "name": "Mauritanian Ouguiya",
+    "symbol": "MRU",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 15500
+  },
+  {
+    "code": "MUR",
+    "name": "Mauritian Rupee",
+    "symbol": "MUR",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 18000
+  },
+  {
+    "code": "MVR",
+    "name": "Maldivian Rufiyaa",
+    "symbol": "MVR",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 5940
+  },
+  {
+    "code": "MWK",
+    "name": "Malawian Kwacha",
+    "symbol": "MWK",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 670000
+  },
+  {
+    "code": "MXN",
+    "name": "Mexican Peso",
+    "symbol": "MXN",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 6520
+  },
+  {
+    "code": "MYR",
+    "name": "Malaysian Ringgit",
+    "symbol": "RM",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1560
+  },
+  {
+    "code": "MZN",
+    "name": "Mozambican Metical",
+    "symbol": "MZN",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 24500
+  },
+  {
+    "code": "NAD",
+    "name": "Namibian Dollar",
+    "symbol": "NAD",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 6200
+  },
+  {
+    "code": "NGN",
+    "name": "Nigerian Naira",
+    "symbol": "NGN",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 510000
+  },
+  {
+    "code": "NIO",
+    "name": "Nicaraguan Córdoba",
+    "symbol": "NIO",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 14000
+  },
+  {
+    "code": "NOK",
+    "name": "Norwegian Krone",
+    "symbol": "NOK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3570
+  },
+  {
+    "code": "NPR",
+    "name": "Nepalese Rupee",
+    "symbol": "NPR",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 59000
+  },
+  {
+    "code": "NZD",
+    "name": "New Zealand Dollar",
+    "symbol": "NZ$",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 660
+  },
+  {
+    "code": "OMR",
+    "name": "Omani Rial",
+    "symbol": "OMR",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 150
+  },
+  {
+    "code": "PAB",
+    "name": "Panamanian Balboa",
+    "symbol": "PAB",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 385
+  },
+  {
+    "code": "PEN",
+    "name": "Peruvian Sol",
+    "symbol": "PEN",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1290
+  },
+  {
+    "code": "PGK",
+    "name": "Papua New Guinean Kina",
+    "symbol": "PGK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1730
+  },
+  {
+    "code": "PHP",
+    "name": "Philippine Peso",
+    "symbol": "₱",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 24100
+  },
+  {
+    "code": "PKR",
+    "name": "Pakistani Rupee",
+    "symbol": "Rs",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 107000
+  },
+  {
+    "code": "PLN",
+    "name": "Polish Zloty",
+    "symbol": "PLN",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1430
+  },
+  {
+    "code": "PYG",
+    "name": "Paraguayan Guarani",
+    "symbol": "PYG",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 2270000
+  },
+  {
+    "code": "QAR",
+    "name": "Qatari Riyal",
+    "symbol": "QAR",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1399
+  },
+  {
+    "code": "RON",
+    "name": "Romanian Leu",
+    "symbol": "RON",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1740
+  },
+  {
+    "code": "RSD",
+    "name": "Serbian Dinar",
+    "symbol": "RSD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 39000
+  },
+  {
+    "code": "RUB",
+    "name": "Russian Ruble",
+    "symbol": "RUB",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 32500
+  },
+  {
+    "code": "RWF",
+    "name": "Rwandan Franc",
+    "symbol": "RWF",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 565000
+  },
+  {
+    "code": "SAR",
+    "name": "Saudi Riyal",
+    "symbol": "SAR",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1440
+  },
+  {
+    "code": "SBD",
+    "name": "Solomon Islands Dollar",
+    "symbol": "SBD",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3030
+  },
+  {
+    "code": "SCR",
+    "name": "Seychellois Rupee",
+    "symbol": "SCR",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 5280
+  },
+  {
+    "code": "SDG",
+    "name": "Sudanese Pound",
+    "symbol": "SDG",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 195000
+  },
+  {
+    "code": "SEK",
+    "name": "Swedish Krona",
+    "symbol": "SEK",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3730
+  },
+  {
+    "code": "SGD",
+    "name": "Singapore Dollar",
+    "symbol": "S$",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 485
+  },
+  {
+    "code": "SHP",
+    "name": "St Helena Pound",
+    "symbol": "SHP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 285
+  },
+  {
+    "code": "SLE",
+    "name": "Sierra Leonean Leone",
+    "symbol": "SLE",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 9490
+  },
+  {
+    "code": "SLL",
+    "name": "Sierra Leonean Leone",
+    "symbol": "SLL",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 9490000
+  },
+  {
+    "code": "SOS",
+    "name": "Somali Shilling",
+    "symbol": "SOS",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 220000
+  },
+  {
+    "code": "SRD",
+    "name": "Surinamese Dollar",
+    "symbol": "SRD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 14500
+  },
+  {
+    "code": "SSP",
+    "name": "South Sudanese Pound",
+    "symbol": "SSP",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 2170000
+  },
+  {
+    "code": "STN",
+    "name": "São Tomé Dobra",
+    "symbol": "STN",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 8120
+  },
+  {
+    "code": "SYP",
+    "name": "Syrian Pound",
+    "symbol": "SYP",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 47000
+  },
+  {
+    "code": "SZL",
+    "name": "Swazi Lilangeni",
+    "symbol": "SZL",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 6200
+  },
+  {
+    "code": "THB",
+    "name": "Thai Baht",
+    "symbol": "฿",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 12700
+  },
+  {
+    "code": "TJS",
+    "name": "Tajikistani Somoni",
+    "symbol": "TJS",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 3550
+  },
+  {
+    "code": "TMT",
+    "name": "Turkmenistani Manat",
+    "symbol": "TMT",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1350
+  },
+  {
+    "code": "TND",
+    "name": "Tunisian Dinar",
+    "symbol": "TND",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1120
+  },
+  {
+    "code": "TOP",
+    "name": "Tongan Paʻanga",
+    "symbol": "TOP",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 905
+  },
+  {
+    "code": "TRY",
+    "name": "Turkish Lira",
+    "symbol": "₺",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 18700
+  },
+  {
+    "code": "TTD",
+    "name": "Trinidad & Tobago Dollar",
+    "symbol": "TTD",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 2600
+  },
+  {
+    "code": "TVD",
+    "name": "Tuvaluan Dollar",
+    "symbol": "TVD",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 535
+  },
+  {
+    "code": "TWD",
+    "name": "New Taiwan Dollar",
+    "symbol": "TWD",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 12000
+  },
+  {
+    "code": "TZS",
+    "name": "Tanzanian Shilling",
+    "symbol": "TZS",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1020000
+  },
+  {
+    "code": "UAH",
+    "name": "Ukrainian Hryvnia",
+    "symbol": "UAH",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 17000
+  },
+  {
+    "code": "UGX",
+    "name": "Ugandan Shilling",
+    "symbol": "UGX",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 1440000
+  },
+  {
+    "code": "USD",
+    "name": "US Dollar",
+    "symbol": "$",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 385
+  },
+  {
+    "code": "UYU",
+    "name": "Uruguayan Peso",
+    "symbol": "UYU",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 15500
+  },
+  {
+    "code": "UZS",
+    "name": "Uzbekistani Som",
+    "symbol": "UZS",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 4520000
+  },
+  {
+    "code": "VES",
+    "name": "Venezuelan Bolívar",
+    "symbol": "VES",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 325000
+  },
+  {
+    "code": "VND",
+    "name": "Vietnamese Dong",
+    "symbol": "VND",
+    "decimals": 0,
+    "step": 10000,
+    "priceOverride": 9950000
+  },
+  {
+    "code": "VUV",
+    "name": "Vanuatu Vatu",
+    "symbol": "VUV",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 45500
+  },
+  {
+    "code": "WST",
+    "name": "Samoan Tala",
+    "symbol": "WST",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1030
+  },
+  {
+    "code": "XAF",
+    "name": "Central African Franc",
+    "symbol": "XAF",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 215000
+  },
+  {
+    "code": "XCD",
+    "name": "East Caribbean Dollar",
+    "symbol": "XCD",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 1040
+  },
+  {
+    "code": "XCG",
+    "name": "Caribbean Guilder",
+    "symbol": "XCG",
+    "decimals": 0,
+    "step": 5,
+    "priceOverride": 690
+  },
+  {
+    "code": "XOF",
+    "name": "West African Franc",
+    "symbol": "XOF",
+    "decimals": 0,
+    "step": 5000,
+    "priceOverride": 215000
+  },
+  {
+    "code": "XPF",
+    "name": "CFP Franc",
+    "symbol": "XPF",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 39500
+  },
+  {
+    "code": "YER",
+    "name": "Yemeni Rial",
+    "symbol": "YER",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 91000
+  },
+  {
+    "code": "ZAR",
+    "name": "South African Rand",
+    "symbol": "R",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 6200
+  },
+  {
+    "code": "ZMW",
+    "name": "Zambian Kwacha",
+    "symbol": "ZMW",
+    "decimals": 0,
+    "step": 10,
+    "priceOverride": 7370
+  },
+  {
+    "code": "ZWG",
+    "name": "Zimbabwean Gold",
+    "symbol": "ZWG",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 10000
+  },
+  {
+    "code": "ZWL",
+    "name": "Zimbabwean Dollar",
+    "symbol": "ZWL",
+    "decimals": 0,
+    "step": 500,
+    "priceOverride": 10000
+  }
+]

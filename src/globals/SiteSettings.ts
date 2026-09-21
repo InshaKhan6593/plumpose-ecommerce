@@ -81,6 +81,61 @@ export const SiteSettings: GlobalConfig = {
           ],
           label: 'Reward wheel',
         },
+        {
+          /**
+           * Ported from the constants at the top of
+           * netlify/lib/personalisation.mjs, where they were hardcoded.
+           * The individual placements, symbols and threads live in the
+           * Personalisation collection.
+           */
+          fields: [
+            {
+              name: 'personalisationFeeQar',
+              type: 'number',
+              admin: { description: 'Charged per placement, per garment.' },
+              defaultValue: 160,
+              label: 'Embroidery fee (QAR)',
+              min: 0,
+              required: true,
+            },
+            {
+              name: 'personalisationMaxChars',
+              type: 'number',
+              admin: { description: 'Longest piece of lettering that will be embroidered.' },
+              defaultValue: 6,
+              label: 'Maximum characters',
+              min: 1,
+              required: true,
+            },
+            {
+              name: 'personalisationMaxPlacements',
+              type: 'number',
+              admin: { description: 'Most placements allowed on a single set.' },
+              defaultValue: 2,
+              label: 'Maximum placements',
+              min: 1,
+              required: true,
+            },
+            {
+              name: 'personalisationLeadTime',
+              type: 'text',
+              admin: { description: 'Shown beside the picker, e.g. "4–10 working days".' },
+              defaultValue: '4–10 working days',
+              label: 'Lead time',
+            },
+            {
+              name: 'personalisationReturnable',
+              type: 'checkbox',
+              admin: {
+                description:
+                  'Leave unticked — personalised pieces are not eligible for return under the current policy.',
+              },
+              defaultValue: false,
+              label: 'Personalised pieces can be returned',
+            },
+          ],
+          label: 'Personalisation',
+        },
       ],
     },
   ],

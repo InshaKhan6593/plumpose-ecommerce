@@ -41,6 +41,27 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
+    /**
+     * Responsive sizes. The old site inlined full-resolution photography as
+     * base64 inside index.html, so the whole gallery downloaded before
+     * anything rendered and nothing could be cached. Generating these once at
+     * upload time is what actually fixes that.
+     *
+     * `position: 'centre'` crops from the middle rather than the top, which
+     * matters for full-length garment shots.
+     */
+    adminThumbnail: 'thumbnail',
+    focalPoint: true,
+    imageSizes: [
+      { name: 'thumbnail', width: 300, height: 400, position: 'centre' },
+      { name: 'square', width: 800, height: 800, position: 'centre' },
+      { name: 'small', width: 600, height: undefined },
+      { name: 'medium', width: 900, height: undefined },
+      { name: 'large', width: 1400, height: undefined },
+      { name: 'xlarge', width: 1920, height: undefined },
+      { name: 'og', width: 1200, height: 630, position: 'centre' },
+    ],
+    mimeTypes: ['image/*'],
     staticDir: path.resolve(dirname, '../../public/media'),
   },
 }

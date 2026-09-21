@@ -1,24 +1,70 @@
-@import '@payloadcms/ui/scss';
+.plumpose-dashboard {
+  margin-bottom: 2.5rem;
 
-.dashboard .before-dashboard {
-  margin-bottom: base(1.5);
+  &__head {
+    margin-bottom: 1.5rem;
 
-  &__banner {
-    & h4 {
+    h2 {
+      font-family: var(--plumpose-display, Georgia, serif);
+      font-size: 1.9rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      margin: 0 0 0.25rem;
+    }
+
+    p {
+      color: var(--theme-elevation-500);
       margin: 0;
     }
   }
 
-  &__instructions {
-    list-style: decimal;
-    margin-bottom: base(0.5);
-
-    & li {
-      width: 100%;
-    }
+  &__stats {
+    display: grid;
+    gap: 1px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    background: var(--theme-elevation-100);
+    border: 1px solid var(--theme-elevation-100);
   }
 
-  & a:hover {
-    opacity: 0.85;
+  &__stat {
+    background: var(--theme-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1.4rem 1.5rem;
+  }
+
+  &__stat-value {
+    font-family: var(--plumpose-display, Georgia, serif);
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.05;
+  }
+
+  &__stat-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--theme-elevation-600);
+  }
+
+  &__stat-hint {
+    color: var(--theme-elevation-400);
+    font-size: 0.78rem;
+  }
+
+  &__alerts {
+    border-left: 2px solid var(--theme-elevation-300);
+    margin-top: 1.5rem;
+    padding-left: 1rem;
+
+    p {
+      color: var(--theme-elevation-600);
+      margin: 0 0 0.35rem;
+    }
+
+    strong {
+      color: var(--theme-elevation-800);
+    }
   }
 }

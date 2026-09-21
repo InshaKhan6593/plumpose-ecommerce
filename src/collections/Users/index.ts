@@ -50,6 +50,16 @@ export const Users: CollectionConfig = {
           value: 'admin',
         },
         {
+          /**
+           * For a future assistant: can work through orders and moderate
+           * content, but cannot change prices, create discounts or touch
+           * settings. Defined now so roles do not have to be retrofitted
+           * after the first hire.
+           */
+          label: 'staff',
+          value: 'staff',
+        },
+        {
           label: 'customer',
           value: 'customer',
         },

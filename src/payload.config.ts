@@ -13,9 +13,12 @@ import {
 } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
+import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { Categories } from '@/collections/Categories'
+import { Countries } from '@/collections/Countries'
+import { Currencies } from '@/collections/Currencies'
 import { DiscountCodes } from '@/collections/DiscountCodes'
 import { FAQs } from '@/collections/FAQs'
 import { Media } from '@/collections/Media'
@@ -28,6 +31,7 @@ import { ShippingCities } from '@/collections/ShippingCities'
 import { ShippingZones } from '@/collections/ShippingZones'
 import { SpinSegments } from '@/collections/SpinSegments'
 import { Spotted } from '@/collections/Spotted'
+import { Subscribers } from '@/collections/Subscribers'
 import { Users } from '@/collections/Users'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
@@ -39,14 +43,24 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
+    avatar: 'default',
     components: {
-      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
-      beforeLogin: ['@/components/BeforeLogin#BeforeLogin'],
-      // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
+      /** The client's own dashboard — orders today, fulfilment queue, low stock. */
       beforeDashboard: ['@/components/BeforeDashboard#BeforeDashboard'],
+      beforeLogin: ['@/components/BeforeLogin#BeforeLogin'],
+      graphics: {
+        Icon: '@/components/AdminBrand#AdminIcon',
+        Logo: '@/components/AdminBrand#AdminLogo',
+      },
     },
+    /** Dates read the way she writes them, not US order. */
+    dateFormat: 'd MMMM yyyy',
+    meta: {
+      description: 'plumpose — manage products, orders and the site.',
+      titleSuffix: ' · plumpose',
+    },
+    /** The brand is light. A dark admin would look like a different product. */
+    theme: 'light',
     user: Users.slug,
   },
   collections: [
@@ -60,10 +74,13 @@ export default buildConfig({
     Press,
     Spotted,
     Reviews,
+    Subscribers,
     // plumpose — shop configuration ported from the old hardcoded files
     PersonalisationOptions,
     ShippingZones,
     ShippingCities,
+    Countries,
+    Currencies,
     DiscountCodes,
     SpinSegments,
   ],
@@ -110,13 +127,11 @@ export default buildConfig({
   //email: nodemailerAdapter(),
   endpoints: [],
   globals: [Header, Footer, SiteSettings],
+  /** Required for the responsive imageSizes on the Media collection. */
+  sharp,
   plugins,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  // Sharp is now an optional dependency -
-  // if you want to resize images, crop, set focal point, etc.
-  // make sure to install it and pass it to the config.
-  // sharp,
 })

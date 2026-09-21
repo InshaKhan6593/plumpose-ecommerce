@@ -81,9 +81,12 @@ export interface Config {
     press: Press;
     spotted: Spotted;
     reviews: Review;
+    subscribers: Subscriber;
     personalisationOptions: PersonalisationOption;
     shippingZones: ShippingZone;
     shippingCities: ShippingCity;
+    countries: Country;
+    currencies: Currency;
     discountCodes: DiscountCode;
     spinSegments: SpinSegment;
     forms: Form;
@@ -124,9 +127,12 @@ export interface Config {
     press: PressSelect<false> | PressSelect<true>;
     spotted: SpottedSelect<false> | SpottedSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     personalisationOptions: PersonalisationOptionsSelect<false> | PersonalisationOptionsSelect<true>;
     shippingZones: ShippingZonesSelect<false> | ShippingZonesSelect<true>;
     shippingCities: ShippingCitiesSelect<false> | ShippingCitiesSelect<true>;
+    countries: CountriesSelect<false> | CountriesSelect<true>;
+    currencies: CurrenciesSelect<false> | CurrenciesSelect<true>;
     discountCodes: DiscountCodesSelect<false> | DiscountCodesSelect<true>;
     spinSegments: SpinSegmentsSelect<false> | SpinSegmentsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
@@ -209,7 +215,7 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   name?: string | null;
-  roles?: ('admin' | 'customer')[] | null;
+  roles?: ('admin' | 'staff' | 'customer')[] | null;
   orders?: {
     docs?: (number | Order)[];
     hasNextPage?: boolean;
@@ -279,6 +285,17 @@ export interface Order {
   amount?: number | null;
   currency?: 'QAR' | null;
   accessToken?: string | null;
+  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
+  trackingNumber?: string | null;
+  /**
+   * Internal only. Never shown to the customer.
+   */
+  adminNotes?: string | null;
+  /**
+   * Order is a gift — include a card, omit the invoice.
+   */
+  gift?: boolean | null;
+  giftNote?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -312,6 +329,83 @@ export interface Product {
       }[]
     | null;
   layout?: (CallToActionBlock | ContentBlock | MediaBlock)[] | null;
+  /**
+   * Shown under the product name, e.g. "in 22-momme Silk".
+   */
+  fabric?: string | null;
+  /**
+   * e.g. Midnight Navy
+   */
+  colour?: string | null;
+  /**
+   * e.g. 97% silk, 3% spandex
+   */
+  composition?: string | null;
+  /**
+   * e.g. 22 momme
+   */
+  fabricWeight?: string | null;
+  /**
+   * e.g. contrast piping
+   */
+  trims?: string | null;
+  /**
+   * e.g. Model is 175cm and wears a size M
+   */
+  fitNote?: string | null;
+  materialCare?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  deliveryReturns?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  giftPackaging?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Hand-finished to order — allows ordering a size that is out of stock.
+   */
+  madeToOrder?: boolean | null;
+  /**
+   * Offer hand embroidery on this piece.
+   */
+  personalisationEnabled?: boolean | null;
   inventory?: number | null;
   enableVariants?: boolean | null;
   variantTypes?: (number | VariantType)[] | null;
@@ -375,6 +469,64 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    square?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    small?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    xlarge?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1158,6 +1310,18 @@ export interface Review {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers".
+ */
+export interface Subscriber {
+  id: number;
+  email: string;
+  source?: ('footer' | 'spinWheel' | 'checkout' | 'manual') | null;
+  unsubscribed?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Where embroidery can go, which motifs and thread colours are offered.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1210,6 +1374,65 @@ export interface ShippingCity {
   feeQar: number;
   active?: boolean | null;
   sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Delivery destinations. A country with a blocked reason cannot be ordered to.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries".
+ */
+export interface Country {
+  id: number;
+  name: string;
+  /**
+   * ISO 3166-1 alpha-2, e.g. QA.
+   */
+  code: string;
+  /**
+   * ISO 4217 code used to display prices, e.g. QAR.
+   */
+  currencyCode: string;
+  /**
+   * Matches a Shipping zone key, or "qatar" for domestic.
+   */
+  zoneKey: string;
+  /**
+   * Set this and the country cannot be ordered to. Leave empty to allow delivery.
+   */
+  blockedReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Display prices only — every card is charged in QAR. Set a price by hand for the markets that matter.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "currencies".
+ */
+export interface Currency {
+  id: number;
+  code: string;
+  name: string;
+  symbol: string;
+  /**
+   * Decimal places shown.
+   */
+  decimals?: number | null;
+  /**
+   * Round displayed delivery to the nearest this many units.
+   */
+  step?: number | null;
+  /**
+   * Hand-set retail price in this currency. Leave empty to derive it from the rate.
+   */
+  priceOverride?: number | null;
+  /**
+   * Units of this currency per 1 QAR.
+   */
+  rate?: number | null;
+  rateUpdatedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1356,6 +1579,10 @@ export interface PayloadLockedDocument {
         value: number | Review;
       } | null)
     | ({
+        relationTo: 'subscribers';
+        value: number | Subscriber;
+      } | null)
+    | ({
         relationTo: 'personalisationOptions';
         value: number | PersonalisationOption;
       } | null)
@@ -1366,6 +1593,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'shippingCities';
         value: number | ShippingCity;
+      } | null)
+    | ({
+        relationTo: 'countries';
+        value: number | Country;
+      } | null)
+    | ({
+        relationTo: 'currencies';
+        value: number | Currency;
       } | null)
     | ({
         relationTo: 'discountCodes';
@@ -1686,6 +1921,80 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        square?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        small?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        medium?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        large?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        xlarge?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1771,6 +2080,17 @@ export interface ReviewsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscribers_select".
+ */
+export interface SubscribersSelect<T extends boolean = true> {
+  email?: T;
+  source?: T;
+  unsubscribed?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "personalisationOptions_select".
  */
 export interface PersonalisationOptionsSelect<T extends boolean = true> {
@@ -1808,6 +2128,35 @@ export interface ShippingCitiesSelect<T extends boolean = true> {
   feeQar?: T;
   active?: T;
   sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries_select".
+ */
+export interface CountriesSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  currencyCode?: T;
+  zoneKey?: T;
+  blockedReason?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "currencies_select".
+ */
+export interface CurrenciesSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  symbol?: T;
+  decimals?: T;
+  step?: T;
+  priceOverride?: T;
+  rate?: T;
+  rateUpdatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2079,6 +2428,17 @@ export interface ProductsSelect<T extends boolean = true> {
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
       };
+  fabric?: T;
+  colour?: T;
+  composition?: T;
+  fabricWeight?: T;
+  trims?: T;
+  fitNote?: T;
+  materialCare?: T;
+  deliveryReturns?: T;
+  giftPackaging?: T;
+  madeToOrder?: T;
+  personalisationEnabled?: T;
   inventory?: T;
   enableVariants?: T;
   variantTypes?: T;
@@ -2158,6 +2518,11 @@ export interface OrdersSelect<T extends boolean = true> {
   amount?: T;
   currency?: T;
   accessToken?: T;
+  fulfilment?: T;
+  trackingNumber?: T;
+  adminNotes?: T;
+  gift?: T;
+  giftNote?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2311,6 +2676,26 @@ export interface SiteSetting {
   spinWheelEnabled?: boolean | null;
   spinWheelHeading?: string | null;
   spinWheelBody?: string | null;
+  /**
+   * Charged per placement, per garment.
+   */
+  personalisationFeeQar: number;
+  /**
+   * Longest piece of lettering that will be embroidered.
+   */
+  personalisationMaxChars: number;
+  /**
+   * Most placements allowed on a single set.
+   */
+  personalisationMaxPlacements: number;
+  /**
+   * Shown beside the picker, e.g. "4–10 working days".
+   */
+  personalisationLeadTime?: string | null;
+  /**
+   * Leave unticked — personalised pieces are not eligible for return under the current policy.
+   */
+  personalisationReturnable?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2377,6 +2762,11 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   spinWheelEnabled?: T;
   spinWheelHeading?: T;
   spinWheelBody?: T;
+  personalisationFeeQar?: T;
+  personalisationMaxChars?: T;
+  personalisationMaxPlacements?: T;
+  personalisationLeadTime?: T;
+  personalisationReturnable?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

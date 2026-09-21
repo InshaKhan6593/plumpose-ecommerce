@@ -141,6 +141,60 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
           label: 'Content',
         },
         {
+          /**
+           * The detail the existing product page carries and a bare
+           * description cannot: fabric, colour, fit and the care copy.
+           * All client-editable — she changes a fabric weight herself.
+           */
+          fields: [
+            {
+              name: 'fabric',
+              type: 'text',
+              admin: {
+                description: 'Shown under the product name, e.g. "in 22-momme Silk".',
+              },
+              label: 'Fabric descriptor',
+            },
+            { name: 'colour', type: 'text', admin: { description: 'e.g. Midnight Navy' } },
+            {
+              name: 'composition',
+              type: 'text',
+              admin: { description: 'e.g. 97% silk, 3% spandex' },
+            },
+            {
+              name: 'fabricWeight',
+              type: 'text',
+              admin: { description: 'e.g. 22 momme' },
+            },
+            { name: 'trims', type: 'text', admin: { description: 'e.g. contrast piping' } },
+            {
+              name: 'fitNote',
+              type: 'text',
+              admin: { description: 'e.g. Model is 175cm and wears a size M' },
+              label: 'Fit note',
+            },
+            { name: 'materialCare', type: 'richText', label: 'Material & care' },
+            { name: 'deliveryReturns', type: 'richText', label: 'Delivery & returns' },
+            { name: 'giftPackaging', type: 'richText', label: 'Gift packaging' },
+            {
+              name: 'madeToOrder',
+              type: 'checkbox',
+              admin: {
+                description:
+                  'Hand-finished to order — allows ordering a size that is out of stock.',
+              },
+              defaultValue: true,
+            },
+            {
+              name: 'personalisationEnabled',
+              type: 'checkbox',
+              admin: { description: 'Offer hand embroidery on this piece.' },
+              defaultValue: true,
+            },
+          ],
+          label: 'Fabric & Care',
+        },
+        {
           fields: [
             ...defaultCollection.fields,
             {

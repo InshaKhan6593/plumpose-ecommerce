@@ -342,6 +342,38 @@ export async function seed(payload: Payload): Promise<void> {
     )
   }
 
+  // ------------------------------------------------ countries & currencies
+  // Extracted from the legacy site with scripts/extract-legacy-tables.mjs
+  log('countries & currencies…')
+  const countries = JSON.parse(
+    fs.readFileSync(path.join(dirname, 'data/countries.json'), 'utf8'),
+  ) as Array<{
+    blockedReason: null | string
+    code: string
+    currencyCode: string
+    name: string
+    zoneKey: string
+  }>
+
+  for (const row of countries) {
+    await upsert(payload, 'countries', { code: { equals: row.code } }, row as any, c)
+  }
+
+  const currencies = JSON.parse(
+    fs.readFileSync(path.join(dirname, 'data/currencies.json'), 'utf8'),
+  ) as Array<{
+    code: string
+    decimals: number
+    name: string
+    priceOverride: null | number
+    step: number
+    symbol: string
+  }>
+
+  for (const row of currencies) {
+    await upsert(payload, 'currencies', { code: { equals: row.code } }, row as any, c)
+  }
+
   // ---------------------------------------------------------- reward wheel
   log('reward wheel…')
   const segments: Array<[string, string, number | undefined, number, string]> = [
@@ -416,6 +448,12 @@ export async function seed(payload: Payload): Promise<void> {
       announcementText: 'RESORT 2026 · NOW SHIPPING WORLDWIDE · EACH PIECE HAND-FINISHED TO ORDER',
       freeShippingEnabled: false,
       intlSurchargePct: 0,
+      // From the constants at the top of the old personalisation.mjs
+      personalisationFeeQar: 160,
+      personalisationLeadTime: '4–10 working days',
+      personalisationMaxChars: 6,
+      personalisationMaxPlacements: 2,
+      personalisationReturnable: false,
       spinWheelEnabled: true,
       spinWheelHeading: 'Before anyone else.',
       spinWheelBody:
