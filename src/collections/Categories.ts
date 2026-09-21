@@ -12,8 +12,10 @@ export const Categories: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
-    useAsTitle: 'title',
+    defaultColumns: ['title', 'slug', 'updatedAt'],
     group: 'Content',
+    listSearchableFields: ['title', 'slug'],
+    useAsTitle: 'title',
   },
   fields: [
     {

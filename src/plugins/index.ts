@@ -202,8 +202,74 @@ export const plugins: Plugin[] = [
        */
       paymentMethods: [],
     },
+    /**
+     * The plugin's own collections ship with generic list views. These give
+     * each one the columns that are actually useful to the client, and group
+     * them so the sidebar reads as Shop / Shop settings rather than one long
+     * undifferentiated list.
+     */
     products: {
       productsCollectionOverride: ProductsCollection,
+      variants: {
+        variantsCollectionOverride: ({ defaultCollection }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection?.admin,
+            defaultColumns: ['title', 'product', 'inventory', 'priceInQAR', '_status'],
+            group: 'Shop',
+            listSearchableFields: ['title'],
+          },
+        }),
+        variantTypesCollectionOverride: ({ defaultCollection }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection?.admin,
+            defaultColumns: ['label', 'name', 'updatedAt'],
+            group: 'Shop settings',
+          },
+        }),
+        variantOptionsCollectionOverride: ({ defaultCollection }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection?.admin,
+            defaultColumns: ['label', 'variantType', 'value'],
+            group: 'Shop settings',
+          },
+        }),
+      },
+    },
+    transactions: {
+      transactionsCollectionOverride: ({ defaultCollection }) => ({
+        ...defaultCollection,
+        admin: {
+          ...defaultCollection?.admin,
+          defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'order', 'createdAt'],
+          group: 'Shop',
+          listSearchableFields: ['customerEmail'],
+        },
+      }),
+    },
+    carts: {
+      cartsCollectionOverride: ({ defaultCollection }) => ({
+        ...defaultCollection,
+        admin: {
+          ...defaultCollection?.admin,
+          /** Abandoned carts are the useful read here, not the cart itself. */
+          defaultColumns: ['id', 'customer', 'status', 'subtotal', 'updatedAt'],
+          group: 'Shop',
+        },
+      }),
+    },
+    addresses: {
+      addressesCollectionOverride: ({ defaultCollection }) => ({
+        ...defaultCollection,
+        admin: {
+          ...defaultCollection?.admin,
+          defaultColumns: ['title', 'customer', 'city', 'country', 'updatedAt'],
+          group: 'Shop',
+          listSearchableFields: ['firstName', 'lastName', 'city'],
+        },
+      }),
     },
   }),
 ]

@@ -15,7 +15,11 @@ const dirname = path.dirname(filename)
 
 export const Media: CollectionConfig = {
   admin: {
+    defaultColumns: ['filename', 'alt', 'mimeType', 'filesize', 'updatedAt'],
     group: 'Content',
+    listSearchableFields: ['filename', 'alt'],
+    pagination: { defaultLimit: 24, limits: [12, 24, 48, 96] },
+    useAsTitle: 'alt',
   },
   slug: 'media',
   access: {

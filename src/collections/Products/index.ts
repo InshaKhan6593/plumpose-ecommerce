@@ -24,7 +24,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ...defaultCollection,
   admin: {
     ...defaultCollection?.admin,
-    defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
+    /** What she needs to see at a glance: what it is, what it costs, is it live. */
+    defaultColumns: ['title', 'priceInQAR', 'inventory', '_status', 'categories', 'updatedAt'],
+    listSearchableFields: ['title', 'slug', 'colour', 'fabric'],
+    pagination: { defaultLimit: 25, limits: [10, 25, 50, 100] },
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({
