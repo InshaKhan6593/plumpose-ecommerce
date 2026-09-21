@@ -5,6 +5,8 @@ import { adminOnly } from '@/access/adminOnly'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
+  /** She calls these collections, and so does the product screen. */
+  labels: { singular: 'Collection', plural: 'Collections' },
   access: {
     create: adminOnly,
     delete: adminOnly,

@@ -60,6 +60,8 @@ export const plugins: Plugin[] = [
       admin: {
         defaultColumns: ['title', 'updatedAt'],
         group: 'Content',
+        /** Built once by a developer; she reads the Enquiries they produce. */
+        hidden: true,
         useAsTitle: 'title',
       },
       fields: ({ defaultFields }) => {
@@ -235,6 +237,8 @@ export const plugins: Plugin[] = [
             ...defaultCollection?.admin,
             defaultColumns: ['label', 'name', 'updatedAt'],
             group: 'Shop settings',
+            /** Set once (Size, Colour, Pattern). Adding one needs code too. */
+            hidden: true,
           },
         }),
         variantOptionsCollectionOverride: ({ defaultCollection }) => ({
@@ -242,8 +246,10 @@ export const plugins: Plugin[] = [
           admin: {
             ...defaultCollection?.admin,
             defaultColumns: ['label', 'variantType', 'value'],
+            description: 'The individual sizes and colours a product can come in.',
             group: 'Shop settings',
           },
+          labels: { singular: 'Size or colour', plural: 'Sizes & colours' },
         }),
       },
     },
@@ -254,6 +260,12 @@ export const plugins: Plugin[] = [
           ...defaultCollection?.admin,
           defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'order', 'createdAt'],
           group: 'Shop',
+          /**
+           * Hidden: one row per payment attempt, including failures. The
+           * order record is what she works from. Kept for audit and
+           * reachable by URL when a payment needs investigating.
+           */
+          hidden: true,
           listSearchableFields: ['customerEmail'],
           useAsTitle: 'customerEmail',
         },
@@ -264,9 +276,14 @@ export const plugins: Plugin[] = [
         ...defaultCollection,
         admin: {
           ...defaultCollection?.admin,
-          /** Abandoned carts are the useful read here, not the cart itself. */
+          /**
+           * Hidden from the nav. The useful read here is abandoned carts,
+           * which needs a report rather than a raw row list — until that
+           * exists this is just noise to the client. Still reachable by URL.
+           */
           defaultColumns: ['id', 'customer', 'status', 'subtotal', 'updatedAt'],
           group: 'Shop',
+          hidden: true,
         },
       }),
     },

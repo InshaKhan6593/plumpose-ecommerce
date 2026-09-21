@@ -490,6 +490,8 @@ export interface Media {
   };
 }
 /**
+ * The individual sizes and colours a product can come in.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variantOptions".
  */
