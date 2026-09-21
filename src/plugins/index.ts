@@ -5,7 +5,7 @@ import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
-import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
+import { QAR } from '@/currencies'
 
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -17,7 +17,7 @@ import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
+  return doc?.title ? `${doc.title} | plumpose` : 'plumpose — silk nightwear, hand-finished to order'
 }
 
 const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
@@ -115,14 +115,27 @@ export const plugins: Plugin[] = [
         ],
       }),
     },
+    /**
+     * plumpose settles in Qatari Riyal. SkipCash is a Qatari gateway and
+     * charges QAR; other currencies on the storefront are display only.
+     */
+    currencies: {
+      defaultCurrency: 'QAR',
+      supportedCurrencies: [QAR],
+    },
+    /** Track stock per product and per variant, and decrement on a paid order. */
+    inventory: true,
     payments: {
-      paymentMethods: [
-        stripeAdapter({
-          secretKey: process.env.STRIPE_SECRET_KEY!,
-          publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-          webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET!,
-        }),
-      ],
+      /**
+       * TODO(payments): add the SkipCash adapter once sandbox credentials
+       * arrive from the client. It implements `initiatePayment` and
+       * `confirmOrder`, ported from the existing Netlify Functions:
+       *   netlify/functions/skipcash-create-payment.mjs  -> initiatePayment
+       *   netlify/functions/skipcash-confirm.mjs         -> confirmOrder
+       * The plugin's finalizeOrder callback handles the order/payment binding,
+       * discount consumption and stock decrement atomically.
+       */
+      paymentMethods: [],
     },
     products: {
       productsCollectionOverride: ProductsCollection,

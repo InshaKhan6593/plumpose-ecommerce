@@ -49,7 +49,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     variants: true,
     enableVariants: true,
     gallery: true,
-    priceInUSD: true,
+    priceInQAR: true,
     inventory: true,
     meta: true,
   },

@@ -16,11 +16,22 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from '@/collections/Categories'
+import { DiscountCodes } from '@/collections/DiscountCodes'
+import { FAQs } from '@/collections/FAQs'
 import { Media } from '@/collections/Media'
 import { Pages } from '@/collections/Pages'
+import { PersonalisationOptions } from '@/collections/PersonalisationOptions'
+import { Press } from '@/collections/Press'
+import { Projects } from '@/collections/Projects'
+import { Reviews } from '@/collections/Reviews'
+import { ShippingCities } from '@/collections/ShippingCities'
+import { ShippingZones } from '@/collections/ShippingZones'
+import { SpinSegments } from '@/collections/SpinSegments'
+import { Spotted } from '@/collections/Spotted'
 import { Users } from '@/collections/Users'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
+import { SiteSettings } from '@/globals/SiteSettings'
 import { plugins } from './plugins'
 
 const filename = fileURLToPath(import.meta.url)
@@ -38,7 +49,24 @@ export default buildConfig({
     },
     user: Users.slug,
   },
-  collections: [Users, Pages, Categories, Media],
+  collections: [
+    Users,
+    Pages,
+    Categories,
+    Media,
+    // plumpose — content the client manages herself
+    Projects,
+    FAQs,
+    Press,
+    Spotted,
+    Reviews,
+    // plumpose — shop configuration ported from the old hardcoded files
+    PersonalisationOptions,
+    ShippingZones,
+    ShippingCities,
+    DiscountCodes,
+    SpinSegments,
+  ],
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
@@ -81,7 +109,7 @@ export default buildConfig({
   }),
   //email: nodemailerAdapter(),
   endpoints: [],
-  globals: [Header, Footer],
+  globals: [Header, Footer, SiteSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

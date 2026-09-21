@@ -14,13 +14,14 @@ import './globals.css'
 
 /* plumpose house fonts — matches the existing site:
    Fraunces for display, Jost for body. */
+// Fraunces is a variable font. When `axes` are requested, `weight` must be
+// omitted — next/font exposes the full weight range instead.
 const fraunces = Fraunces({
   axes: ['SOFT', 'WONK', 'opsz'],
   display: 'swap',
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-fraunces',
-  weight: ['300', '400', '500'],
 })
 
 const jost = Jost({
