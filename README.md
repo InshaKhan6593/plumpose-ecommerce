@@ -10,7 +10,7 @@ promotions and content herself without a developer.
 ## Status
 
 Phase 1 complete — data model and admin panel.
-Storefront and payments not started. See [BUILD-LOG.md](../docs/BUILD-LOG.md).
+Storefront and payments not started. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md).
 
 ---
 
@@ -104,5 +104,4 @@ which do not exist.
 
 ## Project docs
 
-- [REQUIREMENTS.md](../docs/REQUIREMENTS.md) — what the client asked for
-- [BUILD-LOG.md](../docs/BUILD-LOG.md) — what has been built, tested, and not
+- [docs/BUILD-LOG.md](docs/BUILD-LOG.md) — what has been built, tested, and not
