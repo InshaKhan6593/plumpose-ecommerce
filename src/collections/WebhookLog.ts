@@ -23,7 +23,7 @@ export const WebhookLog: CollectionConfig = {
     update: () => false,
   },
   admin: {
-    defaultColumns: ['paymentId', 'orderRef', 'statusId', 'signatureValid', 'createdAt'],
+    defaultColumns: ['event', 'paymentId', 'signatureValid', 'applied', 'createdAt'],
     description: 'Raw payment gateway callbacks, for audit.',
     group: 'Shop',
     hidden: true,
@@ -31,6 +31,20 @@ export const WebhookLog: CollectionConfig = {
   },
   defaultSort: '-createdAt',
   fields: [
+    {
+      name: 'eventId',
+      type: 'text',
+      admin: {
+        description:
+          "The gateway's own id for this callback. Gateways retry, so this is what stops one payment being applied twice.",
+      },
+      index: true,
+    },
+    {
+      name: 'event',
+      type: 'text',
+      admin: { description: 'Event type, e.g. `payment_intent.succeeded`.' },
+    },
     { name: 'paymentId', type: 'text', index: true },
     { name: 'orderRef', type: 'text', index: true },
     {

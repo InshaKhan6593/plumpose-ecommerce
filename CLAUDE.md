@@ -83,6 +83,13 @@ so the displayed price and the charged price cannot drift.
 **`POST /api/quote`** — `src/endpoints/quote.ts`. Prices a bag. Side-effect
 free: never reserves stock, never consumes a code.
 
+**Payment webhook** — `src/payments/webhook.ts`. Fails closed, logs every
+callback to `webhookLog` (verified or not), is idempotent on the gateway's own
+event id, and creates the order when the browser never confirmed it.
+**Limitation:** the webhook is anonymous, and the plugin refuses to settle a
+signed-in customer's transaction from an anonymous caller, so webhook recovery
+covers **guest checkout only**.
+
 **Payments** — `src/payments/`. Stripe **sandbox only**, as a development
 harness while SkipCash credentials are pending. Enabled by
 `PAYMENT_PROVIDER=stripe`; refuses to load when `NODE_ENV` is production.
@@ -95,10 +102,6 @@ the money breakdown on orders; `discountUses`, `spinEntries`, `webhookLog`.
 
 ## What is NOT built
 
-- **The webhook is a verified no-op.** Signatures verify, but no
-  `payment_intent.succeeded` handler is registered, so confirmation depends
-  entirely on the client calling `/confirm-order`. P4 wants the webhook to be
-  the source of truth.
 - **Email.** The adapter is commented out in `payload.config.ts`; the customer
   receives nothing. This is the worst defect on the live site too.
 - **SkipCash.** Blocked on credentials. Note its flow differs from Stripe: it

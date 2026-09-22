@@ -1,6 +1,7 @@
 import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 
 import { stripeAdapter } from '@payloadcms/plugin-ecommerce/payments/stripe'
+import Stripe from 'stripe'
 
 import {
   itemsWithPersonalisation,
@@ -9,6 +10,7 @@ import {
   redeemCartDiscount,
 } from './finaliseOrder'
 import { loadPricingContext, priceCart } from './priceCart'
+import { createStripeWebhookEndpoint } from './webhook'
 
 /**
  * Stripe, in sandbox, as a **temporary development harness** (see §7 of the
@@ -62,8 +64,50 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
     webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET || '',
   })
 
-  return {
+  const secretKey = process.env.STRIPE_SECRET_KEY || ''
+  const webhookSecret = process.env.STRIPE_WEBHOOKS_SIGNING_SECRET || ''
+
+  const adapter: PaymentAdapter = {
     ...base,
+
+    /**
+     * Replace the plugin's webhook receiver with our own.
+     *
+     * The plugin's returns 200 to an unsigned request and logs nothing. Ours
+     * fails closed, records every callback to `webhookLog`, and creates the
+     * order when the browser never confirmed it — which is what makes the
+     * gateway the source of truth (P4). See `./webhook.ts`.
+     */
+    endpoints: [
+      ...(base.endpoints ?? []).filter((endpoint) => endpoint.path !== '/webhooks'),
+      createStripeWebhookEndpoint({
+        /**
+         * Confirms through our own public endpoint rather than by calling the
+         * plugin's handler directly.
+         *
+         * `confirmOrderHandler` is not re-exported — reaching it would mean a
+         * deep import into `dist/`, which breaks on any plugin update. The
+         * adapter's own `endpoints` array carries only the webhook; the
+         * confirm route is registered by the plugin itself.
+         *
+         * So the webhook takes the same route the browser does. One extra hop,
+         * and in exchange the two paths cannot drift apart.
+         */
+        confirmOrder: async (body) => {
+          const origin = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+          return fetch(`${origin}/api/payments/stripe/confirm-order`, {
+            body: JSON.stringify(body),
+            headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+          })
+        },
+        secretKey,
+        stripe: new Stripe(secretKey),
+        webhookSecret,
+      }),
+    ],
+
     label: 'Stripe (sandbox — development only)',
 
     /**
@@ -234,4 +278,6 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
       return result
     },
   }
+
+  return adapter
 }

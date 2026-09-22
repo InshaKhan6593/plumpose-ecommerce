@@ -1457,6 +1457,14 @@ export interface SpinEntry {
  */
 export interface WebhookLog {
   id: number;
+  /**
+   * The gateway's own id for this callback. Gateways retry, so this is what stops one payment being applied twice.
+   */
+  eventId?: string | null;
+  /**
+   * Event type, e.g. `payment_intent.succeeded`.
+   */
+  event?: string | null;
   paymentId?: string | null;
   orderRef?: string | null;
   /**
@@ -2024,6 +2032,8 @@ export interface SpinEntriesSelect<T extends boolean = true> {
  * via the `definition` "webhookLog_select".
  */
 export interface WebhookLogSelect<T extends boolean = true> {
+  eventId?: T;
+  event?: T;
   paymentId?: T;
   orderRef?: T;
   statusId?: T;

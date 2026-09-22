@@ -240,10 +240,6 @@ The audit found **12 problems** on first run and now reports none.
   currencies carry a hand-set `priceOverride`, which is the legacy mechanism
   (the rate is derived from it, deliberately, so a refresh cannot move a market
   price). `rate` being empty is by design, not a gap.
-- **Payment webhook handler** — signatures verify, but no
-  `payment_intent.succeeded` handler is registered, so the webhook is a
-  verified no-op and confirmation depends on the client calling
-  `/confirm-order`. P4 wants the webhook to be the source of truth.
 - **Confirmation email** — the adapter is commented out in `payload.config.ts`.
   Fixes L5, the worst defect on the live site.
 - **Reviews aggregate rating**
@@ -298,18 +294,16 @@ Node 22 with a warning, but the dev machine should be upgraded.
 Shipping, the free-shipping threshold and the discount engine were items 1 and
 2 here; they landed in 92a5f2e. What remains:
 
-1. **Payment webhook handler** — register `payment_intent.succeeded` so the
-   webhook stops being a verified no-op (P4)
-2. **Confirmation email** — fixes L5; the customer currently receives nothing
-3. **Spin wheel** — weighted pick, code issuance, one-per-visitor. Can now
+1. **Confirmation email** — fixes L5; the customer currently receives nothing
+2. **Spin wheel** — weighted pick, code issuance, one-per-visitor. Can now
    issue into `discountCodes`, since validation exists
-4. **Currency display** — the data is ready, the code is not
-5. **Storefront** — shop grid, product page, cart, checkout against real data.
+3. **Currency display** — the data is ready, the code is not
+4. **Storefront** — shop grid, product page, cart, checkout against real data.
    Build checkout as a **redirect** flow: SkipCash returns a `payUrl`, not a
    client secret
-6. **SkipCash adapter** *(blocked on credentials)* — must price through
+5. **SkipCash adapter** *(blocked on credentials)* — must price through
    `priceOrder()`, exactly as the Stripe wrapper does
-7. **Repair the template's e2e specs**, or delete them if the pages they cover
+6. **Repair the template's e2e specs**, or delete them if the pages they cover
    are being replaced anyway
 
 ---
@@ -408,7 +402,7 @@ HMAC-SHA256 over a fixed field order with `timingSafeEqual`, rejecting outright
 when it fails. Keep that, and log every callback to `webhookLog` including the
 failures: a run of `signatureValid: false` is what a forgery attempt looks like.
 
-### Still missing: no event handlers are registered
+### Superseded — no event handlers were registered
 
 `stripeAdapter()` is called without a `webhooks` map, so even a correctly
 signed event does nothing:
@@ -464,6 +458,51 @@ plugin does that part itself via `inventory: { $inc: -qty }`.
    `violates foreign key constraint discount_uses_order_id_orders_id_fk` — the
    order it referenced had not committed yet. **Any write inside an endpoint
    must thread `req` through.**
+
+### The payment webhook (P4) — built
+
+The gateway is now the source of truth. `src/payments/webhook.ts` replaces the
+plugin's receiver, which returned `200 {received:true}` to an unsigned request
+and logged nothing.
+
+| Behaviour | Before | Now |
+|---|---|---|
+| No signature | 200, ignored | **400**, logged |
+| Bad signature | 400, not logged | **400**, logged |
+| Valid event | 200, no handler ran | acted on and logged |
+| Repeat of the same event | n/a | **200 `duplicate`**, applied once |
+| Failed payment | n/a | transaction marked failed (P11) |
+
+Every callback lands in `webhookLog`, verified or not — a run of
+`signatureValid: false` is what a forgery attempt looks like, and discarding
+those hides it. Idempotency is on the gateway's own event id, because gateways
+retry: applying one twice would decrement stock twice and burn a code twice.
+
+**When the browser never confirms** — the customer pays and closes the tab —
+the webhook creates the order itself, through the same public
+`/confirm-order` route the browser uses, so both paths build the order
+identically. It does not call the plugin's handler directly: `confirmOrderHandler`
+is not re-exported, and reaching it would mean a deep import into `dist/`.
+
+#### Known limitation: account holders
+
+The webhook is anonymous, and the plugin refuses to settle a signed-in
+customer's transaction from an anonymous caller — `validateSettlement` throws
+"Guest transaction belongs to an authenticated customer". That guard is
+correct and should not be weakened.
+
+So **webhook recovery covers guest checkout only.** Guest is the default
+(C4/S10), and a signed-in customer confirming in their own browser is the
+normal path, so the exposure is narrow: a logged-in customer who pays and
+closes the tab still gets no order. Closing it properly needs the webhook to
+act with authority, which means either a service user or the plugin exposing
+its confirm handler.
+
+#### For the SkipCash adapter
+
+Keep this shape — fail closed, log everything, idempotent on the gateway's own
+id. Only the signature computation changes: HMAC-SHA256 over a fixed field
+order with `timingSafeEqual`, exactly as `skipcash-webhook.mjs` already does.
 
 ### A note on cleaning up test data
 
