@@ -6,6 +6,7 @@ import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
 import { QAR } from '@/currencies'
+import { createStripeSandboxAdapter, isStripeSandboxEnabled } from '@/payments/stripeSandbox'
 
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -16,9 +17,13 @@ import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
 import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
+import { orderTotalsFields } from '@/fields/orderTotals'
+import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | plumpose` : 'plumpose — silk nightwear, hand-finished to order'
+  return doc?.title
+    ? `${doc.title} | plumpose`
+    : 'plumpose — silk nightwear, hand-finished to order'
 }
 
 const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
@@ -119,20 +124,27 @@ export const plugins: Plugin[] = [
            * Money and payment state are locked at field level. See
            * @/access/isAdminOrStaff — the gateway is the source of truth and a
            * hand-edited total breaks reconciliation against SkipCash.
+           *
+           * `extendArrayField` hangs personalisation off each order line. The
+           * plugin nests `items` inside a tabs field here, so it has to be
+           * walked for rather than mapped over.
            */
-          ...(defaultCollection.fields.map((field) => {
-            if (
-              'name' in field &&
-              ['amount', 'currency', 'status', 'transactions'].includes(field.name as string)
-            ) {
-              return {
-                ...field,
-                access: { ...('access' in field ? field.access : {}), update: neverEditable },
-                admin: { ...('admin' in field ? field.admin : {}), readOnly: true },
+          ...(extendArrayField(defaultCollection.fields, 'items', [personalisationField]).map(
+            (field) => {
+              if (
+                'name' in field &&
+                ['amount', 'currency', 'status', 'transactions'].includes(field.name as string)
+              ) {
+                return {
+                  ...field,
+                  access: { ...('access' in field ? field.access : {}), update: neverEditable },
+                  admin: { ...('admin' in field ? field.admin : {}), readOnly: true },
+                }
               }
-            }
-            return field
-          }) as typeof defaultCollection.fields),
+              return field
+            },
+          ) as typeof defaultCollection.fields),
+          ...orderTotalsFields,
           {
             name: 'accessToken',
             type: 'text',
@@ -203,15 +215,20 @@ export const plugins: Plugin[] = [
     inventory: true,
     payments: {
       /**
+       * Stripe sandbox is a **development harness only** — see
+       * @/payments/stripeSandbox for what it does and does not prove. It is
+       * enabled by PAYMENT_PROVIDER=stripe and refuses to load in production.
+       *
        * TODO(payments): add the SkipCash adapter once sandbox credentials
        * arrive from the client. It implements `initiatePayment` and
        * `confirmOrder`, ported from the existing Netlify Functions:
        *   netlify/functions/skipcash-create-payment.mjs  -> initiatePayment
        *   netlify/functions/skipcash-confirm.mjs         -> confirmOrder
-       * The plugin's finalizeOrder callback handles the order/payment binding,
-       * discount consumption and stock decrement atomically.
+       * It must price through `priceOrder()` exactly as the Stripe wrapper
+       * does — the plugin's own adapters charge `cart.subtotal`, which omits
+       * delivery, embroidery and discounts.
        */
-      paymentMethods: [],
+      paymentMethods: isStripeSandboxEnabled() ? [createStripeSandboxAdapter()] : [],
     },
     /**
      * The plugin's own collections ship with generic list views. These give
@@ -274,6 +291,41 @@ export const plugins: Plugin[] = [
     carts: {
       cartsCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        /**
+         * The bag has to carry personalisation or it is lost at checkout, plus
+         * the two things the pricing engine needs that an address cannot
+         * supply: which Qatar city was picked (the address `city` is free
+         * text, the rate table is keyed) and which discount code is attached.
+         */
+        fields: [
+          ...extendArrayField(defaultCollection.fields, 'items', [personalisationField]),
+          {
+            name: 'shippingCityKey',
+            type: 'text',
+            admin: {
+              description: 'Qatar only — the delivery rate this bag was quoted against.',
+              readOnly: true,
+            },
+          },
+          {
+            name: 'discountCode',
+            type: 'text',
+            admin: {
+              description:
+                'Attached at checkout. Re-validated server-side before payment; never trusted from here.',
+              readOnly: true,
+            },
+          },
+          {
+            name: 'pricingSnapshot',
+            type: 'json',
+            admin: {
+              description:
+                'What the pricing engine computed when payment was initiated — the breakdown behind the amount the gateway was given. Copied onto the order at confirmation.',
+              readOnly: true,
+            },
+          },
+        ],
         admin: {
           ...defaultCollection?.admin,
           /**

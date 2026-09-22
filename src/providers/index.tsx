@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/providers/Auth'
+import { QAR } from '@/currencies'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { stripeAdapterClient } from '@payloadcms/plugin-ecommerce/payments/stripe'
 import React from 'react'
@@ -16,6 +17,16 @@ export const Providers: React.FC<{
         <HeaderThemeProvider>
           <SonnerProvider />
           <EcommerceProvider
+            /**
+             * Must mirror the server config in payload.config's ecommercePlugin.
+             * Without it the client falls back to the plugin default of USD,
+             * which renders prices as `$1,399.00` and makes every POST /api/carts
+             * fail validation with `currency: invalid selection`.
+             */
+            currenciesConfig={{
+              defaultCurrency: 'QAR',
+              supportedCurrencies: [QAR],
+            }}
             enableVariants={true}
             api={{
               cartsFetchQuery: {

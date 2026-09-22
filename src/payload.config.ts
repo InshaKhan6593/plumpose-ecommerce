@@ -20,6 +20,7 @@ import { Categories } from '@/collections/Categories'
 import { Countries } from '@/collections/Countries'
 import { Currencies } from '@/collections/Currencies'
 import { DiscountCodes } from '@/collections/DiscountCodes'
+import { DiscountUses } from '@/collections/DiscountUses'
 import { FAQs } from '@/collections/FAQs'
 import { Media } from '@/collections/Media'
 import { Pages } from '@/collections/Pages'
@@ -29,10 +30,13 @@ import { Projects } from '@/collections/Projects'
 import { Reviews } from '@/collections/Reviews'
 import { ShippingCities } from '@/collections/ShippingCities'
 import { ShippingZones } from '@/collections/ShippingZones'
+import { SpinEntries } from '@/collections/SpinEntries'
 import { SpinSegments } from '@/collections/SpinSegments'
 import { Spotted } from '@/collections/Spotted'
 import { Subscribers } from '@/collections/Subscribers'
 import { Users } from '@/collections/Users'
+import { WebhookLog } from '@/collections/WebhookLog'
+import { quoteEndpoint } from '@/endpoints/quote'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
 import { SiteSettings } from '@/globals/SiteSettings'
@@ -74,6 +78,10 @@ export default buildConfig({
     // Shop — the daily work
     DiscountCodes,
     SpinSegments,
+    // Shop ledgers — server-written, hidden from the nav, kept for audit
+    DiscountUses,
+    SpinEntries,
+    WebhookLog,
     // Content — what she publishes
     Projects,
     FAQs,
@@ -134,7 +142,8 @@ export default buildConfig({
     },
   }),
   //email: nodemailerAdapter(),
-  endpoints: [],
+  /** POST /api/quote — prices a bag. See @/endpoints/quote. */
+  endpoints: [quoteEndpoint],
   globals: [Header, Footer, SiteSettings],
   /** Required for the responsive imageSizes on the Media collection. */
   sharp,

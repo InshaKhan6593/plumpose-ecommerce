@@ -9,8 +9,17 @@ promotions and content herself without a developer.
 
 ## Status
 
-Phase 1 complete — data model and admin panel.
-Storefront and payments not started. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md).
+Data model, admin panel and the **commerce engine** are built. A full purchase
+runs end to end against the Stripe sandbox: bag → priced → paid → order, with
+the money breakdown, embroidery instructions, stock decrement and the discount
+ledger. 81 integration tests, 22 end-to-end.
+
+Not built: the payment webhook handler, confirmation email, the spin wheel,
+currency display, and the storefront itself (still largely the upstream
+template). SkipCash is pending credentials.
+
+See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
+[CLAUDE.md](CLAUDE.md) for the briefing.
 
 ---
 
@@ -24,7 +33,7 @@ Storefront and payments not started. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md).
 | Commerce | `@payloadcms/plugin-ecommerce` |
 | Styling | TailwindCSS 4 + shadcn/ui |
 | Language | TypeScript |
-| Payments | SkipCash *(pending credentials)* |
+| Payments | SkipCash *(pending credentials)* — Stripe sandbox in dev, see below |
 
 Base currency is **QAR**, stored in minor units — `139900` is QAR 1,399.00.
 
@@ -80,6 +89,38 @@ npx tsx scripts/inspect-one.ts "/admin/collections/products/1" "Price & sizes"
 
 > On Git Bash, prefix these with `MSYS_NO_PATHCONV=1` — otherwise a
 > leading-slash argument is rewritten into a Windows path.
+
+---
+
+## Payments
+
+**Stripe sandbox is a development harness, not the gateway.** SkipCash is the
+real one and is still pending credentials. Stripe is wired so the work
+downstream of a successful payment — order creation, stock, discounts, email —
+is not blocked behind them.
+
+```bash
+PAYMENT_PROVIDER=stripe   # anything else, or empty, disables it
+```
+
+It refuses to load when `NODE_ENV` is production. Webhooks cannot reach
+localhost, so forward them:
+
+```bash
+stripe login
+pnpm stripe-webhooks      # prints a fresh whsec_ each run
+```
+
+Two things to know before building on it:
+
+- **The flows differ.** Stripe returns a `clientSecret` and takes payment on
+  our page; SkipCash returns a `payUrl` and takes payment on its own, after a
+  redirect. Build the checkout as a redirect flow, or it gets thrown away.
+- **Never charge `cart.subtotal`.** The plugin's own adapters do, and it omits
+  delivery, embroidery and discounts — QAR 1,399 for a bag that costs QAR
+  1,579. Price through `priceOrder()`, as `src/payments/stripeSandbox.ts` does.
+
+See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §13 for the full picture.
 
 ---
 

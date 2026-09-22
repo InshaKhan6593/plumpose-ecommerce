@@ -74,6 +74,9 @@ export interface Config {
   collections: {
     discountCodes: DiscountCode;
     spinSegments: SpinSegment;
+    discountUses: Discountus;
+    spinEntries: SpinEntry;
+    webhookLog: WebhookLog;
     projects: Project;
     faqs: Faq;
     press: Press;
@@ -120,6 +123,9 @@ export interface Config {
   collectionsSelect: {
     discountCodes: DiscountCodesSelect<false> | DiscountCodesSelect<true>;
     spinSegments: SpinSegmentsSelect<false> | SpinSegmentsSelect<true>;
+    discountUses: DiscountUsesSelect<false> | DiscountUsesSelect<true>;
+    spinEntries: SpinEntriesSelect<false> | SpinEntriesSelect<true>;
+    webhookLog: WebhookLogSelect<false> | WebhookLogSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
     press: PressSelect<false> | PressSelect<true>;
@@ -1061,6 +1067,426 @@ export interface SpinSegment {
   createdAt: string;
 }
 /**
+ * Every time a discount code was actually redeemed.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discountUses".
+ */
+export interface Discountus {
+  id: number;
+  code: number | DiscountCode;
+  order?: (number | null) | Order;
+  /**
+   * Who redeemed it — this is what per-customer limits count.
+   */
+  email: string;
+  /**
+   * What the discount was worth on this order, in minor units.
+   */
+  amountQar?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        variant?: (number | null) | Variant;
+        quantity: number;
+        /**
+         * Hand-embroidery on this piece. Written by the server from the personalisation options — never typed in by hand.
+         */
+        personalisation?:
+          | {
+              /**
+               * Option key, e.g. `pocket`.
+               */
+              placement: string;
+              /**
+               * What it was called when the order was placed.
+               */
+              placementName?: string | null;
+              /**
+               * `text`, `symbol` or `both`.
+               */
+              style: string;
+              /**
+               * The letters to embroider. Empty for a symbol-only placement.
+               */
+              lettering?: string | null;
+              symbol?: string | null;
+              symbolName?: string | null;
+              thread?: string | null;
+              threadName?: string | null;
+              /**
+               * Fee charged for this placement, in minor units. Snapshot, never recalculated.
+               */
+              feeQar?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  shippingAddress?: {
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    company?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
+  customer?: (number | null) | User;
+  customerEmail?: string | null;
+  transactions?: (number | Transaction)[] | null;
+  status?: OrderStatus;
+  amount?: number | null;
+  currency?: 'QAR' | null;
+  /**
+   * The garments alone, before embroidery, delivery or any discount.
+   */
+  subtotalQar?: number | null;
+  /**
+   * Every personalisation placement across every line.
+   */
+  personalisationTotalQar?: number | null;
+  /**
+   * Charged delivery. Zero when free shipping applied.
+   */
+  shippingQar?: number | null;
+  /**
+   * What the discount code took off.
+   */
+  discountTotalQar?: number | null;
+  /**
+   * How delivery was described to the customer, e.g. "Delivery to Al Khor".
+   */
+  shippingLabel?: string | null;
+  /**
+   * Which rate was applied — the audit trail for the fee.
+   */
+  shippingZone?: string | null;
+  /**
+   * The code as the customer typed it.
+   */
+  discountCode?: string | null;
+  /**
+   * Delivery was waived by the spend threshold rather than by a code.
+   */
+  freeShippingApplied?: boolean | null;
+  /**
+   * The currency the customer was shopping in. Settlement is always QAR.
+   */
+  displayCurrency?: string | null;
+  /**
+   * The total as it read on their screen, e.g. "£355". Kept so the receipt and the order email match the page they paid from.
+   */
+  displayTotal?: string | null;
+  accessToken?: string | null;
+  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
+  trackingNumber?: string | null;
+  /**
+   * Internal only. Never shown to the customer.
+   */
+  adminNotes?: string | null;
+  /**
+   * Order is a gift — include a card, omit the invoice.
+   */
+  gift?: boolean | null;
+  giftNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  name?: string | null;
+  roles?: ('admin' | 'staff' | 'customer')[] | null;
+  orders?: {
+    docs?: (number | Order)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  cart?: {
+    docs?: (number | Cart)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  addresses?: {
+    docs?: (number | Address)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "carts".
+ */
+export interface Cart {
+  id: number;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        variant?: (number | null) | Variant;
+        quantity: number;
+        /**
+         * Hand-embroidery on this piece. Written by the server from the personalisation options — never typed in by hand.
+         */
+        personalisation?:
+          | {
+              /**
+               * Option key, e.g. `pocket`.
+               */
+              placement: string;
+              /**
+               * What it was called when the order was placed.
+               */
+              placementName?: string | null;
+              /**
+               * `text`, `symbol` or `both`.
+               */
+              style: string;
+              /**
+               * The letters to embroider. Empty for a symbol-only placement.
+               */
+              lettering?: string | null;
+              symbol?: string | null;
+              symbolName?: string | null;
+              thread?: string | null;
+              threadName?: string | null;
+              /**
+               * Fee charged for this placement, in minor units. Snapshot, never recalculated.
+               */
+              feeQar?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  secret?: string | null;
+  customer?: (number | null) | User;
+  purchasedAt?: string | null;
+  status?: ('active' | 'purchased' | 'abandoned') | null;
+  subtotal?: number | null;
+  currency?: 'QAR' | null;
+  /**
+   * Qatar only — the delivery rate this bag was quoted against.
+   */
+  shippingCityKey?: string | null;
+  /**
+   * Attached at checkout. Re-validated server-side before payment; never trusted from here.
+   */
+  discountCode?: string | null;
+  /**
+   * What the pricing engine computed when payment was initiated — the breakdown behind the amount the gateway was given. Copied onto the order at confirmation.
+   */
+  pricingSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "addresses".
+ */
+export interface Address {
+  id: number;
+  customer?: (number | null) | User;
+  title?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  company?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country:
+    | 'US'
+    | 'GB'
+    | 'CA'
+    | 'AU'
+    | 'AT'
+    | 'BE'
+    | 'BR'
+    | 'BG'
+    | 'CY'
+    | 'CZ'
+    | 'DK'
+    | 'EE'
+    | 'FI'
+    | 'FR'
+    | 'DE'
+    | 'GR'
+    | 'HK'
+    | 'HU'
+    | 'IN'
+    | 'IE'
+    | 'IT'
+    | 'JP'
+    | 'LV'
+    | 'LT'
+    | 'LU'
+    | 'MY'
+    | 'MT'
+    | 'MX'
+    | 'NL'
+    | 'NZ'
+    | 'NO'
+    | 'PL'
+    | 'PT'
+    | 'RO'
+    | 'SG'
+    | 'SK'
+    | 'SI'
+    | 'ES'
+    | 'SE'
+    | 'CH';
+  phone?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "transactions".
+ */
+export interface Transaction {
+  id: number;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        variant?: (number | null) | Variant;
+        quantity: number;
+        id?: string | null;
+      }[]
+    | null;
+  paymentMethod?: 'stripe' | null;
+  stripe?: {
+    customerID?: string | null;
+    paymentIntentID?: string | null;
+  };
+  billingAddress?: {
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    company?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
+  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'expired' | 'refunded';
+  customer?: (number | null) | User;
+  customerEmail?: string | null;
+  order?: (number | null) | Order;
+  cart?: (number | null) | Cart;
+  amount?: number | null;
+  currency?: 'QAR' | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every spin of the reward wheel, and the code it issued.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "spinEntries".
+ */
+export interface SpinEntry {
+  id: number;
+  email: string;
+  segment: number | SpinSegment;
+  /**
+   * Empty for a "roll again" segment, which issues nothing.
+   */
+  issuedCode?: (number | null) | DiscountCode;
+  /**
+   * Salted hash of the visitor IP. Never the address itself.
+   */
+  ipHash?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Raw payment gateway callbacks, for audit.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "webhookLog".
+ */
+export interface WebhookLog {
+  id: number;
+  paymentId?: string | null;
+  orderRef?: string | null;
+  /**
+   * The gateway's own status code. 2 is Paid.
+   */
+  statusId?: number | null;
+  /**
+   * Did the HMAC verify? A run of `false` means someone is probing.
+   */
+  signatureValid?: boolean | null;
+  /**
+   * Did this callback change the order, or was it a duplicate?
+   */
+  applied?: boolean | null;
+  /**
+   * Exactly what arrived, before we interpreted any of it.
+   */
+  payload?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Bridal, bespoke, special embroidery and brand collaborations.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1331,218 +1757,6 @@ export interface Currency {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name?: string | null;
-  roles?: ('admin' | 'staff' | 'customer')[] | null;
-  orders?: {
-    docs?: (number | Order)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  cart?: {
-    docs?: (number | Cart)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  addresses?: {
-    docs?: (number | Address)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  items?:
-    | {
-        product?: (number | null) | Product;
-        variant?: (number | null) | Variant;
-        quantity: number;
-        id?: string | null;
-      }[]
-    | null;
-  shippingAddress?: {
-    title?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    company?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postalCode?: string | null;
-    country?: string | null;
-    phone?: string | null;
-  };
-  customer?: (number | null) | User;
-  customerEmail?: string | null;
-  transactions?: (number | Transaction)[] | null;
-  status?: OrderStatus;
-  amount?: number | null;
-  currency?: 'QAR' | null;
-  accessToken?: string | null;
-  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
-  trackingNumber?: string | null;
-  /**
-   * Internal only. Never shown to the customer.
-   */
-  adminNotes?: string | null;
-  /**
-   * Order is a gift — include a card, omit the invoice.
-   */
-  gift?: boolean | null;
-  giftNote?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "transactions".
- */
-export interface Transaction {
-  id: number;
-  items?:
-    | {
-        product?: (number | null) | Product;
-        variant?: (number | null) | Variant;
-        quantity: number;
-        id?: string | null;
-      }[]
-    | null;
-  billingAddress?: {
-    title?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    company?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postalCode?: string | null;
-    country?: string | null;
-    phone?: string | null;
-  };
-  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled' | 'expired' | 'refunded';
-  customer?: (number | null) | User;
-  customerEmail?: string | null;
-  order?: (number | null) | Order;
-  cart?: (number | null) | Cart;
-  amount?: number | null;
-  currency?: 'QAR' | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "carts".
- */
-export interface Cart {
-  id: number;
-  items?:
-    | {
-        product?: (number | null) | Product;
-        variant?: (number | null) | Variant;
-        quantity: number;
-        id?: string | null;
-      }[]
-    | null;
-  secret?: string | null;
-  customer?: (number | null) | User;
-  purchasedAt?: string | null;
-  status?: ('active' | 'purchased' | 'abandoned') | null;
-  subtotal?: number | null;
-  currency?: 'QAR' | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "addresses".
- */
-export interface Address {
-  id: number;
-  customer?: (number | null) | User;
-  title?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  company?: string | null;
-  addressLine1?: string | null;
-  addressLine2?: string | null;
-  city?: string | null;
-  state?: string | null;
-  postalCode?: string | null;
-  country:
-    | 'US'
-    | 'GB'
-    | 'CA'
-    | 'AU'
-    | 'AT'
-    | 'BE'
-    | 'BR'
-    | 'BG'
-    | 'CY'
-    | 'CZ'
-    | 'DK'
-    | 'EE'
-    | 'FI'
-    | 'FR'
-    | 'DE'
-    | 'GR'
-    | 'HK'
-    | 'HU'
-    | 'IN'
-    | 'IE'
-    | 'IT'
-    | 'JP'
-    | 'LV'
-    | 'LT'
-    | 'LU'
-    | 'MY'
-    | 'MT'
-    | 'MX'
-    | 'NL'
-    | 'NZ'
-    | 'NO'
-    | 'PL'
-    | 'PT'
-    | 'RO'
-    | 'SG'
-    | 'SK'
-    | 'SI'
-    | 'ES'
-    | 'SE'
-    | 'CH';
-  phone?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions".
  */
 export interface FormSubmission {
@@ -1589,6 +1803,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'spinSegments';
         value: number | SpinSegment;
+      } | null)
+    | ({
+        relationTo: 'discountUses';
+        value: number | Discountus;
+      } | null)
+    | ({
+        relationTo: 'spinEntries';
+        value: number | SpinEntry;
+      } | null)
+    | ({
+        relationTo: 'webhookLog';
+        value: number | WebhookLog;
       } | null)
     | ({
         relationTo: 'projects';
@@ -1766,6 +1992,44 @@ export interface SpinSegmentsSelect<T extends boolean = true> {
   colour?: T;
   expiryDays?: T;
   active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discountUses_select".
+ */
+export interface DiscountUsesSelect<T extends boolean = true> {
+  code?: T;
+  order?: T;
+  email?: T;
+  amountQar?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "spinEntries_select".
+ */
+export interface SpinEntriesSelect<T extends boolean = true> {
+  email?: T;
+  segment?: T;
+  issuedCode?: T;
+  ipHash?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "webhookLog_select".
+ */
+export interface WebhookLogSelect<T extends boolean = true> {
+  paymentId?: T;
+  orderRef?: T;
+  statusId?: T;
+  signatureValid?: T;
+  applied?: T;
+  payload?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2517,6 +2781,20 @@ export interface CartsSelect<T extends boolean = true> {
         product?: T;
         variant?: T;
         quantity?: T;
+        personalisation?:
+          | T
+          | {
+              placement?: T;
+              placementName?: T;
+              style?: T;
+              lettering?: T;
+              symbol?: T;
+              symbolName?: T;
+              thread?: T;
+              threadName?: T;
+              feeQar?: T;
+              id?: T;
+            };
         id?: T;
       };
   secret?: T;
@@ -2525,6 +2803,9 @@ export interface CartsSelect<T extends boolean = true> {
   status?: T;
   subtotal?: T;
   currency?: T;
+  shippingCityKey?: T;
+  discountCode?: T;
+  pricingSnapshot?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2539,6 +2820,20 @@ export interface OrdersSelect<T extends boolean = true> {
         product?: T;
         variant?: T;
         quantity?: T;
+        personalisation?:
+          | T
+          | {
+              placement?: T;
+              placementName?: T;
+              style?: T;
+              lettering?: T;
+              symbol?: T;
+              symbolName?: T;
+              thread?: T;
+              threadName?: T;
+              feeQar?: T;
+              id?: T;
+            };
         id?: T;
       };
   shippingAddress?:
@@ -2562,6 +2857,16 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  subtotalQar?: T;
+  personalisationTotalQar?: T;
+  shippingQar?: T;
+  discountTotalQar?: T;
+  shippingLabel?: T;
+  shippingZone?: T;
+  discountCode?: T;
+  freeShippingApplied?: T;
+  displayCurrency?: T;
+  displayTotal?: T;
   accessToken?: T;
   fulfilment?: T;
   trackingNumber?: T;
@@ -2583,6 +2888,13 @@ export interface TransactionsSelect<T extends boolean = true> {
         variant?: T;
         quantity?: T;
         id?: T;
+      };
+  paymentMethod?: T;
+  stripe?:
+    | T
+    | {
+        customerID?: T;
+        paymentIntentID?: T;
       };
   billingAddress?:
     | T

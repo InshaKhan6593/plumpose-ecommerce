@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
     loadPaths: ['./node_modules/@payloadcms/ui/dist/scss/'],
   },
   images: {
+    /**
+     * Next 16 blocks optimising upstream images whose hostname resolves to a
+     * private IP (SSRF guard). The Media component builds an absolute src from
+     * NEXT_PUBLIC_SERVER_URL, which in local dev is localhost -> 127.0.0.1, so
+     * every product photo 400s. Harmless in dev; never enabled in production,
+     * where the host is public.
+     */
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
     localPatterns: [
       {
         pathname: '/api/media/file/**',
@@ -28,6 +36,7 @@ const nextConfig: NextConfig = {
 
         return {
           hostname: url.hostname,
+          port: url.port,
           protocol: url.protocol.replace(':', '') as 'http' | 'https',
         }
       }),
