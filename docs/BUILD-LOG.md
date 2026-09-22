@@ -217,25 +217,44 @@ The audit found **12 problems** on first run and now reports none.
 
 ## 9. What has NOT been done
 
+> Revised 22 Sep 2026. Shipping, the free-shipping threshold, discounts and
+> blocked-country enforcement moved from this list into §13 when the commerce
+> engine landed (92a5f2e).
+
 ### Not tested
-- **The storefront has never been rendered.** Not once.
-- Cart, checkout and variant selection are untested.
-- The Playwright e2e suite has not been run.
-- No admin screen has been exercised by a human — only screenshotted.
+- **No admin screen has been exercised by a human** — only screenshotted.
+- **The template's own e2e specs do not run.** `frontend.e2e.spec.ts` and
+  `admin.e2e.spec.ts` fail before their first assertion: loading the Payload
+  config pulls in `src/collections/Pages/hooks/revalidatePage.ts`, whose
+  extensionless `import ... from 'next/cache'` does not resolve under
+  Playwright's ESM loader. Pre-existing — that file is untouched since the
+  scaffold commit (f770cda). `pnpm test:e2e` therefore fails as a whole; the
+  two commerce specs pass when run directly.
+- The storefront has been rendered and its cart exercised, but only through the
+  API and a handful of pages. There has been no pass over it as a shop.
 
 ### Logic that does not exist yet
-Data is in place for all of these; none of them compute anything:
-
-- **Shipping calculation** — zones and cities are rows; nothing prices an address
-- **Free-shipping threshold** — the field exists, nothing reads it
-- **Discount validation engine**
-- **Spin wheel** — no weighted pick, no code issuance, no one-per-visitor
-- **Blocked-country enforcement** — 22 countries flagged, no check at checkout
-- **Currency display** — `rate` is empty; only hand-set prices work
+- **Spin wheel** — no weighted pick, no code issuance, no one-per-visitor.
+  `spinSegments` and `spinEntries` exist; nothing drives them.
+- **Currency display** — no conversion code. The *data* is ready: all 163
+  currencies carry a hand-set `priceOverride`, which is the legacy mechanism
+  (the rate is derived from it, deliberately, so a refresh cannot move a market
+  price). `rate` being empty is by design, not a gap.
+- **Payment webhook handler** — signatures verify, but no
+  `payment_intent.succeeded` handler is registered, so the webhook is a
+  verified no-op and confirmation depends on the client calling
+  `/confirm-order`. P4 wants the webhook to be the source of truth.
+- **Confirmation email** — the adapter is commented out in `payload.config.ts`.
+  Fixes L5, the worst defect on the live site.
 - **Reviews aggregate rating**
 - **Gift option** — modelled on orders, not wired into checkout
 - **Contact form** — plugin installed, no form configured
 - **GA4 and Search Console**
+- **Storage adapter** — uploads write to local disk and will not survive a
+  serverless deploy
+- **CSV exports** (A6, A17) — `plugin-import-export` was never installed
+- **The storefront itself** — still largely the upstream template: Payload logo,
+  "Designed in Michigan", placeholder homepage
 
 ### Known remaining jargon
 `AVAILABLE VARIANTS` and its `VARIANT OPTIONS` column are rendered by the
@@ -276,12 +295,22 @@ Node 22 with a warning, but the dev machine should be upgraded.
 
 ## 12. Next
 
-1. Shipping calculation and the free-shipping threshold
-2. Discount validation engine
-3. Spin wheel — weighted pick, code issuance, one-per-visitor
-4. Storefront: shop grid, product page, cart — against real data
-5. SkipCash adapter *(blocked)*
-6. A genuine end-to-end test pass, including Playwright
+Shipping, the free-shipping threshold and the discount engine were items 1 and
+2 here; they landed in 92a5f2e. What remains:
+
+1. **Payment webhook handler** — register `payment_intent.succeeded` so the
+   webhook stops being a verified no-op (P4)
+2. **Confirmation email** — fixes L5; the customer currently receives nothing
+3. **Spin wheel** — weighted pick, code issuance, one-per-visitor. Can now
+   issue into `discountCodes`, since validation exists
+4. **Currency display** — the data is ready, the code is not
+5. **Storefront** — shop grid, product page, cart, checkout against real data.
+   Build checkout as a **redirect** flow: SkipCash returns a `payUrl`, not a
+   client secret
+6. **SkipCash adapter** *(blocked on credentials)* — must price through
+   `priceOrder()`, exactly as the Stripe wrapper does
+7. **Repair the template's e2e specs**, or delete them if the pages they cover
+   are being replaced anyway
 
 ---
 

@@ -123,13 +123,24 @@ pnpm seed                    # idempotent
 | Command | Purpose |
 |---|---|
 | `pnpm test:int` | Integration tests (81) |
-| `pnpm test:e2e` | Playwright, needs the dev server |
+| `pnpm test:e2e` | Playwright — **fails as a whole**, see below |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
 
 **`pnpm lint` is broken** — ESLint dies resolving its own config via
 `eslint-config-next`. It fails on untouched files too, so it predates the
 current work.
+
+**`pnpm test:e2e` fails as a whole.** The template's `frontend.e2e.spec.ts` and
+`admin.e2e.spec.ts` never reach an assertion: loading the Payload config pulls
+in `src/collections/Pages/hooks/revalidatePage.ts`, whose extensionless
+`import ... from 'next/cache'` does not resolve under Playwright's ESM loader.
+Pre-existing, untouched since the scaffold commit. The two commerce specs pass
+when run directly:
+
+```bash
+npx playwright test tests/e2e/quote.e2e.spec.ts tests/e2e/checkout.e2e.spec.ts
+```
 
 Tests run with `fileParallelism: false`: each database-backed spec boots its own
 Payload instance and pushes the schema, and concurrent pushes collide with

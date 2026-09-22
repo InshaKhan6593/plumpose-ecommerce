@@ -12,7 +12,9 @@ promotions and content herself without a developer.
 Data model, admin panel and the **commerce engine** are built. A full purchase
 runs end to end against the Stripe sandbox: bag → priced → paid → order, with
 the money breakdown, embroidery instructions, stock decrement and the discount
-ledger. 81 integration tests, 22 end-to-end.
+ledger. 81 integration tests pass; 22 end-to-end tests cover the quote and
+checkout paths (the template's own e2e specs are broken — see
+[CLAUDE.md](CLAUDE.md)).
 
 Not built: the payment webhook handler, confirmation email, the spin wheel,
 currency display, and the storefront itself (still largely the upstream
