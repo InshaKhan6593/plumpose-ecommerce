@@ -152,7 +152,7 @@ client's reference recording (`../brand-assets/reference/`):
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
   outside production only.
-- Spin wheel, currency display (data ready), reviews aggregate, CSV exports,
+- Spin wheel **pop-up** (the logic and `/api/spin` are built, §22), currency display (data ready), reviews aggregate, CSV exports,
   a Homepage global so she can edit the copy, storage adapter (uploads write
   to local disk and will not survive a serverless deploy).
 
@@ -168,7 +168,7 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (146) |
+| `pnpm test:int` | Integration tests (157) |
 | `pnpm test:e2e` | Playwright (38 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |

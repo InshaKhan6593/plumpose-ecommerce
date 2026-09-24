@@ -1604,7 +1604,7 @@ export interface Transaction {
   createdAt: string;
 }
 /**
- * Every spin of the reward wheel, and the code it issued.
+ * Every spin of the reward wheel and the code it issued (REQUIREMENTS A8). Whether a code has been used is on the code itself, under Discount codes.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "spinEntries".
@@ -1617,6 +1617,7 @@ export interface SpinEntry {
    * Empty for a "roll again" segment, which issues nothing.
    */
   issuedCode?: (number | null) | DiscountCode;
+  winnerEmail?: string | null;
   /**
    * Salted hash of the visitor IP. Never the address itself.
    */
@@ -2198,6 +2199,7 @@ export interface SpinEntriesSelect<T extends boolean = true> {
   email?: T;
   segment?: T;
   issuedCode?: T;
+  winnerEmail?: T;
   ipHash?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3245,9 +3247,24 @@ export interface SiteSetting {
    * Made to order, or oversold when made to order is off.
    */
   alertBeyondStock?: boolean | null;
+  /**
+   * Untick to take the wheel off the site. Codes already issued keep working.
+   */
   spinWheelEnabled?: boolean | null;
   spinWheelHeading?: string | null;
   spinWheelBody?: string | null;
+  /**
+   * How many extra spins "Roll again" can give one person. After that it cannot be landed on.
+   */
+  spinWheelMaxRerolls?: number | null;
+  /**
+   * Ticked: an email that has already ordered cannot spin.
+   */
+  spinWheelNewCustomersOnly?: boolean | null;
+  /**
+   * Most spins one device may make in a day, across every email typed — stops one person collecting codes. A household sharing Wi-Fi counts as one device.
+   */
+  spinWheelDailyLimit?: number | null;
   /**
    * Charged per placement, per garment.
    */
@@ -3341,6 +3358,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   spinWheelEnabled?: T;
   spinWheelHeading?: T;
   spinWheelBody?: T;
+  spinWheelMaxRerolls?: T;
+  spinWheelNewCustomersOnly?: T;
+  spinWheelDailyLimit?: T;
   personalisationFeeQar?: T;
   personalisationMaxChars?: T;
   personalisationMaxPlacements?: T;

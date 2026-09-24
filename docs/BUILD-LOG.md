@@ -1365,3 +1365,55 @@ about. **All of it is hers to configure** in **Site settings → Stock alerts**:
 and sent the alert after commit (order 149); Resend refused delivery only
 because plumpose.com is not verified — the same state as every shop email.
 The settings tab and the email were checked on screen.
+
+---
+
+## 22. Reward wheel — the logic, 25 Sep 2026
+
+The wheel's rules and endpoints are built and tested; the pop-up is next.
+
+**Endpoints** (`src/endpoints/spin.ts`): `GET /api/spin` — heading, words and
+each segment's label and colour, **never the odds**; `POST /api/spin
+{ email }` — one spin, decided entirely on the server.
+
+**Rules, all hers** (Site settings → Reward wheel):
+
+| Setting | Default |
+|---|---|
+| Show the wheel to first-time visitors | On (off: hidden, spins refused; issued codes keep working) |
+| Heading · words under it | "Before anyone else." · the list copy |
+| Extra spins from "Roll again" | 1 — after that it cannot be landed on |
+| Only for people who have not ordered yet | Off |
+| Spins per device per day | 5 (salted IP hash; a household on one Wi-Fi counts as one) |
+
+Segments, prizes, odds and code lifetime stay in Shop → Reward wheel.
+
+- **The draw** (`src/lib/spin/wheel.ts`, pure): weighted, from the OS CSPRNG;
+  inactive, weightless or worthless segments (a "10% off" with no value, or
+  over 100%) are never drawn.
+- **The prize** is a code of its own — `PLUM-7K4Q-X2`, no look-alike
+  characters — single use, **locked to the winning email** (the discount
+  engine already refuses it for anyone else), expiring at the end of the day
+  in Doha after the segment's days.
+- **One prize per email, even under a race:** a unique `winnerEmail` column
+  on the winning spin; a second win arriving at the same moment is refused by
+  the database and its code withdrawn.
+- "Already won" and "has ordered" give the **same** reply, so neither can be
+  probed. The winner joins the newsletter list (the copy promises it), and
+  the code is emailed after commit (`src/email/spinReward.ts`) as well as
+  shown on screen.
+- The spin log is now visible (Shop → Wheel spins) as the A8 issued-codes
+  report; Discount codes show source, owner and use count.
+
+**Verified against the running server:** no weights in the public data; a
+spin won Free delivery and its code zeroed delivery for the winner and was
+refused for another email; a second spin refused; **8 simultaneous spins for
+one email → exactly 1 winning entry, 1 code**; the 6th spin from one device in
+a day refused; with "roll again" made near-certain, spin 1 rolled again,
+spin 2 had to be a prize, spin 3 refused; switched off → hidden and refused.
+13 unit tests (`tests/int/spin-wheel.int.spec.ts`), integration **157 passing**.
+Test spins, codes and subscribers deleted; odds restored.
+
+**Next:** the pop-up (docs/SCREEN-PROMPTS 15 — a preview prompt was given):
+when it appears (first visit, once, not at checkout), the spin animation
+towards the segment the server chose, and the result screen with the code.

@@ -162,9 +162,42 @@ export const SiteSettings: GlobalConfig = {
         },
         {
           fields: [
-            { name: 'spinWheelEnabled', type: 'checkbox', defaultValue: true },
-            { name: 'spinWheelHeading', type: 'text', defaultValue: 'Before anyone else.' },
-            { name: 'spinWheelBody', type: 'textarea' },
+            {
+              name: 'spinWheelEnabled',
+              type: 'checkbox',
+              admin: { description: 'Untick to take the wheel off the site. Codes already issued keep working.' },
+              defaultValue: true,
+              label: 'Show the wheel to first-time visitors',
+            },
+            { name: 'spinWheelHeading', type: 'text', defaultValue: 'Before anyone else.', label: 'Heading' },
+            { name: 'spinWheelBody', type: 'textarea', label: 'Words under the heading' },
+            {
+              name: 'spinWheelMaxRerolls',
+              type: 'number',
+              admin: { description: 'How many extra spins "Roll again" can give one person. After that it cannot be landed on.' },
+              defaultValue: 1,
+              label: 'Extra spins from "Roll again"',
+              max: 5,
+              min: 0,
+            },
+            {
+              name: 'spinWheelNewCustomersOnly',
+              type: 'checkbox',
+              admin: { description: 'Ticked: an email that has already ordered cannot spin.' },
+              defaultValue: false,
+              label: 'Only for people who have not ordered yet',
+            },
+            {
+              name: 'spinWheelDailyLimit',
+              type: 'number',
+              admin: {
+                description:
+                  'Most spins one device may make in a day, across every email typed — stops one person collecting codes. A household sharing Wi-Fi counts as one device.',
+              },
+              defaultValue: 5,
+              label: 'Spins per device per day',
+              min: 1,
+            },
           ],
           label: 'Reward wheel',
         },

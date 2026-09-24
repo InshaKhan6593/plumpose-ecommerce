@@ -36,8 +36,8 @@ Track order. Some copy is placeholder until the client confirms it — see
 **Accounts.** Sign in, create an account, password reset on the storefront,
 orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
 
-**Not built yet:** the spin wheel, currency display.
-SkipCash is pending credentials. 146 integration and 38 end-to-end tests pass.
+**Not built yet:** the reward wheel's pop-up (its logic is built), currency display.
+SkipCash is pending credentials. 157 integration and 38 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.
