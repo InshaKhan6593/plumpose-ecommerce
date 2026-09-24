@@ -59,15 +59,16 @@ export default async function MadeForYouPage({ searchParams }: Props) {
 
   /*
    * Bridal gets the portrait cut of the café breakfast film — "the morning of
-   * the wedding". Phone visitors otherwise never see this footage (their
-   * homepage hero is the corridor film), and it spares the window photograph,
-   * which is already the shop card, the product page and a homepage step.
+   * the wedding". It spares the window photograph, which is already the shop
+   * card, the product page and a homepage step.
    */
   const offerFilms: Record<string, (Film & { label: string }) | undefined> = {
     bridal: {
       label: 'A slow breakfast in a café, in the Al Shaheen Nights silk set',
       mp4: '/video/story-cafe.mp4',
       poster: '/video/story-cafe-poster.jpg',
+      // The same clip and frame as the phone hero, so a phone downloads it once.
+      small: '/video/hero-mobile.mp4',
     },
   }
 

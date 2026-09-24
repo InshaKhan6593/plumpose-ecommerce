@@ -10,7 +10,9 @@ import type { Category, Media as MediaType, Product } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { ProductCard } from '@/components/shop/ProductCard'
+import { toMinor } from '@/lib/pricing/money'
 import { Reveal, RevealImage } from '@/motion/Reveal'
+import { Money } from '@/providers/Locale'
 import { cn } from '@/utilities/cn'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
@@ -119,9 +121,16 @@ export default async function ShopPage({ searchParams }: Props) {
         </p>
       </Reveal>
 
-      {/* Filter row: collections left; search and sort right. */}
-      <div className="mt-12 flex flex-col gap-5 border-y border-line py-4 md:flex-row md:items-center md:justify-between">
-        <nav aria-label="Collections" className="flex flex-wrap gap-x-7 gap-y-2">
+      {/*
+        Filter row: collections left; search and sort right. On a phone each is
+        one line that scrolls sideways — wrapped, six collections and three
+        sorts took five lines before the first piece.
+      */}
+      <div className="mt-12 flex flex-col gap-4 border-y border-line py-4 md:flex-row md:items-center md:justify-between md:gap-5">
+        <nav
+          aria-label="Collections"
+          className="-mx-4 flex gap-x-7 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none] md:mx-0 md:flex-wrap md:gap-y-2 md:overflow-visible md:px-0 md:whitespace-normal [&::-webkit-scrollbar]:hidden"
+        >
           {[{ slug: null, title: 'All' }, ...categories].map((c) => {
             const selected = (c.slug ?? null) === (active?.slug ?? null)
             return (
@@ -137,7 +146,7 @@ export default async function ShopPage({ searchParams }: Props) {
           })}
         </nav>
 
-        <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:gap-x-7 md:gap-y-3">
           <form action="/shop" className="flex items-center gap-2 border-b border-line focus-within:border-ink" role="search">
             <label className="sr-only" htmlFor="shop-search">
               Search the shop
@@ -151,7 +160,10 @@ export default async function ShopPage({ searchParams }: Props) {
               type="search"
             />
           </form>
-          <nav aria-label="Sort" className="flex flex-wrap gap-x-5 gap-y-2">
+          <nav
+            aria-label="Sort"
+            className="-mx-4 flex gap-x-5 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none] md:mx-0 md:flex-wrap md:gap-y-2 md:overflow-visible md:px-0 md:whitespace-normal [&::-webkit-scrollbar]:hidden"
+          >
             {(Object.keys(SORTS) as SortKey[]).map((key) => (
               <Link
                 aria-current={sortKey === key ? 'true' : undefined}
@@ -167,38 +179,52 @@ export default async function ShopPage({ searchParams }: Props) {
       </div>
 
       {docs.length ? (
-        <Reveal className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
+        /*
+         * Two to a row on a phone, as fashion shops do — one to a row made a
+         * long catalogue a very long scroll. Each card reveals as it arrives
+         * (one Reveal each, staggered only across a row): as one group, card 21
+         * waited two seconds behind card 1, so a quick scroll met blank cards.
+         * `grid-flow-dense` lets the second piece fill the row beside the
+         * first while the embroidery tile takes a full row below them.
+         */
+        <div className="mt-10 grid grid-flow-dense grid-cols-2 gap-x-3 gap-y-10 sm:mt-12 sm:grid-flow-row sm:gap-x-6 sm:gap-y-14 lg:grid-cols-3 lg:gap-x-8">
           {docs.map((product, index) => (
             <React.Fragment key={product.id}>
-              <div data-reveal>
-                <ProductCard priority={index < 3} product={product} />
-              </div>
+              <Reveal delay={(index % 3) * 0.08}>
+                <div data-reveal>
+                  <ProductCard priority={index < 4} product={product} />
+                </div>
+              </Reveal>
 
               {/* After the first piece: the embroidery, as an editorial tile. */}
               {index === 0 && showTile && embroideryHost ? (
+                <Reveal className="col-span-2 sm:col-span-1">
                 <Link className="group relative block" data-reveal href={`/products/${embroideryHost.slug}#personalisation`}>
-                  <RevealImage className="relative aspect-[4/5] overflow-hidden bg-paper-3">
+                  <RevealImage className="relative aspect-[5/4] overflow-hidden bg-paper-3 sm:aspect-[4/5]">
                     {tile ? (
                       <Media
                         className="absolute inset-0 transition-transform duration-[900ms] ease-brand [@media(hover:hover)]:group-hover:scale-[1.03]"
                         fill
                         imgClassName="object-cover"
                         resource={tile}
-                        size="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
+                        size="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 95vw"
                       />
                     ) : null}
                     <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent" />
                     <div className="absolute inset-x-6 bottom-7 text-white">
                       <p className="caps text-[0.625rem]">Hand embroidery</p>
                       <p className="serif-display mt-3 text-[2rem] leading-[1.05]">Your initials, stitched by hand</p>
-                      <p className="mt-3 text-sm text-white/85">From QAR {settings.personalisationFeeQar} · on any piece</p>
+                      <p className="mt-3 text-sm text-white/85">
+                        From <Money minor={toMinor(settings.personalisationFeeQar)} /> · on any piece
+                      </p>
                     </div>
                   </RevealImage>
                 </Link>
+                </Reveal>
               ) : null}
             </React.Fragment>
           ))}
-        </Reveal>
+        </div>
       ) : (
         <div className="mx-auto max-w-md py-24 text-center">
           <p className="serif-display text-3xl">Nothing matches that — yet.</p>

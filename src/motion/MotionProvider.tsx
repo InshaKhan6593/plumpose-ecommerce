@@ -48,8 +48,17 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  /** A new page starts at the top, and its triggers measure the new layout. */
+  /**
+   * A new page starts at the top, and its triggers measure the new layout.
+   * Not on the first page: ScrollTrigger refreshes itself when the window
+   * loads, and a second full re-measure there was pure start-up cost.
+   */
+  const firstPage = useRef(true)
   useEffect(() => {
+    if (firstPage.current) {
+      firstPage.current = false
+      return
+    }
     lenisRef.current?.scrollTo(0, { immediate: true })
     const id = window.setTimeout(() => ScrollTrigger.refresh(), 50)
     return () => window.clearTimeout(id)

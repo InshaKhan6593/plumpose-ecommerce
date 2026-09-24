@@ -3,10 +3,17 @@
 import React, { useEffect, useRef, useState } from 'react'
 
 import { prefersReducedMotion } from '@/motion/gsap'
+import { afterPageLoad } from '@/utilities/afterPageLoad'
 import { cn } from '@/utilities/cn'
 
-/** `webm` is optional: the café films ship as H.264 only (scripts/encode-videos.sh). */
-export type Film = { mp4: string; poster: string; webm?: string }
+/**
+ * `webm` is optional: the café films ship as H.264 only (scripts/encode-videos.sh).
+ * `small` is a lighter encode of the same frame for phone screens — a third to
+ * a quarter smaller, with no difference a phone can show.
+ */
+export type Film = { mp4: string; poster: string; small?: string; webm?: string }
+
+const PHONE = '(max-width: 767px)'
 
 /**
  * A short film in place of a photograph, further down a page
@@ -35,23 +42,32 @@ export function InViewFilm({
   const ref = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [load, setLoad] = useState(false)
+  const [small, setSmall] = useState(false)
 
   useEffect(() => {
     const el = ref.current
     if (!el || prefersReducedMotion()) return
 
+    let stopWaiting = () => {}
     const near = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setLoad(true)
           near.disconnect()
+          // Near, but never before the page's own photographs have loaded.
+          stopWaiting = afterPageLoad(() => {
+            setSmall(Boolean(film.small) && window.matchMedia(PHONE).matches)
+            setLoad(true)
+          })
         }
       },
       { rootMargin: '100% 0px' },
     )
     near.observe(el)
-    return () => near.disconnect()
-  }, [])
+    return () => {
+      near.disconnect()
+      stopWaiting()
+    }
+  }, [film.small])
 
   useEffect(() => {
     const video = videoRef.current
@@ -85,8 +101,8 @@ export function InViewFilm({
           preload="auto"
           ref={videoRef}
         >
-          {film.webm ? <source src={film.webm} type="video/webm" /> : null}
-          <source src={film.mp4} type="video/mp4" />
+          {small ? null : film.webm ? <source src={film.webm} type="video/webm" /> : null}
+          <source src={small && film.small ? film.small : film.mp4} type="video/mp4" />
         </video>
       ) : null}
     </div>

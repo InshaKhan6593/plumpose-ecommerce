@@ -7,6 +7,7 @@ import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { gsap, LINE_HIDDEN, prefersReducedMotion, ScrollTrigger, splitLines } from '@/motion/gsap'
+import { afterPageLoad } from '@/utilities/afterPageLoad'
 
 import { HOME } from './content'
 
@@ -24,7 +25,8 @@ import { HOME } from './content'
  * like a curtain (see src/app/(app)/page.tsx). As it is covered the film leans
  * in and dims.
  *
- * Only one film loads — landscape on desktop, vertical on a phone — and none
+ * Only one film loads — landscape on desktop, the same café shot in its full
+ * portrait frame on a phone — and only after the page itself has loaded; none
  * under reduced motion, where the poster stands in.
  */
 
@@ -50,9 +52,10 @@ export function HomeHero({
   const root = useRef<HTMLElement>(null)
   const [film, setFilm] = useState<'desktop' | 'mobile' | null>(null)
 
+  // The poster is the first paint; the film joins once the page has loaded (see afterPageLoad).
   useEffect(() => {
     if (prefersReducedMotion()) return
-    setFilm(window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile')
+    return afterPageLoad(() => setFilm(window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile'))
   }, [])
 
   useLayoutEffect(() => {
@@ -146,7 +149,7 @@ export function HomeHero({
             <FilmOrPoster active={film === 'desktop'} film={films.desktop} label="The Al Shaheen Nights set, worn in a café" />
           </div>
           <div className="absolute inset-0 lg:hidden">
-            <FilmOrPoster active={film === 'mobile'} film={films.mobile} label="Walking in the Al Shaheen Nights set" />
+            <FilmOrPoster active={film === 'mobile'} film={films.mobile} label="The Al Shaheen Nights set, worn in a café" />
           </div>
         </div>
       </div>

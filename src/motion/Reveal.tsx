@@ -2,7 +2,50 @@
 
 import React, { useLayoutEffect, useRef } from 'react'
 
-import { gsap, LINE_HIDDEN, MOTION, prefersReducedMotion, ScrollTrigger, splitLines } from './gsap'
+import { gsap, LINE_HIDDEN, MOTION, prefersReducedMotion, splitLines } from './gsap'
+
+/**
+ * Runs `onReach` once, when `el`'s top crosses `line` (a fraction of the
+ * viewport height from the top: 0.85 is 85% down the screen, 2 is a screen
+ * below it) — or at once if the element is already above it, as after a jump
+ * to an anchor or a restored scroll.
+ *
+ * Why not a ScrollTrigger: every trigger is measured when it is made and again
+ * on every refresh, and every page used to make one per reveal on load —
+ * including reveals a visitor may never scroll to. On a mid-range phone that
+ * set-up was most of the half-second freeze after each page loaded. An
+ * IntersectionObserver costs nothing until the element arrives, and the work
+ * (splitting lines, building the timeline) happens only then.
+ */
+export function whenReached(el: Element, line: number, onReach: () => void): () => void {
+  let done = false
+  const io = new IntersectionObserver(
+    ([entry]) => {
+      if (done) return
+      // Intersecting the viewport shrunk to `line`, or already scrolled past it.
+      if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
+        done = true
+        io.disconnect()
+        onReach()
+      }
+    },
+    // Below 1 the viewport's bottom is pulled up to the line; above 1 it reaches further down the page.
+    { rootMargin: `0px 0px ${Math.round((line - 1) * 100)}% 0px` },
+  )
+  io.observe(el)
+  return () => {
+    done = true
+    io.disconnect()
+  }
+}
+
+/** "top 85%" → 0.85, for the ScrollTrigger-style `start` strings the components take. */
+const lineOf = (start: string, fallback: number) => {
+  const pct = start.match(/top\s+(\d+)%/)
+  if (pct) return Number(pct[1]) / 100
+  if (/top\s+bottom/.test(start)) return 1
+  return fallback
+}
 
 /**
  * The house reveal — "staggered fade and slide" (MOTION-SPEC §3C).
@@ -44,34 +87,36 @@ export function Reveal({
     let ctx: gsap.Context | undefined
     let cancelled = false
 
-    // Split after the webfonts load, or the lines are measured in the fallback face.
-    document.fonts.ready.then(() => {
-      if (cancelled) return
+    // Nothing is split or built until the group reaches the line (MOTION.start, "top 85%").
+    const stop = whenReached(root, lineOf(MOTION.start, 0.85), () => {
+      // Split after the webfonts load, or the lines are measured in the fallback face.
+      document.fonts.ready.then(() => {
+        if (cancelled) return
 
-      ctx = gsap.context(() => {
-        const tl = gsap.timeline({ delay, paused: true })
+        ctx = gsap.context(() => {
+          const tl = gsap.timeline({ delay })
 
-        lineEls.forEach((el) => {
-          const split = splitLines(el)
-          gsap.set(el, { opacity: 1 })
-          tl.from(split.lines, { stagger: MOTION.lineStagger, yPercent: LINE_HIDDEN }, 0)
-        })
+          lineEls.forEach((el) => {
+            const split = splitLines(el)
+            gsap.set(el, { opacity: 1 })
+            tl.from(split.lines, { stagger: MOTION.lineStagger, yPercent: LINE_HIDDEN }, 0)
+          })
 
-        if (items.length) {
-          tl.fromTo(
-            items,
-            { opacity: 0, y: 40 },
-            { opacity: 1, stagger: MOTION.itemStagger, y: 0 },
-            lineEls.length ? 0.15 : 0,
-          )
-        }
-
-        ScrollTrigger.create({ onEnter: () => tl.play(), once: true, start: MOTION.start, trigger: root })
-      }, root)
+          if (items.length) {
+            tl.fromTo(
+              items,
+              { opacity: 0, y: 40 },
+              { opacity: 1, stagger: MOTION.itemStagger, y: 0 },
+              lineEls.length ? 0.15 : 0,
+            )
+          }
+        }, root)
+      })
     })
 
     return () => {
       cancelled = true
+      stop()
       ctx?.revert()
     }
   }, [delay])
@@ -111,29 +156,45 @@ export function RevealImage({
     const el = ref.current
     if (!el || prefersReducedMotion()) return
 
+    const inner = el.firstElementChild
+    const rest = parallax ? 1.08 : 1
     const ctx = gsap.context(() => {
-      const inner = el.firstElementChild
-      const rest = parallax ? 1.08 : 1
-      const tl = gsap.timeline({ paused: true })
-      tl.fromTo(
-        el,
-        { clipPath: 'inset(100% 0% 0% 0%)', opacity: 1 },
-        { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.out' },
-      )
-      if (inner) tl.fromTo(inner, { scale: 1.2 }, { duration: 1.8, ease: 'expo.out', scale: rest }, 0)
-
-      ScrollTrigger.create({ onEnter: () => tl.play(), once: true, start, trigger: el })
-
-      if (inner && parallax) {
-        gsap.fromTo(
-          inner,
-          { yPercent: -3 },
-          { ease: 'none', scrollTrigger: { end: 'bottom top', scrub: 1, start: 'top bottom', trigger: el }, yPercent: 3 },
-        )
-      }
+      // The closed starting state is set now, so nothing shows before the unveil.
+      gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', opacity: 1 })
+      if (inner) gsap.set(inner, { scale: 1.2 })
     }, el)
 
-    return () => ctx.revert()
+    // The unveil plays when the frame reaches its line.
+    const stopReveal = whenReached(el, lineOf(start, 0.9), () => {
+      ctx.add(() => {
+        gsap.to(el, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.out' })
+        if (inner) gsap.to(inner, { duration: 1.8, ease: 'expo.out', scale: rest })
+      })
+    })
+
+    /*
+     * The drift is scrubbed, so it needs a ScrollTrigger — but only once the
+     * frame is within a screen of the viewport, not for every photograph on
+     * the page at load.
+     */
+    const stopDrift =
+      inner && parallax
+        ? whenReached(el, 2, () => {
+            ctx.add(() => {
+              gsap.fromTo(
+                inner,
+                { yPercent: -3 },
+                { ease: 'none', scrollTrigger: { end: 'bottom top', scrub: 1, start: 'top bottom', trigger: el }, yPercent: 3 },
+              )
+            })
+          })
+        : () => undefined
+
+    return () => {
+      stopReveal()
+      stopDrift()
+      ctx.revert()
+    }
   }, [parallax, start])
 
   return (

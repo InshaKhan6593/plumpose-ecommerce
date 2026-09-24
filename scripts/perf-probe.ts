@@ -1,9 +1,13 @@
-import { chromium, type Page } from '@playwright/test'
+import { chromium, devices, type Page } from '@playwright/test'
 
 /**
  * How smooth does the storefront feel? Measured, not eyeballed.
  *
  *   npx tsx scripts/perf-probe.ts http://localhost:3000 [/ /shop …]
+ *   npx tsx scripts/perf-probe.ts http://localhost:3000 --phone [/ /shop …]
+ *
+ * `--phone` is a Pixel 7 with its CPU slowed 4× — a mid-range phone — and
+ * scrolls by touch-style smooth scrolling instead of the wheel.
  *
  * For each page, in a real Chromium on this machine (GPU on):
  *   - load:   time to first byte, first paint, largest paint, JavaScript sent
@@ -17,7 +21,9 @@ import { chromium, type Page } from '@playwright/test'
  * Compare `pnpm dev` with a production build: dev is far slower by design.
  */
 const BASE = process.argv[2] || 'http://localhost:3000'
-const PAGES = process.argv.slice(3).length ? process.argv.slice(3) : ['/', '/shop', '/products/al-shaheen-nights', '/our-story']
+const PHONE = process.argv.includes('--phone')
+const args = process.argv.slice(3).filter((a) => a !== '--phone')
+const PAGES = args.length ? args : ['/', '/shop', '/products/al-shaheen-nights', '/our-story']
 
 const collector = () => {
   const w = window as any
@@ -49,7 +55,7 @@ async function record(page: Page, ms: number, action?: () => Promise<void>) {
 
 async function run() {
   const browser = await chromium.launch({ args: ['--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-angle=d3d11'] })
-  const context = await browser.newContext({ viewport: { height: 900, width: 1440 } })
+  const context = await browser.newContext(PHONE ? { ...devices['Pixel 7'] } : { viewport: { height: 900, width: 1440 } })
   // tsx names functions with a `__name` helper, which does not exist inside the page.
   await context.addInitScript({ content: 'window.__name = (f) => f' })
   await context.addInitScript(collector)
@@ -61,6 +67,8 @@ async function run() {
     return ext && gl ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'no WebGL'
   })
   console.log(`${BASE}  ·  GPU: ${gpu}\n`)
+
+  if (PHONE) await (await context.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 })
 
   for (const path of PAGES) {
     await page.goto(`${BASE}${path}`, { timeout: 180_000, waitUntil: 'load' })
@@ -99,11 +107,12 @@ async function run() {
     })
 
     // Scroll the way a visitor does: wheel ticks, which Lenis smooths.
-    await page.mouse.move(720, 450)
+    await page.mouse.move(PHONE ? 200 : 720, PHONE ? 400 : 450)
     const scroll = await record(page, 0, async () => {
-      for (let i = 0; i < 40; i++) {
-        await page.mouse.wheel(0, 140)
-        await page.waitForTimeout(60)
+      for (let i = 0; i < (PHONE ? 14 : 40); i++) {
+        if (PHONE) await page.evaluate(() => window.scrollBy({ behavior: 'smooth', top: 450 }))
+        else await page.mouse.wheel(0, 140)
+        await page.waitForTimeout(PHONE ? 350 : 60)
       }
       await page.waitForTimeout(1200)
     })

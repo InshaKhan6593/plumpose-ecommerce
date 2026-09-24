@@ -1681,3 +1681,56 @@ real phone gain is deferring below-the-fold animation set-up. Not done yet.
 **Films are healthy:** H.264 High, fast-start (index at the front), 1.5–3.4
 Mbps. The desktop hero (7 MB) downloads in full at once. Instant on localhost;
 on a slow connection it competes with the first photographs.
+
+## 28. Phones, films and the shop, fixed and measured — 25 Sep 2026
+
+Measured as an A/B: the previous build (44378e7) on :3002 against this one on
+:3000, both production, interleaved, **median of five runs**, Pixel 7 with the
+CPU slowed 4×. Single runs varied by ±30%, so no single-run figure is used.
+
+| Page | Worst freeze | Busy after load | Film in first 5 s |
+|---|---|---|---|
+| Home | 575 → **472 ms** | 1,576 → 1,458 ms | 1.2 → 3.8 MB (16.7 s loop, was 5 s) |
+| Our Story | 490 → **344 ms** | 1,392 → 1,220 ms | **12.1 → 4.1 MB** |
+| Product | 458 → **357 ms** | 1,387 → 1,275 ms | — |
+| Shop | 311 → 302 ms | 1,124 → 1,168 ms | — (now four pieces on the first screen, was one or two) |
+
+**What changed:**
+
+- **Reveals set up on arrival** (`src/motion/Reveal.tsx`, `whenReached()`).
+  `Reveal` and `RevealImage` (39 uses) each made a ScrollTrigger at load, and
+  every heading was split into lines at load, reveals at the foot of the page
+  included. Now an IntersectionObserver waits, and the split, timeline and
+  drift trigger are made only when the element arrives. An element already
+  above the line, after an anchor jump or a restored scroll, reveals at once.
+- **No second full re-measure on the first page** (`MotionProvider`).
+  ScrollTrigger refreshes itself on load. The provider's refresh now runs on
+  navigations only.
+- **The steps sequence is built within a screen of view** (`MadeSteps`). Its
+  start state is set at once; the timeline is built later, against a finished
+  layout. Checked at step 1, mid-change and step 3 on desktop and phone.
+- **Films wait for the page** (`src/utilities/afterPageLoad.ts`). With the
+  site's code cached (a visitor arriving on a product, then opening the
+  homepage) at 10 Mbit/s, the old build requested the 7 MB hero before the
+  first photographs had finished, and the page loaded at 1,282 ms. Now the
+  film follows the photographs, and the page loads at 893 ms.
+- **The phone hero is the café film**, full portrait frame, 16.7 s. The old
+  phone clip (IMG_5839) is only 5 s at 24 fps, so it looped constantly. It now
+  plays on Our Story only, as `story-walk`.
+- **Phone versions of the portrait films** (`small` on `Film`, used under
+  768 px): `hero-mobile` (CRF 25, 3.4 MB; also the phone version of
+  `story-cafe`, so the two share a download) and `story-pillow-small` (CRF 25,
+  3.8 MB against 5.9 MB). SSIM against a lossless reference is 0.002 lower than
+  the desktop encodes, which a phone cannot show. `scripts/encode-videos.sh`
+  rebuilds them.
+- **Shop on phones:** two to a row, and the collections and sorts are one line
+  each that scrolls sideways. Page height 14,800 → 5,364 px on an iPhone 13.
+  The embroidery tile spans the row. Each card reveals as it arrives: as one
+  group, card 21 trailed card 1 by two seconds, so a quick scroll met blank
+  cards. The tile's "From QAR 160" now follows the visitor's currency.
+
+Desktop unchanged: 60 fps, no dropped film frames. Integration 162, e2e 38.
+
+**What is left of the phone start-up** is Next's own module loading (~250 ms
+at 4×) and hydrating the homepage's pinned scenes (hero, Philosophy, the
+Print's pin), which must exist before the layout below them is measured.

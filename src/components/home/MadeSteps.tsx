@@ -5,8 +5,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react'
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { gsap, prefersReducedMotion, ScrollTrigger } from '@/motion/gsap'
-import { Reveal } from '@/motion/Reveal'
+import { gsap, prefersReducedMotion } from '@/motion/gsap'
+import { Reveal, whenReached } from '@/motion/Reveal'
 
 import { HOME } from './content'
 
@@ -54,24 +54,28 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
     const n = frames.length
 
     const ctx = gsap.context(() => {
-      /*
-       * Decode every photograph while the section is still a screen away. A
-       * fully clipped image is never painted, so otherwise the browser decodes
-       * it on the first frame of its wipe — measured as a run of 33ms frames
-       * right as each change began.
-       */
-      ScrollTrigger.create({
-        once: true,
-        onEnter: () => el.querySelectorAll<HTMLImageElement>('[data-step-frame] img').forEach((img) => img.decode().catch(() => undefined)),
-        start: 'top bottom+=100%',
-        trigger: el,
-      })
-
-      // Starting state: step one showing, the rest waiting fully clipped from the right.
+      // Starting state, set at once (it measures nothing): step one showing, the rest clipped from the right.
       frames.forEach((f, i) => gsap.set(f, { clipPath: i === 0 ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }))
       gsap.set(pictures, { scale: 1.1 })
       titles.forEach((t, i) => gsap.set(t, { opacity: i === 0 ? 1 : 0, x: i === 0 ? 0 : -28 }))
       bodies.forEach((b, i) => gsap.set(b, { opacity: i === 0 ? 1 : 0, x: i === 0 ? 0 : -20 }))
+    }, el)
+
+    /*
+     * The scrubbed timeline is built only when the section is within a screen
+     * of the viewport. It is far down the homepage, and building it at load —
+     * measuring the track while the page was still being put together — was
+     * part of the homepage's start-up freeze on a phone. Built later, it
+     * measures a finished layout (the Print's pin above it included).
+     */
+    const stop = whenReached(el, 2, () => ctx.add(() => {
+      /*
+       * Decode every photograph now, while the section is still a screen away.
+       * A fully clipped image is never painted, so otherwise the browser
+       * decodes it on the first frame of its wipe — measured as a run of 33ms
+       * frames right as each change began.
+       */
+      el.querySelectorAll<HTMLImageElement>('[data-step-frame] img').forEach((img) => img.decode().catch(() => undefined))
 
       /*
        * One timeline across the whole track, scrubbed with a lag so it glides.
@@ -117,9 +121,12 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
         tl.to(bodies[i - 1], { duration: CHANGE * 0.4, ease: 'sine.in', opacity: 0, x: 20 }, at + 0.03)
         tl.fromTo(bodies[i], { opacity: 0, x: -20 }, { duration: CHANGE * 0.5, ease: 'sine.out', opacity: 1, x: 0 }, i + 0.04)
       }
-    }, el)
+    }))
 
-    return () => ctx.revert()
+    return () => {
+      stop()
+      ctx.revert()
+    }
   }, [steps.length])
 
   const count = (n: number) => `${String(n + 1).padStart(2, '0')} / ${String(steps.length).padStart(2, '0')}`

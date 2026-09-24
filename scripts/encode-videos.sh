@@ -48,9 +48,18 @@ TV="in_range=pc:out_range=tv"
 # a 16:9 band cut from hair to mid-chest so the shirt shows, half speed. ~7 MB.
 enc_mp4 hero-wide EK3A2406.mp4 "transpose=2,crop=2160:1215:0:250,setpts=2*PTS,scale=1920:1080:flags=lanczos:$TV,fps=30000/1001" 22 4500
 
-# Phone hero: already vertical, 24fps, standard range. Re-encode only. Also
-# the in-view film beside "Behind the print" on Our Story.
-enc hero-mobile IMG_5839.mp4 "scale=1080:1920" 1600
+# Phone hero: the same café table clip as the desktop hero, in its full
+# portrait frame, half speed — 16.7 s. (It used to be IMG_5839, which is only
+# 5 s at 24 fps, so on a phone the same few seconds looped over and over, and
+# half speed would drop it to a choppy 12 fps.) CRF 25 for phones: 26% smaller
+# than the CRF 23 desktop portrait (story-cafe) for an SSIM 0.002 lower —
+# invisible on a phone screen. Also the phone version of story-cafe, so the two
+# pages share one download.
+enc_mp4 hero-mobile EK3A2406.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500
+
+# The walking clip (IMG_5839): already vertical, 24fps, standard range. The
+# in-view film beside "Behind the print" on Our Story.
+enc story-walk IMG_5839.mp4 "scale=1080:1920" 1600
 
 # Made for You, the Bridal tile: the café breakfast clip, full portrait frame, half speed.
 enc_mp4 story-cafe EK3A2406.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 23 3500
@@ -59,3 +68,5 @@ enc_mp4 story-cafe EK3A2406.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=
 # not use. Portrait only: a landscape crop of it is nothing but her face, so
 # desktop shows it in a portrait half-screen frame.
 enc_mp4 story-pillow EK3A2414.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 22 4000
+# …and its phone version: 36% smaller (3.8 MB against 5.9 MB), SSIM 0.002 lower.
+enc_mp4 story-pillow-small EK3A2414.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500

@@ -261,6 +261,12 @@ From Git Bash, prefix commands taking a leading-slash argument with
   + `pnpm start` — never against dev, where every page is fresh (BUILD-LOG §25).
 - **A dynamic route needs a `loading.tsx`**, or clicks to it show nothing until
   the whole page has rendered (BUILD-LOG §18).
+- **Scroll animations are made on arrival.** Use `Reveal` / `RevealImage` or
+  `whenReached()` (`src/motion/Reveal.tsx`), not a ScrollTrigger per element
+  at load. Only pins, which move the layout below them, belong at load
+  (BUILD-LOG §28).
+- **Films start after the page has loaded** (`afterPageLoad`), and portrait
+  films take a lighter `small` encode on phones.
 - **Film: H.264, standard range, CRF 22.** VP9 from this ffmpeg is visibly
   softer and Chrome prefers it; the café originals are full range. See
   `scripts/encode-videos.sh` and BUILD-LOG §18.

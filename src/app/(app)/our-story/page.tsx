@@ -65,7 +65,7 @@ export default async function OurStoryPage() {
   return (
     <>
       <StoryOpener
-        film={{ mp4: '/video/story-pillow.mp4', poster: '/video/story-pillow-poster.jpg' }}
+        film={{ mp4: '/video/story-pillow.mp4', poster: '/video/story-pillow-poster.jpg', small: '/video/story-pillow-small.mp4' }}
         heading={OUR_STORY.opener.heading}
         label={OUR_STORY.opener.label}
         lede={OUR_STORY.lede}
@@ -86,9 +86,9 @@ export default async function OurStoryPage() {
         className="pt-24 md:pt-36"
         film={{
           label: 'Walking down a corridor in the Al Shaheen Nights set, then a close-up of the whale-shark print',
-          mp4: '/video/hero-mobile.mp4',
-          poster: '/video/hero-mobile-poster.jpg',
-          webm: '/video/hero-mobile.webm',
+          mp4: '/video/story-walk.mp4',
+          poster: '/video/story-walk-poster.jpg',
+          webm: '/video/story-walk.webm',
         }}
         id="the-print"
         imgClassName="object-[50%_40%]"
