@@ -4,6 +4,14 @@ import config from '../../src/payload.config.js'
 export const testUser = {
   email: 'dev@payloadcms.com',
   password: 'test',
+  /**
+   * Required. `users.access.admin` is `checkRole(['admin'])` and the `roles`
+   * field defaults to `['customer']`, so a user seeded without this one logs
+   * in successfully and then gets "Unauthorized, this user does not have
+   * access to the admin panel." The upstream template had no roles, which is
+   * why it was absent here.
+   */
+  roles: ['admin' as const],
 }
 
 /**

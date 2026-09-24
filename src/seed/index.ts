@@ -134,6 +134,28 @@ export async function seed(payload: Payload): Promise<void> {
     if (m) images[file] = m
   }
 
+  /**
+   * The client's own photography, supplied 22 Sep 2026 at 1333×2000
+   * (brand-assets/product/). The shots above were extracted from the base64
+   * in her old index.html at 640–1100px and are kept only as a fallback. The
+   * order is the product page's, from the approved mockup: full length first,
+   * then the print, then the details.
+   */
+  const brandShots: Array<[string, string]> = [
+    ['brand-01-window.jpg', 'Al Shaheen Nights silk pyjama set, full length by a window'],
+    ['brand-02-print-macro.jpg', 'The hand-drawn whale-shark print on navy silk, with cream piping'],
+    ['brand-03-piping.jpg', 'The shirt front: cream piping, mother-of-pearl buttons and pocket'],
+    ['brand-04-corridor.jpg', 'Walking in the Al Shaheen Nights set along a hotel corridor'],
+    ['brand-05-armchair.jpg', 'Seated in a blue armchair wearing the Al Shaheen Nights set'],
+    ['brand-06-doorway.jpg', 'Portrait in a dark wood doorway wearing the Al Shaheen Nights set'],
+    ['brand-07-qatar-book.jpg', 'Holding a book on Qatar, showing the piped cuff'],
+  ]
+  const brandImages: any[] = []
+  for (const [file, alt] of brandShots) {
+    const m = await upsertMedia(payload, file, alt)
+    if (m) brandImages.push(m)
+  }
+
   // ----------------------------------------------------------- categories
   log('collections…')
   const resort = await upsert(
@@ -168,7 +190,7 @@ export async function seed(payload: Payload): Promise<void> {
 
   // --------------------------------------------------------------- product
   log('product…')
-  const gallery = [
+  const legacyGallery = [
     'plumpose-00-hero.jpg',
     'plumpose-01.jpg',
     'plumpose-02.jpg',
@@ -177,7 +199,11 @@ export async function seed(payload: Payload): Promise<void> {
     'plumpose-05.jpg',
   ]
     .filter((f) => images[f])
-    .map((f) => ({ image: images[f].id }))
+    .map((f) => images[f].id as number)
+
+  const gallery = (
+    brandImages.length ? brandImages.map((m) => m.id as number) : legacyGallery
+  ).map((id) => ({ image: id }))
 
   const existingProduct = await payload.find({
     collection: 'products',
@@ -213,7 +239,29 @@ export async function seed(payload: Payload): Promise<void> {
     })
     c.created++
   } else {
-    c.skipped++
+    /**
+     * Upgrade an existing database to the full-resolution photographs — but
+     * only while the gallery is still exactly the seeded legacy set. A gallery
+     * the client has edited is hers, and a re-seed must not overwrite it.
+     */
+    const current = (product.gallery ?? []).map((row: { image: any }) =>
+      typeof row.image === 'object' ? row.image?.id : row.image,
+    )
+    const untouched =
+      current.length === legacyGallery.length &&
+      current.every((id: number, i: number) => id === legacyGallery[i])
+
+    if (untouched && brandImages.length) {
+      product = await payload.update({
+        collection: 'products',
+        data: { gallery } as any,
+        id: product.id,
+      })
+      log('product gallery upgraded to the full-resolution photographs')
+      c.created++
+    } else {
+      c.skipped++
+    }
   }
 
   // One variant per size, each with its own stock. Hand-finished to order,

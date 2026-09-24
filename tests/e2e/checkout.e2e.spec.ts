@@ -84,6 +84,10 @@ test.describe('checkout, end to end', () => {
       },
       headers: admin(),
     })
+    expect(
+      cartRes.ok(),
+      `creating the cart failed: ${cartRes.status()} ${await cartRes.text()}`,
+    ).toBe(true)
     const cart = (await cartRes.json()).doc
 
     const initiated = await request.post(`${BASE}/api/payments/stripe/initiate`, {
@@ -95,7 +99,14 @@ test.describe('checkout, end to end', () => {
       },
       headers: admin(),
     })
+    // Assert before using it. Otherwise a failed initiate surfaces further down
+    // as Stripe complaining that "intent" is undefined, which hides the cause.
+    expect(
+      initiated.ok(),
+      `initiating payment failed: ${initiated.status()} ${await initiated.text()}`,
+    ).toBe(true)
     const initiatedBody = await initiated.json()
+    expect(initiatedBody.paymentIntentID, 'initiate returned no paymentIntentID').toBeTruthy()
 
     // Pay it, the way a customer's browser would.
     await stripe.paymentIntents.confirm(initiatedBody.paymentIntentID, {

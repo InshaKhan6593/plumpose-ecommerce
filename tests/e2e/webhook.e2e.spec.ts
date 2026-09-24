@@ -108,7 +108,13 @@ test.describe('payment webhook', () => {
   test.beforeAll(async ({ request }) => {
     stripe = new Stripe(secretKey as string)
     const login = await request.post(`${BASE}/api/users/login`, { data: DEV_USER })
+    // Assert it here. Without this a failed login leaves `token` undefined,
+    // every later request goes out as `Authorization: JWT undefined`, and the
+    // first thing to fail is an assertion on a field the 403 body does not
+    // have -- which reports as "Expected: NaN" and says nothing about auth.
+    expect(login.ok(), `login as ${DEV_USER.email} failed: ${login.status()}`).toBe(true)
     token = (await login.json()).token
+    expect(token, 'login returned no token').toBeTruthy()
   })
 
   test.describe('refuses what it cannot verify', () => {
@@ -134,20 +140,31 @@ test.describe('payment webhook', () => {
     })
 
     test('records the attempt rather than discarding it', async ({ request }) => {
-      const before = await request.get(
-        `${BASE}/api/webhookLog?where[signatureValid][equals]=false&limit=1`,
-        { headers: admin() },
-      )
-      const countBefore = (await before.json()).totalDocs
+      /** `webhookLog.read` is admin-only, so an unauthenticated GET 403s. */
+      const countRejected = async (): Promise<number> => {
+        const response = await request.get(
+          `${BASE}/api/webhookLog?where[signatureValid][equals]=false&limit=1`,
+          { headers: admin() },
+        )
+        expect(
+          response.ok(),
+          `reading webhookLog failed: ${response.status()} ${await response.text()}`,
+        ).toBe(true)
+        const { totalDocs } = await response.json()
+        expect(typeof totalDocs, 'webhookLog did not return totalDocs').toBe('number')
+        return totalDocs as number
+      }
 
-      await request.post(WEBHOOK, { data: { type: 'payment_intent.succeeded' } })
+      const countBefore = await countRejected()
 
-      const after = await request.get(
-        `${BASE}/api/webhookLog?where[signatureValid][equals]=false&limit=1`,
-        { headers: admin() },
-      )
+      const rejected = await request.post(WEBHOOK, {
+        data: { type: 'payment_intent.succeeded' },
+      })
+      expect(rejected.status()).toBe(400)
+
       // A run of these is what a forgery attempt looks like; losing them hides it.
-      expect((await after.json()).totalDocs).toBe(countBefore + 1)
+      // The receiver awaits the log write before replying, so this cannot race.
+      expect(await countRejected()).toBe(countBefore + 1)
     })
   })
 

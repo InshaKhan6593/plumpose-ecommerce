@@ -1,166 +1,230 @@
 'use client'
 
-import { Price } from '@/components/Price'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import * as Dialog from '@radix-ui/react-dialog'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
-import { ShoppingCart } from 'lucide-react'
+import { X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 
-import { DeleteItemButton } from './DeleteItemButton'
-import { EditItemQuantityButton } from './EditItemQuantityButton'
+import type { Media, Product, Variant, VariantOption } from '@/payload-types'
+
+import { formatQar } from '@/lib/pricing/money'
+import { useLenis } from '@/motion/MotionProvider'
+import { cn } from '@/utilities/cn'
+
 import { OpenCartButton } from './OpenCart'
-import { Button } from '@/components/ui/button'
-import { Product, VariantOption } from '@/payload-types'
 
-/** The cart item's product/variant arrive loosely typed, so the array
- *  callbacks below lose their contextual type. These name them back. */
-type GalleryItem = NonNullable<Product['gallery']>[number]
-type VariantOptionRef = VariantOption | number
+/** Dispatch this to slide the bag open — AddToCart does, once a piece is in. */
+export const OPEN_BAG_EVENT = 'plumpose:open-bag'
+export const openBag = () => window.dispatchEvent(new Event(OPEN_BAG_EVENT))
 
+type QuoteLine = {
+  personalisation: Array<{
+    lettering: string
+    placementName: string
+    symbolName: string
+    threadName: string
+  }>
+  personalisationTotal: number
+  subtotal: number
+}
 
+type Quote = {
+  lines: QuoteLine[]
+  totals: { personalisation: number; subtotal: number; total: number }
+}
+
+const describe = (p: QuoteLine['personalisation'][number]) =>
+  `${p.placementName}: ${[
+    p.lettering ? `“${p.lettering}”` : '',
+    p.symbolName ? p.symbolName.toLowerCase() : '',
+    p.threadName ? `${p.threadName.toLowerCase()} thread` : '',
+  ]
+    .filter(Boolean)
+    .join(', ')}`
+
+/**
+ * The bag (SCREEN-PROMPTS 08).
+ *
+ * The plugin keeps the lines; **the money comes from `/api/quote`** — the same
+ * engine checkout charges through — because the cart's own `subtotal` is goods
+ * only (no embroidery) and is overwritten with the full total once payment
+ * starts. Delivery is left to checkout, where the address is known.
+ */
 export function CartModal() {
-  const { cart } = useCart()
+  const { cart, decrementItem, incrementItem, isLoading, removeItem } = useCart()
   const [isOpen, setIsOpen] = useState(false)
-
+  const [quote, setQuote] = useState<null | Quote>(null)
   const pathname = usePathname()
+  const lenis = useLenis()
+
+  const items = useMemo(() => cart?.items ?? [], [cart])
+  const count = items.reduce((n, item) => n + (item.quantity || 0), 0)
+
+  useEffect(() => setIsOpen(false), [pathname])
 
   useEffect(() => {
-    // Close the cart modal when the pathname changes.
-    setIsOpen(false)
-  }, [pathname])
+    const open = () => setIsOpen(true)
+    window.addEventListener(OPEN_BAG_EVENT, open)
+    return () => window.removeEventListener(OPEN_BAG_EVENT, open)
+  }, [])
 
-  const totalQuantity = useMemo(() => {
-    if (!cart || !cart.items || !cart.items.length) return undefined
-    return cart.items.reduce((quantity, item) => (item.quantity || 0) + quantity, 0)
-  }, [cart])
+  useEffect(() => {
+    if (isOpen) lenis.current?.stop()
+    else lenis.current?.start()
+  }, [isOpen, lenis])
+
+  /** Re-price whenever the lines change — ids, sizes, quantities, embroidery. */
+  const quoteKey = JSON.stringify(
+    items.map((item) => [
+      typeof item.product === 'object' ? item.product?.id : item.product,
+      typeof item.variant === 'object' ? item.variant?.id : item.variant,
+      item.quantity,
+      (item as { personalisation?: unknown }).personalisation ?? [],
+    ]),
+  )
+
+  useEffect(() => {
+    if (!items.length) {
+      setQuote(null)
+      return
+    }
+    const controller = new AbortController()
+    fetch('/api/quote', {
+      body: JSON.stringify({
+        items: items.map((item) => ({
+          personalisation: (item as { personalisation?: unknown }).personalisation ?? [],
+          productId: typeof item.product === 'object' ? item.product?.id : item.product,
+          quantity: item.quantity,
+          variantId: typeof item.variant === 'object' ? item.variant?.id : item.variant,
+        })),
+      }),
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body: null | Quote) => setQuote(body))
+      .catch(() => undefined)
+    return () => controller.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteKey])
+
+  // Only trust per-line figures when the quote priced exactly these lines.
+  const lineQuotes = quote && quote.lines.length === items.length ? quote.lines : null
 
   return (
-    <Sheet onOpenChange={setIsOpen} open={isOpen}>
-      <SheetTrigger asChild>
-        <OpenCartButton quantity={totalQuantity} />
-      </SheetTrigger>
+    <Dialog.Root onOpenChange={setIsOpen} open={isOpen}>
+      <Dialog.Trigger asChild>
+        <OpenCartButton quantity={count || undefined} />
+      </Dialog.Trigger>
 
-      <SheetContent className="flex flex-col">
-        <SheetHeader>
-          <SheetTitle>My Cart</SheetTitle>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/30 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[28rem] flex-col bg-background duration-500 ease-brand data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right"
+        >
+          <header className="flex items-center justify-between border-b border-line px-7 py-6">
+            <Dialog.Title className="serif-display text-3xl">
+              Your bag
+              {count ? <span className="ml-2 align-middle text-sm text-ink-soft">({count})</span> : null}
+            </Dialog.Title>
+            <Dialog.Close aria-label="Close bag" className="-mr-1 p-1">
+              <X className="size-5" strokeWidth={1.25} />
+            </Dialog.Close>
+          </header>
 
-          <SheetDescription>Manage your cart here, add items to view the total.</SheetDescription>
-        </SheetHeader>
+          {!items.length ? (
+            <div className="flex flex-1 flex-col items-center justify-center px-7 text-center">
+              <p className="serif-display text-3xl">Your bag is empty.</p>
+              <p className="mt-3 text-sm text-ink-soft">Every piece is hand-finished to order in Doha.</p>
+              <Link className="caps mt-8 bg-ink px-8 py-4 text-[0.6875rem] text-white hover:bg-ink/85" href="/shop">
+                Visit the shop
+              </Link>
+            </div>
+          ) : (
+            <>
+              <ul className="flex-1 overflow-y-auto px-7" data-lenis-prevent>
+                {items.map((item, index) => {
+                  const product = typeof item.product === 'object' ? (item.product as Product) : null
+                  if (!product?.slug) return null
 
-        {!cart || cart?.items?.length === 0 ? (
-          <div className="text-center flex flex-col items-center gap-2">
-            <ShoppingCart className="h-16" />
-            <p className="text-center text-2xl font-bold">Your cart is empty.</p>
-          </div>
-        ) : (
-          <div className="grow flex px-4">
-            <div className="flex flex-col justify-between w-full">
-              <ul className="grow overflow-auto py-4">
-                {cart?.items?.map((item, i) => {
-                  const product = item.product
-                  const variant = item.variant
+                  const variant = typeof item.variant === 'object' ? (item.variant as Variant) : null
+                  const size = variant?.options
+                    ?.map((o) => (typeof o === 'object' ? (o as VariantOption).label : null))
+                    .filter(Boolean)
+                    .join(' / ')
+                  const image = product.gallery?.find((g) => typeof g.image === 'object')?.image as
+                    | Media
+                    | undefined
 
-                  if (typeof product !== 'object' || !item || !product || !product.slug)
-                    return <React.Fragment key={i} />
+                  const line = lineQuotes?.[index]
+                  const unit = variant?.priceInQAR ?? product.priceInQAR ?? 0
+                  const lineTotal = line ? line.subtotal + line.personalisationTotal : unit * (item.quantity || 1)
 
-                  const metaImage =
-                    product.meta?.image && typeof product.meta?.image === 'object'
-                      ? product.meta.image
-                      : undefined
-
-                  const firstGalleryImage =
-                    typeof product.gallery?.[0]?.image === 'object'
-                      ? product.gallery?.[0]?.image
-                      : undefined
-
-                  let image = firstGalleryImage || metaImage
-                  let price = product.priceInQAR
-
-                  const isVariant = Boolean(variant) && typeof variant === 'object'
-
-                  if (isVariant) {
-                    price = variant?.priceInQAR
-
-                    const imageVariant = product.gallery?.find((item: GalleryItem) => {
-                      if (!item.variantOption) return false
-                      const variantOptionID =
-                        typeof item.variantOption === 'object'
-                          ? item.variantOption.id
-                          : item.variantOption
-
-                      const hasMatch = variant?.options?.some((option: VariantOptionRef) => {
-                        if (typeof option === 'object') return option.id === variantOptionID
-                        else return option === variantOptionID
-                      })
-
-                      return hasMatch
-                    })
-
-                    if (imageVariant && typeof imageVariant.image === 'object') {
-                      image = imageVariant.image
-                    }
-                  }
+                  const target = variant ?? product
+                  const atStock =
+                    typeof target.inventory === 'number' && (item.quantity || 0) >= target.inventory
 
                   return (
-                    <li className="flex w-full flex-col" key={i}>
-                      <div className="relative flex w-full flex-row justify-between px-1 py-4">
-                        <div className="absolute z-40 -mt-2 ml-[55px]">
-                          <DeleteItemButton item={item} />
-                        </div>
-                        <Link
-                          className="z-30 flex flex-row space-x-4"
-                          href={`/products/${(item.product as Product)?.slug}`}
-                        >
-                          <div className="relative h-16 w-16 cursor-pointer overflow-hidden rounded-md border border-neutral-300 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                            {image?.url && (
-                              <Image
-                                alt={image?.alt || product?.title || ''}
-                                className="h-full w-full object-cover"
-                                height={94}
-                                src={image.url}
-                                width={94}
-                              />
-                            )}
-                          </div>
+                    <li className="flex gap-5 border-b border-line py-6" key={item.id ?? index}>
+                      <Link
+                        className="relative aspect-[4/5] w-20 shrink-0 overflow-hidden bg-paper-3"
+                        href={`/products/${product.slug}`}
+                      >
+                        {image?.url ? (
+                          <Image alt={image.alt || product.title} className="object-cover" fill sizes="80px" src={image.url} />
+                        ) : null}
+                      </Link>
 
-                          <div className="flex flex-1 flex-col text-base">
-                            <span className="leading-tight">{product?.title}</span>
-                            {isVariant && variant ? (
-                              <p className="text-sm text-neutral-500 dark:text-neutral-400 capitalize">
-                                {variant.options
-                                  ?.map((option: VariantOptionRef) => {
-                                    if (typeof option === 'object') return option.label
-                                    return null
-                                  })
-                                  .join(', ')}
-                              </p>
-                            ) : null}
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <Link className="serif-display text-lg leading-snug" href={`/products/${product.slug}`}>
+                            {product.title.split(/\s+[—–]\s+/)[0]}
+                          </Link>
+                          <span className="shrink-0 text-sm tabular-nums">{formatQar(lineTotal)}</span>
+                        </div>
+                        {size ? <p className="mt-1 text-xs text-ink-soft">Size {size}</p> : null}
+                        {line?.personalisation.map((p) => (
+                          <p className="serif-italic mt-1 text-[0.8125rem] text-ink-soft" key={p.placementName}>
+                            Embroidery — {describe(p)}
+                          </p>
+                        ))}
+
+                        <div className="mt-auto flex items-center justify-between pt-4">
+                          <div className="flex items-center border border-line">
+                            <button
+                              aria-label="One fewer"
+                              className="flex size-8 items-center justify-center disabled:opacity-40"
+                              disabled={isLoading || !item.id}
+                              onClick={() => item.id && decrementItem(item.id)}
+                              type="button"
+                            >
+                              −
+                            </button>
+                            <span className="w-6 text-center text-xs tabular-nums">{item.quantity}</span>
+                            <button
+                              aria-label="One more"
+                              className="flex size-8 items-center justify-center disabled:opacity-40"
+                              disabled={isLoading || !item.id || atStock}
+                              onClick={() => item.id && incrementItem(item.id)}
+                              title={atStock ? 'That is all we have in this size' : undefined}
+                              type="button"
+                            >
+                              +
+                            </button>
                           </div>
-                        </Link>
-                        <div className="flex h-16 flex-col justify-between">
-                          {typeof price === 'number' && (
-                            <Price
-                              amount={price}
-                              className="flex justify-end space-y-2 text-right text-sm"
-                            />
-                          )}
-                          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border">
-                            <EditItemQuantityButton item={item} type="minus" />
-                            <p className="w-6 text-center">
-                              <span className="w-full text-sm">{item.quantity}</span>
-                            </p>
-                            <EditItemQuantityButton item={item} type="plus" />
-                          </div>
+                          <button
+                            className="caps text-[0.5625rem] text-ink-soft underline-offset-4 hover:text-ink hover:underline"
+                            disabled={isLoading || !item.id}
+                            onClick={() => item.id && removeItem(item.id)}
+                            type="button"
+                          >
+                            Remove
+                          </button>
                         </div>
                       </div>
                     </li>
@@ -168,29 +232,45 @@ export function CartModal() {
                 })}
               </ul>
 
-              <div className="px-4">
-                <div className="py-4 text-sm text-neutral-500 dark:text-neutral-400">
-                  {typeof cart?.subtotal === 'number' && (
-                    <div className="mb-3 flex items-center justify-between border-b border-neutral-200 pb-1 pt-1 dark:border-neutral-700">
-                      <p>Total</p>
-                      <Price
-                        amount={cart?.subtotal}
-                        className="text-right text-base text-black dark:text-white"
-                      />
-                    </div>
+              <footer className="border-t border-line px-7 py-6">
+                <dl className="flex flex-col gap-2 text-sm">
+                  <Row label="Pieces" value={quote ? formatQar(quote.totals.subtotal) : '—'} />
+                  {quote && quote.totals.personalisation > 0 ? (
+                    <Row label="Embroidery" value={formatQar(quote.totals.personalisation)} />
+                  ) : null}
+                  <Row label="Delivery" muted value="Calculated at checkout" />
+                  <div className="mt-2 flex items-baseline justify-between border-t border-line pt-3">
+                    <dt className="caps text-[0.625rem]">Total</dt>
+                    <dd className="text-base tabular-nums">{quote ? formatQar(quote.totals.total) : '—'}</dd>
+                  </div>
+                </dl>
+                <p className="mt-3 text-xs text-ink-soft">All orders are charged in QAR.</p>
+                <Link
+                  className={cn(
+                    'caps mt-5 flex h-12 w-full items-center justify-center bg-ink text-[0.6875rem] text-white hover:bg-ink/85',
+                    isLoading && 'pointer-events-none bg-ink/70',
                   )}
+                  href="/checkout"
+                >
+                  Checkout
+                </Link>
+                <Dialog.Close className="caps mx-auto mt-4 block text-[0.5625rem] text-ink-soft underline-offset-4 hover:underline">
+                  Continue shopping
+                </Dialog.Close>
+              </footer>
+            </>
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
 
-                  <Button asChild>
-                    <Link className="w-full" href="/checkout">
-                      Proceed to Checkout
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+function Row({ label, muted, value }: { label: string; muted?: boolean; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between">
+      <dt className="caps text-[0.625rem] text-ink-soft">{label}</dt>
+      <dd className={cn('tabular-nums', muted && 'text-xs text-ink-soft')}>{value}</dd>
+    </div>
   )
 }

@@ -51,3 +51,10 @@ export const percentOf = (amount: Minor, pct: number): Minor => Math.round((amou
 
 /** Totals must never go below zero, whatever a discount claims to be worth. */
 export const clampToZero = (amount: Minor): Minor => (amount < 0 ? 0 : amount)
+
+/** `139900` → `QAR 1,399.00`. Display only — the same format as the admin's PriceCell. */
+export const formatQar = (amount: Minor | null | undefined): string =>
+  `QAR ${toMajor(amount ?? 0).toLocaleString('en-GB', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  })}`

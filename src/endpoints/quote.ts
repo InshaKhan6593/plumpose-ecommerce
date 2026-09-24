@@ -6,6 +6,7 @@ import { validateDiscountCode } from '@/lib/pricing/discounts'
 import { toMajor } from '@/lib/pricing/money'
 import { personalisationRules } from '@/lib/pricing/personalisation'
 import {
+  priceGoods,
   type PriceLineInput,
   priceOrder,
   type PriceOrderContext,
@@ -137,6 +138,34 @@ export const quoteEndpoint: Endpoint = {
       personalisationRules: personalisationRules(options.docs, settings),
       settings,
       shipping: { cities: cities.docs, countries: countries.docs, zones: zones.docs },
+    }
+
+    /**
+     * No destination yet — the bag, before checkout. Price the goods and the
+     * embroidery with the same engine and say plainly that delivery is still
+     * to come, rather than refusing the whole quote for want of an address.
+     */
+    if (!asText(body.country, 2)) {
+      const goods = priceGoods(lines, context.personalisationRules)
+      return json({
+        deliveryPending: true,
+        lines: goods.lines.map((line) => ({
+          personalisation: line.personalisation,
+          personalisationTotal: line.personalisationTotal,
+          productId: line.productId,
+          quantity: line.quantity,
+          subtotal: line.subtotal,
+          title: line.productTitle,
+          unitPrice: line.unitPrice,
+          variantId: line.variantId,
+          variantTitle: line.variantTitle,
+        })),
+        totals: {
+          personalisation: goods.personalisationTotal,
+          subtotal: goods.subtotal,
+          total: goods.total,
+        },
+      })
     }
 
     /**

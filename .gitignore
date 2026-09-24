@@ -41,6 +41,10 @@ next-env.d.ts
 
 public/media
 
+# The client's film. The repository is public and the footage is unreleased,
+# like seed-assets/ below. Rebuild it with scripts/encode-videos.sh.
+public/video/
+
 .env
 seed-assets/
 .screenshots/

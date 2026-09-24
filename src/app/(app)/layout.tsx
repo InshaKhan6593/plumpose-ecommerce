@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
-import { Footer } from '@/components/Footer'
-import { Header } from '@/components/Header'
+import { SiteFooter } from '@/components/SiteFooter'
+import { SiteHeader } from '@/components/SiteHeader'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { ensureStartsWith } from '@/utilities/ensureStartsWith'
+import { MotionProvider } from '@/motion/MotionProvider'
 import { Providers } from '@/providers'
-import { InitTheme } from '@/providers/Theme/InitTheme'
 import { GeistMono } from 'geist/font/mono'
 import { Fraunces, Jost } from 'next/font/google'
 import React from 'react'
@@ -60,13 +60,21 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
+    /*
+     * `data-theme` and `js-motion` are rendered, not set by a script. The site
+     * is light only, so there is nothing to decide at runtime; and a
+     * before-paint <script> tripped React's "script tag while rendering"
+     * warning whenever Next re-rendered this layout on the client (every 404).
+     * If the motion script never loads, the CSS failsafe in globals.css still
+     * shows everything after 2.5s.
+     */
     <html
-      className={[fraunces.variable, jost.variable, GeistMono.variable].filter(Boolean).join(' ')}
+      className={[fraunces.variable, jost.variable, GeistMono.variable, 'js-motion'].filter(Boolean).join(' ')}
+      data-theme="light"
       lang="en"
       suppressHydrationWarning
     >
       <head>
-        <InitTheme />
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
       </head>
@@ -75,9 +83,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <AdminBar />
           <LivePreviewListener />
 
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <MotionProvider>
+            <SiteHeader />
+            <main>{children}</main>
+            <SiteFooter />
+          </MotionProvider>
         </Providers>
       </body>
     </html>

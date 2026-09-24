@@ -36,6 +36,7 @@ import { Spotted } from '@/collections/Spotted'
 import { Subscribers } from '@/collections/Subscribers'
 import { Users } from '@/collections/Users'
 import { WebhookLog } from '@/collections/WebhookLog'
+import { emailAdapter } from '@/email/config'
 import { quoteEndpoint } from '@/endpoints/quote'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
@@ -141,7 +142,8 @@ export default buildConfig({
       ]
     },
   }),
-  //email: nodemailerAdapter(),
+  /** Resend when RESEND_API_KEY is set; otherwise Payload logs emails to the console. See @/email/config. */
+  email: emailAdapter(),
   /** POST /api/quote — prices a bag. See @/endpoints/quote. */
   endpoints: [quoteEndpoint],
   globals: [Header, Footer, SiteSettings],

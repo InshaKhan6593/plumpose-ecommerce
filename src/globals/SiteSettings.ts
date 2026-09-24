@@ -1,6 +1,25 @@
-import type { GlobalConfig } from 'payload'
+import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
+
+import { revalidateTag } from 'next/cache'
 
 import { adminOnly } from '@/access/adminOnly'
+
+/**
+ * The storefront reads these through `getCachedGlobal('siteSettings')`, which
+ * is cached under this tag. Without clearing it, a new announcement or
+ * WhatsApp number would not appear until the next deploy. `expire: 0` because
+ * she expects to see her change on the next page load, not eventually.
+ */
+const revalidateSiteSettings: GlobalAfterChangeHook = ({ doc, req }) => {
+  if (!req.context?.disableRevalidate) {
+    try {
+      revalidateTag('global_siteSettings', { expire: 0 })
+    } catch {
+      // Outside a Next request (seed script, Local API) there is no cache to clear.
+    }
+  }
+  return doc
+}
 
 /**
  * Everything the client needs to change without a developer:
@@ -14,13 +33,29 @@ export const SiteSettings: GlobalConfig = {
     read: () => true,
     update: adminOnly,
   },
+  hooks: { afterChange: [revalidateSiteSettings] },
   fields: [
     {
       type: 'tabs',
       tabs: [
         {
           fields: [
-            { name: 'contactEmail', type: 'email', defaultValue: 'info@plumpose.com' },
+            {
+              name: 'contactEmail',
+              type: 'email',
+              admin: {
+                description: 'Shown on the site, and where customers’ replies to order emails arrive.',
+              },
+              defaultValue: 'info@plumpose.com',
+            },
+            {
+              name: 'orderAlertEmail',
+              type: 'email',
+              admin: {
+                description: 'Every new order is emailed here. Leave empty to use the contact email.',
+              },
+              label: 'New-order alerts go to',
+            },
             {
               name: 'whatsappNumber',
               type: 'text',

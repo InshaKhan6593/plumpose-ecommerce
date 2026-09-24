@@ -100,18 +100,41 @@ embroidery instructions, stock decrement and a `discountUses` ledger row.
 relationships, so old orders still read correctly when options are renamed);
 the money breakdown on orders; `discountUses`, `spinEntries`, `webhookLog`.
 
+**Email** — `src/email/`. Resend. Confirmation and new-order alert on order
+create, "on its way" when fulfilment becomes Shipped, a "Resend confirmation"
+button on the order, branded password reset. Sent **after** the response (so
+after the transaction commits), re-reading the order without `req`; each email
+stamps its own date on the order so it is sent once.
+
+**Storefront** — built from the approved mockups (`../docs/mockups/`) and the
+client's reference recording (`../brand-assets/reference/`):
+
+- `SiteHeader` / `SiteFooter` — real wordmark (vector, traced from the brand
+  guideline), fixed nav, announcement from Site settings. Over the film, in
+  white, on the homepage only.
+- Homepage (`src/components/home/`) — full-screen film hero, a curtain, her
+  words with drifting photographs, The Print expansion with her facts, a pinned
+  scrubbed 01–04 sequence, the product band. Copy placeholders are in
+  `content.ts`.
+- Shop, product page, embroidery drawer (`EmbroideryDrawer.tsx`), bag drawer
+  (`CartModal.tsx`, priced by `/api/quote`, never by `cart.subtotal`).
+- Motion: `src/motion/` — GSAP + ScrollTrigger + SplitText, Lenis. `Reveal`,
+  `RevealImage`. Everything off under `prefers-reduced-motion`.
+
 ## What is NOT built
 
-- **Email.** The adapter is commented out in `payload.config.ts`; the customer
-  receives nothing. This is the worst defect on the live site too.
-- **SkipCash.** Blocked on credentials. Note its flow differs from Stripe: it
-  returns a `payUrl` and takes payment on its own page after a redirect, so
-  **build the checkout as a redirect flow** or it gets thrown away.
-- Spin wheel, currency display (data is ready — every currency has a hand-set
-  `priceOverride`), reviews aggregate, CSV exports, storage adapter (uploads
-  currently write to local disk and will not survive a serverless deploy).
-- **The storefront is still largely the upstream template** — Payload logo,
-  "Designed in Michigan", placeholder homepage.
+- **Email from plumpose.com.** Works, but the domain is not verified in Resend,
+  so for now it sends from `onboarding@resend.dev` to the account owner only.
+- **SkipCash.** Blocked on credentials. It returns a `payUrl` and takes payment
+  on its own page after a redirect — **build the checkout as a redirect flow**.
+- Storefront still on the template: **checkout**, account pages, and the pages
+  the nav links to — Our Story, FAQ, Press, Spotted, Made for You, Shipping &
+  Returns (they land on the branded not-found page).
+- Spin wheel, currency display (data ready), reviews aggregate, CSV exports,
+  a Homepage global so she can edit the copy, storage adapter (uploads write
+  to local disk and will not survive a serverless deploy).
+- **Stock can go negative** — nothing floors the plugin's `$inc`. Blocked on
+  the client's made-to-order decision (REQUIREMENTS §9.3 Q8).
 
 ---
 
@@ -125,29 +148,43 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (81) |
+| `pnpm test:int` | Integration tests (107) |
 | `pnpm test:e2e` | Playwright — **fails as a whole**, see below |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
+| `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
+| `pnpm test-shots` | Import test photographs (see `../docs/TEST-SHOTS.md`) |
+| `sh scripts/encode-videos.sh` | Rebuild `public/video/` from the camera originals |
 
 **`pnpm lint` is broken** — ESLint dies resolving its own config via
 `eslint-config-next`. It fails on untouched files too, so it predates the
 current work.
 
-**`pnpm test:e2e` fails as a whole.** The template's `frontend.e2e.spec.ts` and
-`admin.e2e.spec.ts` never reach an assertion: loading the Payload config pulls
-in `src/collections/Pages/hooks/revalidatePage.ts`, whose extensionless
-`import ... from 'next/cache'` does not resolve under Playwright's ESM loader.
-Pre-existing, untouched since the scaffold commit. The two commerce specs pass
-when run directly:
+**`pnpm test:e2e` passes: 32 tests, plus 21 skipped.** The skipped ones are
+`frontend.e2e.spec.ts`, the upstream template's storefront suite — it asserts a
+page titled "Payload Ecommerce Template" and a "Hoodie" product, neither of
+which plumpose has. Replace it when the storefront is built.
 
-```bash
-npx playwright test tests/e2e/quote.e2e.spec.ts tests/e2e/checkout.e2e.spec.ts
-```
+**When a spec breaks, suspect this project's own hardening first.** Both
+template specs failed for that reason, and neither error named it: the admin
+one seeded a user with no `roles` (so `users.access.admin`, which is
+`checkRole(['admin'])`, refused it after a successful login), and the
+storefront one POSTed to `/api/variantTypes` unauthenticated, which is a 403
+here and was open upstream.
 
-Tests run with `fileParallelism: false`: each database-backed spec boots its own
-Payload instance and pushes the schema, and concurrent pushes collide with
-Postgres error 42704.
+**Assert a response before reading fields off it.** Two specs read
+`.token` and `.paymentIntentID` from unchecked responses, so an auth or
+initiate failure surfaced later as `Expected: NaN` and `Argument "intent" must
+be a string` — neither of which points at the cause. Both now assert
+`response.ok()` first.
+
+**Both suites run serially, and must.** Vitest uses `fileParallelism: false`
+because each database-backed spec boots its own Payload instance and pushes the
+schema, and concurrent pushes collide with Postgres error 42704. Playwright uses
+`workers: 1` because the specs share one database and one seeded product: with
+the default 5 workers, `decrements stock by the quantity ordered` read stock,
+bought two and found three gone, because another worker bought one in between.
+If either gets too slow, the fix is a database per worker — not more workers.
 
 E2E tests that write to the database prefix their data (`E2EONLY-`, `E2EPAID-`,
 `TESTONLY-`) and clean up afterwards. Cleanup is best-effort: a redeemed
@@ -158,6 +195,30 @@ From Git Bash, prefix commands taking a leading-slash argument with
 `MSYS_NO_PATHCONV=1`.
 
 ---
+
+## Storefront — things that bit
+
+- **A constant exported from a `'use client'` module is a client reference on
+  the server**, not the value. Shared helpers live in plain modules
+  (`src/utilities/splitTitle.ts`).
+- **ScrollTrigger measures once.** A pin adds spacing; triggers below it that
+  refresh first get the wrong positions. The Print's pin has
+  `refreshPriority: 1`. If a scroll effect below a pin runs early or late,
+  suspect this first.
+- **Animate only `transform`, `opacity`, `clip-path`.** Pictures that move
+  inside a frame must rest larger than it (`RevealImage` rests at 108%).
+- **Hidden-before-JS elements use the CSS failsafe** in `globals.css`
+  (`data-reveal`, `data-reveal-lines`, `data-reveal-image`); `html` renders with
+  `js-motion` and `data-theme="light"` — there is no before-paint script.
+- **The film is a portrait source.** `hero-wide` is cut from the 4K original;
+  check a new crop at several points in the loop and at several screen shapes.
+- **Client media is never committed** (public repo): `seed-assets/`,
+  `public/video/`, `public/media`. Test photographs (`pnpm test-shots`) only
+  show while `TEST_SHOTS=on`.
+- **Python on Windows writes cp1252 by default.** Pass `encoding="utf-8"` when a
+  script writes source, or Turbopack fails on the first non-ASCII character.
+- **"Hydration mismatch" on `fdprocessedid`** is a browser extension (password
+  manager / autofill), not the site. Check in a private window.
 
 ## House rules
 

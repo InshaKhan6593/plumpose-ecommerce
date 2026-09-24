@@ -5,7 +5,22 @@ import { fileURLToPath } from 'url'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-test.describe('Frontend', () => {
+/**
+ * Skipped: this is the upstream template's storefront suite, and it asserts a
+ * storefront plumpose does not have. It expects a page titled "Payload
+ * Ecommerce Template", a "Hoodie" product, and the template's /account,
+ * /orders and /find-order pages.
+ *
+ * It also cannot run as written: `createVariantsAndProducts` POSTs to
+ * /api/variantTypes with no auth header, which this project answers with 403
+ * (the upstream template left that collection open), so `.doc.id` throws in
+ * `beforeAll`. Repairing that would still leave it seeding `admin@test.com`
+ * and Brand/Payload/Figma variant types into the development database.
+ *
+ * Replace it with a plumpose storefront suite when the storefront is built;
+ * until then it is kept as a checklist of what that suite should cover.
+ */
+test.describe.skip('Frontend', () => {
   let page: Page
   const baseURL = 'http://localhost:3000'
   const mediaURL = `${baseURL}/admin/collections/media`

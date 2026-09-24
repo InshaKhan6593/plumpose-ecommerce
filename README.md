@@ -9,16 +9,23 @@ promotions and content herself without a developer.
 
 ## Status
 
-Data model, admin panel and the **commerce engine** are built. A full purchase
-runs end to end against the Stripe sandbox: bag → priced → paid → order, with
-the money breakdown, embroidery instructions, stock decrement and the discount
-ledger. 81 integration tests pass; 22 end-to-end tests cover the quote and
-checkout paths (the template's own e2e specs are broken — see
-[CLAUDE.md](CLAUDE.md)).
+**Backend.** Data model, admin panel and the commerce engine are built. A full
+purchase runs end to end against the Stripe sandbox: bag → priced → paid →
+order, with the money breakdown, embroidery instructions, stock decrement and
+the discount ledger. The payment webhook is the source of truth. Order emails
+(confirmation, new-order alert, shipped, resend, password reset) go through
+Resend.
 
-Not built: the payment webhook handler, confirmation email, the spin wheel,
-currency display, and the storefront itself (still largely the upstream
-template). SkipCash is pending credentials.
+**Storefront.** Built from the approved mockups and the client's reference
+animation: homepage (full-screen film hero, curtain, floating photographs, The
+Print, a pinned "made for you" sequence), shop, product page with the hand
+embroidery drawer, bag drawer, branded header, footer and not-found page. Motion
+is GSAP + ScrollTrigger + Lenis, and all of it switches off under
+`prefers-reduced-motion`.
+
+**Not built yet:** checkout restyle, account pages, Our Story / FAQ / Press /
+Spotted / Made for You / Shipping & Returns, the spin wheel, currency display.
+SkipCash is pending credentials. 107 integration tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.
@@ -43,12 +50,12 @@ Base currency is **QAR**, stored in minor units — `139900` is QAR 1,399.00.
 
 ## Running locally
 
-Requires **Node 24.15+**, pnpm and Docker.
+Requires **Node 20.9+** (`engines`: `^18.20.2 || >=20.9.0`), pnpm and Docker.
 
 ```bash
 docker run -d --name plumpose-pg \
   -e POSTGRES_USER=plumpose -e POSTGRES_PASSWORD=plumpose -e POSTGRES_DB=plumpose \
-  -p 5433:5432 postgres:16
+  -p 5434:5432 postgres:16
 ```
 
 ```bash
@@ -63,9 +70,17 @@ Storefront at `http://localhost:3000`, admin at `/admin`.
 pnpm seed
 ```
 
-The seed is idempotent and safe to re-run. Product photography lives in
-`seed-assets/`, which is not committed — the seed skips missing files and
-carries on.
+The seed is idempotent and safe to re-run.
+
+**The client's media is not in this repository** — it is public, and the
+photography and film are hers and unreleased. After cloning, with the client's
+`brand-assets/` folder beside `plumpose/`:
+
+- **Photographs:** copy `brand-assets/product/*.jpg` into `seed-assets/` as
+  `brand-01-window.jpg` … `brand-07-qatar-book.jpg` (the names are in
+  `src/seed/index.ts`), then run `pnpm seed`. Missing files are skipped.
+- **Film:** `sh scripts/encode-videos.sh` rebuilds `public/video/` from the
+  camera originals (needs ffmpeg).
 
 ---
 
@@ -81,6 +96,9 @@ carries on.
 | `pnpm generate:importmap` | Regenerate the admin import map |
 | `pnpm test:int` | Integration tests |
 | `pnpm test:e2e` | Playwright end-to-end tests |
+| `pnpm test-shots` | Import AI-generated **test** photographs from `../brand-assets/test-shots/` (shown only while `TEST_SHOTS=on`; never for launch — see `../docs/TEST-SHOTS.md`) |
+| `npx tsx scripts/shoot-storefront.ts [paths…]` | Screenshot storefront pages at desktop and phone size, full page and first screen, with console errors |
+| `sh scripts/encode-videos.sh` | Rebuild the web film from the camera originals |
 
 Two ad-hoc helpers for chasing a single layout problem:
 

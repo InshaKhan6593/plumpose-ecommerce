@@ -1,31 +1,29 @@
-import { Button } from '@/components/ui/button'
-import clsx from 'clsx'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingBag } from 'lucide-react'
 import React from 'react'
 
+/**
+ * The bag icon in the header. Rendered as the cart drawer's trigger, so it
+ * accepts whatever props and ref the drawer passes down.
+ */
 export function OpenCartButton({
-  className,
   quantity,
   ...rest
 }: {
-  className?: string
   quantity?: number
-}) {
+} & React.ComponentProps<'button'>) {
   return (
-    <Button
-      variant="nav"
-      size="clear"
-      className="navLink relative items-end hover:cursor-pointer"
+    <button
+      aria-label={quantity ? `Bag, ${quantity} ${quantity === 1 ? 'item' : 'items'}` : 'Bag'}
+      className="relative flex items-center hover:cursor-pointer"
+      type="button"
       {...rest}
     >
-      <span>Cart</span>
-
+      <ShoppingBag className="size-[1.15rem]" strokeWidth={1.25} />
       {quantity ? (
-        <>
-          <span>•</span>
-          <span>{quantity}</span>
-        </>
+        <span className="absolute -top-1.5 -right-2.5 text-[0.625rem] leading-none tabular-nums">
+          {quantity}
+        </span>
       ) : null}
-    </Button>
+    </button>
   )
 }

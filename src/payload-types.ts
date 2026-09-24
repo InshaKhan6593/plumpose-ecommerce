@@ -1193,6 +1193,9 @@ export interface Order {
    */
   displayTotal?: string | null;
   accessToken?: string | null;
+  /**
+   * Setting this to Shipped emails the customer — add the tracking number first.
+   */
   fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
   trackingNumber?: string | null;
   /**
@@ -1204,6 +1207,13 @@ export interface Order {
    */
   gift?: boolean | null;
   giftNote?: string | null;
+  confirmationEmailSentAt?: string | null;
+  notificationEmailSentAt?: string | null;
+  shippedEmailSentAt?: string | null;
+  /**
+   * The last email that failed. Use "Resend confirmation" once fixed.
+   */
+  emailError?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2883,6 +2893,10 @@ export interface OrdersSelect<T extends boolean = true> {
   adminNotes?: T;
   gift?: T;
   giftNote?: T;
+  confirmationEmailSentAt?: T;
+  notificationEmailSentAt?: T;
+  shippedEmailSentAt?: T;
+  emailError?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3025,7 +3039,14 @@ export interface Footer {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * Shown on the site, and where customers’ replies to order emails arrive.
+   */
   contactEmail?: string | null;
+  /**
+   * Every new order is emailed here. Leave empty to use the contact email.
+   */
+  orderAlertEmail?: string | null;
   /**
    * International format, e.g. +974 1234 5678. Used for click-to-chat links.
    */
@@ -3118,6 +3139,7 @@ export interface FooterSelect<T extends boolean = true> {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   contactEmail?: T;
+  orderAlertEmail?: T;
   whatsappNumber?: T;
   instagramHandle?: T;
   instagramUrl?: T;
