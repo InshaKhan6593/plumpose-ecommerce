@@ -18,6 +18,7 @@ export const Image: React.FC<MediaProps> = (props) => {
     fill,
     height: heightFromProps,
     imgClassName,
+    loading,
     onClick,
     onLoad: onLoadFromProps,
     priority,
@@ -27,27 +28,17 @@ export const Image: React.FC<MediaProps> = (props) => {
     width: widthFromProps,
   } = props
 
-  const [isLoading, setIsLoading] = React.useState(true)
-
   let width: number | undefined | null
   let height: number | undefined | null
   let alt = altFromProps
   let src: StaticImageData | string = srcFromProps || ''
 
   if (!src && resource && typeof resource === 'object') {
-    const {
-      alt: altFromResource,
-      filename: fullFilename,
-      height: fullHeight,
-      url,
-      width: fullWidth,
-    } = resource
+    const { alt: altFromResource, height: fullHeight, url, width: fullWidth } = resource
 
     width = widthFromProps ?? fullWidth
     height = heightFromProps ?? fullHeight
     alt = altFromResource
-
-    const filename = fullFilename
 
     src = `${process.env.NEXT_PUBLIC_SERVER_URL}${url}`
   }
@@ -65,13 +56,10 @@ export const Image: React.FC<MediaProps> = (props) => {
       className={cn(imgClassName)}
       fill={fill}
       height={!fill ? height || heightFromProps : undefined}
+      // `priority` already loads eagerly, and Next warns if both are given.
+      loading={priority ? undefined : loading}
       onClick={onClick}
-      onLoad={() => {
-        setIsLoading(false)
-        if (typeof onLoadFromProps === 'function') {
-          onLoadFromProps()
-        }
-      }}
+      onLoad={onLoadFromProps}
       priority={priority}
       quality={90}
       sizes={sizes}

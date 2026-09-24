@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/providers/Auth'
+import { LocaleProvider } from '@/providers/Locale'
 import { QAR } from '@/currencies'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { stripeAdapterClient } from '@payloadcms/plugin-ecommerce/payments/stripe'
@@ -37,6 +38,8 @@ export const Providers: React.FC<{
                     title: true,
                     gallery: true,
                     inventory: true,
+                    // The bag's stepper follows the stock rule (@/lib/pricing/stock), which needs this.
+                    madeToOrder: true,
                   },
                   variants: {
                     title: true,
@@ -51,7 +54,7 @@ export const Providers: React.FC<{
               }),
             ]}
           >
-            {children}
+            <LocaleProvider>{children}</LocaleProvider>
           </EcommerceProvider>
         </HeaderThemeProvider>
       </AuthProvider>

@@ -360,7 +360,7 @@ export interface Product {
     [k: string]: unknown;
   } | null;
   /**
-   * Hand-finished to order — allows ordering a size that is out of stock.
+   * Ticked: a size with no stock left can still be ordered — it is made to order, the customer is told it takes a little longer, and the order is noted for the atelier. Unticked: a size with no stock is sold out, and no one can buy more than you have.
    */
   madeToOrder?: boolean | null;
   /**
@@ -1193,6 +1193,9 @@ export interface Order {
    */
   displayTotal?: string | null;
   accessToken?: string | null;
+  /**
+   * Setting this to Shipped emails the customer — add the tracking number first.
+   */
   fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
   trackingNumber?: string | null;
   /**
@@ -1204,6 +1207,13 @@ export interface Order {
    */
   gift?: boolean | null;
   giftNote?: string | null;
+  confirmationEmailSentAt?: string | null;
+  notificationEmailSentAt?: string | null;
+  shippedEmailSentAt?: string | null;
+  /**
+   * The last email that failed. Use "Resend confirmation" once fixed.
+   */
+  emailError?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1342,46 +1352,210 @@ export interface Address {
   state?: string | null;
   postalCode?: string | null;
   country:
-    | 'US'
-    | 'GB'
-    | 'CA'
+    | 'AF'
+    | 'AL'
+    | 'DZ'
+    | 'AD'
+    | 'AO'
+    | 'AG'
+    | 'AR'
+    | 'AM'
     | 'AU'
     | 'AT'
+    | 'AZ'
+    | 'BS'
+    | 'BH'
+    | 'BD'
+    | 'BB'
+    | 'BY'
     | 'BE'
+    | 'BZ'
+    | 'BJ'
+    | 'BT'
+    | 'BO'
+    | 'BA'
+    | 'BW'
     | 'BR'
+    | 'BN'
     | 'BG'
+    | 'BF'
+    | 'BI'
+    | 'KH'
+    | 'CM'
+    | 'CA'
+    | 'CV'
+    | 'CF'
+    | 'TD'
+    | 'CL'
+    | 'CN'
+    | 'CO'
+    | 'KM'
+    | 'CR'
+    | 'HR'
+    | 'CU'
     | 'CY'
     | 'CZ'
+    | 'CD'
     | 'DK'
+    | 'DJ'
+    | 'DM'
+    | 'DO'
+    | 'EC'
+    | 'EG'
+    | 'SV'
+    | 'GQ'
+    | 'ER'
     | 'EE'
+    | 'SZ'
+    | 'ET'
+    | 'FJ'
     | 'FI'
     | 'FR'
+    | 'GA'
+    | 'GM'
+    | 'GE'
     | 'DE'
+    | 'GH'
+    | 'GI'
     | 'GR'
+    | 'GD'
+    | 'GT'
+    | 'GG'
+    | 'GN'
+    | 'GW'
+    | 'GY'
+    | 'HT'
+    | 'HN'
     | 'HK'
     | 'HU'
+    | 'IS'
     | 'IN'
+    | 'ID'
+    | 'IR'
+    | 'IQ'
     | 'IE'
+    | 'IM'
+    | 'IL'
     | 'IT'
+    | 'CI'
+    | 'JM'
     | 'JP'
+    | 'JE'
+    | 'JO'
+    | 'KZ'
+    | 'KE'
+    | 'KI'
+    | 'XK'
+    | 'KW'
+    | 'KG'
+    | 'LA'
     | 'LV'
+    | 'LB'
+    | 'LS'
+    | 'LR'
+    | 'LY'
+    | 'LI'
     | 'LT'
     | 'LU'
+    | 'MO'
+    | 'MG'
+    | 'MW'
     | 'MY'
+    | 'MV'
+    | 'ML'
     | 'MT'
+    | 'MH'
+    | 'MR'
+    | 'MU'
     | 'MX'
+    | 'FM'
+    | 'MD'
+    | 'MC'
+    | 'MN'
+    | 'ME'
+    | 'MA'
+    | 'MZ'
+    | 'MM'
+    | 'NA'
+    | 'NR'
+    | 'NP'
     | 'NL'
     | 'NZ'
+    | 'NI'
+    | 'NE'
+    | 'NG'
+    | 'KP'
+    | 'MK'
     | 'NO'
+    | 'OM'
+    | 'PK'
+    | 'PW'
+    | 'PS'
+    | 'PA'
+    | 'PG'
+    | 'PY'
+    | 'PE'
+    | 'PH'
     | 'PL'
     | 'PT'
+    | 'PR'
+    | 'QA'
+    | 'CG'
     | 'RO'
+    | 'RU'
+    | 'RW'
+    | 'KN'
+    | 'LC'
+    | 'VC'
+    | 'WS'
+    | 'SM'
+    | 'SA'
+    | 'SN'
+    | 'RS'
+    | 'SC'
+    | 'SL'
     | 'SG'
     | 'SK'
     | 'SI'
+    | 'SB'
+    | 'SO'
+    | 'ZA'
+    | 'KR'
+    | 'SS'
     | 'ES'
+    | 'LK'
+    | 'SD'
+    | 'SR'
     | 'SE'
-    | 'CH';
+    | 'CH'
+    | 'SY'
+    | 'ST'
+    | 'TW'
+    | 'TJ'
+    | 'TZ'
+    | 'TH'
+    | 'TL'
+    | 'TG'
+    | 'TO'
+    | 'TT'
+    | 'TN'
+    | 'TM'
+    | 'TV'
+    | 'TR'
+    | 'UG'
+    | 'UA'
+    | 'AE'
+    | 'GB'
+    | 'US'
+    | 'UY'
+    | 'UZ'
+    | 'VU'
+    | 'VA'
+    | 'VE'
+    | 'VN'
+    | 'YE'
+    | 'ZM'
+    | 'ZW';
   phone?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1404,6 +1578,7 @@ export interface Transaction {
   stripe?: {
     customerID?: string | null;
     paymentIntentID?: string | null;
+    checkoutSessionID?: string | null;
   };
   billingAddress?: {
     title?: string | null;
@@ -1429,7 +1604,7 @@ export interface Transaction {
   createdAt: string;
 }
 /**
- * Every spin of the reward wheel, and the code it issued.
+ * Every spin of the reward wheel and the code it issued (REQUIREMENTS A8). Whether a code has been used is on the code itself, under Discount codes.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "spinEntries".
@@ -1442,6 +1617,7 @@ export interface SpinEntry {
    * Empty for a "roll again" segment, which issues nothing.
    */
   issuedCode?: (number | null) | DiscountCode;
+  winnerEmail?: string | null;
   /**
    * Salted hash of the visitor IP. Never the address itself.
    */
@@ -1476,7 +1652,7 @@ export interface WebhookLog {
    */
   signatureValid?: boolean | null;
   /**
-   * Did this callback change the order, or was it a duplicate?
+   * Yes if the payment this callback reports had become an order by the time it was handled. No for duplicates, ignored events and anything that could not be settled.
    */
   applied?: boolean | null;
   /**
@@ -1752,7 +1928,7 @@ export interface Currency {
    */
   step?: number | null;
   /**
-   * Hand-set retail price in this currency. Leave empty to derive it from the rate.
+   * What Al Shaheen Nights (QAR 1,399 — Site settings → Currencies) costs in this currency, set by hand. Shown exactly; other amounts convert at the rate it implies. Leave empty to use the rate.
    */
   priceOverride?: number | null;
   /**
@@ -2023,6 +2199,7 @@ export interface SpinEntriesSelect<T extends boolean = true> {
   email?: T;
   segment?: T;
   issuedCode?: T;
+  winnerEmail?: T;
   ipHash?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2883,6 +3060,10 @@ export interface OrdersSelect<T extends boolean = true> {
   adminNotes?: T;
   gift?: T;
   giftNote?: T;
+  confirmationEmailSentAt?: T;
+  notificationEmailSentAt?: T;
+  shippedEmailSentAt?: T;
+  emailError?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2905,6 +3086,7 @@ export interface TransactionsSelect<T extends boolean = true> {
     | {
         customerID?: T;
         paymentIntentID?: T;
+        checkoutSessionID?: T;
       };
   billingAddress?:
     | T
@@ -3025,7 +3207,14 @@ export interface Footer {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * Shown on the site, and where customers’ replies to order emails arrive.
+   */
   contactEmail?: string | null;
+  /**
+   * Every new order is emailed here. Leave empty to use the contact email.
+   */
+  orderAlertEmail?: string | null;
   /**
    * International format, e.g. +974 1234 5678. Used for click-to-chat links.
    */
@@ -3040,9 +3229,54 @@ export interface SiteSetting {
    * Added to every international zone fee. Use when carrier fuel costs rise.
    */
   intlSurchargePct?: number | null;
+  /**
+   * Untick to stop all stock emails. The dashboard still shows low stock.
+   */
+  stockAlertsEnabled?: boolean | null;
+  /**
+   * Leave empty to use “New-order alerts go to”, or else the contact email.
+   */
+  stockAlertEmail?: string | null;
+  /**
+   * A size counts as running low at this many pieces or fewer. Also used on the dashboard.
+   */
+  lowStockThreshold?: number | null;
+  alertLowStock?: boolean | null;
+  alertSoldOut?: boolean | null;
+  /**
+   * Made to order, or oversold when made to order is off.
+   */
+  alertBeyondStock?: boolean | null;
+  /**
+   * Visitors can see prices in their own currency. Every order is still charged in QAR, and the site says so beside every price.
+   */
+  currencyDisplayEnabled?: boolean | null;
+  /**
+   * Start a first-time visitor in the currency of the country they are browsing from. They can always change it.
+   */
+  currencyDetectLocation?: boolean | null;
+  /**
+   * The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.
+   */
+  currencyAnchorQar?: number | null;
+  /**
+   * Untick to take the wheel off the site. Codes already issued keep working.
+   */
   spinWheelEnabled?: boolean | null;
   spinWheelHeading?: string | null;
   spinWheelBody?: string | null;
+  /**
+   * How many extra spins "Roll again" can give one person. After that it cannot be landed on.
+   */
+  spinWheelMaxRerolls?: number | null;
+  /**
+   * Ticked: an email that has already ordered cannot spin.
+   */
+  spinWheelNewCustomersOnly?: boolean | null;
+  /**
+   * Most spins one device may make in a day, across every email typed — stops one person collecting codes. A household sharing Wi-Fi counts as one device.
+   */
+  spinWheelDailyLimit?: number | null;
   /**
    * Charged per placement, per garment.
    */
@@ -3118,6 +3352,7 @@ export interface FooterSelect<T extends boolean = true> {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   contactEmail?: T;
+  orderAlertEmail?: T;
   whatsappNumber?: T;
   instagramHandle?: T;
   instagramUrl?: T;
@@ -3126,9 +3361,21 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   freeShippingEnabled?: T;
   freeShippingThresholdQar?: T;
   intlSurchargePct?: T;
+  stockAlertsEnabled?: T;
+  stockAlertEmail?: T;
+  lowStockThreshold?: T;
+  alertLowStock?: T;
+  alertSoldOut?: T;
+  alertBeyondStock?: T;
+  currencyDisplayEnabled?: T;
+  currencyDetectLocation?: T;
+  currencyAnchorQar?: T;
   spinWheelEnabled?: T;
   spinWheelHeading?: T;
   spinWheelBody?: T;
+  spinWheelMaxRerolls?: T;
+  spinWheelNewCustomersOnly?: T;
+  spinWheelDailyLimit?: T;
   personalisationFeeQar?: T;
   personalisationMaxChars?: T;
   personalisationMaxPlacements?: T;

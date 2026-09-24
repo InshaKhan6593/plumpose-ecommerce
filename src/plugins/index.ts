@@ -1,11 +1,12 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
-import { Plugin } from 'payload'
+import { Field, Plugin } from 'payload'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
 import { QAR } from '@/currencies'
+import { COUNTRY_OPTIONS } from '@/data/countryOptions'
 import { createStripeSandboxAdapter, isStripeSandboxEnabled } from '@/payments/stripeSandbox'
 
 import { Page, Product } from '@/payload-types'
@@ -17,6 +18,11 @@ import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
 import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
+import { sendEnquiryAlert } from '@/email/enquiryAlert'
+import { resendConfirmationEndpoint, sendOrderEmails } from '@/email/orderHooks'
+import { stockAfterSale } from '@/hooks/stockAfterSale'
+import { validateEnquiry } from '@/hooks/validateEnquiry'
+import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { orderTotalsFields } from '@/fields/orderTotals'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
 
@@ -53,6 +59,14 @@ export const plugins: Plugin[] = [
         useAsTitle: 'id',
       },
       defaultSort: '-createdAt',
+      /*
+       * The plugin checks nothing about what is submitted and emails values
+       * unescaped: validate on the server, and send our own escaped alert.
+       */
+      hooks: {
+        afterChange: [sendEnquiryAlert],
+        beforeValidate: [validateEnquiry],
+      },
       labels: { singular: 'Enquiry', plural: 'Enquiries' },
     },
     formOverrides: {
@@ -119,6 +133,11 @@ export const plugins: Plugin[] = [
           /** Rows were titled by createdAt, so every order looked the same. */
           useAsTitle: 'customerEmail',
         },
+        endpoints: [...(defaultCollection.endpoints || []), resendConfirmationEndpoint],
+        hooks: {
+          ...defaultCollection.hooks,
+          afterChange: [...(defaultCollection.hooks?.afterChange ?? []), sendOrderEmails],
+        },
         fields: [
           /**
            * Money and payment state are locked at field level. See
@@ -169,7 +188,11 @@ export const plugins: Plugin[] = [
           {
             name: 'fulfilment',
             type: 'select',
-            admin: { position: 'sidebar' },
+            admin: {
+              description:
+                'Setting this to Shipped emails the customer — add the tracking number first.',
+              position: 'sidebar',
+            },
             defaultValue: 'unfulfilled',
             options: [
               { label: 'Awaiting fulfilment', value: 'unfulfilled' },
@@ -199,6 +222,48 @@ export const plugins: Plugin[] = [
             type: 'textarea',
             admin: { condition: (data) => data?.gift === true },
             maxLength: 200,
+          },
+          /* ---- email — written by the server, see @/email/sendOrderEmail ---- */
+          {
+            name: 'resendConfirmation',
+            type: 'ui',
+            admin: {
+              components: {
+                Field: '@/components/admin/ResendConfirmation#ResendConfirmation',
+              },
+              position: 'sidebar',
+            },
+          },
+          ...(
+            [
+              ['confirmationEmailSentAt', 'Confirmation emailed'],
+              ['notificationEmailSentAt', 'New-order alert sent'],
+              ['shippedEmailSentAt', 'Shipped email sent'],
+            ] as const
+          ).map(
+            ([name, label]): Field => ({
+              name,
+              type: 'date',
+              access: { update: neverEditable },
+              admin: {
+                date: { displayFormat: 'd MMM yyyy, HH:mm', pickerAppearance: 'dayAndTime' },
+                position: 'sidebar',
+                readOnly: true,
+              },
+              label,
+            }),
+          ),
+          {
+            name: 'emailError',
+            type: 'text',
+            access: { update: neverEditable },
+            admin: {
+              condition: (data) => Boolean(data?.emailError),
+              description: 'The last email that failed. Use "Resend confirmation" once fixed.',
+              position: 'sidebar',
+              readOnly: true,
+            },
+            label: 'Email problem',
           },
         ],
       }),
@@ -247,6 +312,8 @@ export const plugins: Plugin[] = [
             group: 'Shop',
             listSearchableFields: ['title'],
           },
+          // Her words, not the plugin's: the stock alert emails point her here by this name.
+          labels: { plural: 'Sizes & stock', singular: 'Size & stock' },
         }),
         variantTypesCollectionOverride: ({ defaultCollection }) => ({
           ...defaultCollection,
@@ -286,9 +353,16 @@ export const plugins: Plugin[] = [
           listSearchableFields: ['customerEmail'],
           useAsTitle: 'customerEmail',
         },
+        hooks: {
+          ...defaultCollection.hooks,
+          // Stock never stays below zero after a sale; see @/hooks/stockAfterSale.
+          afterChange: [...(defaultCollection.hooks?.afterChange ?? []), stockAfterSale],
+        },
       }),
     },
     carts: {
+      /** Embroidery is part of a line's identity — see @/lib/cart/itemMatcher. */
+      cartItemMatcher: plumposeCartItemMatcher,
       cartsCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
         /**
@@ -340,6 +414,8 @@ export const plugins: Plugin[] = [
       }),
     },
     addresses: {
+      // The plugin's default list has 40 countries and no Qatar — the store's own table instead.
+      supportedCountries: COUNTRY_OPTIONS,
       addressesCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
         admin: {

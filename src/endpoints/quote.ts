@@ -6,11 +6,13 @@ import { validateDiscountCode } from '@/lib/pricing/discounts'
 import { toMajor } from '@/lib/pricing/money'
 import { personalisationRules } from '@/lib/pricing/personalisation'
 import {
+  priceGoods,
   type PriceLineInput,
   priceOrder,
   type PriceOrderContext,
   type ValidatedDiscount,
 } from '@/lib/pricing/priceOrder'
+import { stockSummary } from '@/lib/pricing/stock'
 
 /**
  * `POST /api/quote` — price a bag (P6, P8).
@@ -140,6 +142,36 @@ export const quoteEndpoint: Endpoint = {
     }
 
     /**
+     * No destination yet — the bag, before checkout. Price the goods and the
+     * embroidery with the same engine and say plainly that delivery is still
+     * to come, rather than refusing the whole quote for want of an address.
+     */
+    if (!asText(body.country, 2)) {
+      const goods = priceGoods(lines, context.personalisationRules)
+      return json({
+        deliveryPending: true,
+        /** Sold-out sizes (the bag then asks for a change) and pieces that will be made to order. */
+        stock: stockSummary(lines),
+        lines: goods.lines.map((line) => ({
+          personalisation: line.personalisation,
+          personalisationTotal: line.personalisationTotal,
+          productId: line.productId,
+          quantity: line.quantity,
+          subtotal: line.subtotal,
+          title: line.productTitle,
+          unitPrice: line.unitPrice,
+          variantId: line.variantId,
+          variantTitle: line.variantTitle,
+        })),
+        totals: {
+          personalisation: goods.personalisationTotal,
+          subtotal: goods.subtotal,
+          total: goods.total,
+        },
+      })
+    }
+
+    /**
      * The discount is validated against the *undiscounted* goods total, so
      * price once without it to get that figure, then price again with it.
      * Cheap — the engine is pure and touches no database.
@@ -189,6 +221,7 @@ export const quoteEndpoint: Endpoint = {
 
     return json({
       currency: 'QAR',
+      stock: stockSummary(lines),
       /** Present when a code was sent but could not be used. The bag is still priced. */
       discountError,
       lines: order.lines.map((line) => ({

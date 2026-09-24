@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { autoKey } from '@/fields/autoKey'
 
 /**
@@ -23,6 +24,8 @@ export const ShippingCities: CollectionConfig = {
     read: () => true,
     update: adminOnly,
   },
+  /** The storefront pages that show this are prerendered; see revalidateStorefront. */
+  hooks: withStorefrontRefresh(),
   fields: [
     { name: 'name', type: 'text', required: true },
     autoKey('name'),

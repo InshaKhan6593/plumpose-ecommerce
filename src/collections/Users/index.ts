@@ -5,6 +5,7 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { publicAccess } from '@/access/publicAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
 import { checkRole } from '@/access/utilities'
+import { passwordResetHtml, passwordResetSubject } from '@/email/passwordReset'
 
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 
@@ -25,6 +26,10 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
   },
   auth: {
+    forgotPassword: {
+      generateEmailHTML: passwordResetHtml,
+      generateEmailSubject: passwordResetSubject,
+    },
     tokenExpiration: 1209600,
   },
   fields: [

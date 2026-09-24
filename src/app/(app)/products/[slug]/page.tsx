@@ -1,18 +1,19 @@
-import type { Media, Product } from '@/payload-types'
+import type { Category, Media, Product } from '@/payload-types'
+
+import configPromise from '@payload-config'
+import { Metadata } from 'next'
+import { draftMode } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { getPayload } from 'payload'
+import React, { cache } from 'react'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
-import { GridTileImage } from '@/components/Grid/tile'
-import { Gallery } from '@/components/product/Gallery'
-import { ProductDescription } from '@/components/product/ProductDescription'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
-import { draftMode } from 'next/headers'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import React, { Suspense } from 'react'
-import { Button } from '@/components/ui/button'
-import { ChevronLeftIcon } from 'lucide-react'
-import { Metadata } from 'next'
+import type { EmbroideryOption, EmbroideryRules } from '@/components/product/embroidery'
+import { ProductGallery } from '@/components/product/ProductGallery'
+import { type ProductDetail, ProductInfo } from '@/components/product/ProductInfo'
+import { deliveryRange } from '@/lib/pricing/deliveryRange'
+import { formatQar, toMajor, toMinor } from '@/lib/pricing/money'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 
 type Args = {
   params: Promise<{
@@ -22,7 +23,7 @@ type Args = {
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
+  const product = await queryProductBySlug(slug)
 
   if (!product) return notFound()
 
@@ -59,130 +60,189 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
   }
 }
 
+/**
+ * The product page (docs/mockups/06-product-page.webp): the photo stack on
+ * the left, everything needed to choose and buy on the right, sticky.
+ */
 export default async function ProductPage({ params }: Args) {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
+  const product = await queryProductBySlug(slug)
 
   if (!product) return notFound()
 
-  const gallery =
+  const payload = await getPayload({ config: configPromise })
+  const settings = await getCachedGlobal('siteSettings', 0)()
+
+  // Independent reads, in parallel rather than one after another.
+  const [details, embroideryDocs] = await Promise.all([
+    productDetails({ payload, product, settings }),
+    product.personalisationEnabled
+      ? payload.find({
+          collection: 'personalisationOptions',
+          depth: 0,
+          limit: 100,
+          pagination: false,
+          sort: ['_order', 'createdAt'],
+          where: { active: { not_equals: false } },
+        })
+      : null,
+  ])
+
+  const images =
     product.gallery
-      ?.filter((item) => typeof item.image === 'object')
-      .map((item) => ({
-        ...item,
-        image: item.image as Media,
-      })) || []
+      ?.map((item) => item.image)
+      .filter((image): image is Media => Boolean(image) && typeof image === 'object') ?? []
 
-  const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
-  const hasStock = product.enableVariants
-    ? product?.variants?.docs?.some((variant) => {
-        if (typeof variant !== 'object') return false
-        return variant.inventory && variant?.inventory > 0
-      })
-    : product.inventory! > 0
+  const category = product.categories?.find(
+    (entry): entry is Category => typeof entry === 'object' && entry !== null,
+  )
 
-  let price = product.priceInQAR
+  /**
+   * Embroidery options in the order she arranges them in the admin, then by
+   * when they were added (the seeded ones carry no order yet). Only the fields
+   * the drawer shows are sent — no internal notes, nothing priced.
+   */
+  const embroideryOptions: EmbroideryOption[] = embroideryDocs
+    ? embroideryDocs.docs.map(({ hex, key, name, note, svgPath, type }) => ({ hex, key, name, note, svgPath, type }))
+    : []
 
-  if (product.enableVariants && product?.variants?.docs?.length) {
-    price = product?.variants?.docs?.reduce((acc, variant) => {
-      if (typeof variant === 'object' && variant?.priceInQAR && acc && variant?.priceInQAR > acc) {
-        return variant.priceInQAR
+  const embroideryRules: EmbroideryRules | null = settings.personalisationFeeQar
+    ? {
+        feeQar: settings.personalisationFeeQar,
+        leadTime: settings.personalisationLeadTime ?? null,
+        maxChars: settings.personalisationMaxChars ?? 6,
+        maxPlacements: settings.personalisationMaxPlacements ?? 2,
+        returnable: Boolean(settings.personalisationReturnable),
       }
-      return acc
-    }, price)
-  }
+    : null
 
+  const variants = (product.variants?.docs ?? []).filter(
+    (variant) => typeof variant === 'object' && variant !== null,
+  )
+  const hasStock = product.enableVariants
+    ? variants.some((variant) => typeof variant === 'object' && (variant.inventory ?? 0) > 0)
+    : (product.inventory ?? 0) > 0
+  const prices = variants
+    .map((variant) => (typeof variant === 'object' ? variant.priceInQAR : null))
+    .filter((price): price is number => typeof price === 'number')
+  const price = prices.length ? Math.min(...prices) : (product.priceInQAR ?? 0)
+
+  /**
+   * Structured data for search engines. Money is stored in minor units, so it
+   * is converted here — the template sent `139900` in `usd`, which Google would
+   * read as a hundred and forty thousand dollars.
+   */
   const productJsonLd = {
-    name: product.title,
     '@context': 'https://schema.org',
     '@type': 'Product',
-    description: product.description,
-    image: metaImage?.url,
+    image: images[0]?.url,
+    name: product.title,
     offers: {
-      '@type': 'AggregateOffer',
-      availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      price: price,
-      priceCurrency: 'usd',
+      '@type': 'Offer',
+      availability:
+        hasStock || product.madeToOrder
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      price: toMajor(price).toFixed(2),
+      priceCurrency: 'QAR',
     },
   }
 
-  const relatedProducts =
-    product.relatedProducts?.filter((relatedProduct) => typeof relatedProduct === 'object') ?? []
-
   return (
-    <React.Fragment>
+    <>
       <script
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
         type="application/ld+json"
       />
-      <div className="container pt-8 pb-8">
-        <Button asChild variant="ghost" className="mb-4">
-          <Link href="/shop">
-            <ChevronLeftIcon />
-            All products
-          </Link>
-        </Button>
-        <div className="flex flex-col gap-12 rounded-lg border p-8 md:py-12 lg:flex-row lg:gap-8 bg-primary-foreground">
-          <div className="h-full w-full basis-full lg:basis-1/2">
-            <Suspense
-              fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
-              }
-            >
-              {Boolean(gallery?.length) && <Gallery gallery={gallery} />}
-            </Suspense>
-          </div>
 
-          <div className="basis-full lg:basis-1/2">
-            <ProductDescription product={product} />
-          </div>
+      <div className="mx-auto grid max-w-[90rem] gap-10 px-4 pt-8 md:px-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-20 lg:pt-10">
+        <ProductGallery images={images} />
+
+        <div className="lg:sticky lg:top-24 lg:self-start lg:pt-6 lg:pr-10 xl:pr-20">
+          <ProductInfo
+            categoryTitle={category?.title ?? null}
+            details={details}
+            embroideryOptions={embroideryOptions}
+            embroideryRules={embroideryRules}
+            product={product}
+          />
         </div>
       </div>
 
-      {product.layout?.length ? <RenderBlocks blocks={product.layout} /> : <></>}
-
-      {relatedProducts.length ? (
-        <div className="container">
-          <RelatedProducts products={relatedProducts as Product[]} />
-        </div>
-      ) : (
-        <></>
-      )}
-    </React.Fragment>
+      {product.layout?.length ? <RenderBlocks blocks={product.layout} /> : null}
+    </>
   )
 }
 
-function RelatedProducts({ products }: { products: Product[] }) {
-  if (!products.length) return null
+/**
+ * The accordion rows under the buy button. Each is the client's own text when
+ * she has written it; otherwise it is built from data that is actually true —
+ * the fabric fields, the live delivery tables, the returns rule — and left out
+ * entirely when there is nothing true to say. Nothing is invented.
+ */
+async function productDetails({
+  payload,
+  product,
+  settings,
+}: {
+  payload: Awaited<ReturnType<typeof getPayload>>
+  product: Product
+  settings: Awaited<ReturnType<ReturnType<typeof getCachedGlobal<'siteSettings'>>>>
+}): Promise<ProductDetail[]> {
+  const details: ProductDetail[] = []
 
-  return (
-    <div className="py-8">
-      <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
-      <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {products.map((product) => (
-          <li
-            className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-            key={product.id}
-          >
-            <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
-              <GridTileImage
-                label={{
-                  amount: product.priceInQAR!,
-                  title: product.title,
-                }}
-                media={product.meta?.image as Media}
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+  // Material & care
+  if (product.materialCare) {
+    details.push({ rich: product.materialCare, title: 'Material & care' })
+  } else {
+    const lines = [
+      product.fabric && `Fabric: ${product.fabric}`,
+      product.composition && `Composition: ${product.composition}`,
+      product.fabricWeight && `Weight: ${product.fabricWeight}`,
+      product.trims && `Trims: ${product.trims}`,
+      product.fitNote && `Fit: ${product.fitNote}`,
+    ].filter((line): line is string => Boolean(line))
+    if (lines.length) details.push({ lines, title: 'Material & care' })
+  }
+
+  // Delivery & returns
+  if (product.deliveryReturns) {
+    details.push({ rich: product.deliveryReturns, title: 'Delivery & returns' })
+  } else {
+    const range = await deliveryRange(payload, settings)
+    const lines: string[] = []
+    if (range.qatarLow !== null && range.qatarHigh !== null) {
+      lines.push(
+        range.qatarLow === range.qatarHigh
+          ? `Delivery within Qatar: ${formatQar(range.qatarLow)}.`
+          : `Delivery within Qatar: ${formatQar(range.qatarLow)} to ${formatQar(range.qatarHigh)}, depending on your city.`,
+      )
+    }
+    if (range.intlLow !== null) {
+      lines.push(`International delivery from ${formatQar(range.intlLow)}, calculated at checkout.`)
+    }
+    if (settings.freeShippingEnabled && settings.freeShippingThresholdQar) {
+      lines.push(`Free delivery on orders over ${formatQar(toMinor(settings.freeShippingThresholdQar))}.`)
+    }
+    if (product.personalisationEnabled && !settings.personalisationReturnable) {
+      lines.push('Personalised pieces cannot be returned.')
+    }
+    if (lines.length) details.push({ lines, title: 'Delivery & returns' })
+  }
+
+  if (product.giftPackaging) {
+    details.push({ rich: product.giftPackaging, title: 'Gift wrapping' })
+  }
+
+  return details
 }
 
-const queryProductBySlug = async ({ slug }: { slug: string }) => {
+/**
+ * Wrapped in React's `cache` so the page and its metadata share one lookup per
+ * request — it was running twice, each time three levels deep. Takes the slug
+ * itself, not an object: `cache` matches arguments by identity.
+ */
+const queryProductBySlug = cache(async (slug: string) => {
   const { isEnabled: draft } = await draftMode()
 
   const payload = await getPayload({ config: configPromise })
@@ -215,4 +275,4 @@ const queryProductBySlug = async ({ slug }: { slug: string }) => {
   })
 
   return result.docs?.[0] || null
-}
+})

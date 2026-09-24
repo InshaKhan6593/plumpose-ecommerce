@@ -21,9 +21,9 @@ export const SpinEntries: CollectionConfig = {
   },
   admin: {
     defaultColumns: ['email', 'segment', 'issuedCode', 'createdAt'],
-    description: 'Every spin of the reward wheel, and the code it issued.',
+    description:
+      'Every spin of the reward wheel and the code it issued (REQUIREMENTS A8). Whether a code has been used is on the code itself, under Discount codes.',
     group: 'Shop',
-    hidden: true,
     useAsTitle: 'email',
   },
   defaultSort: '-createdAt',
@@ -35,6 +35,18 @@ export const SpinEntries: CollectionConfig = {
       type: 'relationship',
       admin: { description: 'Empty for a "roll again" segment, which issues nothing.' },
       relationTo: 'discountCodes',
+    },
+    {
+      /**
+       * Set only on a spin that won a code, and unique. Two spins for the same
+       * email arriving at the same moment would both pass the "has this email
+       * won?" check; the database then refuses the second, so one email can
+       * never hold two wheel codes. Empty on "roll again" spins.
+       */
+      name: 'winnerEmail',
+      type: 'email',
+      admin: { hidden: true },
+      unique: true,
     },
     {
       name: 'ipHash',

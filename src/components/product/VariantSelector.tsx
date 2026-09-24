@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import type { Product } from '@/payload-types'
 
+import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
 import { createUrl } from '@/utilities/createUrl'
 import clsx from 'clsx'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -32,9 +32,9 @@ export function VariantSelector({ product }: { product: Product }) {
     }
 
     return (
-      <dl className="" key={type.id}>
-        <dt className="mb-4 text-sm">{type.label}</dt>
-        <dd className="flex flex-wrap gap-3">
+      <dl key={type.id}>
+        <dt className="caps mb-3 text-[0.625rem] text-ink">{type.label}</dt>
+        <dd className="flex flex-wrap gap-2.5">
           <React.Fragment>
             {options?.map((option) => {
               if (!option || typeof option !== 'object') {
@@ -58,6 +58,7 @@ export function VariantSelector({ product }: { product: Product }) {
               const currentOptions = Array.from(optionSearchParams.values())
 
               let isAvailableForSale = true
+              let madeToOrderOnly = false
 
               // Find a matching variant
               if (variants) {
@@ -79,11 +80,9 @@ export function VariantSelector({ product }: { product: Product }) {
                   // If we found a matching variant, set the variant ID in the search params.
                   optionSearchParams.set('variant', String(matchingVariant.id))
 
-                  if (matchingVariant.inventory && matchingVariant.inventory > 0) {
-                    isAvailableForSale = true
-                  } else {
-                    isAvailableForSale = false
-                  }
+                  // The shared rule (@/lib/pricing/stock): made to order is never sold out.
+                  isAvailableForSale = purchaseLimit(product, matchingVariant) > 0
+                  madeToOrderOnly = isAvailableForSale && readyStock(matchingVariant) === 0
                 }
               }
 
@@ -95,12 +94,16 @@ export function VariantSelector({ product }: { product: Product }) {
                 searchParams.get(optionKeyLowerCase) === String(optionID)
 
               return (
-                <Button
-                  variant={'ghost'}
+                <button
                   aria-disabled={!isAvailableForSale}
-                  className={clsx('px-2', {
-                    'bg-primary/5 text-primary': isActive,
-                  })}
+                  aria-pressed={isActive}
+                  className={clsx(
+                    'caps flex size-12 items-center justify-center border text-[0.6875rem] transition-colors duration-300 ease-brand',
+                    isActive
+                      ? 'border-ink bg-ink text-white'
+                      : 'border-line text-ink hover:border-ink',
+                    !isAvailableForSale && 'cursor-not-allowed text-ink-faint line-through hover:border-line',
+                  )}
                   disabled={!isAvailableForSale}
                   key={option.id}
                   onClick={() => {
@@ -108,10 +111,11 @@ export function VariantSelector({ product }: { product: Product }) {
                       scroll: false,
                     })
                   }}
-                  title={`${option.label} ${!isAvailableForSale ? ' (Out of Stock)' : ''}`}
+                  title={`${option.label}${!isAvailableForSale ? ' — sold out' : madeToOrderOnly ? ' — made to order' : ''}`}
+                  type="button"
                 >
                   {option.label}
-                </Button>
+                </button>
               )
             })}
           </React.Fragment>

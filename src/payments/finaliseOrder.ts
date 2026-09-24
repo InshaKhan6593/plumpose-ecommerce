@@ -5,6 +5,8 @@ import type { Cart } from '@/payload-types'
 import { redeemDiscount, validateDiscountCode } from '@/lib/pricing/discounts'
 import type { Minor } from '@/lib/pricing/money'
 
+import type { CheckoutAddress } from './checkoutSession'
+
 /**
  * Turning a paid cart into an order.
  *
@@ -32,6 +34,17 @@ export type SnapshotLine = {
 
 /** Written onto the cart at `initiatePayment`, read back here. */
 export type PricingSnapshot = {
+  /**
+   * Where it goes and whether it is a gift, as the checkout form sent it.
+   * Kept here rather than in the gateway's metadata: no 500-character cap, and
+   * the customer's address is not copied to a third party it does not need to
+   * reach.
+   */
+  delivery?: {
+    address: CheckoutAddress
+    gift: boolean
+    giftNote: string
+  }
   discountCode: string
   discountTotal: Minor
   freeShippingApplied: boolean
@@ -54,7 +67,8 @@ const isSnapshot = (value: unknown): value is PricingSnapshot =>
   Boolean(value) && typeof value === 'object' && 'total' in (value as Record<string, unknown>)
 
 /**
- * The breakdown fields, mapped onto the order.
+ * The breakdown fields — plus the delivery address and gift note when the
+ * checkout recorded them — mapped onto the order.
  *
  * Returns nothing when there is no snapshot: an order with a correct `amount`
  * and a blank breakdown is recoverable, whereas one carrying zeros would look
@@ -72,6 +86,13 @@ export const orderTotalsFromSnapshot = (snapshot: unknown): Record<string, unkno
     shippingQar: snapshot.shipping,
     shippingZone: snapshot.shippingZone,
     subtotalQar: snapshot.subtotal,
+    ...(snapshot.delivery
+      ? {
+          gift: snapshot.delivery.gift,
+          giftNote: snapshot.delivery.gift ? snapshot.delivery.giftNote || undefined : undefined,
+          shippingAddress: snapshot.delivery.address,
+        }
+      : {}),
   }
 }
 

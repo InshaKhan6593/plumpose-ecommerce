@@ -5,6 +5,7 @@ import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 
 import { webAddress } from '@/fields/webAddress'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -23,6 +24,8 @@ import { DefaultDocumentIDType, Where } from 'payload'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
+  /** The homepage and Our Story show the product and its price, and they are prerendered. */
+  hooks: withStorefrontRefresh(defaultCollection.hooks),
   admin: {
     ...defaultCollection?.admin,
     /** What she needs to see at a glance: what it is, what it costs, is it live. */
@@ -205,10 +208,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               name: 'madeToOrder',
               type: 'checkbox',
               admin: {
+                /** The rule itself lives in @/lib/pricing/stock; the storefront and payment both follow it. */
                 description:
-                  'Hand-finished to order — allows ordering a size that is out of stock.',
+                  'Ticked: a size with no stock left can still be ordered — it is made to order, the customer is told it takes a little longer, and the order is noted for the atelier. Unticked: a size with no stock is sold out, and no one can buy more than you have.',
               },
               defaultValue: true,
+              label: 'Made to order',
             },
             {
               name: 'personalisationEnabled',

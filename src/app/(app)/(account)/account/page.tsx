@@ -1,95 +1,105 @@
 import type { Metadata } from 'next'
 
-import { Button } from '@/components/ui/button'
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import Link from 'next/link'
-import { headers as getHeaders } from 'next/headers.js'
-import configPromise from '@payload-config'
-import { AccountForm } from '@/components/forms/AccountForm'
-import { Order } from '@/payload-types'
-import { OrderItem } from '@/components/OrderItem'
-import { getPayload } from 'payload'
-import { redirect } from 'next/navigation'
+import React from 'react'
 
-export default async function AccountPage() {
-  const headers = await getHeaders()
-  const payload = await getPayload({ config: configPromise })
-  const { user } = await payload.auth({ headers })
+import type { Order } from '@/payload-types'
 
-  let orders: Order[] | null = null
-
-  if (!user) {
-    redirect(
-      `/login?warning=${encodeURIComponent('Please login to access your account settings.')}`,
-    )
-  }
-
-  try {
-    const ordersResult = await payload.find({
-      collection: 'orders',
-      limit: 5,
-      user,
-      overrideAccess: false,
-      pagination: false,
-      where: {
-        customer: {
-          equals: user?.id,
-        },
-      },
-    })
-
-    orders = ordersResult?.docs || []
-  } catch (error) {
-    // when deploying this template on Payload Cloud, this page needs to build before the APIs are live
-    // so swallow the error here and simply render the page with fallback data where necessary
-    // in production you may want to redirect to a 404  page or at least log the error somewhere
-    // console.error(error)
-  }
-
-  return (
-    <>
-      <div className="border p-8 rounded-lg bg-primary-foreground">
-        <h1 className="text-3xl font-medium mb-8">Account settings</h1>
-        <AccountForm />
-      </div>
-
-      <div className=" border p-8 rounded-lg bg-primary-foreground">
-        <h2 className="text-3xl font-medium mb-8">Recent Orders</h2>
-
-        <div className="prose dark:prose-invert mb-8">
-          <p>
-            These are the most recent orders you have placed. Each order is associated with an
-            payment. As you place more orders, they will appear in your orders list.
-          </p>
-        </div>
-
-        {(!orders || !Array.isArray(orders) || orders?.length === 0) && (
-          <p className="mb-8">You have no orders.</p>
-        )}
-
-        {orders && orders.length > 0 && (
-          <ul className="flex flex-col gap-6 mb-8">
-            {orders?.map((order, index) => (
-              <li key={order.id}>
-                <OrderItem order={order} />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <Button asChild variant="default">
-          <Link href="/orders">View all orders</Link>
-        </Button>
-      </div>
-    </>
-  )
-}
+import { Notice } from '@/components/account'
+import { requireUser } from '@/components/account/session'
+import { ButtonLink, TextLink } from '@/components/editorial'
+import { formatQar } from '@/lib/pricing/money'
 
 export const metadata: Metadata = {
-  description: 'Create an account or log in to your existing account.',
-  openGraph: mergeOpenGraph({
-    title: 'Account',
-    url: '/account',
-  }),
-  title: 'Account',
+  robots: { follow: false, index: false },
+  title: 'Your orders',
+}
+
+const FULFILMENT: Record<NonNullable<Order['fulfilment']>, string> = {
+  delivered: 'Delivered',
+  inAtelier: 'In the atelier',
+  shipped: 'On its way',
+  unfulfilled: 'Order placed',
+}
+
+const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+
+type Props = { searchParams: Promise<{ notice?: string }> }
+
+/**
+ * The account's front page is the customer's orders — the one thing people
+ * come to an account for (docs/SCREEN-PROMPTS 17): one row each, newest first,
+ * opening the same order page the confirmation email links to.
+ *
+ * Only orders placed while signed in are here. A guest order is found through
+ * Track order, and the page says so rather than looking empty.
+ */
+export default async function AccountOrdersPage({ searchParams }: Props) {
+  const { notice } = await searchParams
+  const { payload, user } = await requireUser('/account')
+
+  const { docs } = await payload.find({
+    collection: 'orders',
+    depth: 0,
+    limit: 100,
+    overrideAccess: false,
+    pagination: false,
+    select: { amount: true, createdAt: true, fulfilment: true, items: true },
+    sort: '-createdAt',
+    user,
+    where: { customer: { equals: user.id } },
+  })
+  const orders = docs as Order[]
+
+  return (
+    <div className="flex flex-col gap-10">
+      <Notice code={notice} />
+      <h1 className="caps text-[0.6875rem]">Orders</h1>
+
+      {orders.length ? (
+        <ul className="border-t border-line">
+          {orders.map((order) => {
+            const pieces = (order.items ?? []).reduce((n, item) => n + (item.quantity ?? 0), 0)
+            return (
+              <li key={order.id}>
+                <Link
+                  className="group grid grid-cols-2 items-baseline gap-x-6 gap-y-2 border-b border-line py-7 md:grid-cols-[1fr_1.2fr_1fr_auto] md:py-8"
+                  href={`/order/${order.id}`}
+                >
+                  <span>
+                    <span className="caps block text-[0.625rem]">No. {order.id}</span>
+                    <span className="mt-1 block text-[0.8125rem] text-ink-soft">{dateFormat.format(new Date(order.createdAt))}</span>
+                  </span>
+                  <span className="caps text-right text-[0.5625rem] text-ink-soft md:text-left">
+                    {FULFILMENT[order.fulfilment ?? 'unfulfilled']}
+                  </span>
+                  <span className="text-[0.9375rem] tabular-nums md:text-right">
+                    {formatQar(order.amount)}
+                    <span className="ml-2 text-[0.8125rem] text-ink-soft">
+                      · {pieces} {pieces === 1 ? 'piece' : 'pieces'}
+                    </span>
+                  </span>
+                  <span className="caps text-right text-[0.5625rem] underline-offset-4 group-hover:underline">View</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <div className="border border-line px-7 py-10">
+          <p className="serif-display text-[2rem]">No orders yet</p>
+          <p className="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft">
+            When you order while signed in, it will be here — with its progress from the atelier to your door.
+          </p>
+          <ButtonLink className="mt-8" href="/shop">
+            Discover the collection
+          </ButtonLink>
+        </div>
+      )}
+
+      <p className="text-[0.8125rem] leading-relaxed text-ink-soft">
+        Ordered without signing in? <TextLink className="ml-1" href="/find-order">Find it with Track order</TextLink>
+      </p>
+    </div>
+  )
 }

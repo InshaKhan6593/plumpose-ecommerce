@@ -1,19 +1,28 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import type { EmbroideryChoice } from '@/components/product/embroidery'
 import type { Product, Variant } from '@/payload-types'
 
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
 import { useSearchParams } from 'next/navigation'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+
+import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
+
+import { openBag } from './CartModal'
 type Props = {
+  /** Called once the piece is in the bag — the product page clears its embroidery. */
+  onAdded?: () => void
+  /** Embroidery for this piece, as option keys. The server re-prices it; see @/components/product/embroidery. */
+  personalisation?: EmbroideryChoice[]
   product: Product
 }
 
-export function AddToCart({ product }: Props) {
+export function AddToCart({ onAdded, personalisation = [], product }: Props) {
   const { addItem, cart, isLoading } = useCart()
+  const [adding, setAdding] = useState(false)
   const searchParams = useSearchParams()
 
   const variants = product.variants?.docs || []
@@ -41,71 +50,76 @@ export function AddToCart({ product }: Props) {
     (e: React.FormEvent<HTMLButtonElement>) => {
       e.preventDefault()
 
+      setAdding(true)
       addItem({
         product: product.id,
         variant: selectedVariant?.id ?? undefined,
-      }).then(() => {
-        toast.success('Item added to cart.')
-      })
+        ...(personalisation.length ? { personalisation } : {}),
+      } as Parameters<typeof addItem>[0])
+        .then(() => {
+          onAdded?.()
+          // Slide the bag open — the add-to-bag feedback (MOTION-SPEC D4).
+          openBag()
+        })
+        .catch(() => {
+          toast.error('That didn’t work. Please try again.')
+        })
+        .finally(() => setAdding(false))
     },
-    [addItem, product, selectedVariant],
+    [addItem, onAdded, personalisation, product, selectedVariant],
   )
 
-  const disabled = useMemo<boolean>(() => {
-    const existingItem = cart?.items?.find((item) => {
+  /*
+   * One rule for the button, the bag's stepper and the server (@/lib/pricing/stock):
+   * made to order → any quantity; otherwise no more than there are.
+   */
+  const record = product.enableVariants ? selectedVariant : product
+  const inBag = useMemo(() => {
+    const line = cart?.items?.find((item) => {
       const productID = typeof item.product === 'object' ? item.product?.id : item.product
-      const variantID = item.variant
-        ? typeof item.variant === 'object'
-          ? item.variant?.id
-          : item.variant
-        : undefined
-
-      if (productID === product.id) {
-        if (product.enableVariants) {
-          return variantID === selectedVariant?.id
-        }
-        return true
-      }
+      const variantID = item.variant ? (typeof item.variant === 'object' ? item.variant?.id : item.variant) : undefined
+      return productID === product.id && (!product.enableVariants || variantID === selectedVariant?.id)
     })
+    return line?.quantity ?? 0
+  }, [cart?.items, product.enableVariants, product.id, selectedVariant?.id])
 
-    if (existingItem) {
-      const existingQuantity = existingItem.quantity
+  const needsSize = Boolean(product.enableVariants && !selectedVariant)
+  const limit = record ? purchaseLimit(product, record) : 0
+  const soldOut = Boolean(record) && limit === 0
+  const atLimit = Boolean(record) && !soldOut && inBag >= limit
+  const disabled = needsSize || soldOut || atLimit
+  /** The next one added would be beyond what is ready to send. */
+  const madeToOrder = Boolean(record) && product.madeToOrder !== false && readyStock(record!) <= inBag
 
-      if (product.enableVariants) {
-        return existingQuantity >= (selectedVariant?.inventory || 0)
-      }
-      return existingQuantity >= (product.inventory || 0)
-    }
-
-    if (product.enableVariants) {
-      if (!selectedVariant) {
-        return true
-      }
-
-      if (selectedVariant.inventory === 0) {
-        return true
-      }
-    } else {
-      if (product.inventory === 0) {
-        return true
-      }
-    }
-
-    return false
-  }, [selectedVariant, cart?.items, product])
+  /** Say why the button is off, rather than leaving a dead button. */
+  const label = needsSize
+    ? 'Select a size'
+    : soldOut
+      ? 'Sold out'
+      : atLimit
+        ? `All ${limit} are in your bag`
+        : 'Add to bag'
 
   return (
-    <Button
-      aria-label="Add to cart"
-      variant={'outline'}
-      className={clsx({
-        'hover:opacity-90': true,
-      })}
-      disabled={disabled || isLoading}
-      onClick={addToCart}
-      type="submit"
-    >
-      Add To Cart
-    </Button>
+    <>
+      <button
+        className={clsx(
+          'caps h-12 w-full px-8 text-[0.6875rem] transition-colors duration-300 ease-brand',
+          disabled || isLoading
+            ? 'cursor-not-allowed bg-ink/80 text-white/80'
+            : 'bg-ink text-white hover:bg-ink/85',
+        )}
+        disabled={disabled || isLoading || adding}
+        onClick={addToCart}
+        type="submit"
+      >
+        {adding ? 'Adding…' : label}
+      </button>
+      {madeToOrder && !disabled ? (
+        <p className="mt-3 text-[0.8125rem] leading-relaxed text-ink-soft">
+          This size is made to order for you, so it takes a little longer to reach you.
+        </p>
+      ) : null}
+    </>
   )
 }

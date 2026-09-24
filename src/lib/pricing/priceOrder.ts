@@ -15,6 +15,7 @@ import {
   qualifiesForFreeShipping,
   type ShippingTables,
 } from './shipping'
+import { stockRefusal } from './stock'
 
 /**
  * The pricing engine (P6).
@@ -98,7 +99,7 @@ export type PricedOrder = {
 export type PriceOrderResult =
   | {
       ok: false
-      refusal: DeliveryRefusal | { blocked: false; message: string; reason: 'emptyBasket' }
+      refusal: DeliveryRefusal | { blocked: false; message: string; reason: 'emptyBasket' | 'outOfStock' }
     }
   | { ok: true; order: PricedOrder }
 
@@ -175,6 +176,23 @@ const applyDiscount = (
 }
 
 /**
+ * Prices the goods and the embroidery only — step 1 of `priceOrder`, before
+ * any destination is known. This is what the bag shows ("delivery calculated
+ * at checkout"). It is the same `priceLine` checkout uses, so the bag and the
+ * charge cannot disagree about a piece or a placement.
+ */
+export const priceGoods = (
+  lines: PriceLineInput[],
+  rules: PersonalisationRules,
+): { lines: PricedLine[]; personalisationTotal: Minor; subtotal: Minor; total: Minor } => {
+  const priced = lines.map((line) => priceLine(line, rules))
+  const subtotal = priced.reduce((total, line) => total + line.subtotal, 0)
+  const personalisationTotal = priced.reduce((total, line) => total + line.personalisationTotal, 0)
+
+  return { lines: priced, personalisationTotal, subtotal, total: subtotal + personalisationTotal }
+}
+
+/**
  * Prices a whole basket for a destination.
  *
  * Order of operations matters and is deliberate:
@@ -199,11 +217,16 @@ export const priceOrder = (
     }
   }
 
-  const lines = input.lines.map((line) => priceLine(line, context.personalisationRules))
+  // Before anything is priced or charged: can this be sold? See ./stock.ts.
+  const outOfStock = stockRefusal(input.lines)
+  if (outOfStock) return { ok: false, refusal: { blocked: false, message: outOfStock, reason: 'outOfStock' } }
 
-  const subtotal = lines.reduce((total, line) => total + line.subtotal, 0)
-  const personalisationTotal = lines.reduce((total, line) => total + line.personalisationTotal, 0)
-  const goodsTotal = subtotal + personalisationTotal
+  const {
+    lines,
+    personalisationTotal,
+    subtotal,
+    total: goodsTotal,
+  } = priceGoods(input.lines, context.personalisationRules)
 
   const { discountTotal, waivesShipping } = applyDiscount(lines, input.discount)
   const discountedGoods = clampToZero(goodsTotal - discountTotal)

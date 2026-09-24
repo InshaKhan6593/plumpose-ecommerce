@@ -14,7 +14,8 @@ export const DiscountCodes: CollectionConfig = {
   defaultSort: '-createdAt',
   labels: { singular: 'Discount code', plural: 'Discount codes' },
   admin: {
-    defaultColumns: ['code', 'type', 'value', 'usageCount', 'active', 'expiresAt'],
+    // Source and owner show wheel codes apart from her own promotions; usage count is the redemption report.
+    defaultColumns: ['code', 'type', 'value', 'usageCount', 'source', 'issuedToEmail', 'expiresAt', 'active'],
     group: 'Shop',
     useAsTitle: 'code',
   },

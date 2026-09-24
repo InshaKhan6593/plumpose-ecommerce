@@ -1,23 +1,25 @@
 import type { Metadata } from 'next'
 
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import React from 'react'
 
-import { ForgotPasswordForm } from '@/components/forms/ForgotPasswordForm'
-
-export default async function ForgotPasswordPage() {
-  return (
-    <div className="container py-16">
-      <ForgotPasswordForm />
-    </div>
-  )
-}
+import { AuthShell } from '@/components/account'
+import { ForgotPasswordForm } from '@/components/account/AuthForms'
+import { TextLink } from '@/components/editorial'
 
 export const metadata: Metadata = {
-  description: 'Enter your email address to recover your password.',
-  openGraph: mergeOpenGraph({
-    title: 'Forgot Password',
-    url: '/forgot-password',
-  }),
-  title: 'Forgot Password',
+  description: 'Choose a new password for your plumpose account.',
+  robots: { follow: false, index: false },
+  title: 'Forgotten password',
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <AuthShell
+      footer={<TextLink href="/login">Back to sign in</TextLink>}
+      intro="Enter your email and we will send you a link to choose a new password."
+      title="Forgotten password"
+    >
+      <ForgotPasswordForm />
+    </AuthShell>
+  )
 }

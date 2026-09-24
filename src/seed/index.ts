@@ -46,6 +46,13 @@ const para = (text: string) => ({
   },
 })
 
+/** Rich text of several paragraphs. */
+const paras = (...texts: string[]) => {
+  const doc = para(texts[0] ?? '')
+  doc.root.children = texts.map((text) => para(text).root.children[0])
+  return doc
+}
+
 /** Finds an existing doc by a unique-ish field, or creates it. */
 async function upsert<T extends Record<string, any>>(
   payload: Payload,
@@ -134,6 +141,28 @@ export async function seed(payload: Payload): Promise<void> {
     if (m) images[file] = m
   }
 
+  /**
+   * The client's own photography, supplied 22 Sep 2026 at 1333×2000
+   * (brand-assets/product/). The shots above were extracted from the base64
+   * in her old index.html at 640–1100px and are kept only as a fallback. The
+   * order is the product page's, from the approved mockup: full length first,
+   * then the print, then the details.
+   */
+  const brandShots: Array<[string, string]> = [
+    ['brand-01-window.jpg', 'Al Shaheen Nights silk pyjama set, full length by a window'],
+    ['brand-02-print-macro.jpg', 'The hand-drawn whale-shark print on navy silk, with cream piping'],
+    ['brand-03-piping.jpg', 'The shirt front: cream piping, mother-of-pearl buttons and pocket'],
+    ['brand-04-corridor.jpg', 'Walking in the Al Shaheen Nights set along a hotel corridor'],
+    ['brand-05-armchair.jpg', 'Seated in a blue armchair wearing the Al Shaheen Nights set'],
+    ['brand-06-doorway.jpg', 'Portrait in a dark wood doorway wearing the Al Shaheen Nights set'],
+    ['brand-07-qatar-book.jpg', 'Holding a book on Qatar, showing the piped cuff'],
+  ]
+  const brandImages: any[] = []
+  for (const [file, alt] of brandShots) {
+    const m = await upsertMedia(payload, file, alt)
+    if (m) brandImages.push(m)
+  }
+
   // ----------------------------------------------------------- categories
   log('collections…')
   const resort = await upsert(
@@ -168,7 +197,7 @@ export async function seed(payload: Payload): Promise<void> {
 
   // --------------------------------------------------------------- product
   log('product…')
-  const gallery = [
+  const legacyGallery = [
     'plumpose-00-hero.jpg',
     'plumpose-01.jpg',
     'plumpose-02.jpg',
@@ -177,7 +206,11 @@ export async function seed(payload: Payload): Promise<void> {
     'plumpose-05.jpg',
   ]
     .filter((f) => images[f])
-    .map((f) => ({ image: images[f].id }))
+    .map((f) => images[f].id as number)
+
+  const gallery = (
+    brandImages.length ? brandImages.map((m) => m.id as number) : legacyGallery
+  ).map((id) => ({ image: id }))
 
   const existingProduct = await payload.find({
     collection: 'products',
@@ -213,7 +246,67 @@ export async function seed(payload: Payload): Promise<void> {
     })
     c.created++
   } else {
-    c.skipped++
+    /**
+     * Upgrade an existing database to the full-resolution photographs — but
+     * only while the gallery is still exactly the seeded legacy set. A gallery
+     * the client has edited is hers, and a re-seed must not overwrite it.
+     */
+    const current = (product.gallery ?? []).map((row: { image: any }) =>
+      typeof row.image === 'object' ? row.image?.id : row.image,
+    )
+    const untouched =
+      current.length === legacyGallery.length &&
+      current.every((id: number, i: number) => id === legacyGallery[i])
+
+    if (untouched && brandImages.length) {
+      product = await payload.update({
+        collection: 'products',
+        data: { gallery } as any,
+        id: product.id,
+      })
+      log('product gallery upgraded to the full-resolution photographs')
+      c.created++
+    } else {
+      c.skipped++
+    }
+  }
+
+  /**
+   * The product's detail rows, from the old site's "Product details",
+   * "Material & care" and "Gift packaging" panels — her words, verbatim.
+   * Filled field by field, and only where the field is still empty, so
+   * anything she has since edited in the admin is left alone.
+   *
+   * Delivery & returns is left empty on purpose: the product page then builds
+   * it from the live rate tables, so it can never quote a stale fee.
+   *
+   * ⚠️ The old site says "Pure 22-momme silk" and "97% silk, 3% spandex" —
+   * both are carried over; the client is asked to confirm (BUILD-LOG §17).
+   */
+  const productDetails: Record<string, unknown> = {
+    colour: 'Midnight Navy',
+    composition: '97% silk, 3% spandex',
+    fabric: 'in 22-momme silk',
+    fabricWeight: '22 momme',
+    fitNote: 'Model is 175cm and wears a size M',
+    giftPackaging: para(
+      'Every plumpose order is presented in our signature packaging and finished with a complimentary thank-you card — ideal for gifting, or for keeping as a personal indulgence.',
+    ),
+    materialCare: para(
+      "To preserve the beauty of this piece, we recommend dry cleaning or gentle hand washing at 30°C with a specialist silk detergent. Iron on a cool setting to restore the silk's natural lustre. Please do not leave the garment to soak or tumble dry. Store folded away from direct sunlight to protect the fabric and print.",
+    ),
+    trims: 'Contrast piping',
+  }
+  const missing = Object.fromEntries(
+    Object.entries(productDetails).filter(([key]) => {
+      const current = (product as unknown as Record<string, unknown>)[key]
+      return current === null || current === undefined || current === ''
+    }),
+  )
+  if (Object.keys(missing).length) {
+    product = await payload.update({ collection: 'products', data: missing as any, id: product.id })
+    log(`product details filled: ${Object.keys(missing).join(', ')}`)
+    c.created++
   }
 
   // One variant per size, each with its own stock. Hand-finished to order,
@@ -452,6 +545,63 @@ export async function seed(payload: Payload): Promise<void> {
       'personalisation',
       'Hand embroidery is QAR 160 per placement, per garment. Up to two placements can be added to a single set.',
     ],
+    /*
+     * Added for the FAQ page (24 Sep 2026). Every answer restates something
+     * the old site already said — the checkout, the returns policy, the
+     * product details, the embroidery drawer — rather than inventing policy.
+     * Fees are not repeated here: answers point to Shipping & Returns, which
+     * reads the live tables, so an FAQ cannot quote a stale price.
+     */
+    [
+      'Which payment methods do you accept?',
+      'orders',
+      'Visa, Mastercard and American Express. Your card details are entered on a secure banking page — plumpose never sees or stores them.',
+    ],
+    [
+      'Can I send my order as a gift?',
+      'orders',
+      'Yes. Choose “This is a gift” at checkout and we will handwrite your message onto a plumpose card. The price is never shown inside a gift parcel.',
+    ],
+    [
+      'How do I track my order?',
+      'orders',
+      'Your confirmation email carries a private link to your order, where you can see each step as it happens. You can also ask for that link again from Track order, with your email and order number.',
+    ],
+    [
+      'How much is delivery?',
+      'delivery',
+      'Within Qatar we charge a flat rate by city; everywhere else, a flat rate by destination. Every rate is listed on our Shipping & Returns page, and your exact delivery charge is shown at checkout before you pay.',
+    ],
+    [
+      'How do I return or exchange a piece?',
+      'returns',
+      'Write to info@plumpose.com or send us a message on Instagram within 14 days of delivery. Pieces must be unworn, unwashed and in their original packaging. Return shipping is paid by the customer unless the item is faulty or incorrect.',
+    ],
+    [
+      'My piece arrived damaged or incorrect. What should I do?',
+      'returns',
+      'We are sorry. Please contact us within 48 hours of delivery, with a photograph if you can, and we will put it right.',
+    ],
+    [
+      'Can I check my embroidery before it is stitched?',
+      'personalisation',
+      'Your lettering is stitched exactly as typed, so please check the spelling before adding the piece to your bag — the bag and your confirmation email both show it as it will be stitched. Personalised pieces cannot be returned.',
+    ],
+    [
+      'Where can the embroidery go?',
+      'personalisation',
+      'On the pocket, the neck, the cuff or the collar — up to two placements on a set. Choose letters, a symbol, or both, and one of five thread colours.',
+    ],
+    [
+      'What is the set made of?',
+      'care',
+      'Al Shaheen Nights is cut from 22-momme silk (97% silk, 3% spandex) in Midnight Navy, with contrast piping and French seams finished by hand.',
+    ],
+    [
+      'How does it fit?',
+      'care',
+      'The set comes in S, M and L, cut in the signature plumpose silhouette with elegantly long trousers designed for a graceful drape. Our model is 175cm and wears a size M. If you are unsure, write to us and we will help you choose.',
+    ],
   ]
   for (const [i, [question, category, answer]] of faqs.entries()) {
     await upsert(
@@ -461,6 +611,111 @@ export async function seed(payload: Payload): Promise<void> {
       { question, category, answer: para(answer), published: true },
       c,
     )
+  }
+
+  // ------------------------------------------------------- contact form
+  /**
+   * The form the Contact page submits to (src/app/(app)/contact). Messages
+   * land in the admin under Content → Enquiries. No notification email is
+   * configured: the form plugin writes submitted values into the email's HTML
+   * unescaped, so it waits for an escaping `beforeEmail` hook (BUILD-LOG §17).
+   */
+  log('contact form…')
+  const formField = (blockType: string, name: string, label: string, required: boolean, width = 50) => ({
+    blockType,
+    label,
+    name,
+    required,
+    width,
+  })
+  await upsert(
+    payload,
+    'forms',
+    { title: { equals: 'Contact' } },
+    {
+      confirmationMessage: para('Thank you. Your message is with us. We usually reply within a day.'),
+      confirmationType: 'message',
+      fields: [
+        formField('text', 'name', 'Name', true),
+        formField('email', 'email', 'Email', true),
+        formField('text', 'subject', 'About', false),
+        formField('text', 'orderNumber', 'Order number', false),
+        formField('textarea', 'message', 'Message', true, 100),
+      ],
+      submitButtonLabel: 'Send',
+      title: 'Contact',
+    },
+    c,
+  )
+
+  // ------------------------------------------- Made for You — samples, dev only
+  /**
+   * SAMPLE projects so Made for You can be reviewed with its project grid and
+   * detail pages filled. They are **not real commissions**: seeded only
+   * outside production, like the dev admin above, and listed in BUILD-LOG §17
+   * for the client to replace with her own work before launch.
+   */
+  if (process.env.NODE_ENV !== 'production' && brandImages.length >= 7) {
+    log('made for you (samples, dev only)…')
+    const [window, print, piping, corridor, armchair, doorway, qatarBook] = brandImages.map((m) => m.id as number)
+    const samples: Array<{
+      category: string
+      coverImage: number
+      description: string[]
+      gallery: number[]
+      slug: string
+      summary: string
+      title: string
+    }> = [
+      {
+        category: 'bridal',
+        coverImage: window,
+        description: [
+          'For the morning of a wedding in Doha: a set for the bride, and one for each of her sisters, every pocket embroidered in gold with a first initial.',
+          'The bride’s set carried the wedding date at the cuff in cream thread, small enough to be found only by those who knew to look.',
+        ],
+        gallery: [armchair, piping, qatarBook],
+        slug: 'sample-a-bridal-morning',
+        summary: 'Sets for a bride and her sisters, each pocket embroidered with an initial in gold.',
+        title: 'A bridal morning',
+      },
+      {
+        category: 'embroidery',
+        coverImage: piping,
+        description: [
+          'Initials and a four-pointed star at the pocket, stitched by hand in gold thread on Midnight Navy silk.',
+        ],
+        gallery: [print, corridor, doorway],
+        slug: 'sample-initials-in-gold',
+        summary: 'Initials and a four-pointed star at the pocket, in gold thread.',
+        title: 'Initials in gold',
+      },
+      {
+        category: 'bespoke',
+        coverImage: armchair,
+        description: [
+          'The Al Shaheen Nights set, with the trousers cut to the client’s height and the sleeves shortened a little, finished with cream piping.',
+        ],
+        gallery: [doorway, window],
+        slug: 'sample-cut-to-measure',
+        summary: 'The set cut to the client’s height, with cream piping.',
+        title: 'Cut to measure',
+      },
+    ]
+    for (const sample of samples) {
+      await upsert(
+        payload,
+        'projects',
+        { slug: { equals: sample.slug } },
+        {
+          ...sample,
+          description: paras(...sample.description),
+          gallery: sample.gallery.map((image) => ({ image })),
+          published: true,
+        },
+        c,
+      )
+    }
   }
 
   // -------------------------------------------------------- site settings

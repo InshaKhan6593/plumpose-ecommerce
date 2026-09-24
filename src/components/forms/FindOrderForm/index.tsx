@@ -1,13 +1,12 @@
 'use client'
 
-import { FormError } from '@/components/forms/FormError'
-import { FormItem } from '@/components/forms/FormItem'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useAuth } from '@/providers/Auth'
-import React, { Fragment, useCallback, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
+
+import { HouseAlert, HouseButton, HouseField, houseInput } from '@/components/forms/house'
+import { TRACK_PAGE } from '@/content/pages'
+
 import { sendOrderAccessEmail } from './sendOrderAccessEmail'
 
 type FormData = {
@@ -19,6 +18,11 @@ type Props = {
   initialEmail?: string
 }
 
+/**
+ * Email + order number → a private link to the order, by email. The server
+ * action answers the same whether or not an order matched (see
+ * sendOrderAccessEmail), so this form cannot be used to probe who ordered.
+ */
 export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,8 +45,9 @@ export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
 
     try {
       const result = await sendOrderAccessEmail({
-        email: data.email,
-        orderID: data.orderID,
+        email: data.email.trim(),
+        // Accept "#105" or "105" — the order number as the confirmation email shows it.
+        orderID: data.orderID.replace(/[^\d]/g, ''),
       })
 
       if (result.success) {
@@ -59,53 +64,43 @@ export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
 
   if (success) {
     return (
-      <Fragment>
-        <h1 className="text-xl mb-4">Check your email</h1>
-        <div className="prose dark:prose-invert">
-          <p>
-            {`If an order exists with the provided email and order ID, we've sent you an email with a link to view your order details.`}
-          </p>
-        </div>
-      </Fragment>
+      <div aria-live="polite" className="border border-line px-7 py-8 text-center">
+        <p className="serif-display text-[2rem]">{TRACK_PAGE.sent.heading}</p>
+        <p className="mx-auto mt-3 max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft">{TRACK_PAGE.sent.body}</p>
+      </div>
     )
   }
 
   return (
-    <Fragment>
-      <h1 className="text-xl mb-4">Find my order</h1>
-      <div className="prose dark:prose-invert mb-8">
-        <p>{`Please enter your email and order ID below. We'll send you a link to view your order.`}</p>
-      </div>
-      <form className="max-w-lg flex flex-col gap-8" onSubmit={handleSubmit(onSubmit)}>
-        <FormItem>
-          <Label htmlFor="email" className="mb-2">
-            Email address
-          </Label>
-          <Input
-            id="email"
-            {...register('email', { required: 'Email is required.' })}
-            type="email"
-          />
-          {errors.email && <FormError message={errors.email.message} />}
-        </FormItem>
-        <FormItem>
-          <Label htmlFor="orderID" className="mb-2">
-            Order ID
-          </Label>
-          <Input
-            id="orderID"
-            {...register('orderID', {
-              required: 'Order ID is required.',
-            })}
-            type="text"
-          />
-          {errors.orderID && <FormError message={errors.orderID.message} />}
-        </FormItem>
-        {submitError && <FormError message={submitError} />}
-        <Button type="submit" className="self-start" variant="default" disabled={isSubmitting}>
-          {isSubmitting ? 'Sending...' : 'Find order'}
-        </Button>
-      </form>
-    </Fragment>
+    <form className="flex flex-col gap-9" noValidate onSubmit={handleSubmit(onSubmit)}>
+      <HouseField error={errors.email?.message} id="email" label="Email">
+        <input
+          aria-invalid={Boolean(errors.email)}
+          autoComplete="email"
+          className={houseInput}
+          id="email"
+          {...register('email', { required: 'Please enter the email you ordered with.' })}
+          type="email"
+        />
+      </HouseField>
+      <HouseField error={errors.orderID?.message} id="orderID" label="Order number">
+        <input
+          aria-invalid={Boolean(errors.orderID)}
+          className={houseInput}
+          id="orderID"
+          inputMode="numeric"
+          placeholder="e.g. 105"
+          {...register('orderID', {
+            required: 'Please enter your order number.',
+            validate: (v) => /\d/.test(v) || 'Your order number is in your confirmation email.',
+          })}
+          type="text"
+        />
+      </HouseField>
+      {submitError ? <HouseAlert>{submitError}</HouseAlert> : null}
+      <HouseButton className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Sending…' : 'Find my order'}
+      </HouseButton>
+    </form>
   )
 }

@@ -1,23 +1,27 @@
 import type { Metadata } from 'next'
 
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import React from 'react'
 
-import { LogoutPage } from './LogoutPage'
-
-export default async function Logout() {
-  return (
-    <div className="container max-w-lg my-16">
-      <LogoutPage />
-    </div>
-  )
-}
+import { AuthShell } from '@/components/account'
+import { SignOut } from '@/components/account/AuthForms'
+import { ButtonLink, TextLink } from '@/components/editorial'
 
 export const metadata: Metadata = {
-  description: 'You have been logged out.',
-  openGraph: mergeOpenGraph({
-    title: 'Logout',
-    url: '/logout',
-  }),
-  title: 'Logout',
+  robots: { follow: false, index: false },
+  title: 'Signed out',
+}
+
+export default function LogoutPage() {
+  return (
+    <AuthShell
+      footer={<TextLink href="/login">Sign in again</TextLink>}
+      intro="You have been signed out."
+      title="Until next time"
+    >
+      <SignOut />
+      <div className="text-center">
+        <ButtonLink href="/shop">Discover the collection</ButtonLink>
+      </div>
+    </AuthShell>
+  )
 }

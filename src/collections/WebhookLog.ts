@@ -61,7 +61,15 @@ export const WebhookLog: CollectionConfig = {
     {
       name: 'applied',
       type: 'checkbox',
-      admin: { description: 'Did this callback change the order, or was it a duplicate?' },
+      admin: {
+        /**
+         * Not "did this callback create the order": when the return page and
+         * the webhook arrive together, the plugin hands every caller the one
+         * order it made, so no caller can tell. What is recorded is the outcome.
+         */
+        description:
+          'Yes if the payment this callback reports had become an order by the time it was handled. No for duplicates, ignored events and anything that could not be settled.',
+      },
       defaultValue: false,
     },
     {

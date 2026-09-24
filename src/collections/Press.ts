@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 
 export const Press: CollectionConfig = {
   slug: 'press',
@@ -24,6 +25,8 @@ export const Press: CollectionConfig = {
     },
     update: adminOnly,
   },
+  /** The storefront pages that show this are prerendered; see revalidateStorefront. */
+  hooks: withStorefrontRefresh(),
   fields: [
     { name: 'publication', type: 'text', required: true },
     { name: 'headline', type: 'text', required: true },

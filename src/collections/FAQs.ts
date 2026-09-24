@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 
 export const FAQs: CollectionConfig = {
   slug: 'faqs',
@@ -23,6 +24,8 @@ export const FAQs: CollectionConfig = {
     },
     update: adminOnly,
   },
+  /** The storefront pages that show this are prerendered; see revalidateStorefront. */
+  hooks: withStorefrontRefresh(),
   fields: [
     { name: 'question', type: 'text', required: true },
     { name: 'answer', type: 'richText', required: true },

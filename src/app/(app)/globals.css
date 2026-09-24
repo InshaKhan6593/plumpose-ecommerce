@@ -43,7 +43,8 @@
   --breakpoint-lg: 64rem;
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
-  --font-mono: var(--font-geist-mono);
+  /* The template set prices and labels in Geist Mono; the brand has no monospace. */
+  --font-mono: var(--font-jost);
   --font-sans: var(--font-jost);
   --font-display: var(--font-fraunces);
 
@@ -55,7 +56,96 @@
   --color-ink-faint: #a9a299;
   --color-line: rgba(27, 24, 21, 0.16);
   --color-line-soft: rgba(27, 24, 21, 0.09);
+  --color-paper-3: #eee9e1;
   --ease-brand: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/*
+ * House type styles, from the approved mockups (docs/mockups/).
+ * Display is Fraunces pushed to its high-contrast optical size with the
+ * soft/wonky axes off — the nearest free face to the guideline's Negaroa.
+ */
+@utility caps {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+@utility serif-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 300;
+  font-variation-settings:
+    'opsz' 144,
+    'SOFT' 0,
+    'WONK' 0;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+}
+
+@utility serif-italic {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-variation-settings:
+    'opsz' 48,
+    'SOFT' 0,
+    'WONK' 0;
+}
+
+/*
+ * Motion failsafe. `html.js-motion` is set by an inline script before paint so
+ * revealed elements start hidden (no flash of content that then disappears).
+ * If the motion script never takes over — slow network, a crash — they fade in
+ * on their own after 2.5s. `motion-ready` is added once GSAP owns them.
+ * See src/motion/.
+ */
+html.js-motion:not(.motion-ready) [data-reveal],
+html.js-motion:not(.motion-ready) [data-reveal-lines],
+html.js-motion:not(.motion-ready) [data-reveal-image] {
+  opacity: 0;
+  animation: pp-reveal-failsafe 0.6s var(--ease-brand) 2.5s forwards;
+}
+
+@keyframes pp-reveal-failsafe {
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * The mask each heading line rises out of (splitLines in src/motion/gsap.ts).
+ * SplitText clips it to the line box, and with a tight line-height — the hero
+ * is 0.9 — descenders hang outside that box and were cut off: the tail of the
+ * y in "differently", the g in "gathering", the y in "by hand". The padding
+ * grows the clip to take them (and the tops of italic capitals); the negative
+ * margin gives the space back, so the layout does not move.
+ */
+.split-line-mask {
+  padding-block: 0.06em 0.22em;
+  margin-block: -0.06em -0.22em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js-motion:not(.motion-ready) [data-reveal],
+  html.js-motion:not(.motion-ready) [data-reveal-lines],
+  html.js-motion:not(.motion-ready) [data-reveal-image] {
+    animation-delay: 0s;
+    animation-duration: 0.3s;
+  }
+}
+
+/* Lenis — required styles for smooth scrolling. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
 }
 
 @layer utilities {
@@ -99,19 +189,20 @@
 
 :root {
   /* plumpose — mapped from the existing site's palette */
-  --background: #ffffff;           /* --paper   */
+  /* The page is warm paper, as in the approved mockups — not white. */
+  --background: #f6f4f0;           /* --paper-2 */
   --foreground: #1b1815;           /* --ink     */
-  --card: #f6f4f0;                 /* --paper-2 */
+  --card: #eee9e1;                 /* --paper-3, one step deeper so panels still read */
   --card-foreground: #1b1815;
   --popover: #ffffff;
   --popover-foreground: #1b1815;
   --primary: #1b1815;
   --primary-foreground: #ffffff;
-  --secondary: #f6f4f0;
+  --secondary: #eee9e1;
   --secondary-foreground: #1b1815;
-  --muted: #f6f4f0;
+  --muted: #eee9e1;
   --muted-foreground: #7a736a;     /* --ink-soft */
-  --accent: #f6f4f0;
+  --accent: #eee9e1;
   --accent-foreground: #1b1815;
   --destructive: oklch(57.7% 0.245 27.325deg);
   --destructive-foreground: oklch(57.7% 0.245 27.325deg);

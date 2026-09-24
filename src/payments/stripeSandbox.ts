@@ -9,6 +9,7 @@ import {
   type PricingSnapshot,
   redeemCartDiscount,
 } from './finaliseOrder'
+import { itemsForGateway, readCheckoutDetails } from './checkoutSession'
 import { loadPricingContext, priceCart } from './priceCart'
 import { createStripeWebhookEndpoint } from './webhook'
 
@@ -24,28 +25,24 @@ import { createStripeWebhookEndpoint } from './webhook'
  * email, the status lifecycle — is provider-agnostic and was otherwise blocked
  * behind them. Stripe unblocks that work without waiting.
  *
- * ## What it is NOT
+ * ## The flow: a redirect, like SkipCash
  *
- * It is not a rehearsal of SkipCash, and the two are not interchangeable:
+ * Payment is taken on **Stripe's hosted Checkout page**, not a card form on
+ * ours. `initiatePayment` returns a `redirectURL`, the customer pays there and
+ * comes back to `/checkout/return`, and the webhook confirms the order if they
+ * never do — the same shape as SkipCash's `payUrl`. When SkipCash arrives the
+ * checkout page, the return page and order creation stay; only this adapter
+ * and the webhook's signature check are swapped. See `./checkoutSession.ts`.
  *
- * | | Stripe | SkipCash |
- * |---|---|---|
- * | `initiatePayment` returns | a `clientSecret` | a `payUrl` |
- * | Customer pays | on our page, in Stripe Elements | on SkipCash's page, after a redirect |
- * | Returns via | client-side confirmation | redirect + webhook |
- *
- * **Build the checkout as a redirect flow regardless.** An inline card form
- * built around Stripe Elements is thrown away the day SkipCash arrives.
- *
- * It also cannot exercise the HMAC signature with its fixed field order —
+ * It still cannot exercise the HMAC signature with its fixed field order —
  * which §7.2 calls the most brittle part of the integration — nor SkipCash's
  * status codes, nor its webhook shape.
  *
  * ## The amount
  *
  * The plugin's stock Stripe adapter charges `cart.subtotal`, which omits
- * delivery, embroidery and discounts. This wrapper overrides `initiatePayment`
- * so the amount comes from `priceOrder()` instead. See `./priceCart.ts`.
+ * delivery, embroidery and discounts. The amount here comes from
+ * `priceOrder()` instead. See `./priceCart.ts`.
  *
  * ## Switching it off
  *
@@ -57,8 +54,22 @@ import { createStripeWebhookEndpoint } from './webhook'
 export const isStripeSandboxEnabled = (): boolean =>
   process.env.PAYMENT_PROVIDER === 'stripe' && process.env.NODE_ENV !== 'production'
 
+/** How long the hosted page stays payable. Stripe's minimum is 30 minutes. */
+const SESSION_LIFETIME_SECONDS = 60 * 60
+
 export const createStripeSandboxAdapter = (): PaymentAdapter => {
   const base = stripeAdapter({
+    /**
+     * The transaction remembers the Checkout Session it was created for; the
+     * PaymentIntent id is filled in once the customer has paid (it does not
+     * exist before). See `settleCheckoutSession`.
+     */
+    groupOverrides: {
+      fields: ({ defaultFields }) => [
+        ...defaultFields,
+        { name: 'checkoutSessionID', type: 'text', index: true, label: 'Stripe Checkout Session ID' },
+      ],
+    },
     publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
     secretKey: process.env.STRIPE_SECRET_KEY || '',
     webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET || '',
@@ -66,6 +77,7 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
 
   const secretKey = process.env.STRIPE_SECRET_KEY || ''
   const webhookSecret = process.env.STRIPE_WEBHOOKS_SIGNING_SECRET || ''
+  const stripe = new Stripe(secretKey)
 
   const adapter: PaymentAdapter = {
     ...base,
@@ -74,36 +86,14 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
      * Replace the plugin's webhook receiver with our own.
      *
      * The plugin's returns 200 to an unsigned request and logs nothing. Ours
-     * fails closed, records every callback to `webhookLog`, and creates the
-     * order when the browser never confirmed it — which is what makes the
-     * gateway the source of truth (P4). See `./webhook.ts`.
+     * fails closed, records every callback to `webhookLog`, and settles a paid
+     * Checkout Session when the customer never came back — which is what makes
+     * the gateway the source of truth (P4). See `./webhook.ts`.
      */
     endpoints: [
       ...(base.endpoints ?? []).filter((endpoint) => endpoint.path !== '/webhooks'),
       createStripeWebhookEndpoint({
-        /**
-         * Confirms through our own public endpoint rather than by calling the
-         * plugin's handler directly.
-         *
-         * `confirmOrderHandler` is not re-exported — reaching it would mean a
-         * deep import into `dist/`, which breaks on any plugin update. The
-         * adapter's own `endpoints` array carries only the webhook; the
-         * confirm route is registered by the plugin itself.
-         *
-         * So the webhook takes the same route the browser does. One extra hop,
-         * and in exchange the two paths cannot drift apart.
-         */
-        confirmOrder: async (body) => {
-          const origin = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
-
-          return fetch(`${origin}/api/payments/stripe/confirm-order`, {
-            body: JSON.stringify(body),
-            headers: { 'Content-Type': 'application/json' },
-            method: 'POST',
-          })
-        },
-        secretKey,
-        stripe: new Stripe(secretKey),
+        stripe,
         webhookSecret,
       }),
     ],
@@ -111,24 +101,43 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
     label: 'Stripe (sandbox — development only)',
 
     /**
-     * Prices through our own engine, then hands the real total to Stripe.
+     * Records the checkout's choices on the cart, prices it through our own
+     * engine, and opens a Stripe Checkout Session for exactly that total.
+     * Returns the hosted page's `redirectURL`.
      *
      * The cart is re-priced from the database here, at the moment of payment:
      * the browser's quote is never carried into the charge (P6).
      */
     initiatePayment: async (args) => {
-      const { data, req } = args
-      const { cart, customerEmail, shippingAddress } = data
-
-      const countryCode = String(shippingAddress?.country ?? '')
+      const { data, req, transactionsSlug } = args
+      const { cart, customerEmail } = data
 
       /**
-       * Re-read the cart in full.
-       *
-       * The plugin loads it with
+       * The plugin passes the adapter only its own fields; ours — delivery
+       * city, discount code, gift note, the full address — are read from the
+       * request body the plugin has already parsed.
+       */
+      const details = readCheckoutDetails(req.data)
+      const countryCode = details.address.country || String(data.shippingAddress?.country ?? '')
+
+      /**
+       * The pricing engine reads the city and the code from the cart, so they
+       * are written there first. Both are re-validated below; nothing here is
+       * trusted because the browser sent it.
+       */
+      await req.payload.update({
+        collection: 'carts',
+        data: { discountCode: details.discountCode, shippingCityKey: details.cityKey },
+        id: cart.id,
+        overrideAccess: true,
+        req,
+      })
+
+      /**
+       * Re-read the cart in full. The plugin loads it with
        * `select: { id, currency, customerEmail, items, subtotal }`, so the
        * cart handed to an adapter has `shippingCityKey` and `discountCode`
-       * stripped out — the engine would then refuse every Qatar address with
+       * stripped out — the engine would refuse every Qatar address with
        * "Please choose a delivery city" and silently ignore every discount.
        */
       const storedCart = await req.payload.findByID({
@@ -159,13 +168,8 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
         )
       }
 
-      /**
-       * The plugin derives the charge from `cart.subtotal`, so the priced
-       * total is written back onto the cart before delegating. This is the
-       * seam: everything below still believes it is charging a cart subtotal,
-       * and that subtotal is now the engine's total.
-       */
       const snapshot: PricingSnapshot = {
+        delivery: { address: details.address, gift: details.gift, giftNote: details.giftNote },
         discountCode: priced.order.discountCode,
         discountTotal: priced.order.discountTotal,
         freeShippingApplied: priced.order.freeShippingApplied,
@@ -185,40 +189,103 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
 
       await req.payload.update({
         collection: 'carts',
-        data: { pricingSnapshot: snapshot, subtotal: priced.order.total },
+        data: { pricingSnapshot: snapshot },
         id: cart.id,
         overrideAccess: true,
         req,
       })
 
+      /** The same Stripe customer the plugin would use, found or made by email. */
+      const customer =
+        (await stripe.customers.list({ email: customerEmail, limit: 1 })).data[0] ??
+        (await stripe.customers.create({ email: customerEmail }))
+
+      const items = itemsForGateway(cart.items ?? [])
+      /** "Al Shaheen Nights — Silk Pyjama Set, size M × 1". A variant's title repeats its product's, so only the rest is kept. */
+      const pieces = priced.order.lines
+        .map((line) => {
+          const size = line.variantTitle
+            ?.replace(line.productTitle, '')
+            .replace(/^\s*[—–-]\s*/, '')
+            .trim()
+          return `${line.productTitle}${size ? `, size ${size}` : ''} × ${line.quantity}`
+        })
+        .join('; ')
+
+      const origin = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
       /**
-       * Strip personalisation before delegating.
-       *
-       * The plugin writes cart items into Stripe metadata with
-       * `...customProperties`, so our `personalisation` array goes with them —
-       * but the transactions collection's `items` field has no such field, so
-       * it is dropped on the way into the database. `validateSettlement` then
-       * compares the two and throws "Stripe cart items do not match the
-       * transaction items", failing every confirmation.
-       *
-       * Nothing is lost: personalisation is read back from the database cart
-       * in `confirmOrder`. This also sidesteps Stripe's 500-character limit on
-       * a metadata value, which two embroidery placements can exceed.
+       * One line for the whole order, at the engine's total. Stripe's page
+       * cannot show a discount without creating a coupon object per order, and
+       * a single line guarantees the amount it charges is exactly the amount
+       * we priced — the description carries what is in it.
        */
-      const itemsForGateway = (cart.items ?? []).map((item) => {
-        const { personalisation: _dropped, ...rest } = item as typeof item & {
-          personalisation?: unknown
-        }
-        return rest
+      const session = await stripe.checkout.sessions.create({
+        cancel_url: `${origin}/checkout?payment=cancelled`,
+        client_reference_id: String(cart.id),
+        customer: customer.id,
+        expires_at: Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS,
+        line_items: [
+          {
+            price_data: {
+              currency: 'qar',
+              product_data: {
+                description: [
+                  pieces,
+                  priced.order.personalisationTotal ? 'hand embroidery' : '',
+                  priced.order.shippingLabel || '',
+                  priced.order.discountCode ? `code ${priced.order.discountCode}` : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+                  .slice(0, 500),
+                name: 'Your plumpose order',
+              },
+              unit_amount: priced.order.total,
+            },
+            quantity: 1,
+          },
+        ],
+        locale: 'en',
+        metadata: { cartID: String(cart.id) },
+        mode: 'payment',
+        /**
+         * The plugin's settlement check reads these off the PaymentIntent the
+         * session creates: which cart, and the exact items the transaction
+         * below records.
+         */
+        payment_intent_data: {
+          description: `plumpose — cart ${cart.id}`,
+          metadata: { cartID: String(cart.id), cartItemsSnapshot: JSON.stringify(items) },
+        },
+        payment_method_types: ['card'],
+        submit_type: 'pay',
+        success_url: `${origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
       })
 
-      return base.initiatePayment({
-        ...args,
+      if (!session.url) throw new Error('Stripe did not return a payment page.')
+
+      await req.payload.create({
+        collection: transactionsSlug as 'transactions',
         data: {
-          ...data,
-          cart: { ...cart, items: itemsForGateway, subtotal: priced.order.total },
+          ...(req.user ? { customer: req.user.id } : { customerEmail }),
+          amount: priced.order.total,
+          billingAddress: details.address as never,
+          cart: cart.id as number,
+          currency: 'QAR',
+          items: items as never,
+          paymentMethod: 'stripe',
+          status: 'pending',
+          stripe: { checkoutSessionID: session.id, customerID: customer.id },
         },
+        req,
       })
+
+      return {
+        checkoutSessionID: session.id,
+        message: 'Payment page ready.',
+        redirectURL: session.url,
+      }
     },
 
     /**
