@@ -10,6 +10,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 
 import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
+import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
 import { formatQar } from '@/lib/pricing/money'
 import { useLenis } from '@/motion/MotionProvider'
 import { cn } from '@/utilities/cn'
@@ -33,6 +34,8 @@ type QuoteLine = {
 
 type Quote = {
   lines: QuoteLine[]
+  /** From @/lib/pricing/stock — set when a size in the bag can no longer be bought. */
+  stock?: { refusal: null | string }
   totals: { personalisation: number; subtotal: number; total: number }
 }
 
@@ -164,9 +167,11 @@ export function CartModal() {
                   const unit = variant?.priceInQAR ?? product.priceInQAR ?? 0
                   const lineTotal = line ? line.subtotal + line.personalisationTotal : unit * (item.quantity || 1)
 
+                  // The stock rule (@/lib/pricing/stock): no more than there are, unless made to order.
                   const target = variant ?? product
-                  const atStock =
-                    typeof target.inventory === 'number' && (item.quantity || 0) >= target.inventory
+                  const atStock = (item.quantity || 0) >= purchaseLimit(product, target)
+                  const madeToOrderCount =
+                    product.madeToOrder !== false ? Math.max(0, (item.quantity || 0) - readyStock(target)) : 0
 
                   return (
                     <li className="flex gap-5 border-b border-line py-6" key={item.id ?? index}>
@@ -187,6 +192,11 @@ export function CartModal() {
                           <span className="shrink-0 text-sm tabular-nums">{formatQar(lineTotal)}</span>
                         </div>
                         {size ? <p className="mt-1 text-xs text-ink-soft">Size {size}</p> : null}
+                        {madeToOrderCount ? (
+                          <p className="mt-1 text-xs text-ink-soft">
+                            {madeToOrderCount === (item.quantity || 0) ? 'Made to order' : `${madeToOrderCount} made to order`}
+                          </p>
+                        ) : null}
                         {line?.personalisation.map((p) => (
                           <p className="serif-italic mt-1 text-[0.8125rem] text-ink-soft" key={p.placementName}>
                             Embroidery — {describe(p)}
@@ -244,10 +254,16 @@ export function CartModal() {
                   </div>
                 </dl>
                 <p className="mt-3 text-xs text-ink-soft">All orders are charged in QAR.</p>
+                {quote?.stock?.refusal ? (
+                  <p className="mt-4 text-[0.8125rem] leading-relaxed text-[#8a2424]" role="alert">
+                    {quote.stock.refusal}
+                  </p>
+                ) : null}
                 <Link
+                  aria-disabled={Boolean(quote?.stock?.refusal) || undefined}
                   className={cn(
                     'caps mt-5 flex h-12 w-full items-center justify-center bg-ink text-[0.6875rem] text-white hover:bg-ink/85',
-                    isLoading && 'pointer-events-none bg-ink/70',
+                    (isLoading || quote?.stock?.refusal) && 'pointer-events-none bg-ink/70',
                   )}
                   href="/checkout"
                 >

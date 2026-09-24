@@ -12,6 +12,7 @@ import {
   type PriceOrderContext,
   type ValidatedDiscount,
 } from '@/lib/pricing/priceOrder'
+import { stockSummary } from '@/lib/pricing/stock'
 
 /**
  * `POST /api/quote` — price a bag (P6, P8).
@@ -149,6 +150,8 @@ export const quoteEndpoint: Endpoint = {
       const goods = priceGoods(lines, context.personalisationRules)
       return json({
         deliveryPending: true,
+        /** Sold-out sizes (the bag then asks for a change) and pieces that will be made to order. */
+        stock: stockSummary(lines),
         lines: goods.lines.map((line) => ({
           personalisation: line.personalisation,
           personalisationTotal: line.personalisationTotal,
@@ -218,6 +221,7 @@ export const quoteEndpoint: Endpoint = {
 
     return json({
       currency: 'QAR',
+      stock: stockSummary(lines),
       /** Present when a code was sent but could not be used. The bag is still priced. */
       discountError,
       lines: order.lines.map((line) => ({

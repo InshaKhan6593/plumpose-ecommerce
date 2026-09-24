@@ -37,7 +37,7 @@ Track order. Some copy is placeholder until the client confirms it — see
 orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
 
 **Not built yet:** the spin wheel, currency display.
-SkipCash is pending credentials. 128 integration and 36 end-to-end tests pass.
+SkipCash is pending credentials. 137 integration and 38 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.

@@ -155,8 +155,6 @@ client's reference recording (`../brand-assets/reference/`):
 - Spin wheel, currency display (data ready), reviews aggregate, CSV exports,
   a Homepage global so she can edit the copy, storage adapter (uploads write
   to local disk and will not survive a serverless deploy).
-- **Stock can go negative** — nothing floors the plugin's `$inc`. Blocked on
-  the client's made-to-order decision (REQUIREMENTS §9.3 Q8).
 
 ---
 
@@ -170,8 +168,8 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (128) |
-| `pnpm test:e2e` | Playwright (36 pass, 21 skipped) — pays for real on Stripe's hosted test page |
+| `pnpm test:int` | Integration tests (137) |
+| `pnpm test:e2e` | Playwright (38 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
 | `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
@@ -201,7 +199,7 @@ this machine's port with `E2E_BASE_URL=http://localhost:3001`.
 users, where the bare subpath does not resolve — that silently broke the admin
 spec for a commit.
 
-**`pnpm test:e2e` passes: 36 tests, plus 21 skipped.** The skipped ones are
+**`pnpm test:e2e` passes: 38 tests, plus 21 skipped.** The skipped ones are
 `frontend.e2e.spec.ts`, the upstream template's storefront suite — it asserts a
 page titled "Payload Ecommerce Template" and a "Hoodie" product, neither of
 which plumpose has. Replace it when the storefront is built.
@@ -262,6 +260,11 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Film: H.264, standard range, CRF 22.** VP9 from this ffmpeg is visibly
   softer and Chrome prefers it; the café originals are full range. See
   `scripts/encode-videos.sh` and BUILD-LOG §18.
+- **Stock is ours, not the plugin's.** Its pre-payment check never runs for a
+  product with sizes, and its decrement has no floor. `stockRefusal()`
+  (`src/lib/pricing/stock.ts`) runs inside `priceOrder()`, and
+  `stockAfterSale` clamps and notes after payment. The product's *Made to
+  order* switch decides the rule; storefront, quote and payment share it.
 - **After signing in or out, tell the ecommerce plugin** (`onLogin` /
   `onLogout` from `useEcommerce`), or the bag is lost and it fetches as a
   user who has gone. See `src/components/account/AuthForms.tsx`.

@@ -360,7 +360,7 @@ export interface Product {
     [k: string]: unknown;
   } | null;
   /**
-   * Hand-finished to order — allows ordering a size that is out of stock.
+   * Ticked: a size with no stock left can still be ordered — it is made to order, the customer is told it takes a little longer, and the order is noted for the atelier. Unticked: a size with no stock is sold out, and no one can buy more than you have.
    */
   madeToOrder?: boolean | null;
   /**

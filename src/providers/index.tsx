@@ -37,6 +37,8 @@ export const Providers: React.FC<{
                     title: true,
                     gallery: true,
                     inventory: true,
+                    // The bag's stepper follows the stock rule (@/lib/pricing/stock), which needs this.
+                    madeToOrder: true,
                   },
                   variants: {
                     title: true,

@@ -15,6 +15,7 @@ import {
   qualifiesForFreeShipping,
   type ShippingTables,
 } from './shipping'
+import { stockRefusal } from './stock'
 
 /**
  * The pricing engine (P6).
@@ -98,7 +99,7 @@ export type PricedOrder = {
 export type PriceOrderResult =
   | {
       ok: false
-      refusal: DeliveryRefusal | { blocked: false; message: string; reason: 'emptyBasket' }
+      refusal: DeliveryRefusal | { blocked: false; message: string; reason: 'emptyBasket' | 'outOfStock' }
     }
   | { ok: true; order: PricedOrder }
 
@@ -215,6 +216,10 @@ export const priceOrder = (
       refusal: { blocked: false, message: 'Your bag is empty.', reason: 'emptyBasket' },
     }
   }
+
+  // Before anything is priced or charged: can this be sold? See ./stock.ts.
+  const outOfStock = stockRefusal(input.lines)
+  if (outOfStock) return { ok: false, refusal: { blocked: false, message: outOfStock, reason: 'outOfStock' } }
 
   const {
     lines,

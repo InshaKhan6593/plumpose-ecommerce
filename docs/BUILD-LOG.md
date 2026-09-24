@@ -635,7 +635,7 @@ plan in `../docs/MOTION-SPEC.md` and the prompts in `../docs/SCREEN-PROMPTS.md`.
 
 ### Found, not fixed — needs a decision
 
-- **Stock goes negative.** Size M had reached **−115** in the local database
+- ~~**Stock goes negative.**~~ *Fixed 24 Sep 2026, §20.* Size M had reached **−115** in the local database
   from repeated test purchases: nothing stops the plugin's `inventory: $inc`
   going below zero. This is P9, blocked on the client's answer to "do
   out-of-stock sizes block purchase, or allow made-to-order?" (REQUIREMENTS
@@ -1259,6 +1259,75 @@ accounts were deleted afterwards.
 
 ### Still open
 
-- Stock can go negative (size M reads −24 locally after test purchases) — the
-  client's made-to-order decision.
+- ~~Stock can go negative~~ — fixed, §20.
 - A size's own price change still does not refresh the homepage's "from" price (§18).
+
+---
+
+## 20. Stock — 24 Sep 2026
+
+### What was wrong
+
+Two faults in `@payloadcms/plugin-ecommerce`, found by reading its source:
+
+1. **The pre-payment stock check never ran for a product with sizes.** In
+   `endpoints/initiatePayment.js` the variant branch is nested inside
+   `if (item.product && !item.variant)`, so it cannot be reached. Nothing
+   checked stock before a payment.
+2. **The decrement has no floor.** `confirmOrder.js` takes each piece off
+   with a raw `db.updateOne({ inventory: { $inc: -qty } })` — which also
+   bypasses collection hooks.
+
+The storefront meanwhile blocked sold-out sizes regardless of the product's
+*Made to order* switch, and capped quantities at stock. Size M reached −115,
+then −24.
+
+### The rule
+
+The product's existing **Made to order** switch (admin → Fabric & Care, now
+described in plain words there) decides it, in one module —
+`src/lib/pricing/stock.ts` — that the storefront, the quote and payment share:
+
+| | Made to order **on** (the seeded product) | **Off** |
+|---|---|---|
+| Size with no stock | Orderable; "M — made to order"; a note under the button | Sold out, button disabled |
+| More than in stock | Allowed; bag says "2 made to order"; checkout lists them | Capped; "Only 2 left in … size M" |
+| At payment | Charged | Refused before a payment page opens |
+
+Quantities are summed per size across the bag, so a plain and an embroidered
+M cannot each pass alone. Negative stock reads as zero everywhere.
+
+### Where it is enforced
+
+- **Before payment:** `stockRefusal()` runs inside `priceOrder()`, so the
+  quote refuses and every payment adapter (Stripe now, SkipCash later) refuses
+  too — the plugin shows its own generic error there, so customers get the
+  words from checkout's live quote, which disables Pay first.
+- **The bag:** the goods-only quote returns `stock` (refusal + made-to-order
+  counts); the bag shows the refusal and blocks checkout. The cart now
+  populates `madeToOrder` so the stepper can follow the rule.
+- **After payment** (`src/hooks/stockAfterSale.ts`, on transactions turning
+  `succeeded`, inside the plugin's own database transaction right after its
+  decrement): stock below zero goes back to zero, and the order's internal
+  notes say which size went beyond stock — *Made to order* or *OVERSOLD —
+  contact the customer*. A paid order is never failed.
+
+### Verified
+
+- 9 unit tests (`tests/int/stock.int.spec.ts`); integration suite **137 passing**.
+- The live quote, both ways: on → 8 of 6 sold with "2 made to order"; off →
+  all 6 sold, 8 refused ("Only 6 left…"), bag shows it, sold out refused.
+- **E2E suite 38 passing** (2 new): a made-to-order sale beyond stock is
+  charged, stock ends at 0 not −1, the order note reads "Made to order — … M:
+  1 beyond ready stock when paid"; with the switch off a sold-out size cannot
+  open a payment page. "Decrements stock" now starts from a known figure —
+  it relied on ambient stock that other tests spend.
+- The product page, both ways, in a browser.
+- Dummy stock reset to S 4 · M 6 · L 4 (the data is test data, to be replaced).
+
+### Not done
+
+- The client should still confirm the rule she wants at launch — the switch
+  is hers to flip. REQUIREMENTS §9.3 Q8 / CLIENT-REQUEST §6.1.
+- No low-stock or oversold alert email; the dashboard's low-stock panel and
+  the order note are the signals.

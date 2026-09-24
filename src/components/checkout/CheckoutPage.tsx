@@ -40,6 +40,8 @@ type QuoteLine = {
 }
 
 type Quote = {
+  /** From @/lib/pricing/stock: sizes going beyond ready stock, made to order. */
+  stock?: { madeToOrder: Array<{ count: number; label: string }>; refusal: null | string }
   deliveryPending?: boolean
   discountError?: null | string
   lines: QuoteLine[]
@@ -691,6 +693,13 @@ export function CheckoutPage({
             {quoteState.status === 'refused' && !blocked ? (
               <p className="mt-4 text-[0.8125rem] text-[#8a2424]" role="alert">
                 {quoteState.error}
+              </p>
+            ) : null}
+
+            {quote?.stock?.madeToOrder.length ? (
+              <p className="mt-4 text-xs leading-relaxed text-ink-soft">
+                Made to order, so it takes a little longer to reach you:{' '}
+                {quote.stock.madeToOrder.map((m) => `${m.label}${m.count > 1 ? ` (${m.count})` : ''}`).join(', ')}.
               </p>
             ) : null}
 

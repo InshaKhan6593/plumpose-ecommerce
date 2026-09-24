@@ -119,11 +119,85 @@ test.describe('checkout, end to end', () => {
     expect(placement.threadName).toBe('Gold')
   })
 
+  /*
+   * Stock (@/lib/pricing/stock, @/hooks/stockAfterSale). The plugin never
+   * checked a sized product's stock and decremented it without a floor, so
+   * size M reached −115 in testing. Each test sets the stock it needs and
+   * puts both it and the product's switch back afterwards.
+   */
+  const setStock = async (request: APIRequestContext, variantId: number, inventory: number) => {
+    const res = await request.patch(`${BASE}/api/variants/${variantId}`, { data: { inventory }, headers: admin() })
+    expect(res.ok(), `setting stock failed: ${res.status()}`).toBe(true)
+  }
+  const setMadeToOrder = async (request: APIRequestContext, madeToOrder: boolean) => {
+    const res = await request.patch(`${BASE}/api/products/1`, { data: { madeToOrder }, headers: admin() })
+    expect(res.ok(), `setting made to order failed: ${res.status()}`).toBe(true)
+  }
+
   test('decrements stock by the quantity ordered', async ({ page, request }) => {
+    // From a known figure: other tests buy size M too, and stock now stops at zero.
     const before = await readStock(request, 2)
-    const { redirectURL } = await startCheckout(request, { email: shopper('stock'), quantity: 2 })
-    await payAndReturn(page, redirectURL)
-    expect(await readStock(request, 2)).toBe(before - 2)
+    await setStock(request, 2, 5)
+    try {
+      const { redirectURL } = await startCheckout(request, { email: shopper('stock'), quantity: 2 })
+      await payAndReturn(page, redirectURL)
+      expect(await readStock(request, 2)).toBe(3)
+    } finally {
+      await setStock(request, 2, before)
+    }
+  })
+
+  test('made to order: a sale beyond stock goes through, stock stops at zero, the order is noted', async ({ page, request }) => {
+    const before = await readStock(request, 2)
+    await setMadeToOrder(request, true)
+    await setStock(request, 2, 1)
+    try {
+      const { redirectURL } = await startCheckout(request, { email: shopper('beyond'), quantity: 2 })
+      const { orderId } = await payAndReturn(page, redirectURL)
+
+      expect(await readStock(request, 2), 'stock must never go below zero').toBe(0)
+      const order = await readOrder(request, orderId)
+      expect(order.adminNotes).toMatch(/Made to order — .*M: 1 beyond ready stock/)
+    } finally {
+      await setStock(request, 2, before)
+    }
+  })
+
+  test('not made to order: a sold-out size cannot reach the payment page', async ({ request }) => {
+    const before = await readStock(request, 2)
+    await setMadeToOrder(request, false)
+    await setStock(request, 2, 0)
+    try {
+      const cart = (
+        await (
+          await request.post(`${BASE}/api/carts`, {
+            data: { currency: 'QAR', items: [{ personalisation: [], product: 1, quantity: 1, variant: 2 }] },
+          })
+        ).json()
+      ).doc
+      const res = await request.post(`${BASE}/api/payments/stripe/initiate`, {
+        data: {
+          cartID: cart.id,
+          currency: 'QAR',
+          customerEmail: shopper('soldout'),
+          secret: cart.secret,
+          shippingAddress: { addressLine1: 'x', city: 'Doha', country: 'QA', firstName: 'x', lastName: 'x', phone: '1234567' },
+          shippingCityKey: 'doha',
+        },
+      })
+      expect(res.ok(), 'a sold-out size opened a payment page').toBe(false)
+
+      // The plugin replaces the adapter's reason with a generic error, so the
+      // words the customer sees come from the quote checkout shows before Pay.
+      const quote = await request.post(`${BASE}/api/quote`, {
+        data: { city: 'doha', country: 'QA', items: [{ productId: 1, quantity: 1, variantId: 2 }] },
+      })
+      expect(quote.status()).toBe(400)
+      expect((await quote.json()).error).toMatch(/size M is sold out/)
+    } finally {
+      await setStock(request, 2, before)
+      await setMadeToOrder(request, true)
+    }
   })
 
   test('redeems a discount code only once payment succeeds', async ({ page, request }) => {

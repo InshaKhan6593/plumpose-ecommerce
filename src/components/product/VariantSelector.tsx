@@ -2,6 +2,7 @@
 
 import type { Product } from '@/payload-types'
 
+import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
 import { createUrl } from '@/utilities/createUrl'
 import clsx from 'clsx'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -57,6 +58,7 @@ export function VariantSelector({ product }: { product: Product }) {
               const currentOptions = Array.from(optionSearchParams.values())
 
               let isAvailableForSale = true
+              let madeToOrderOnly = false
 
               // Find a matching variant
               if (variants) {
@@ -78,11 +80,9 @@ export function VariantSelector({ product }: { product: Product }) {
                   // If we found a matching variant, set the variant ID in the search params.
                   optionSearchParams.set('variant', String(matchingVariant.id))
 
-                  if (matchingVariant.inventory && matchingVariant.inventory > 0) {
-                    isAvailableForSale = true
-                  } else {
-                    isAvailableForSale = false
-                  }
+                  // The shared rule (@/lib/pricing/stock): made to order is never sold out.
+                  isAvailableForSale = purchaseLimit(product, matchingVariant) > 0
+                  madeToOrderOnly = isAvailableForSale && readyStock(matchingVariant) === 0
                 }
               }
 
@@ -111,7 +111,7 @@ export function VariantSelector({ product }: { product: Product }) {
                       scroll: false,
                     })
                   }}
-                  title={`${option.label}${!isAvailableForSale ? ' — sold out' : ''}`}
+                  title={`${option.label}${!isAvailableForSale ? ' — sold out' : madeToOrderOnly ? ' — made to order' : ''}`}
                   type="button"
                 >
                   {option.label}

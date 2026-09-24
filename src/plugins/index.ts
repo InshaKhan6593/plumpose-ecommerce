@@ -20,6 +20,7 @@ import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { sendEnquiryAlert } from '@/email/enquiryAlert'
 import { resendConfirmationEndpoint, sendOrderEmails } from '@/email/orderHooks'
+import { stockAfterSale } from '@/hooks/stockAfterSale'
 import { validateEnquiry } from '@/hooks/validateEnquiry'
 import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { orderTotalsFields } from '@/fields/orderTotals'
@@ -349,6 +350,11 @@ export const plugins: Plugin[] = [
           hidden: true,
           listSearchableFields: ['customerEmail'],
           useAsTitle: 'customerEmail',
+        },
+        hooks: {
+          ...defaultCollection.hooks,
+          // Stock never stays below zero after a sale; see @/hooks/stockAfterSale.
+          afterChange: [...(defaultCollection.hooks?.afterChange ?? []), stockAfterSale],
         },
       }),
     },
