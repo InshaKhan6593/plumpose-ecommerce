@@ -5,6 +5,7 @@ import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 
 import { webAddress } from '@/fields/webAddress'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -23,6 +24,8 @@ import { DefaultDocumentIDType, Where } from 'payload'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
+  /** The homepage and Our Story show the product and its price, and they are prerendered. */
+  hooks: withStorefrontRefresh(defaultCollection.hooks),
   admin: {
     ...defaultCollection?.admin,
     /** What she needs to see at a glance: what it is, what it costs, is it live. */

@@ -5,7 +5,7 @@ import { Metadata } from 'next'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
-import React from 'react'
+import React, { cache } from 'react'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
 import type { EmbroideryOption, EmbroideryRules } from '@/components/product/embroidery'
@@ -23,7 +23,7 @@ type Args = {
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
+  const product = await queryProductBySlug(slug)
 
   if (!product) return notFound()
 
@@ -66,12 +66,27 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
  */
 export default async function ProductPage({ params }: Args) {
   const { slug } = await params
-  const product = await queryProductBySlug({ slug })
+  const product = await queryProductBySlug(slug)
 
   if (!product) return notFound()
 
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
+
+  // Independent reads, in parallel rather than one after another.
+  const [details, embroideryDocs] = await Promise.all([
+    productDetails({ payload, product, settings }),
+    product.personalisationEnabled
+      ? payload.find({
+          collection: 'personalisationOptions',
+          depth: 0,
+          limit: 100,
+          pagination: false,
+          sort: ['_order', 'createdAt'],
+          where: { active: { not_equals: false } },
+        })
+      : null,
+  ])
 
   const images =
     product.gallery
@@ -82,24 +97,13 @@ export default async function ProductPage({ params }: Args) {
     (entry): entry is Category => typeof entry === 'object' && entry !== null,
   )
 
-  const details = await productDetails({ payload, product, settings })
-
   /**
    * Embroidery options in the order she arranges them in the admin, then by
    * when they were added (the seeded ones carry no order yet). Only the fields
    * the drawer shows are sent — no internal notes, nothing priced.
    */
-  const embroideryOptions: EmbroideryOption[] = product.personalisationEnabled
-    ? (
-        await payload.find({
-          collection: 'personalisationOptions',
-          depth: 0,
-          limit: 100,
-          pagination: false,
-          sort: ['_order', 'createdAt'],
-          where: { active: { not_equals: false } },
-        })
-      ).docs.map(({ hex, key, name, note, svgPath, type }) => ({ hex, key, name, note, svgPath, type }))
+  const embroideryOptions: EmbroideryOption[] = embroideryDocs
+    ? embroideryDocs.docs.map(({ hex, key, name, note, svgPath, type }) => ({ hex, key, name, note, svgPath, type }))
     : []
 
   const embroideryRules: EmbroideryRules | null = settings.personalisationFeeQar
@@ -233,7 +237,12 @@ async function productDetails({
   return details
 }
 
-const queryProductBySlug = async ({ slug }: { slug: string }) => {
+/**
+ * Wrapped in React's `cache` so the page and its metadata share one lookup per
+ * request — it was running twice, each time three levels deep. Takes the slug
+ * itself, not an object: `cache` matches arguments by identity.
+ */
+const queryProductBySlug = cache(async (slug: string) => {
   const { isEnabled: draft } = await draftMode()
 
   const payload = await getPayload({ config: configPromise })
@@ -266,4 +275,4 @@ const queryProductBySlug = async ({ slug }: { slug: string }) => {
   })
 
   return result.docs?.[0] || null
-}
+})

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 
 /**
  * Customer photographs. Nothing appears on the site until it has been
@@ -29,6 +30,8 @@ export const Spotted: CollectionConfig = {
     },
     update: adminOnly,
   },
+  /** The storefront pages that show this are prerendered; see revalidateStorefront. */
+  hooks: withStorefrontRefresh(),
   fields: [
     { name: 'image', type: 'upload', relationTo: 'media', required: true },
     {

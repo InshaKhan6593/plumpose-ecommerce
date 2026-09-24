@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { webAddress } from '@/fields/webAddress'
 
 /**
@@ -30,6 +31,8 @@ export const Projects: CollectionConfig = {
     },
     update: adminOnly,
   },
+  /** The storefront pages that show this are prerendered; see revalidateStorefront. */
+  hooks: withStorefrontRefresh(),
   fields: [
     { name: 'title', type: 'text', required: true },
     {
