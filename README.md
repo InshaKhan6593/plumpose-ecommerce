@@ -33,8 +33,11 @@ Made for You with project pages, Press, Spotted, Contact (enquiry form) and
 Track order. Some copy is placeholder until the client confirms it — see
 [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §17.
 
-**Not built yet:** account pages, the spin wheel, currency display.
-SkipCash is pending credentials. 121 integration and 36 end-to-end tests pass.
+**Accounts.** Sign in, create an account, password reset on the storefront,
+orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
+
+**Not built yet:** the spin wheel, currency display.
+SkipCash is pending credentials. 128 integration and 36 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.

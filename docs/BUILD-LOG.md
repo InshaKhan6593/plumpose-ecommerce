@@ -1,7 +1,7 @@
 # plumpose — Build Log
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
-**Phase reached:** Backend, email, the storefront, checkout and the content pages are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Account pages still to do; content-page copy partly placeholder (§17); SkipCash pending credentials.
+**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Content-page copy partly placeholder (§17); SkipCash pending credentials.
 **Last updated:** 24 Sep 2026
 
 This is the running record of what has actually been built, tested and
@@ -18,7 +18,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Admin config audit | **No problems** |
 | Integration tests | **121 passing** |
 | End-to-end tests | **36 passing** (21 skipped — the template storefront spec) |
-| Storefront | **Homepage, shop, product page, embroidery drawer, bag, checkout, order confirmation, and every content page** — built (§15–§17). Account pages still template |
+| Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sending from plumpose.com waits on domain verification |
 | Payments | Stripe sandbox, hosted Checkout (redirect flow), working end to end; SkipCash blocked on credentials |
 
@@ -1185,3 +1185,80 @@ on `/faq` at the next visit, and again when reverted. Not covered: variants
 current; the homepage's "from" price would lag until another refresh.
 
 121 integration tests pass; type check clean.
+
+---
+
+## 19. Account area, enquiries and Track order — 24 Sep 2026
+
+### The account pages, rebuilt
+
+| Page | Route | Notes |
+|---|---|---|
+| Orders | `/account` | The account's front page: one row per order (number, date, stage, total, pieces), opening the one order page every email links to (`/order/[id]`). Points guests to Track order |
+| Addresses | `/account/addresses` | Add, edit, remove. **Qatar with the delivery-city picker**, as at checkout; every other country typed |
+| Your details | `/account/details` | Name and email, and a separate change-password form |
+| Sign in · Create an account · Forgotten password | `/login` `/create-account` `/forgot-password` | House form parts (`src/components/forms/house.tsx`, now shared with Contact and Track order) |
+| Choose a new password | `/reset-password?token=` | **New.** The reset email used to send customers to the Payload admin's screen; customers now come here, the client and staff still to the admin |
+| Signed out | `/logout` | Linked to `/search`, which does not exist |
+| `/orders`, `/orders/[id]` | — | Template duplicates; now redirect to `/account` and `/order/[id]` |
+
+### Fixed on the way
+
+- **Saved addresses could not be in Qatar.** The plugin's default list has 40
+  countries and no Gulf state. `addresses.supportedCountries` is now the
+  store's own 204 (`src/data/countryOptions.ts`, from the seed's countries.json).
+- **Checkout pre-fills** from a signed-in customer's most recent address,
+  including the Qatar delivery city (matched to its key by name). Anything
+  typed in the visit still wins, field by field.
+- **The bag was lost on sign-in, and the plugin kept fetching after sign-out.**
+  The ecommerce plugin tracks the user itself and must be told:
+  `onLogin` (merges a guest bag into the account's cart) and `onLogout`
+  (forgets cart and addresses on the device) — never called before. Verified:
+  a size added as a guest was in the account's cart after sign-in, alongside
+  the one already there; no console errors after sign-out.
+- **The auth provider's `create`, `forgotPassword` and `resetPassword` did not
+  work** — a non-existent endpoint and GraphQL-shaped reads of REST replies.
+  Rewritten; errors carry codes the forms turn into words.
+- **Redirect messages are codes, not text.** The template printed any
+  `?error=` / `?warning=` on the page, so a link could put words of anyone's
+  choosing on plumpose.com. Verified: forged text shows nothing.
+- **A catch-all `(app)/loading.tsx` (§18) turned every `redirect()` into a
+  200 + client-side redirect** — account sign-in redirects and the payment
+  return among them. Removed; skeletons are only where pages never redirect
+  (product page, Made for You). All four redirects checked back at 307.
+
+### Enquiries
+
+- **Validated on the server** (`src/hooks/validateEnquiry.ts`, a
+  `beforeValidate` hook on form-submissions): only the form's own fields,
+  each once, trimmed and capped; required fields present; email fields well
+  formed. Verified: name-only → 400, bad email → 400, junk and duplicate
+  fields dropped.
+- **A branded "New enquiry" alert** (`src/email/enquiryAlert.ts`) to the
+  order-alert address, reply-to the sender, every value escaped, sent after
+  commit. The plugin's own (unescaped) emails are not used. The send reached
+  Resend and was refused only because plumpose.com is not verified yet — the
+  same state as the order alerts.
+
+### Track order
+
+The lookup matched `customerEmail` only, which a signed-in customer's order
+never has — so those orders could not be found. It now matches the account's
+email too, case-insensitively for guests. Verified on order 129: old query 0
+results, new 1. The email is branded, carries the order's token link, and the
+reply is identical whether or not an order matched.
+
+### Tests
+
+7 new (`tests/int/enquiry-and-account-email.int.spec.ts`): escaping, line
+breaks, subject and reply-to, the reset link per role. Integration suite
+**128 passing**; type check clean. The account flow (create → address →
+checkout pre-fill → details → sign out → locked page → wrong password → sign
+in back to the page asked for) was driven headlessly end to end; its test
+accounts were deleted afterwards.
+
+### Still open
+
+- Stock can go negative (size M reads −24 locally after test purchases) — the
+  client's made-to-order decision.
+- A size's own price change still does not refresh the homepage's "from" price (§18).

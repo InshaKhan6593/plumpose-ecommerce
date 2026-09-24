@@ -152,9 +152,6 @@ client's reference recording (`../brand-assets/reference/`):
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
   outside production only.
-- **Saved addresses** (account area) use the plugin's country list, which has
-  no Qatar — fix before building account pages.
-- Storefront still on the template: account pages.
 - Spin wheel, currency display (data ready), reviews aggregate, CSV exports,
   a Homepage global so she can edit the copy, storage adapter (uploads write
   to local disk and will not survive a serverless deploy).
@@ -173,7 +170,7 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (121) |
+| `pnpm test:int` | Integration tests (128) |
 | `pnpm test:e2e` | Playwright (36 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
@@ -265,6 +262,13 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Film: H.264, standard range, CRF 22.** VP9 from this ffmpeg is visibly
   softer and Chrome prefers it; the café originals are full range. See
   `scripts/encode-videos.sh` and BUILD-LOG §18.
+- **After signing in or out, tell the ecommerce plugin** (`onLogin` /
+  `onLogout` from `useEcommerce`), or the bag is lost and it fetches as a
+  user who has gone. See `src/components/account/AuthForms.tsx`.
+- **No `loading.tsx` above a page that redirects** — under a loading boundary
+  `redirect()` becomes a 200 and a client-side meta refresh.
+- **URL messages are codes** (`src/components/account/notices.ts`); never
+  print a query parameter as text.
 - **Never invent social proof.** Reviews, Spotted and Press show only what she
   has approved or added; empty states say so. Sample Made-for-You projects are
   dev-only.
