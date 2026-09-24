@@ -9,6 +9,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -22,6 +23,8 @@ export const Media: CollectionConfig = {
     useAsTitle: 'alt',
   },
   slug: 'media',
+  // A photo's description, focal point or file shows on prerendered pages.
+  hooks: withStorefrontRefresh(),
   access: {
     create: adminOnly,
     delete: adminOnly,

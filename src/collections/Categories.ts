@@ -2,6 +2,7 @@ import { slugField } from 'payload'
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
@@ -19,6 +20,8 @@ export const Categories: CollectionConfig = {
     listSearchableFields: ['title', 'slug'],
     useAsTitle: 'title',
   },
+  // The collection's name is on the prerendered homepage.
+  hooks: withStorefrontRefresh(),
   fields: [
     {
       name: 'title',

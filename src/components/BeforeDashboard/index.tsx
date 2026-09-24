@@ -47,7 +47,9 @@ export const BeforeDashboard: React.FC = async () => {
       payload.find({
         collection: 'variants',
         depth: 1,
-        limit: 10,
+        pagination: false,
+        // A product populates with a few fields by default; these two decide what counts.
+        populate: { products: { _status: true, madeToOrder: true } },
         where: { inventory: { less_than_equal: lowAt } },
       }),
       payload.count({ collection: 'reviews', where: { status: { equals: 'pending' } } }),
@@ -64,6 +66,18 @@ export const BeforeDashboard: React.FC = async () => {
     { hint: 'Needs packing or posting', label: 'Awaiting fulfilment', value: String(awaiting?.totalDocs ?? 0) },
     { label: 'Live products', value: String(liveProducts?.totalDocs ?? 0) },
   ]
+
+  /*
+   * Only what needs her: sizes of live pieces that are sold out or running
+   * low. A made-to-order size at zero is working as intended — it is made
+   * when ordered — so it is not counted, as the stock emails also say.
+   */
+  const liveSizes = ((lowStock?.docs ?? []) as any[]).filter(
+    (v) => typeof v.product === 'object' && v.product?._status === 'published',
+  )
+  const soldOut = liveSizes.filter((v) => (v.inventory ?? 0) <= 0 && v.product.madeToOrder === false).length
+  const runningLow = liveSizes.filter((v) => (v.inventory ?? 0) > 0).length
+  const sizesLink = '/admin/collections/variants?sort=inventory'
 
   const toReview =
     (pendingReviews?.totalDocs ?? 0) + (pendingSpotted?.totalDocs ?? 0)
@@ -85,7 +99,7 @@ export const BeforeDashboard: React.FC = async () => {
         ))}
       </div>
 
-      {(toReview > 0 || (lowStock?.totalDocs ?? 0) > 0) && (
+      {(toReview > 0 || soldOut > 0 || runningLow > 0) && (
         <div className={`${baseClass}__alerts`}>
           {toReview > 0 && (
             <p>
@@ -93,10 +107,16 @@ export const BeforeDashboard: React.FC = async () => {
               {toReview === 1 ? 'submission is' : 'submissions are'} waiting for your approval.
             </p>
           )}
-          {(lowStock?.totalDocs ?? 0) > 0 && (
+          {soldOut > 0 && (
             <p>
-              <strong>{lowStock?.totalDocs}</strong>{' '}
-              {lowStock?.totalDocs === 1 ? 'size is' : 'sizes are'} down to {lowAt === 0 ? 'none' : `${lowAt} or fewer`}.
+              <strong>{soldOut}</strong> {soldOut === 1 ? 'size is' : 'sizes are'} sold out.{' '}
+              <a href={sizesLink}>See sizes &amp; stock</a>
+            </p>
+          )}
+          {runningLow > 0 && (
+            <p>
+              <strong>{runningLow}</strong> {runningLow === 1 ? 'size is' : 'sizes are'} down to {lowAt} or fewer.{' '}
+              <a href={sizesLink}>See sizes &amp; stock</a>
             </p>
           )}
         </div>

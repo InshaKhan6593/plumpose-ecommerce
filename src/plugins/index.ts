@@ -21,6 +21,7 @@ import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { sendEnquiryAlert } from '@/email/enquiryAlert'
 import { resendConfirmationEndpoint, sendOrderEmails } from '@/email/orderHooks'
 import { stockAfterSale } from '@/hooks/stockAfterSale'
+import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { validateEnquiry } from '@/hooks/validateEnquiry'
 import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { orderTotalsFields } from '@/fields/orderTotals'
@@ -312,6 +313,8 @@ export const plugins: Plugin[] = [
             group: 'Shop',
             listSearchableFields: ['title'],
           },
+          // A size's price is on the prerendered homepage; see @/hooks/revalidateStorefront.
+          hooks: withStorefrontRefresh(defaultCollection.hooks),
           // Her words, not the plugin's: the stock alert emails point her here by this name.
           labels: { plural: 'Sizes & stock', singular: 'Size & stock' },
         }),
@@ -333,6 +336,7 @@ export const plugins: Plugin[] = [
             description: 'The individual sizes and colours a product can come in.',
             group: 'Shop settings',
           },
+          hooks: withStorefrontRefresh(defaultCollection.hooks),
           labels: { singular: 'Size or colour', plural: 'Sizes & colours' },
         }),
       },

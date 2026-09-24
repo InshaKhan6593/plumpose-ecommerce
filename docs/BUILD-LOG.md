@@ -1560,3 +1560,44 @@ filter row, are the usual answers.
 
 Integration **162 passing**, e2e 38. The test runs' orders were cleared again
 afterwards, and her stock restored to S 4 · M 6 · L 4.
+
+## 25. Does an admin edit reach the live site? — 25 Sep 2026
+
+`scripts/check-admin-reflects.ts`, run against a **production build** (in dev
+every page renders fresh, so everything passes there and proves nothing). For
+each thing she can edit it saves a change through the admin's REST API (same
+hooks as the admin screens), loads the public page, checks the change, then
+undoes it and checks again.
+
+**First run: 34 of 41.** Four were the check's own mistakes (the page never
+shows that field). Three were real — the prerendered **homepage kept the old**:
+
+- **size price** (Sizes & stock had no refresh hook),
+- **collection name** (Collections had none),
+- **photo description** (Media had none).
+
+`withStorefrontRefresh()` is now on variants, sizes & colours, collections and
+media. **Second run: 39 of 39** shown on the first visit, and every undo too.
+Checked afterwards: nothing the check made or changed was left behind.
+
+Covered: Site settings (announcement, contact email, embroidery fee, free
+delivery threshold, lead time, wheel heading), product name, size price and
+stock, unpublishing, collections, FAQs, Press, Spotted, Reviews, Made for You,
+photos, new Pages, Qatar and international delivery fees, embroidery threads,
+wheel segments, currencies, countries.
+
+**Not live data, by design:** the FAQ answers are her own words, so "QAR 160
+per placement" and "five thread colours" in them do not follow the settings. If
+she changes the fee she edits that answer too.
+
+**Dashboard stock line fixed.** It said "23 sizes are down to 2 or fewer",
+counting made-to-order sizes at zero (fine by design) and draft pieces, and
+naming none. It now reads "6 sizes are sold out" and "12 sizes are down to 2 or
+fewer", live pieces only, each with a link to Sizes & stock sorted lowest
+first. A related product populates with only a few fields, so the query now
+asks for `_status` and `madeToOrder` explicitly. The bag was checked for the
+same gap and is fine: + is disabled at 1 of 1.
+
+**Admin menu review** — in the menu but unused by the site: **Header** and
+**Footer** (template globals; the header and footer read Site settings and
+code). Left in place pending her decision; see the reply of 25 Sep.

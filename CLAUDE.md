@@ -256,6 +256,8 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Static pages need a refresh hook.** Most storefront pages are prerendered.
   A new collection a page reads must use `withStorefrontRefresh()`
   (`src/hooks/revalidateStorefront.ts`), or her edits never reach the live site.
+  Prove it with `npx tsx scripts/check-admin-reflects.ts` against `pnpm build`
+  + `pnpm start` — never against dev, where every page is fresh (BUILD-LOG §25).
 - **A dynamic route needs a `loading.tsx`**, or clicks to it show nothing until
   the whole page has rendered (BUILD-LOG §18).
 - **Film: H.264, standard range, CRF 22.** VP9 from this ffmpeg is visibly
