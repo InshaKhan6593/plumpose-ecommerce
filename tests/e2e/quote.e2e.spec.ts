@@ -2,6 +2,8 @@ import type { APIRequestContext } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 
+import { BASE } from '../helpers/base'
+
 /**
  * `POST /api/quote` over real HTTP.
  *
@@ -15,7 +17,6 @@ import { expect, test } from '@playwright/test'
  * stops being true during a refactor.
  */
 
-const BASE = 'http://localhost:3000'
 const PREFIX = 'E2EONLY-'
 
 /** The local development fixture, seeded by `pnpm seed`. */

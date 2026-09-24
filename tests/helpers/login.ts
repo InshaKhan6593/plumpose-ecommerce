@@ -1,3 +1,4 @@
+import { BASE } from './base'
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 
@@ -15,7 +16,7 @@ export interface LoginOptions {
  */
 export async function login({
   page,
-  serverURL = 'http://localhost:3000',
+  serverURL = BASE,
   user,
 }: LoginOptions): Promise<void> {
   await page.goto(`${serverURL}/admin/login`)

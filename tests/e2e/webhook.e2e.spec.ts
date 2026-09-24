@@ -3,6 +3,9 @@ import type { APIRequestContext } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import Stripe from 'stripe'
 
+import { BASE } from '../helpers/base'
+import { payAndVanish, startCheckout } from '../helpers/stripeCheckout'
+
 /**
  * The payment webhook (P4).
  *
@@ -10,12 +13,12 @@ import Stripe from 'stripe'
  * driven through the Stripe CLI, so these run deterministically without a
  * listener open in another terminal.
  *
- * The case worth the most: a customer pays and closes the tab before the
- * confirmation call lands. They have still paid. Without the webhook their
- * order simply never exists — and nobody finds out until they ask where it is.
+ * The case worth the most: a customer pays on Stripe's hosted page and closes
+ * the tab before it sends them back. They have still paid. Without the webhook
+ * their order simply never exists — and nobody finds out until they ask where
+ * it is. That test pays for real on checkout.stripe.com (test mode).
  */
 
-const BASE = 'http://localhost:3000'
 const WEBHOOK = `${BASE}/api/payments/stripe/webhooks`
 const DEV_USER = { email: 'dev@plumpose.local', password: 'devpassword' }
 
@@ -68,41 +71,22 @@ test.describe('payment webhook', () => {
     return (await res.json()).docs as Array<Record<string, unknown>>
   }
 
-  /**
-   * A **guest** purchase, paid but never confirmed.
-   *
-   * Guest deliberately: the plugin refuses to settle a signed-in customer's
-   * transaction from an anonymous caller ("Guest transaction belongs to an
-   * authenticated customer"), and a webhook is always anonymous. Guest checkout
-   * is the store's default (C4/S10), so this is the case that matters — see the
-   * build log for the limitation on account holders.
-   */
-  const payAsGuestWithoutConfirming = async (request: APIRequestContext, email: string) => {
-    const cartRes = await request.post(`${BASE}/api/carts`, {
-      data: {
-        items: [{ personalisation: [], product: 1, quantity: 1, variant: 2 }],
-        shippingCityKey: 'doha',
-      },
-    })
-    const cart = (await cartRes.json()).doc
+  /** A Checkout Session event, as Stripe sends it; the receiver re-reads the real session. */
+  const sessionEvent = (args: { cartID: string; id: string; sessionId: string; type: string }) => ({
+    data: { object: { id: args.sessionId, metadata: { cartID: args.cartID }, object: 'checkout.session' } },
+    id: args.id,
+    object: 'event',
+    type: args.type,
+  })
 
-    const initiated = await request.post(`${BASE}/api/payments/stripe/initiate`, {
-      data: {
-        billingAddress: { city: 'Doha', country: 'QA' },
-        cartID: cart.id,
-        customerEmail: email,
-        secret: cart.secret,
-        shippingAddress: { city: 'Doha', country: 'QA' },
-      },
-    })
-    const { paymentIntentID } = await initiated.json()
-
-    await stripe.paymentIntents.confirm(paymentIntentID, {
-      payment_method: 'pm_card_visa',
-      return_url: BASE,
-    })
-
-    return { cart, paymentIntentID }
+  const transactionFor = async (request: APIRequestContext, sessionId: string) => {
+    const res = await request.get(
+      `${BASE}/api/transactions?where[stripe.checkoutSessionID][equals]=${sessionId}&depth=0`,
+      { headers: admin() },
+    )
+    const doc = (await res.json()).docs[0]
+    expect(doc, `no transaction for ${sessionId}`).toBeTruthy()
+    return doc
   }
 
   test.beforeAll(async ({ request }) => {
@@ -176,8 +160,8 @@ test.describe('payment webhook', () => {
     )
 
     expect(status).toBe(200)
-    // No cart id on it, so there is nothing to confirm.
-    expect(body.reason).toBe('unusable')
+    // No Checkout Session behind it, so it was not made by this store: logged, not retried.
+    expect(body.reason).toBe('not a checkout payment')
 
     const logs = await logsFor(request, eventId)
     expect(logs).toHaveLength(1)
@@ -197,70 +181,90 @@ test.describe('payment webhook', () => {
   })
 
   /**
-   * The whole point of the webhook: the customer paid, then closed the tab
-   * before `/confirm-order` ran. The order must still exist.
+   * The whole point of the webhook: the customer paid on Stripe's page, then
+   * closed the tab before it sent them back. The order must still exist.
+   *
+   * The browser is stopped from ever reaching `/checkout/return`, so only the
+   * webhook can create the order. Guest deliberately: a webhook is always
+   * anonymous, and the plugin refuses to settle a signed-in customer's
+   * transaction for an anonymous caller (see the build log).
    */
-  test('creates the order when the browser never confirmed it', async ({ request }) => {
-    const { cart, paymentIntentID } = await payAsGuestWithoutConfirming(
-      request,
-      'webhook-only@plumpose.local',
-    )
+  test('creates the order when the customer never comes back', async ({ page, request }) => {
+    test.setTimeout(120_000)
+    const started = await startCheckout(request, { email: `webhook-only-${Date.now()}@plumpose.local` })
+    await payAndVanish(page, stripe, started)
 
-    // Deliberately skip /confirm-order — this is the abandoned-tab case.
     const eventId = `evt_test_${Date.now()}_orphan`
-    const { body, status } = await send(
-      request,
-      paidEvent({ cartID: String(cart.id), id: eventId, paymentIntentID }),
-    )
+    const { body, status } = await send(request, sessionEvent({
+      cartID: String(started.cart.id),
+      id: eventId,
+      sessionId: started.sessionId,
+      type: 'checkout.session.completed',
+    }))
 
     expect(status).toBe(200)
-    expect(body.reason).toBe('confirmed by webhook')
+    // "confirmed" whether this call made the order or a forwarded real event beat it to it.
+    expect(body.reason).toBe('confirmed')
 
-    const orders = await request.get(
-      `${BASE}/api/orders?where[subtotalQar][equals]=139900&sort=-createdAt&limit=1`,
-      { headers: admin() },
-    )
-    const order = (await orders.json()).docs[0]
+    const transaction = await transactionFor(request, started.sessionId)
+    expect(transaction.status).toBe('succeeded')
+    expect(transaction.order, 'the transaction is linked to an order').toBeTruthy()
+
+    const orders = await (
+      await request.get(`${BASE}/api/orders?where[transactions][equals]=${transaction.id}`, { headers: admin() })
+    ).json()
+    // Exactly one, however many callers raced to create it.
+    expect(orders.totalDocs).toBe(1)
 
     // Built through the same path the browser would have used.
+    const order = orders.docs[0]
     expect(order.amount).toBe(141900)
     expect(order.shippingQar).toBe(2000)
     expect(order.shippingLabel).toBe('Delivery to Doha')
-
-    const logs = await logsFor(request, eventId)
-    expect(logs[0].applied).toBe(true)
   })
 
   /**
-   * Gateways retry. Applying the same callback twice would decrement stock
-   * twice and burn a discount code twice.
+   * Gateways retry. Applying the same callback twice would, for a paid one,
+   * decrement stock twice and burn a discount code twice. An expiry is used
+   * here because it applies deterministically without paying.
    */
   test('applies a repeated callback only once', async ({ request }) => {
-    const { cart, paymentIntentID } = await payAsGuestWithoutConfirming(
-      request,
-      'retry@plumpose.local',
-    )
-
-    const eventId = `evt_test_${Date.now()}_retry`
-    const event = paidEvent({ cartID: String(cart.id), id: eventId, paymentIntentID })
+    const started = await startCheckout(request, { email: `retry-${Date.now()}@plumpose.local` })
+    const event = sessionEvent({
+      cartID: String(started.cart.id),
+      id: `evt_test_${Date.now()}_retry`,
+      sessionId: started.sessionId,
+      type: 'checkout.session.expired',
+    })
 
     const first = await send(request, event)
-    expect(first.body.reason).toBe('confirmed by webhook')
+    expect(first.status).toBe(200)
 
     const second = await send(request, event)
     expect(second.status).toBe(200)
     expect(second.body.reason).toBe('duplicate')
 
-    const logs = await logsFor(request, eventId)
+    const logs = await logsFor(request, event.id)
     // Both callbacks recorded; only one of them applied.
     expect(logs.length).toBeGreaterThanOrEqual(2)
     expect(logs.filter((log) => log.applied === true)).toHaveLength(1)
+
+    // An abandoned checkout stays visible, marked expired (P11).
+    expect((await transactionFor(request, started.sessionId)).status).toBe('expired')
+    await stripe.checkout.sessions.expire(started.sessionId).catch(() => undefined)
   })
 
-  test('records a failed payment rather than dropping it', async ({ request }) => {
+  /**
+   * A declined card is logged but must not fail the transaction: on the hosted
+   * page the customer can try another card in the same session, and the plugin
+   * only settles a transaction that is still pending.
+   */
+  test('records a declined card without failing the transaction', async ({ request }) => {
+    const started = await startCheckout(request, { email: `declined-${Date.now()}@plumpose.local` })
+
     const eventId = `evt_test_${Date.now()}_failed`
     const { status } = await send(request, {
-      data: { object: { id: 'pi_failed_x', object: 'payment_intent' } },
+      data: { object: { id: 'pi_failed_x', metadata: { cartID: String(started.cart.id) }, object: 'payment_intent' } },
       id: eventId,
       object: 'event',
       type: 'payment_intent.payment_failed',
@@ -270,5 +274,8 @@ test.describe('payment webhook', () => {
     const logs = await logsFor(request, eventId)
     expect(logs[0].signatureValid).toBe(true)
     expect(logs[0].event).toBe('payment_intent.payment_failed')
+    expect((await transactionFor(request, started.sessionId)).status).toBe('pending')
+
+    await stripe.checkout.sessions.expire(started.sessionId).catch(() => undefined)
   })
 })

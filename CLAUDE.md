@@ -90,11 +90,27 @@ event id, and creates the order when the browser never confirmed it.
 signed-in customer's transaction from an anonymous caller, so webhook recovery
 covers **guest checkout only**.
 
-**Payments** — `src/payments/`. Stripe **sandbox only**, as a development
-harness while SkipCash credentials are pending. Enabled by
-`PAYMENT_PROVIDER=stripe`; refuses to load when `NODE_ENV` is production.
-A full purchase works: bag → priced → paid → order with the money breakdown,
-embroidery instructions, stock decrement and a `discountUses` ledger row.
+**Payments** — `src/payments/`. Stripe **sandbox only**, as a stand-in while
+SkipCash credentials are pending. Enabled by `PAYMENT_PROVIDER=stripe`;
+refuses to load when `NODE_ENV` is production. **A redirect flow, like
+SkipCash:** `initiatePayment` opens a Stripe *hosted* Checkout Session for the
+`priceOrder()` total and returns `redirectURL`; the customer pays on Stripe's
+page and comes back to `/checkout/return`, which calls `settleCheckoutSession()`
+(`checkoutSession.ts`) — the same function the webhook calls. It links the
+session's PaymentIntent (which only exists once paid) to the transaction, then
+confirms through the plugin's own endpoint, whose atomic claim guarantees one
+order however many callers race. The order carries the money breakdown,
+embroidery, address, gift note, a stock decrement and a `discountUses` row.
+When SkipCash arrives, only the adapter and the webhook's signature check
+change.
+
+**Checkout** — `/checkout` (`components/checkout/CheckoutPage.tsx`): contact,
+delivery (blocked countries say why; Qatar city picker), gift note, discount
+code; priced live by `/api/quote`; the draft survives a cancelled payment in
+sessionStorage. `/order/[id]?token=…` is the confirmation page and the link in
+every email — the order's random `accessToken`, never the email address, in
+the URL. A signed-in customer's order has no `customerEmail` (the plugin links
+the account instead): read it with `customerEmailOf()`.
 
 **Data model** — personalisation on cart and order lines (snapshots, not
 relationships, so old orders still read correctly when options are renamed);
@@ -125,9 +141,13 @@ client's reference recording (`../brand-assets/reference/`):
 
 - **Email from plumpose.com.** Works, but the domain is not verified in Resend,
   so for now it sends from `onboarding@resend.dev` to the account owner only.
-- **SkipCash.** Blocked on credentials. It returns a `payUrl` and takes payment
-  on its own page after a redirect — **build the checkout as a redirect flow**.
-- Storefront still on the template: **checkout**, account pages, and the pages
+- **SkipCash.** Blocked on credentials. The checkout is already a redirect
+  flow; the adapter replaces `stripeSandbox.ts` and must price through
+  `priceOrder()`.
+- **Track order** (`/find-order`) is still the template's form.
+- **Saved addresses** (account area) use the plugin's country list, which has
+  no Qatar — fix before building account pages.
+- Storefront still on the template: account pages, and the pages
   the nav links to — Our Story, FAQ, Press, Spotted, Made for You, Shipping &
   Returns (they land on the branded not-found page).
 - Spin wheel, currency display (data ready), reviews aggregate, CSV exports,
@@ -148,8 +168,8 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (107) |
-| `pnpm test:e2e` | Playwright — **fails as a whole**, see below |
+| `pnpm test:int` | Integration tests (121) |
+| `pnpm test:e2e` | Playwright (36 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
 | `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
@@ -167,7 +187,19 @@ with `;` — `&&` is a parse error.
 `eslint-config-next`. It fails on untouched files too, so it predates the
 current work.
 
-**`pnpm test:e2e` passes: 32 tests, plus 21 skipped.** The skipped ones are
+**Stripe webhooks locally:** `stripe listen --api-key <your sk_test key>
+--events checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed
+--forward-to localhost:3001/api/payments/stripe/webhooks`. Passing the key
+needs no `stripe login`, and the secret it prints matches `.env`.
+(`pnpm stripe-webhooks` does the same for port 3000.) Point the e2e suite at
+this machine's port with `E2E_BASE_URL=http://localhost:3001`.
+
+**Files the Payload config loads must import `next/cache.js` / `next/server.js`**
+(with the extension). The e2e suite loads the config as strict ESM to seed
+users, where the bare subpath does not resolve — that silently broke the admin
+spec for a commit.
+
+**`pnpm test:e2e` passes: 36 tests, plus 21 skipped.** The skipped ones are
 `frontend.e2e.spec.ts`, the upstream template's storefront suite — it asserts a
 page titled "Payload Ecommerce Template" and a "Hoodie" product, neither of
 which plumpose has. Replace it when the storefront is built.

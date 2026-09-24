@@ -50,8 +50,7 @@ const describe = (p: QuoteLine['personalisation'][number]) =>
  *
  * The plugin keeps the lines; **the money comes from `/api/quote`** — the same
  * engine checkout charges through — because the cart's own `subtotal` is goods
- * only (no embroidery) and is overwritten with the full total once payment
- * starts. Delivery is left to checkout, where the address is known.
+ * only (no embroidery). Delivery is left to checkout, where the address is known.
  */
 export function CartModal() {
   const { cart, decrementItem, incrementItem, isLoading, removeItem } = useCart()

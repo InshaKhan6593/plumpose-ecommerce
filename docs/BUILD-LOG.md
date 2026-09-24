@@ -1,7 +1,7 @@
 # plumpose — Build Log
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
-**Phase reached:** Backend, email and the core storefront (homepage, shop, product, embroidery, bag) are built. A purchase runs end to end against the Stripe sandbox. Checkout restyle, account and content pages still to do; SkipCash pending credentials.
+**Phase reached:** Backend, email, the core storefront and checkout are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Account, track-order and content pages still to do; SkipCash pending credentials.
 **Last updated:** 24 Sep 2026
 
 This is the running record of what has actually been built, tested and
@@ -16,11 +16,11 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **107 passing** |
-| End-to-end tests | **22 passing** |
-| Storefront | **Homepage, shop, product page, embroidery drawer, bag** — built (§15). Checkout, account and content pages still template |
+| Integration tests | **121 passing** |
+| End-to-end tests | **36 passing** (21 skipped — the template storefront spec) |
+| Storefront | **Homepage, shop, product page, embroidery drawer, bag, checkout, order confirmation** — built (§15, §16). Account, track-order and content pages still template |
 | Email | Built (§14); sending from plumpose.com waits on domain verification |
-| Payments | Stripe sandbox working end to end; SkipCash blocked on credentials |
+| Payments | Stripe sandbox, hosted Checkout (redirect flow), working end to end; SkipCash blocked on credentials |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
 
@@ -908,3 +908,89 @@ the steps two screens early). `LifestyleRow` is no longer used.
   host is public and the guard should stay on. Measured on the production
   server: median frame 16.7ms in every run, no long animation frames, step
   photographs all loaded before the section, no wipe edge gaps.
+
+---
+
+## 16. Checkout — Stripe hosted page as the SkipCash stand-in, 24 Sep 2026
+
+The template's checkout (an inline Stripe card form) is gone. It never recorded
+the Qatar delivery city on the cart, so every Qatar address would have been
+refused at payment with "Please choose a delivery city".
+
+### The flow
+
+| Step | Where | What happens |
+|---|---|---|
+| Form | `/checkout` — `components/checkout/CheckoutPage.tsx` | Contact, delivery (every country; blocked ones say why; Qatar city picker with fees), gift note, discount code. Priced live by `/api/quote`. Wordmark-only header. The draft survives a cancelled payment (sessionStorage) |
+| Pay | `stripeSandbox.ts` → `initiatePayment` | Writes city + code onto the cart, re-prices with `priceOrder()`, stores address + gift in the cart's pricing snapshot (not in Stripe metadata), opens a **hosted Checkout Session** for exactly that total, returns `redirectURL` |
+| Return | `/checkout/return` | `settleCheckoutSession()` on the server, then a redirect to the order — or back to checkout if unpaid. A short "confirming" state keeps checking if Stripe has taken the money but the order is not yet confirmable |
+| Order | `/order/[id]?token=…` | Thank-you, order no., 4-step progress, pieces with embroidery, breakdown, address, gift note. The order's random `accessToken` is the key; the email address is no longer in the link (it was, on the template's `/orders/:id?email=…`) |
+
+**How a Checkout Session meets the plugin.** The plugin confirms from a
+PaymentIntent and checks it hard (`validateSettlement`). The session is created
+with the plugin's metadata on its PaymentIntent, so every check passes — except
+that the PaymentIntent does not exist until the customer pays. The transaction
+therefore records `stripe.checkoutSessionID` (new field), and
+`settleCheckoutSession()` copies the PaymentIntent id across once paid, then
+confirms through the plugin's own endpoint. The return page and the webhook both
+call it; the plugin's atomic claim on the transaction means exactly one order.
+
+**Two traps it avoids.** The link write goes out *without* `req` — inside the
+webhook's transaction it would be invisible to the confirm call, a separate HTTP
+request. And a declined card no longer marks the transaction failed: on the
+hosted page the customer can try another card, and the plugin only settles a
+transaction that is still pending. Abandoned sessions are marked `expired` by
+`checkout.session.expired` (P11).
+
+**Signed-in customers.** The return page forwards the shopper's cookie to the
+confirm endpoint, so their order settles as theirs. The webhook stays anonymous
+and still covers guests only (§13).
+
+### Verified
+
+- A real purchase through the UI: bag → checkout → Stripe's page showed QAR
+  1,419.00 → back on "Thank you, Mariam." Order 105: amount 141900 = 139900 +
+  2000, gift note, full address and phone; transaction `succeeded` with session
+  and PaymentIntent linked; both forwarded events 200 with valid signatures.
+- `checkout.e2e.spec.ts` rewritten to pay on the hosted page in a browser (8):
+  engine total charged, breakdown/address/gift on the order, embroidery, stock,
+  discount consumed only on payment (guest ledger email), a cancelled payment
+  creates nothing, a signed-in customer's order is theirs, a blocked country is
+  refused. `webhook.e2e.spec.ts` (8): signatures, "customer never comes back"
+  (browser stopped before the return page; exactly one order), a retried event
+  applied once, a declined card leaves the transaction pending.
+- Full suite: **36 e2e pass**, 21 skipped (the template storefront spec);
+  **121 integration** (14 new in `checkout-session.int.spec.ts`).
+
+### Found and fixed on the way
+
+- **A signed-in customer's confirmation email was never sent** — "no
+  recipient": their order carries the account, not `customerEmail`.
+  `customerEmailOf()` falls back to the account; used by the emails and the
+  order page.
+- **The admin e2e spec had been failing at load since `ff7df58`**: the suite
+  loads the Payload config as strict ESM, where `next/cache` and `next/server`
+  do not resolve. Those imports (in files the config loads) now carry `.js`.
+- The find-order email printed its access link to the server log. Removed.
+- `@stripe/react-stripe-js` and `@stripe/stripe-js` removed — nothing uses them.
+- The webhook's old "bare PaymentIntent" path (its own copy of the confirm call,
+  ~130 lines) is gone: every payment is now a Checkout Session. A paid
+  PaymentIntent with no session behind it is logged as "not a checkout
+  payment" and let go, never retried.
+- `webhookLog.applied` now says what it can know: "had the payment become an
+  order". When the return page and the webhook race, the plugin hands every
+  caller the one order it made, so no caller can tell which of them made it.
+
+### Not yet
+
+- **Track order** (`/find-order`) is still the template's form.
+- **Stripe's page says "New business sandbox"** — the account's business name,
+  set in the Stripe dashboard (Settings → Business → Public details), along with
+  its logo and brand colour. Nothing in code.
+- **The owner's new-order alert 403s** until plumpose.com is verified in Resend
+  (test mode only delivers to the account owner). `EMAIL_TEST_RECIPIENT` can
+  route everything to one inbox meanwhile.
+- **Saved addresses** use the plugin's default country list, which lacks Qatar —
+  fix before building account pages.
+- A bag of ~8+ lines could exceed Stripe's 500-character metadata limit on
+  `cartItemsSnapshot` (the plugin has the same ceiling).

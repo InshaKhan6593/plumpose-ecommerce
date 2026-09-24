@@ -44,9 +44,13 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
   ],
+  /**
+   * Reuses a running dev server. Point the suite elsewhere with E2E_BASE_URL
+   * (this machine runs dev on 3001 — see tests/helpers/base.ts).
+   */
   webServer: {
     command: 'pnpm dev',
     reuseExistingServer: true,
-    url: 'http://localhost:3000',
+    url: process.env.E2E_BASE_URL || 'http://localhost:3000',
   },
 })

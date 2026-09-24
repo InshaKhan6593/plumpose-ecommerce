@@ -23,9 +23,14 @@ embroidery drawer, bag drawer, branded header, footer and not-found page. Motion
 is GSAP + ScrollTrigger + Lenis, and all of it switches off under
 `prefers-reduced-motion`.
 
-**Not built yet:** checkout restyle, account pages, Our Story / FAQ / Press /
+**Checkout.** Contact, delivery (Qatar city picker; blocked countries say why),
+gift note and discount code, priced live; payment on Stripe's hosted page (a
+redirect, the same shape as SkipCash); a confirmation page reached by the
+order's private link.
+
+**Not built yet:** track-order page, account pages, Our Story / FAQ / Press /
 Spotted / Made for You / Shipping & Returns, the spin wheel, currency display.
-SkipCash is pending credentials. 107 integration tests pass.
+SkipCash is pending credentials. 121 integration and 36 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.
@@ -128,19 +133,21 @@ localhost, so forward them:
 
 ```bash
 stripe login
-pnpm stripe-webhooks      # prints a fresh whsec_ each run
+pnpm stripe-webhooks      # forwards the four payment events to localhost:3000
 ```
 
 Two things to know before building on it:
 
-- **The flows differ.** Stripe returns a `clientSecret` and takes payment on
-  our page; SkipCash returns a `payUrl` and takes payment on its own, after a
-  redirect. Build the checkout as a redirect flow, or it gets thrown away.
+- **It is a redirect flow, like SkipCash.** Payment happens on Stripe's hosted
+  Checkout page and the customer comes back to `/checkout/return`; the webhook
+  creates the order if they never do. When SkipCash arrives only the adapter
+  and the webhook's signature check change — see
+  `src/payments/checkoutSession.ts`.
 - **Never charge `cart.subtotal`.** The plugin's own adapters do, and it omits
   delivery, embroidery and discounts — QAR 1,399 for a bag that costs QAR
   1,579. Price through `priceOrder()`, as `src/payments/stripeSandbox.ts` does.
 
-See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §13 for the full picture.
+See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §13 and §16 for the full picture.
 
 ---
 

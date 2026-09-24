@@ -1,12 +1,14 @@
 import type { Payload } from 'payload'
 
-import { after } from 'next/server'
+// `.js`: the e2e suite loads the Payload config as strict ESM, where `next/server` alone does not resolve.
+import { after } from 'next/server.js'
 
 import type { Order } from '@/payload-types'
 
 import { isUndeliverable, siteUrl } from './config'
 import {
   customerConfirmation,
+  customerEmailOf,
   type EmailContent,
   type OrderView,
   ownerNotification,
@@ -59,13 +61,14 @@ export type SendResult =
 /** Tells the orders hook that this write is ours, so it does not schedule another email. */
 export const ORDER_EMAIL_CONTEXT = { skipOrderEmails: true } as const
 
-const orderLink = (order: Order): string => {
-  if (!order.accessToken || !order.customerEmail) return ''
-  const query = new URLSearchParams({
-    accessToken: order.accessToken,
-    email: order.customerEmail,
-  })
-  return `${siteUrl()}/orders/${order.id}?${query.toString()}`
+/**
+ * The customer's own view of the order. The random access token is the key;
+ * the email address is deliberately left out of the link so it does not sit in
+ * browser history, analytics or server logs. See `app/(app)/order/[id]`.
+ */
+export const orderLink = (order: Pick<Order, 'accessToken' | 'id'>): string => {
+  if (!order.accessToken) return ''
+  return `${siteUrl()}/order/${order.id}?${new URLSearchParams({ token: order.accessToken })}`
 }
 
 export const sendOrderEmail = async (
@@ -93,7 +96,7 @@ export const sendOrderEmail = async (
   const to =
     kind === 'notification'
       ? settings.orderAlertEmail || settings.contactEmail || ''
-      : order.customerEmail || ''
+      : customerEmailOf(order)
 
   if (!to) {
     payload.logger.warn({ kind, order: orderId }, 'Order email skipped — no recipient.')
@@ -124,7 +127,7 @@ export const sendOrderEmail = async (
    * reach the customer, so she can answer an order question in one step.
    */
   const replyTo =
-    kind === 'notification' ? order.customerEmail || undefined : settings.contactEmail || undefined
+    kind === 'notification' ? customerEmailOf(order) || undefined : settings.contactEmail || undefined
 
   try {
     await payload.sendEmail({

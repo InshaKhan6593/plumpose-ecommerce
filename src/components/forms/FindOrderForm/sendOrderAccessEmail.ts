@@ -2,7 +2,7 @@
 
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
-import { getServerSideURL } from '@/utilities/getURL'
+import { orderLink } from '@/email/sendOrderEmail'
 
 type SendOrderAccessEmailArgs = {
   email: string
@@ -36,8 +36,8 @@ export async function sendOrderAccessEmail({
       return { success: true }
     }
 
-    const serverURL = getServerSideURL()
-    const orderURL = `${serverURL}/orders/${order.id}?email=${encodeURIComponent(email)}&accessToken=${order.accessToken}`
+    // Token only — the email address stays out of the link (see orderLink).
+    const orderURL = orderLink(order)
 
     const emailBody = `
         <h1>View Your Order</h1>
@@ -47,8 +47,6 @@ export async function sendOrderAccessEmail({
         <p>${orderURL}</p>
         <p>This link will give you access to view your order details.</p>
       `
-
-    console.log('[sendOrderAccessEmail] Email body:', emailBody)
 
     await payload.sendEmail({
       to: email,

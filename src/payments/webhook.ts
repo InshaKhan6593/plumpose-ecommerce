@@ -1,7 +1,8 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
-import type { Transaction } from '@/payload-types'
 import type Stripe from 'stripe'
+
+import { expireCheckoutSession, settleCheckoutSession } from './checkoutSession'
 
 /**
  * The payment webhook (P4).
@@ -26,7 +27,10 @@ import type Stripe from 'stripe'
  *     `signatureValid: false` is what a forgery attempt looks like, and
  *     discarding those hides it
  *   · **is idempotent** on the gateway's own event id, because gateways retry
- *   · records failed payments as well as successful ones (P11)
+ *   · keeps declined attempts in the log and marks abandoned checkouts
+ *     expired, as well as confirming paid ones (P11)
+ *   · settles hosted Checkout Sessions through `settleCheckoutSession`, the
+ *     same function the customer's return page calls
  *
  * ## A note for the SkipCash adapter
  *
@@ -91,57 +95,7 @@ const alreadyApplied = async (req: PayloadRequest, eventId: string): Promise<boo
   return seen.totalDocs > 0
 }
 
-/**
- * Who the order belongs to.
- *
- * The gateway is not a reliable source for this — we do not set
- * `receipt_email` on the intent — so it comes from the transaction: its own
- * email for a guest, or the signed-in customer it belongs to. Carts do not
- * carry one. Without an email the confirm endpoint refuses with
- * "A customer email is required to make a purchase."
- */
-const resolveCustomerEmail = async (
-  req: PayloadRequest,
-  transaction: null | Transaction,
-): Promise<string> => {
-  if (transaction?.customerEmail) return transaction.customerEmail
-
-  const customerId =
-    typeof transaction?.customer === 'number' ? transaction.customer : transaction?.customer?.id
-
-  if (customerId) {
-    const user = await req.payload
-      .findByID({ collection: 'users', depth: 0, id: customerId, overrideAccess: true, req })
-      .catch(() => null)
-    if (user?.email) return user.email
-  }
-
-  return ''
-}
-
-const findTransaction = async (req: PayloadRequest, paymentIntentID: string) => {
-  const found = await req.payload.find({
-    collection: 'transactions',
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-    req,
-    where: { 'stripe.paymentIntentID': { equals: paymentIntentID } },
-  })
-  return found.docs[0] ?? null
-}
-
-export type ConfirmOrderRequest = {
-  cartID: number
-  customerEmail: string
-  paymentIntentID: string
-  /** The cart's own secret — how the confirm endpoint authorises a caller. */
-  secret?: string
-}
-
 export const createStripeWebhookEndpoint = (args: {
-  confirmOrder: (body: ConfirmOrderRequest) => Promise<Response>
-  secretKey: string
   stripe: Stripe
   webhookSecret: string
 }): Endpoint => ({
@@ -169,9 +123,9 @@ export const createStripeWebhookEndpoint = (args: {
       return ok({ error: 'Invalid signature.' }, 400)
     }
 
-    const intent = event.data.object as Stripe.PaymentIntent
-    const paymentId = typeof intent?.id === 'string' ? intent.id : undefined
-    const cartID = intent?.metadata?.cartID
+    const object = event.data.object as { id?: unknown; metadata?: Record<string, string> }
+    const paymentId = typeof object?.id === 'string' ? object.id : undefined
+    const cartID = object?.metadata?.cartID
 
     const base = {
       event: event.type,
@@ -188,25 +142,50 @@ export const createStripeWebhookEndpoint = (args: {
       return ok({ received: true, reason: 'duplicate' })
     }
 
+    /* ---------------- the hosted Checkout page ---------------- */
+
     /**
-     * A payment that failed is still worth keeping (P11): an abandoned or
-     * declined attempt is the thing the client asks about when a customer says
-     * "it didn't work".
+     * Paid on Stripe's page. The customer is normally on their way back to
+     * `/checkout/return`, which settles the same session; whichever arrives
+     * first creates the order and the other finds it done.
+     */
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session
+      const result = await settleCheckoutSession({ payload, sessionId: session.id, stripe: args.stripe })
+
+      await record({ ...base, applied: result.status === 'confirmed' })
+
+      /**
+       * Non-2xx makes Stripe retry — wanted only when a paid order is still
+       * missing. A session with no transaction of ours (another app on the same
+       * Stripe account, a test from the dashboard) is logged and let go.
+       */
+      if (result.status === 'pending') {
+        return ok({ error: 'Could not confirm the order yet.' }, 500)
+      }
+      return ok({ received: true, reason: result.status })
+    }
+
+    /**
+     * The hosted page timed out unpaid. The transaction is kept, marked
+     * expired, so abandoned checkouts stay visible (P11); the bag is untouched.
+     */
+    if (event.type === 'checkout.session.expired') {
+      const applied = paymentId ? await expireCheckoutSession(req, paymentId) : false
+      await record({ ...base, applied })
+      return ok({ received: true })
+    }
+
+    /**
+     * A declined card is logged, but the transaction is **not** marked failed.
+     * On the hosted page the customer can simply try another card within the
+     * same session, and the plugin only settles a transaction that is still
+     * pending — marking it failed here would turn their successful second
+     * attempt into a paid customer with no order. The log keeps the attempt
+     * visible (P11); an abandoned session is marked expired above.
      */
     if (event.type === 'payment_intent.payment_failed') {
-      const transaction = paymentId ? await findTransaction(req, paymentId) : null
-
-      if (transaction) {
-        await payload.update({
-          collection: 'transactions',
-          data: { status: 'failed' },
-          id: transaction.id,
-          overrideAccess: true,
-          req,
-        })
-      }
-
-      await record({ ...base, applied: Boolean(transaction) })
+      await record({ ...base, applied: false })
       return ok({ received: true })
     }
 
@@ -217,92 +196,30 @@ export const createStripeWebhookEndpoint = (args: {
 
     /* ---------------- a payment succeeded ---------------- */
 
-    if (!paymentId || !cartID) {
-      await record({ ...base, applied: false })
-      payload.logger.error(
-        { event: event.id },
-        'Paid callback carried no payment intent or cart id — cannot create an order from it.',
-      )
-      return ok({ received: true, reason: 'unusable' })
-    }
-
     /**
-     * If an order already references this transaction the browser got there
-     * first, which is the normal case. Nothing to do.
+     * Every payment this store takes is a Checkout Session, so a paid
+     * PaymentIntent is settled through its session — which links it to the
+     * transaction first. One without a session was not made by this checkout
+     * (another app on the same Stripe account, a dashboard test): logged and
+     * let go, never retried.
      */
-    const transaction = await findTransaction(req, paymentId)
-    if (transaction) {
-      const existing = await payload.count({
-        collection: 'orders',
-        overrideAccess: true,
-        req,
-        where: { transactions: { equals: transaction.id } },
-      })
+    const sessions = paymentId
+      ? await args.stripe.checkout.sessions.list({ limit: 1, payment_intent: paymentId }).catch(() => null)
+      : null
+    const session = sessions?.data[0]
 
-      if (existing.totalDocs > 0) {
-        await record({ ...base, applied: false })
-        return ok({ received: true, reason: 'already confirmed' })
-      }
-    }
-
-    /**
-     * Nobody confirmed it, so we do — through the same path the browser would
-     * have used, so the order is built identically: the money breakdown, the
-     * embroidery instructions, the stock decrement and the discount ledger all
-     * come from one place.
-     */
-    try {
-      const customerEmail = await resolveCustomerEmail(req, transaction)
-
-      /**
-       * The webhook arrives with nobody signed in, so it authorises itself the
-       * way a guest browser does — with the cart's own secret. Without it the
-       * confirm endpoint answers 403, since an anonymous caller may not touch
-       * somebody else's cart.
-       */
-      const cart = await req.payload
-        .findByID({ collection: 'carts', depth: 0, id: Number(cartID), overrideAccess: true, req })
-        .catch(() => null)
-
-      if (!customerEmail) {
-        await record({ ...base, applied: false })
-        payload.logger.error(
-          { cartID, event: event.id },
-          'Paid callback has no customer email on its transaction — cannot create an order.',
-        )
-        return ok({ error: 'No customer email for this payment.' }, 500)
-      }
-
-      const response = await args.confirmOrder({
-        cartID: Number(cartID),
-        customerEmail,
-        paymentIntentID: paymentId,
-        secret: cart?.secret ?? undefined,
-      })
-
-      const applied = response.status >= 200 && response.status < 300
-      await record({ ...base, applied })
-
-      if (!applied) {
-        /** Non-2xx makes Stripe retry, which is what we want here. */
-        const detail = await response.text().catch(() => '')
-        payload.logger.error(
-          { cartID, detail: detail.slice(0, 500), event: event.id, status: response.status },
-          'Webhook could not create an order for a paid payment.',
-        )
-        return ok({ error: 'Could not confirm the order.' }, 500)
-      }
-
-      payload.logger.info(
-        { cartID, event: event.id },
-        'Created an order from the webhook — the browser never confirmed it.',
-      )
-      return ok({ received: true, reason: 'confirmed by webhook' })
-    } catch (error) {
+    if (!session) {
       await record({ ...base, applied: false })
-      payload.logger.error({ cartID, err: error }, 'Webhook order confirmation threw.')
-      return ok({ error: 'Could not confirm the order.' }, 500)
+      return ok({ received: true, reason: 'not a checkout payment' })
     }
+
+    const result = await settleCheckoutSession({ payload, sessionId: session.id, stripe: args.stripe })
+    await record({ ...base, applied: result.status === 'confirmed', orderRef: session.metadata?.cartID })
+
+    if (result.status === 'pending') {
+      return ok({ error: 'Could not confirm the order yet.' }, 500)
+    }
+    return ok({ received: true, reason: result.status })
   },
   method: 'post',
   path: '/webhooks',

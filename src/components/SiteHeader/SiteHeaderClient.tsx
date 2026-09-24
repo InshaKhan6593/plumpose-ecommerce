@@ -1,6 +1,6 @@
 'use client'
 
-import { Search, User, X } from 'lucide-react'
+import { Lock, Search, User, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { Suspense, useEffect, useState } from 'react'
@@ -84,6 +84,29 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
    */
   const onHome = pathname === '/'
   const overlay = onHome && !condensed && !menuOpen
+
+  /**
+   * Checkout gets the wordmark and nothing else to click away to
+   * (docs/SCREEN-PROMPTS.md 09) — no announcement, no navigation, no bag.
+   */
+  if (pathname.startsWith('/checkout')) {
+    return (
+      <header className="sticky top-0 z-40 bg-background text-ink">
+        <div className="mx-4 grid h-20 grid-cols-[1fr_auto_1fr] items-center border-b border-line md:mx-7 md:h-24">
+          <Link className="caps text-[0.5625rem] text-ink-soft transition-colors hover:text-ink" href="/shop">
+            <span aria-hidden>← </span>Shop
+          </Link>
+          <Link aria-label="plumpose — home" href="/">
+            <Wordmark className="h-7 w-auto md:h-9" />
+          </Link>
+          <span className="caps flex items-center justify-end gap-2 text-[0.5625rem] text-ink-soft">
+            <Lock aria-hidden className="size-3" strokeWidth={1.5} />
+            Secure checkout
+          </span>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <>

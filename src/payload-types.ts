@@ -1414,6 +1414,7 @@ export interface Transaction {
   stripe?: {
     customerID?: string | null;
     paymentIntentID?: string | null;
+    checkoutSessionID?: string | null;
   };
   billingAddress?: {
     title?: string | null;
@@ -1486,7 +1487,7 @@ export interface WebhookLog {
    */
   signatureValid?: boolean | null;
   /**
-   * Did this callback change the order, or was it a duplicate?
+   * Yes if the payment this callback reports had become an order by the time it was handled. No for duplicates, ignored events and anything that could not be settled.
    */
   applied?: boolean | null;
   /**
@@ -2919,6 +2920,7 @@ export interface TransactionsSelect<T extends boolean = true> {
     | {
         customerID?: T;
         paymentIntentID?: T;
+        checkoutSessionID?: T;
       };
   billingAddress?:
     | T

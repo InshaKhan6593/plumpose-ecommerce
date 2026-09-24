@@ -1,6 +1,7 @@
 import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
 
-import { revalidateTag } from 'next/cache'
+// `.js`: the e2e suite loads this config as strict ESM, where `next/cache` alone does not resolve.
+import { revalidateTag } from 'next/cache.js'
 
 import { adminOnly } from '@/access/adminOnly'
 

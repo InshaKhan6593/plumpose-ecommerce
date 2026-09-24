@@ -103,6 +103,14 @@ const sizeOf = (variant: OrderItem['variant']): string => {
 }
 
 /**
+ * Who placed the order. A guest's order carries the address they typed; a
+ * signed-in customer's carries their account instead (the plugin links the
+ * customer and leaves `customerEmail` empty), so the email comes from there.
+ */
+export const customerEmailOf = (order: Pick<Order, 'customer' | 'customerEmail'>): string =>
+  order.customerEmail || (typeof order.customer === 'object' ? (order.customer?.email ?? '') : '')
+
+/**
  * Flattens an order read at `depth: 2` (items → product/variant → options).
  * Anything unpopulated degrades to an empty string rather than throwing: an
  * email with a missing size is better than no email.
@@ -142,7 +150,7 @@ export const toOrderView = (
       countryName(address.country),
     ].filter((part): part is string => Boolean(part && String(part).trim())),
     adminUrl: ctx.adminUrl,
-    customerEmail: order.customerEmail ?? '',
+    customerEmail: customerEmailOf(order),
     customerName,
     discountCode: order.discountCode ?? '',
     firstName,
