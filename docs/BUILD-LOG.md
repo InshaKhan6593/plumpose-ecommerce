@@ -1642,3 +1642,42 @@ Integration 162, e2e 38, `pnpm audit:admin` clean. All storefront pages 200.
 dev server stop at "Accept warnings and push schema? (y/N)", which nothing can
 answer, and every request hung. Drop the column yourself, then restart the dev
 server.
+
+## 27. "The site feels laggy" — measured, 25 Sep 2026
+
+`scripts/perf-probe.ts` measures load, main-thread blocking, frame times while
+the intro plays and while wheel-scrolling (Lenis), dropped film frames and
+click latency, in Chromium with the GPU on. This machine has an AMD Radeon 740M
+(integrated graphics).
+
+**The dev server is most of it.** Click → new page shown:
+
+| | /shop | /our-story | /made-for-you | /shop again |
+|---|---|---|---|---|
+| `pnpm dev` (3001) | 3,460 ms | 827 ms | 953 ms | 2,491 ms |
+| production (3000) | 436 ms | 140 ms | 425 ms | 397 ms |
+
+Dev also sends ~1 MB of JavaScript per page against ~260 KB in production, and
+first paint on the homepage is 920 ms against 360 ms. Judge feel on a
+production build (`plumpose-prod` in launch.json), never on dev. Builds and
+test runs on the same machine slow browsing too.
+
+**Production, laptop (1440×900 at 1×, 1.5× and 2×):** homepage and shop scroll
+at 60 fps, no frame over 34 ms. The films drop 0 of 90–120 frames. The server
+answers a click in ~3 ms. The one stutter seen (217 ms) was on the first
+homepage load after a restart, while images were being resized for the first
+time. It did not recur.
+
+**Production, a mid-range phone** (Pixel 7, CPU slowed 4×): 0.5–1.4 s of
+start-up work after load (worst single task 546 ms on the homepage), in which
+a tap waits. Homepage and product page then scroll at 58–59 fps; the shop has
+some stutter (47 fps, worst 383 ms). CPU profile of the homepage start: Next's
+module loading ~220 ms and GSAP ~360 ms, including ScrollTrigger.refresh
+187 ms (three refreshes: MotionProvider's, HomeHero's after fonts, and
+ScrollTrigger's own on load). React hydration itself is small. De-duplicating
+the refreshes would save ~15 ms on a laptop, so it was not done alone. The
+real phone gain is deferring below-the-fold animation set-up. Not done yet.
+
+**Films are healthy:** H.264 High, fast-start (index at the front), 1.5–3.4
+Mbps. The desktop hero (7 MB) downloads in full at once. Instant on localhost;
+on a slow connection it competes with the first photographs.

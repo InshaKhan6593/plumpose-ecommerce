@@ -174,6 +174,7 @@ pnpm seed                    # idempotent
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
 | `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
 | `pnpm test-shots` | Import test photographs (see `../docs/TEST-SHOTS.md`) |
+| `npx tsx scripts/perf-probe.ts <url>` | Load, blocking, scroll fps, dropped film frames, click latency — run against a production build (BUILD-LOG §27) |
 | `pnpm demo:seed` / `demo:remove` | 20 demo pieces with Pexels photos, to see a full shop; removes only `demo-` records (BUILD-LOG §24) |
 | `sh scripts/encode-videos.sh` | Rebuild `public/video/` from the camera originals |
 
