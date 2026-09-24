@@ -27,6 +27,22 @@ export const MOTION = {
   start: 'top 85%',
 } as const
 
+/**
+ * Split a heading into lines, each inside a mask it can rise out of. Always
+ * use this rather than calling SplitText directly: the masks carry the
+ * `split-line-mask` class, which globals.css extends below the line so
+ * descenders (the y of "differently", the g of "gathering") are not cut off by
+ * a tight line-height.
+ */
+export const splitLines = (el: HTMLElement) => SplitText.create(el, { linesClass: 'split-line', mask: 'lines', type: 'lines' })
+
+/**
+ * Where a masked line starts, in % of its own height. It must clear the mask's
+ * extended bottom edge as well as the line itself, or the tops of the letters
+ * show before the reveal begins.
+ */
+export const LINE_HIDDEN = 130
+
 export const prefersReducedMotion = (): boolean =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 

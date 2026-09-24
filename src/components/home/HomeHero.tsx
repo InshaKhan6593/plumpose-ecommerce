@@ -6,7 +6,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { gsap, prefersReducedMotion, ScrollTrigger, SplitText } from '@/motion/gsap'
+import { gsap, LINE_HIDDEN, prefersReducedMotion, ScrollTrigger, splitLines } from '@/motion/gsap'
 
 import { HOME } from './content'
 
@@ -59,6 +59,8 @@ export function HomeHero({
     if (!el || prefersReducedMotion()) return
 
     const filmLayer = el.querySelector<HTMLElement>('[data-hero-film]')
+    const depth = el.querySelector<HTMLElement>('[data-hero-depth]')
+    const detailBlock = el.querySelector<HTMLElement>('[data-hero-detail-block]')
     const dim = el.querySelector<HTMLElement>('[data-hero-dim]')
     const tagline = el.querySelector<HTMLElement>('[data-hero-tagline]')
     const words = Array.from(el.querySelectorAll<HTMLElement>('[data-hero-word]'))
@@ -83,8 +85,8 @@ export function HomeHero({
 
         if (tagline) {
           gsap.set(tagline, { opacity: 1 })
-          const split = SplitText.create(tagline, { mask: 'lines', type: 'lines' })
-          intro.from(split.lines, { duration: 1.5, stagger: 0.14, yPercent: 115 }, 0.45)
+          const split = splitLines(tagline)
+          intro.from(split.lines, { duration: 1.5, stagger: 0.14, yPercent: LINE_HIDDEN }, 0.45)
         }
         intro.fromTo(words, { opacity: 0, y: 18 }, { duration: 1.3, opacity: 1, stagger: 0.12, y: 0 }, 1)
 
@@ -107,14 +109,22 @@ export function HomeHero({
 
         // ---------- curtain: as the next section covers the hero ----------
         /*
-         * The whole frame recedes — it shrinks a little, dims and the words lift
+         * The film sinks and leans in behind the frame, dims, and the words lift
          * away — while the next section rises over it. `scrub: 1` lets it trail
          * the scroll by a beat, so it glides instead of tracking the wheel 1:1.
+         *
+         * Only what is *inside* the frame moves. Scaling the section itself
+         * (the first version) shrank it away from the screen edges and showed
+         * a cream border around the film for the whole of the curtain.
          */
         const cover = { end: '+=100%', scrub: 1, start: 'top top', trigger: el }
-        gsap.fromTo(el, { scale: 1 }, { ease: 'none', immediateRender: false, scale: 0.92, scrollTrigger: cover, transformOrigin: '50% 30%' })
-        if (dim) gsap.fromTo(dim, { opacity: 0 }, { ease: 'none', opacity: 0.65, scrollTrigger: cover })
-        if (copy) gsap.to(copy, { ease: 'none', opacity: 0, scrollTrigger: { ...cover, end: '+=60%' }, yPercent: -25 })
+        if (depth) {
+          // Scaling to 1.1 leaves 5% spare above the frame, so a 5% sink never uncovers its top edge.
+          gsap.fromTo(depth, { scale: 1, yPercent: 0 }, { ease: 'none', immediateRender: false, scale: 1.1, scrollTrigger: cover, yPercent: 5 })
+        }
+        if (dim) gsap.fromTo(dim, { opacity: 0 }, { ease: 'none', opacity: 0.7, scrollTrigger: cover })
+        if (copy) gsap.to(copy, { ease: 'none', opacity: 0, scrollTrigger: { ...cover, end: '+=55%' }, yPercent: -30 })
+        if (detailBlock) gsap.to(detailBlock, { ease: 'none', opacity: 0, scrollTrigger: { ...cover, end: '+=55%' }, yPercent: -40 })
       }, el)
 
       ScrollTrigger.refresh()
@@ -128,13 +138,15 @@ export function HomeHero({
 
   return (
     <section aria-label="Welcome" className="relative h-svh min-h-[36rem] overflow-hidden bg-ink text-white" ref={root}>
-      {/* The film */}
-      <div className="absolute inset-0" data-hero-film>
-        <div className="absolute inset-0 hidden lg:block">
-          <FilmOrPoster active={film === 'desktop'} film={films.desktop} label="The Al Shaheen Nights set, worn in a café" />
-        </div>
-        <div className="absolute inset-0 lg:hidden">
-          <FilmOrPoster active={film === 'mobile'} film={films.mobile} label="Walking in the Al Shaheen Nights set" />
+      {/* The film — the outer layer carries the curtain's depth, the inner the intro. */}
+      <div className="absolute inset-0 will-change-transform" data-hero-depth>
+        <div className="absolute inset-0" data-hero-film>
+          <div className="absolute inset-0 hidden lg:block">
+            <FilmOrPoster active={film === 'desktop'} film={films.desktop} label="The Al Shaheen Nights set, worn in a café" />
+          </div>
+          <div className="absolute inset-0 lg:hidden">
+            <FilmOrPoster active={film === 'mobile'} film={films.mobile} label="Walking in the Al Shaheen Nights set" />
+          </div>
         </div>
       </div>
 
@@ -173,7 +185,7 @@ export function HomeHero({
         right of centre, so anywhere nearer the middle would cover her face.
       */}
       {detail ? (
-        <div className="absolute top-[26%] right-4 hidden md:right-7 lg:block">
+        <div className="absolute top-[26%] right-4 hidden md:right-7 lg:block" data-hero-detail-block>
           <div className="relative size-[clamp(7rem,10vw,11rem)] overflow-hidden border border-white" data-hero-detail data-reveal-image>
             <div className="absolute inset-0" data-hero-detail-picture>
               <Media className="absolute inset-0" fill imgClassName="object-cover" priority resource={detail} size="176px" />

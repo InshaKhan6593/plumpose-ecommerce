@@ -805,3 +805,106 @@ the steps two screens early). `LifestyleRow` is no longer used.
   spacing, and later triggers were measuring before it — the steps finished
   half-way through their track. The pin now has `refreshPriority: 1`, so it is
   measured first. Verified: progress line equals scroll position at every 10%.
+- **Landing-page polish from a review of the client's screen recording (24 Sep).**
+  Five faults, each traced to a cause:
+  - *Photographs slid over the headline* in the philosophy section: they were
+    placed across the whole section, half of them in front of the words. The
+    headline is now held to the middle 54% of the screen and every photograph
+    lives in the outer margins (furthest in: 18% of the width), all behind.
+  - *Photographs popped in*: each arrived on a 1.8s timer when it crossed a
+    line. Fade, settle and drift are now all scrubbed to the scroll. On a phone
+    there are no margins, so the section is the words and two photographs.
+  - *A cream border round the hero during the curtain*: the whole section was
+    scaled to 0.92. Now only the film inside the frame leans in and sinks.
+  - *The Print's words looked cut off*: the white copy faded in while the frame
+    was still opening, half of it over cream paper. It now waits for the full
+    frame; `scrub: 1` instead of `true` removes the jitter.
+  - *The steps felt mechanical*: each photograph wiped up with a clip, showing
+    two half-photographs mid-way. Now a cross-dissolve with a zoom settle,
+    overlapping word changes, `scrub: 1.4`.
+  Also: the dev-mode "Compiling" badge is off (`devIndicators: false`) — it
+  appeared in every recording and read as a site fault; the product band's
+  bottom padding is lighter, so it no longer leaves a screen of blank paper
+  above the footer. Verified by wheel-scrolling headlessly at 1920×1080 and on a
+  phone: at every step no photograph intersects the headline's text, the Print
+  copy never shows before the frame is full, the hero stays full width, and
+  there are no console errors.
+- **Steps readable, and a clean hand-off to the product (second review, 24 Sep).**
+  The previous round made each change take 80% of its step so something was
+  always moving — which left the middle steps readable for a fraction of a
+  second ("Add hand embroidery" flashed past in the recording). Now each change
+  takes 40% of a step, centred on the boundary, and 60% holds still: measured
+  by wheel-scrolling, steps 2 and 3 stay fully readable for ~720px of scroll
+  (was ~185px). Scroll per step 85 → 95svh. The hairline now steps on a
+  quarter at a time with the change, so it always agrees with the "02 / 04"
+  counter (0 mismatches across the run). Hand-off: the product photograph
+  began fully hidden and only opened at 90% of the screen, leaving half a
+  screen of blank paper after the pinned steps. `RevealImage` takes a `start`
+  (default unchanged); the product band opens from `'top bottom'` and its top
+  padding is lighter.
+- **Hero film fit checked on screen; header nav wrap fixed (24 Sep).** At
+  1920×1080, 1440×900, 1366×768, 1280×1024, 2560×1080, 1024×768 (landscape
+  film) and 768×1024, 390×844 (vertical film): playing, `object-fit: cover`,
+  covering the hero edge to edge, intro settled at scale 1, her face in frame
+  at 10/35/60/85% of the loop. The close-up at ~60% of the phone clip has no
+  face in the source itself. Ultrawide 2560 upscales the 1080p film 1.33× —
+  fine, but a 4K encode would be sharper there and on retina screens. Found on
+  the way: from 768 to 1023px the inline nav wrapped into "MADE / FOR / YOU"
+  (column 266–394px, links need ~363–411px). Inline nav now from `lg` at
+  `gap-6`, `xl:gap-10`, `whitespace-nowrap`; below that, the menu button.
+- **Closer to the reference; descenders no longer cut (24 Sep).** Compared
+  frame by frame against `brand-assets/reference/client-reference-animation.mov`:
+  - *The Print now does the reference's signature move.* Its heading and
+    figures are on screen from the start, in ink on paper, and each letter
+    turns white as the growing card reaches it — two identical copies of the
+    words, the ink one on the paper and the white one inside the frame, where
+    the frame's own clip-path reveals it. Only the paragraph and link wait for
+    the full frame. Starting card smaller and portrait, as in the reference.
+  - *Philosophy:* four small thumbnails framing the headline instead of six
+    photographs out at the page edges; placed from the centre (inner edges
+    29–31vw from it, the headline column is 27vw either side). No overlap at
+    768, 1024, 1440, 1920.
+  - *Descenders were clipped* — the y of "differently", the g of "gathering",
+    the y of "by hand". SplitText clips each line's mask to the line box, and
+    with line-height 0.9 the tails hang outside it. All three splits now go
+    through `splitLines()` (src/motion/gsap.ts), whose masks carry
+    `split-line-mask`; globals.css pads that box 0.22em below (0.06em above)
+    and gives the space back with a negative margin. Lines start at
+    `LINE_HIDDEN` (130%) so they still clear the taller mask.
+  Not changed on purpose: the hero's detail frame stays at the edge (an outline
+  over a moving subject frames nothing); the steps keep a dissolve rather than
+  the reference's wipe (the wipe was reviewed as mechanical); no extra section
+  padding (the reference has none, and the last review flagged gaps).
+- **Steps: left-to-right wipe (client request, 24 Sep).** The dissolve felt
+  flat; the client asked for the reference's direction. The next photograph is
+  uncovered from its left edge (`clip-path` inset from the right, 100% → 0)
+  while its picture glides in from 10% left at 118% and settles; the last
+  drifts 8% right beneath it, so the two move as one strip. `power2.inOut`,
+  change = half a step (was 40%), scroll per step 95 → 110svh so the holds stay
+  as long. Titles and notes slide the same way (out right, in from left).
+  Verified: over 150 wheel samples no picture ever leaves an edge showing
+  inside its visible part of the frame; middle steps readable ~14–15 samples.
+- **Why the step wipe did not feel smooth: the photographs were not there yet
+  (24 Sep).** Measured by wheel-scrolling with a frame logger and the Long
+  Animation Frames API: the animation itself holds 60fps (median and p99
+  16.7ms, no long frames). The fault was loading — photographs 2–4 are
+  `loading="lazy"` and sit fully clipped until their wipe, and the browser does
+  not count a fully clipped image as visible, so each one only began to
+  download as its wipe uncovered it: an empty frame, then a pop mid-transition
+  (worse in dev, where each image size is generated on first request).
+  `Media` now takes `loading`; the step photographs are `eager`, and the
+  section calls `img.decode()` on all four a screen before it arrives so no
+  decode lands in a wipe. Verified: all four complete before the section, and
+  a clean run shows 0 frames over 20ms. Residual 33ms frames in a second run
+  were scattered, not aligned with wipes — dev mode and machine load, not the
+  page. Judge smoothness on `pnpm build && pnpm start`.
+- **Production build, run locally (24 Sep).** `pnpm build` passes (TypeScript
+  included; `/` prerenders as static). Next 16 builds into `.next` and dev into
+  `.next/dev`, so the two can run side by side. Locally, `next start` 400'd
+  every photograph: Next 16 refuses to optimise upstream images on a private
+  IP, and `dangerouslyAllowLocalIP` was dev-only. It now also honours
+  `LOCAL_PRODUCTION_PREVIEW=on`, set only in the `plumpose-prod` entry of
+  `.claude/launch.json` (port 3000) — never on a deployed server, where the
+  host is public and the guard should stay on. Measured on the production
+  server: median frame 16.7ms in every run, no long animation frames, step
+  photographs all loaded before the section, no wipe edge gaps.

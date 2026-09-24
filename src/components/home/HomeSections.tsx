@@ -35,9 +35,16 @@ export function ProductBand({
   const { name, subtitle } = splitTitle(title)
 
   return (
-    <section className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 py-20 md:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-24 lg:py-32">
+    /*
+     * Light padding both ends. Above: the pinned steps already end with space
+     * under their centred photograph. Below: the footer brings its own margin.
+     * With full padding either side, the page showed half a screen of blank
+     * paper between sections, which read as a cut.
+     */
+    <section className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 pt-10 pb-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-24 lg:pt-12 lg:pb-10">
       {image ? (
-        <RevealImage className="relative aspect-[4/5] overflow-hidden bg-paper-3 lg:aspect-square">
+        // Opens as soon as it enters, so it arrives already unveiling rather than as an empty frame.
+        <RevealImage className="relative aspect-[4/5] overflow-hidden bg-paper-3 lg:aspect-square" start="top bottom">
           <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="(min-width: 1024px) 45vw, 100vw" />
         </RevealImage>
       ) : null}

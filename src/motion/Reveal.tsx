@@ -2,7 +2,7 @@
 
 import React, { useLayoutEffect, useRef } from 'react'
 
-import { gsap, MOTION, prefersReducedMotion, ScrollTrigger, SplitText } from './gsap'
+import { gsap, LINE_HIDDEN, MOTION, prefersReducedMotion, ScrollTrigger, splitLines } from './gsap'
 
 /**
  * The house reveal — "staggered fade and slide" (MOTION-SPEC §3C).
@@ -52,9 +52,9 @@ export function Reveal({
         const tl = gsap.timeline({ delay, paused: true })
 
         lineEls.forEach((el) => {
-          const split = SplitText.create(el, { mask: 'lines', type: 'lines' })
+          const split = splitLines(el)
           gsap.set(el, { opacity: 1 })
-          tl.from(split.lines, { stagger: MOTION.lineStagger, yPercent: 110 }, 0)
+          tl.from(split.lines, { stagger: MOTION.lineStagger, yPercent: LINE_HIDDEN }, 0)
         })
 
         if (items.length) {
@@ -89,15 +89,21 @@ export function Reveal({
  * little depth: the picture drifts inside its frame more slowly than the page
  * scrolls. It rests at 108% of the frame, so the drift (±3%) can never show an
  * edge. `parallax={false}` for frames that must stay still.
+ *
+ * `start` is where the frame's top must reach before it opens. The default
+ * waits until it is a little way up the screen; use `'top bottom'` where an
+ * empty frame arriving from below would read as a gap in the page.
  */
 export function RevealImage({
   children,
   className,
   parallax = true,
+  start = 'top 90%',
 }: {
   children: React.ReactNode
   className?: string
   parallax?: boolean
+  start?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -116,7 +122,7 @@ export function RevealImage({
       )
       if (inner) tl.fromTo(inner, { scale: 1.2 }, { duration: 1.8, ease: 'expo.out', scale: rest }, 0)
 
-      ScrollTrigger.create({ onEnter: () => tl.play(), once: true, start: 'top 90%', trigger: el })
+      ScrollTrigger.create({ onEnter: () => tl.play(), once: true, start, trigger: el })
 
       if (inner && parallax) {
         gsap.fromTo(
@@ -128,7 +134,7 @@ export function RevealImage({
     }, el)
 
     return () => ctx.revert()
-  }, [parallax])
+  }, [parallax, start])
 
   return (
     <div className={className} data-reveal-image="" ref={ref}>

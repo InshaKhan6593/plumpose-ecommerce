@@ -114,6 +114,19 @@ html.js-motion:not(.motion-ready) [data-reveal-image] {
   }
 }
 
+/*
+ * The mask each heading line rises out of (splitLines in src/motion/gsap.ts).
+ * SplitText clips it to the line box, and with a tight line-height — the hero
+ * is 0.9 — descenders hang outside that box and were cut off: the tail of the
+ * y in "differently", the g in "gathering", the y in "by hand". The padding
+ * grows the clip to take them (and the tops of italic capitals); the negative
+ * margin gives the space back, so the layout does not move.
+ */
+.split-line-mask {
+  padding-block: 0.06em 0.22em;
+  margin-block: -0.06em -0.22em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.js-motion:not(.motion-ready) [data-reveal],
   html.js-motion:not(.motion-ready) [data-reveal-lines],

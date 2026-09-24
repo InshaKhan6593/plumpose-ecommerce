@@ -108,7 +108,7 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
             <button
               aria-expanded={menuOpen}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="-ml-1 p-1 md:hidden"
+              className="-ml-1 p-1 lg:hidden"
               onClick={() => setMenuOpen((open) => !open)}
               type="button"
             >
@@ -122,12 +122,18 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
               )}
             </button>
 
-            <ul className="hidden items-center gap-8 md:flex lg:gap-10">
+            {/*
+              Inline from 1024px only. The links need ~363px on one line at
+              gap-6 (~411px at gap-10); the header's side column is 266px at
+              768 and 394px at 1024, so from md they wrapped into
+              "MADE / FOR / YOU". Tablets get the menu button instead.
+            */}
+            <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
               {NAV.map((item) => (
                 <li key={item.href}>
                   <Link
                     className={cn(
-                      'caps relative text-[0.625rem] transition-opacity hover:opacity-60',
+                      'caps relative text-[0.625rem] whitespace-nowrap transition-opacity hover:opacity-60',
                       pathname.startsWith(item.href) &&
                         'after:absolute after:inset-x-0 after:-bottom-1.5 after:h-px after:bg-current',
                     )}
@@ -169,7 +175,7 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
         {menuOpen ? (
           <nav
             aria-label="Main"
-            className="absolute inset-x-0 top-full h-[calc(100dvh-100%)] bg-background px-6 pt-10 text-ink md:hidden"
+            className="absolute inset-x-0 top-full h-[calc(100dvh-100%)] bg-background px-6 pt-10 text-ink lg:hidden"
           >
             <ul className="flex flex-col gap-7">
               {NAV.map((item) => (

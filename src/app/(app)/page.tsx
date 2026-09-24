@@ -135,12 +135,10 @@ export default async function HomePage() {
         </div>
         <Philosophy
           images={{
-            armchair: image('armchair'),
             corridor: image('corridor'),
             piping: image('piping'),
             print: image('print'),
             qatarBook: image('qatarBook'),
-            window: image('window'),
           }}
         />
       </div>

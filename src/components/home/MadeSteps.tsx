@@ -5,7 +5,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react'
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { gsap, prefersReducedMotion } from '@/motion/gsap'
+import { gsap, prefersReducedMotion, ScrollTrigger } from '@/motion/gsap'
 import { Reveal } from '@/motion/Reveal'
 
 import { HOME } from './content'
@@ -17,11 +17,12 @@ export type Step = { body: string; image?: MediaType; title: string }
  * "Informed decisions supported by expert guidance" (01/04 → 04/04).
  *
  * The stage holds while four steps play through — and it is **scrubbed**: every
- * bit of scroll moves it. The next photograph rises over the last as the wheel
- * turns (and sinks back if it turns back), the titles and words slide with it,
- * a hairline fills with progress, and every picture keeps a slow zoom and drift
- * the whole way. The first version switched steps at four thresholds with
- * nothing moving in between, and the page felt stuck.
+ * bit of scroll moves it. The next photograph sweeps in from left to right as the
+ * wheel turns (and back if it turns back), the titles and words slide with it,
+ * a hairline steps on with the counter, and every picture keeps a slow drift
+ * the whole way. Each step then holds long enough to read. (The first version
+ * switched at four thresholds with nothing moving in between and felt stuck;
+ * the second changed almost continuously and the middle steps flashed past.)
  *
  * Every fact in a step comes from the database — sizes, thread colours, the
  * fee, the lead time, delivery prices. Under reduced motion there is no
@@ -29,7 +30,7 @@ export type Step = { body: string; image?: MediaType; title: string }
  */
 
 /** Scroll given to each step, in viewport heights. */
-const PER_STEP = 75
+const PER_STEP = 110
 
 export function MadeSteps({ steps }: { steps: Step[] }) {
   const root = useRef<HTMLElement>(null)
@@ -53,38 +54,68 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
     const n = frames.length
 
     const ctx = gsap.context(() => {
-      // Starting state: step one showing, the rest waiting below.
-      frames.forEach((f, i) => gsap.set(f, { clipPath: i === 0 ? 'inset(0% 0% 0% 0%)' : 'inset(100% 0% 0% 0%)' }))
-      gsap.set(pictures, { scale: 1.12 })
-      titles.forEach((t, i) => gsap.set(t, { opacity: i === 0 ? 1 : 0, yPercent: i === 0 ? 0 : 100 }))
-      bodies.forEach((b, i) => gsap.set(b, { opacity: i === 0 ? 1 : 0, y: i === 0 ? 0 : 30 }))
-
       /*
-       * One timeline across the whole track, scrubbed with a one-beat lag so it
-       * glides. Timeline units: one per step. Each change runs from half-way
-       * through a step into the next, so there is always something turning.
+       * Decode every photograph while the section is still a screen away. A
+       * fully clipped image is never painted, so otherwise the browser decodes
+       * it on the first frame of its wipe — measured as a run of 33ms frames
+       * right as each change began.
        */
-      const tl = gsap.timeline({
-        defaults: { ease: 'none' },
-        scrollTrigger: { end: 'bottom bottom', scrub: 1, start: 'top top', trigger: track },
+      ScrollTrigger.create({
+        once: true,
+        onEnter: () => el.querySelectorAll<HTMLImageElement>('[data-step-frame] img').forEach((img) => img.decode().catch(() => undefined)),
+        start: 'top bottom+=100%',
+        trigger: el,
       })
 
-      // Always moving: the hairline fills, every picture keeps a slow drift.
-      if (bar) tl.fromTo(bar, { scaleX: 0 }, { duration: n, scaleX: 1 }, 0)
+      // Starting state: step one showing, the rest waiting fully clipped from the right.
+      frames.forEach((f, i) => gsap.set(f, { clipPath: i === 0 ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }))
+      gsap.set(pictures, { scale: 1.1 })
+      titles.forEach((t, i) => gsap.set(t, { opacity: i === 0 ? 1 : 0, x: i === 0 ? 0 : -28 }))
+      bodies.forEach((b, i) => gsap.set(b, { opacity: i === 0 ? 1 : 0, x: i === 0 ? 0 : -20 }))
+
+      /*
+       * One timeline across the whole track, scrubbed with a lag so it glides.
+       * Timeline units: one per step, and step i owns [i, i+1].
+       *
+       * Each change takes half a step, centred on the boundary, and the other
+       * half holds the step still enough to read. (An earlier version spent 80%
+       * of every step changing, and in the client's recording "Add hand
+       * embroidery" flashed past.) The first and last steps hold longest.
+       */
+      const CHANGE = 0.5
+      const tl = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: { end: 'bottom bottom', scrub: 1.2, start: 'top top', trigger: track },
+      })
+
+      // Life during the holds: every picture keeps a slow drift the whole way.
       pictures.forEach((p) => tl.fromTo(p, { yPercent: -3 }, { duration: n, yPercent: 3 }, 0))
+      // The hairline advances a quarter per step, with the change, so it always agrees with "02 / 04".
+      if (bar) gsap.set(bar, { scaleX: 1 / n })
 
       for (let i = 1; i < n; i++) {
-        const at = i - 0.55
-        // The next photograph rises over the last, settling from a closer zoom…
-        tl.to(frames[i], { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.7, ease: 'power2.inOut' }, at)
-        tl.fromTo(pictures[i], { scale: 1.3 }, { duration: 0.9, ease: 'power2.out', scale: 1.1 }, at)
-        // …while the last eases back beneath it.
-        tl.to(pictures[i - 1], { duration: 0.7, scale: 1.02 }, at)
-        // Words: out upward, in from below, just behind the picture.
-        tl.to(titles[i - 1], { duration: 0.35, opacity: 0, yPercent: -100 }, at)
-        tl.fromTo(titles[i], { opacity: 0, yPercent: 100 }, { duration: 0.4, opacity: 1, yPercent: 0 }, at + 0.2)
-        tl.to(bodies[i - 1], { duration: 0.3, opacity: 0, y: -20 }, at)
-        tl.fromTo(bodies[i], { opacity: 0, y: 30 }, { duration: 0.4, opacity: 1, y: 0 }, at + 0.25)
+        const at = i - CHANGE / 2
+        /*
+         * Left to right, as in the reference: the next photograph is uncovered
+         * from its left edge while the picture inside glides in from the left
+         * and settles from a closer zoom; the last one drifts right beneath it,
+         * so the two travel together like one moving strip rather than a hard
+         * edge crossing a still image. `power2.inOut` starts and lands softly.
+         *
+         * Why nothing shows at the edges: the incoming picture starts 10% left
+         * at 118% scale and is nearly home before the clip reaches the right
+         * edge; the outgoing one moves at most 8% right at 104%, and its
+         * uncovered left strip is always inside the part already wiped over.
+         */
+        tl.fromTo(frames[i], { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: CHANGE, ease: 'power2.inOut' }, at)
+        tl.fromTo(pictures[i], { scale: 1.18, xPercent: -10 }, { duration: CHANGE * 1.3, ease: 'power2.out', scale: 1.1, xPercent: 0 }, at)
+        tl.to(pictures[i - 1], { duration: CHANGE, ease: 'power2.inOut', scale: 1.04, xPercent: 8 }, at)
+        if (bar) tl.to(bar, { duration: CHANGE, ease: 'power2.inOut', scaleX: (i + 1) / n }, at)
+        // Words move the same way: the old ones slip out to the right, the new ones arrive from the left.
+        tl.to(titles[i - 1], { duration: CHANGE * 0.45, ease: 'sine.in', opacity: 0, x: 28 }, at)
+        tl.fromTo(titles[i], { opacity: 0, x: -28 }, { duration: CHANGE * 0.5, ease: 'sine.out', opacity: 1, x: 0 }, i)
+        tl.to(bodies[i - 1], { duration: CHANGE * 0.4, ease: 'sine.in', opacity: 0, x: 20 }, at + 0.03)
+        tl.fromTo(bodies[i], { opacity: 0, x: -20 }, { duration: CHANGE * 0.5, ease: 'sine.out', opacity: 1, x: 0 }, i + 0.04)
       }
     }, el)
 
@@ -125,8 +156,20 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
                   {steps.map((step, i) =>
                     step.image ? (
                       <div className="absolute inset-0" data-step-frame key={step.title} style={{ zIndex: i }}>
-                        <div className="absolute inset-0">
-                          <Media className="absolute inset-0" fill imgClassName="object-cover" resource={step.image} size="(min-width: 1024px) 26rem, 70vw" />
+                        <div className="absolute inset-0 will-change-transform">
+                          {/*
+                            Eager: photographs 2–4 sit fully clipped until their wipe,
+                            and a lazy image the browser cannot see only started
+                            loading as the wipe uncovered it — an empty frame, then a pop.
+                          */}
+                          <Media
+                            className="absolute inset-0"
+                            fill
+                            imgClassName="object-cover"
+                            loading="eager"
+                            resource={step.image}
+                            size="(min-width: 1024px) 26rem, 70vw"
+                          />
                         </div>
                       </div>
                     ) : null,

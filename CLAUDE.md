@@ -156,6 +156,13 @@ pnpm seed                    # idempotent
 | `pnpm test-shots` | Import test photographs (see `../docs/TEST-SHOTS.md`) |
 | `sh scripts/encode-videos.sh` | Rebuild `public/video/` from the camera originals |
 
+**A production build locally:** `pnpm build`, then `next start` with
+`LOCAL_PRODUCTION_PREVIEW=on` (the `plumpose-prod` launch entry) — without it
+every photo 400s, because Next 16 will not optimise images from localhost.
+Never set that flag on a deployed server. Build and dev use separate folders
+(`.next` / `.next/dev`), so they can run side by side. In PowerShell 5.1 chain
+with `;` — `&&` is a parse error.
+
 **`pnpm lint` is broken** — ESLint dies resolving its own config via
 `eslint-config-next`. It fails on untouched files too, so it predates the
 current work.
@@ -205,6 +212,16 @@ From Git Bash, prefix commands taking a leading-slash argument with
   refresh first get the wrong positions. The Print's pin has
   `refreshPriority: 1`. If a scroll effect below a pin runs early or late,
   suspect this first.
+- **Split headings with `splitLines()`** (`src/motion/gsap.ts`), never
+  `SplitText.create` directly. Its masks carry `split-line-mask`, which
+  `globals.css` extends below the line; a bare SplitText mask clips descenders
+  at tight line-heights (the y of "differently" was cut). Start hidden lines at
+  `LINE_HIDDEN`.
+- **An image hidden by a clip or mask must be `loading="eager"`.** The browser
+  does not count a fully clipped image as visible, so a lazy one starts loading
+  as its reveal begins and pops in mid-animation (`Media` takes `loading`).
+- **Nothing may slide over text.** Floating photographs live outside the
+  column the words occupy — two client reviews flagged overlap.
 - **Animate only `transform`, `opacity`, `clip-path`.** Pictures that move
   inside a frame must rest larger than it (`RevealImage` rests at 108%).
 - **Hidden-before-JS elements use the CSS failsafe** in `globals.css`

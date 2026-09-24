@@ -5,7 +5,8 @@ import React, { useLayoutEffect, useRef } from 'react'
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { gsap, prefersReducedMotion, SplitText } from '@/motion/gsap'
+import { gsap, LINE_HIDDEN, prefersReducedMotion, splitLines } from '@/motion/gsap'
+import { RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
 
 import { HOME } from './content'
@@ -14,37 +15,54 @@ import { HOME } from './content'
  * The section that slides up over the hero (the curtain) — after the
  * reference's "Private Atelier for those who appreciate subtle refinement".
  *
- * The headline holds the centre of the screen (sticky) while small photographs
- * drift past it, each at its own speed: some pass in front of the words, some
- * behind. The words are hers — the opening of her product description.
+ * The headline holds the centre of the screen (sticky) while small thumbnails
+ * drift past just outside it, each at its own speed, so nearer ones seem to
+ * move faster. The words are hers — the opening of her product description.
  *
- * Positions are percentages of the section; `speed` is how far a photograph
- * travels against the scroll, so faster ones seem nearer. Under reduced motion
- * the photographs simply sit where they are.
+ * **The thumbnails never touch the words.** The headline is held to the
+ * middle 54% of the screen and each thumbnail's inner edge is at least 2vw
+ * outside that. The first version scattered photographs across the section
+ * with some in front of the text, and in the client's recording they slid
+ * straight over the headline; the second pushed six of them out to the page
+ * edges, which read as margins rather than the reference's framing.
+ *
+ * Nothing arrives on a timer: each photograph's fade, settle and drift are all
+ * scrubbed to the scroll, so it glides in with the hand on the wheel rather
+ * than popping when it crosses a line.
+ *
+ * On a phone there are no margins to drift in, so the section is simply the
+ * words and two photographs beneath them. Under reduced motion the photographs
+ * sit where they are.
  */
 
 type Float = {
   className: string
-  front: boolean
   image?: MediaType
   key: string
+  side: 'left' | 'right'
+  /** How far it travels against the scroll, in % of its own height. */
   speed: number
 }
 
 export function Philosophy({
   images,
 }: {
-  images: { armchair?: MediaType; corridor?: MediaType; piping?: MediaType; print?: MediaType; qatarBook?: MediaType; window?: MediaType }
+  images: { corridor?: MediaType; piping?: MediaType; print?: MediaType; qatarBook?: MediaType }
 }) {
   const root = useRef<HTMLElement>(null)
 
+  /*
+   * Four small thumbnails, as in the reference — framing the words, not
+   * filling the margins. Each is placed from the centre of the page: the
+   * headline column is at most 54vw (27vw either side of centre), so an inner
+   * edge at 29–31vw from centre sits just clear of the words at every width.
+   * `top` is % of the section's height.
+   */
   const floats: Float[] = [
-    { className: 'left-[6%] top-[16%] w-[34vw] md:w-[11vw]', front: false, image: images.corridor, key: 'corridor', speed: 40 },
-    { className: 'right-[5%] top-[22%] w-[40vw] md:right-[9%] md:w-[14vw]', front: true, image: images.print, key: 'print', speed: 95 },
-    { className: 'left-[16%] top-[50%] hidden md:block md:w-[10vw]', front: true, image: images.piping, key: 'piping', speed: 70 },
-    { className: 'right-[8%] top-[60%] w-[30vw] md:right-[20%] md:w-[12vw]', front: false, image: images.qatarBook, key: 'book', speed: 55 },
-    { className: 'left-[10%] top-[78%] w-[32vw] md:left-[40%] md:w-[10vw]', front: true, image: images.window, key: 'window', speed: 110 },
-    { className: 'right-[6%] top-[84%] hidden md:block md:w-[9vw]', front: false, image: images.armchair, key: 'armchair', speed: 60 },
+    { className: 'right-[calc(50%+29vw)] top-[12%] w-[7.5vw]', image: images.corridor, key: 'corridor', side: 'left', speed: 40 },
+    { className: 'right-[calc(50%+31vw)] top-[58%] w-[6vw]', image: images.piping, key: 'piping', side: 'left', speed: 80 },
+    { className: 'left-[calc(50%+29vw)] top-[26%] w-[8.5vw]', image: images.print, key: 'print', side: 'right', speed: 70 },
+    { className: 'left-[calc(50%+31vw)] top-[70%] w-[6.5vw]', image: images.qatarBook, key: 'book', side: 'right', speed: 50 },
   ]
 
   useLayoutEffect(() => {
@@ -72,35 +90,43 @@ export function Philosophy({
         if (label) gsap.fromTo(label, { opacity: 0, y: 20 }, { ease: 'none', opacity: 1, scrollTrigger: arrive, y: 0 })
         if (headline) {
           gsap.set(headline, { opacity: 1 })
-          const split = SplitText.create(headline, { mask: 'lines', type: 'lines' })
-          gsap.fromTo(split.lines, { yPercent: 110 }, { ease: 'none', scrollTrigger: arrive, stagger: 0.12, yPercent: 0 })
+          const split = splitLines(headline)
+          gsap.fromTo(split.lines, { yPercent: LINE_HIDDEN }, { ease: 'none', scrollTrigger: arrive, stagger: 0.12, yPercent: 0 })
         }
 
-        el.querySelectorAll<HTMLElement>('[data-float]').forEach((float) => {
-          const speed = Number(float.dataset.speed)
-          const fromLeft = float.dataset.side === 'left'
+        const mm = gsap.matchMedia()
+        mm.add('(min-width: 768px)', () => {
+          el.querySelectorAll<HTMLElement>('[data-float]').forEach((anchor) => {
+            const drift = anchor.firstElementChild as HTMLElement | null
+            const picture = drift?.firstElementChild as HTMLElement | null
+            if (!drift || !picture) return
+            const speed = Number(anchor.dataset.speed)
+            const fromLeft = anchor.dataset.side === 'left'
 
-          // Depth: each drifts against the scroll at its own speed.
-          gsap.fromTo(
-            float,
-            { yPercent: speed },
-            { ease: 'none', scrollTrigger: { end: 'bottom top', scrub: 1, start: 'top bottom', trigger: el }, yPercent: -speed },
-          )
+            // Depth: each drifts against the scroll at its own speed, across the whole section.
+            gsap.fromTo(
+              drift,
+              { yPercent: speed },
+              { ease: 'none', scrollTrigger: { end: 'bottom top', scrub: 1.2, start: 'top bottom', trigger: el }, yPercent: -speed },
+            )
 
-          // Arrival: after the words, from its own side, on the luxury curve.
-          gsap.fromTo(
-            float.firstElementChild,
-            { opacity: 0, scale: 0.94, x: fromLeft ? -40 : 40 },
-            {
-              delay: 0.15,
-              duration: 1.8,
-              ease: 'expo.out',
-              opacity: 1,
-              scale: 1,
-              scrollTrigger: { once: true, start: 'top 92%', trigger: float },
-              x: 0,
-            },
-          )
+            /*
+             * Arrival, scrubbed: it fades up and settles in from its own side as
+             * it climbs the lower part of the screen. The anchor never moves, so
+             * the trigger measures a true position whatever the drift is doing.
+             */
+            gsap.fromTo(
+              picture,
+              { opacity: 0, scale: 0.9, x: fromLeft ? -36 : 36 },
+              {
+                ease: 'power2.out',
+                opacity: 1,
+                scale: 1,
+                scrollTrigger: { end: 'top 55%', scrub: 1.2, start: 'top 98%', trigger: anchor },
+                x: 0,
+              },
+            )
+          })
         })
       }, el)
     })
@@ -112,14 +138,14 @@ export function Philosophy({
   }, [])
 
   return (
-    <section aria-label={HOME.philosophy.label} className="relative z-10 h-[220svh] bg-background" ref={root}>
+    <section aria-label={HOME.philosophy.label} className="relative z-10 bg-background md:h-[220svh]" ref={root}>
       {/* The words hold the centre while the photographs pass. */}
-      <div className="sticky top-0 z-10 flex h-svh items-center justify-center px-6">
-        <div className="max-w-[62rem] text-center">
+      <div className="relative z-10 flex items-center justify-center px-6 pt-28 pb-14 md:sticky md:top-0 md:h-svh md:py-0">
+        <div className="max-w-[62rem] text-center md:max-w-[54vw]">
           <p className="caps text-[0.625rem] text-ink-soft" data-philosophy-label data-reveal>
             {HOME.philosophy.label}
           </p>
-          <h2 className="mt-7 text-[clamp(2.4rem,5.2vw,5rem)] leading-[1.08] text-ink" data-philosophy-headline data-reveal-lines>
+          <h2 className="mt-7 text-[clamp(2.4rem,4.4vw,4.6rem)] leading-[1.08] text-balance text-ink" data-philosophy-headline data-reveal-lines>
             {HOME.philosophy.headline.map((part, i) =>
               part.italic ? (
                 <em className="serif-italic" key={i}>
@@ -135,22 +161,38 @@ export function Philosophy({
         </div>
       </div>
 
+      {/* Desktop: the photographs drift through the margins, never over the words. */}
       {floats.map((float) =>
         float.image ? (
           <div
-            // On a phone every photograph passes behind the words — at that width one in front hides the line.
-            className={cn('absolute z-0', float.front && 'md:z-20', float.className)}
+            aria-hidden
+            className={cn('pointer-events-none absolute z-0 hidden md:block', float.className)}
             data-float
-            data-side={float.className.includes('left-') ? 'left' : 'right'}
+            data-side={float.side}
             data-speed={float.speed}
             key={float.key}
           >
-            <div className="relative aspect-[4/5] overflow-hidden bg-paper-3">
-              <Media className="absolute inset-0" fill imgClassName="object-cover" resource={float.image} size="(min-width: 768px) 14vw, 40vw" />
+            <div className="will-change-transform">
+              <div className="relative aspect-[4/5] overflow-hidden bg-paper-3">
+                <Media className="absolute inset-0" fill imgClassName="object-cover" resource={float.image} size="9vw" />
+              </div>
             </div>
           </div>
         ) : null,
       )}
+
+      {/* Phone: no margins to drift in — two photographs beneath the words. */}
+      <div className="grid grid-cols-2 gap-3 px-6 pb-24 md:hidden">
+        {[images.corridor, images.qatarBook].map((image, i) =>
+          image ? (
+            <RevealImage className={cn('relative aspect-[4/5] overflow-hidden bg-paper-3', i === 1 && 'mt-12')} key={image.id}>
+              <div className="absolute inset-0">
+                <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="45vw" />
+              </div>
+            </RevealImage>
+          ) : null,
+        )}
+      </div>
     </section>
   )
 }
