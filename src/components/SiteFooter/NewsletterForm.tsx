@@ -68,7 +68,7 @@ export function NewsletterForm() {
           type="email"
         />
         <button
-          className="caps pb-2 text-[0.625rem] text-ink transition-opacity hover:opacity-60 disabled:opacity-40"
+          className="caps shrink-0 pb-2 text-[0.625rem] text-ink transition-opacity hover:opacity-60 disabled:opacity-40"
           disabled={state === 'sending'}
           type="submit"
         >

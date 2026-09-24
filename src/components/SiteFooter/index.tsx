@@ -39,12 +39,14 @@ export async function SiteFooter() {
         { href: '/shipping-returns#returns', label: 'Returns' },
         { href: '/faq', label: 'FAQ' },
         { href: '/find-order', label: 'Track order' },
+        { href: '/contact', label: 'Contact us' },
       ],
     },
     {
       heading: 'About',
       links: [
         { href: '/our-story', label: 'Our story' },
+        { href: '/our-story#the-silk', label: 'The silk' },
         { href: '/made-for-you', label: 'Made for you' },
         { href: '/press', label: 'Press' },
         { href: '/spotted', label: 'Spotted' },
@@ -62,43 +64,52 @@ export async function SiteFooter() {
     },
   ]
 
+  /*
+   * As in the mockup: a band one step deeper than the page, the brand and the
+   * newsletter on the left, the four link columns grouped on the right — not
+   * five columns spread across the full width, which left the links floating
+   * apart and "Subscribe" pressed against the first column. Two-by-two on a
+   * phone, so the lists do not stack into a screen and a half of links.
+   */
   return (
-    <footer className="mt-24 border-t border-line bg-background md:mt-32">
-      <div className="mx-auto max-w-[90rem] px-6 pt-14 pb-10 md:px-14 md:pt-20">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_repeat(4,1fr)] md:gap-8">
+    <footer className="mt-24 border-t border-line bg-paper-3 md:mt-32">
+      <div className="mx-auto max-w-[90rem] px-6 pt-14 pb-8 md:px-14 md:pt-16">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
           <div className="max-w-sm">
             <Link aria-label="plumpose — home" className="inline-block text-ink" href="/">
               <Wordmark className="h-9 w-auto md:h-11" />
             </Link>
-            <p className="serif-italic mt-4 text-lg text-ink">Hand-finished in Doha</p>
+            <p className="serif-italic mt-3 text-lg text-ink">Hand-finished in Doha</p>
             <NewsletterForm />
           </div>
 
-          {columns.map((column) =>
-            column.links.length ? (
-              <div key={column.heading}>
-                <h2 className="caps mb-5 text-[0.625rem] text-ink">{column.heading}</h2>
-                <ul className="flex flex-col gap-2.5">
-                  {column.links.map((link) => (
-                    <li key={link.href}>
-                      <a
-                        className="text-sm text-ink-soft transition-colors hover:text-ink"
-                        href={link.href}
-                        {...(link.href.startsWith('http')
-                          ? { rel: 'noopener noreferrer', target: '_blank' }
-                          : {})}
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null,
-          )}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
+            {columns.map((column) =>
+              column.links.length ? (
+                <div className="min-w-0" key={column.heading}>
+                  <h2 className="caps mb-4 text-[0.625rem] text-ink">{column.heading}</h2>
+                  <ul className="flex flex-col gap-1">
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <a
+                          className="text-[0.8125rem] leading-5 break-words text-ink-soft transition-colors hover:text-ink"
+                          href={link.href}
+                          {...(link.href.startsWith('http')
+                            ? { rel: 'noopener noreferrer', target: '_blank' }
+                            : {})}
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null,
+            )}
+          </div>
         </div>
 
-        <div className="mt-16 flex flex-col gap-3 border-t border-line pt-6 md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 md:flex-row md:items-center md:justify-between">
           <p className="caps text-[0.5625rem] text-ink-soft">Qatar · QAR</p>
           <p className="caps text-[0.5625rem] text-ink-soft">
             All orders are charged in QAR · © {new Date().getFullYear()} plumpose
