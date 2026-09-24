@@ -128,7 +128,7 @@ export default async function HomePage() {
             ctaHref={productHref}
             detail={image('print')}
             films={{
-              desktop: { mp4: '/video/hero-wide.mp4', poster: '/video/hero-wide-poster.jpg', webm: '/video/hero-wide.webm' },
+              desktop: { mp4: '/video/hero-wide.mp4', poster: '/video/hero-wide-poster.jpg' },
               mobile: { mp4: '/video/hero-mobile.mp4', poster: '/video/hero-mobile-poster.jpg', webm: '/video/hero-mobile.webm' },
             }}
           />

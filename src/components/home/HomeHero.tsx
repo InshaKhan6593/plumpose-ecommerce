@@ -28,7 +28,8 @@ import { HOME } from './content'
  * under reduced motion, where the poster stands in.
  */
 
-type Film = { mp4: string; poster: string; webm: string }
+/** `webm` is optional: the café films ship as H.264 only (scripts/encode-videos.sh). */
+type Film = { mp4: string; poster: string; webm?: string }
 
 /**
  * Where the crop anchors when the screen's shape differs from the film's. Her
@@ -237,7 +238,7 @@ function FilmOrPoster({ active, film, label }: { active: boolean; film: Film; la
           ref={ref}
           style={{ objectPosition: FOCUS }}
         >
-          <source src={film.webm} type="video/webm" />
+          {film.webm ? <source src={film.webm} type="video/webm" /> : null}
           <source src={film.mp4} type="video/mp4" />
         </video>
       ) : null}
