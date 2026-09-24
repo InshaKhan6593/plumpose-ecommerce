@@ -38,8 +38,10 @@ orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
 
 **Reward wheel.** First-visit pop-up, prizes and rules set in the admin.
 
-**Not built yet:** currency display.
-SkipCash is pending credentials. 157 integration and 38 end-to-end tests pass.
+**Currencies.** Prices in the visitor's currency, from their location or the
+country picker; always charged in QAR. On/off in Site settings.
+
+SkipCash is pending credentials. 162 integration and 38 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.

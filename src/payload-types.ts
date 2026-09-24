@@ -1928,7 +1928,7 @@ export interface Currency {
    */
   step?: number | null;
   /**
-   * Hand-set retail price in this currency. Leave empty to derive it from the rate.
+   * What Al Shaheen Nights (QAR 1,399 — Site settings → Currencies) costs in this currency, set by hand. Shown exactly; other amounts convert at the rate it implies. Leave empty to use the rate.
    */
   priceOverride?: number | null;
   /**
@@ -3248,6 +3248,18 @@ export interface SiteSetting {
    */
   alertBeyondStock?: boolean | null;
   /**
+   * Visitors can see prices in their own currency. Every order is still charged in QAR, and the site says so beside every price.
+   */
+  currencyDisplayEnabled?: boolean | null;
+  /**
+   * Start a first-time visitor in the currency of the country they are browsing from. They can always change it.
+   */
+  currencyDetectLocation?: boolean | null;
+  /**
+   * The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.
+   */
+  currencyAnchorQar?: number | null;
+  /**
    * Untick to take the wheel off the site. Codes already issued keep working.
    */
   spinWheelEnabled?: boolean | null;
@@ -3355,6 +3367,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   alertLowStock?: T;
   alertSoldOut?: T;
   alertBeyondStock?: T;
+  currencyDisplayEnabled?: T;
+  currencyDetectLocation?: T;
+  currencyAnchorQar?: T;
   spinWheelEnabled?: T;
   spinWheelHeading?: T;
   spinWheelBody?: T;

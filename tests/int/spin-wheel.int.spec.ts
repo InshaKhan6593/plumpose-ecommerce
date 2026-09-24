@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { buildSpinRewardEmail } from '@/email/spinRewardEmail'
 import { describeReward, drawableSegments, newRewardCode, pickSegment, rewardExpiry } from '@/lib/spin/wheel'
 
 type Seg = { active?: boolean; id: number; label: string; rewardType: 'fixed' | 'freeShipping' | 'percent' | 'rollAgain'; rewardValue?: number; weight: number }
@@ -81,8 +82,7 @@ describe('reward wheel — the code', () => {
 })
 
 describe('reward wheel — the code email', () => {
-  it('carries the code, the prize, the expiry in Doha and the one-use rule', async () => {
-    const { buildSpinRewardEmail } = await import('@/email/spinReward')
+  it('carries the code, the prize, the expiry in Doha and the one-use rule', () => {
     const email = buildSpinRewardEmail({
       code: { code: 'PLUM-7K4Q-X2', expiresAt: '2026-10-25T20:59:59.000Z', type: 'percent', value: 10 },
       shopUrl: 'http://localhost:3000/shop',
@@ -93,8 +93,7 @@ describe('reward wheel — the code email', () => {
     expect(email.text).toContain('One use, for this email address only.')
   })
 
-  it('names free delivery and fixed amounts in words', async () => {
-    const { buildSpinRewardEmail } = await import('@/email/spinReward')
+  it('names free delivery and fixed amounts in words', () => {
     const at = (type: 'fixed' | 'freeShipping', value?: number) =>
       buildSpinRewardEmail({ code: { code: 'X', expiresAt: null, type, value }, shopUrl: 'x' }).subject
     expect(at('fixed', 100)).toBe('Your plumpose code: QAR 100 off')

@@ -1449,3 +1449,67 @@ limit also showed itself locally — every local request shares one address.
 **Open:** the centre uses a square crop of the print photograph, which
 catches the cream piping. A clean single-shark artwork (Darna Studio's print
 file, or a generated one) should replace it — a prompt was given.
+
+## 23. Currency display — 25 Sep 2026
+
+Prices now show in the visitor's currency (REQUIREMENTS C21, S7). **What is
+charged is unchanged: always QAR**, priced by `priceOrder()`.
+
+**The rule** (`src/lib/pricing/currency.ts`, pure, shared by server and
+browser) is the old site's:
+
+- The hand-set price for the flagship piece (Shop → Currencies, "Price set by
+  hand") is sacred. One piece shows exactly it, two pieces exactly twice it.
+- Everything else converts at the rate that price implies (price ÷ the anchor,
+  QAR 1,399 by default), rounded to the currency's `step`. A stored rate is used
+  only when there is no hand-set price. A currency with neither is not offered.
+- A letter symbol takes a space ("AED 1,410"), a sign does not ("£285").
+
+**Her switches** (Site settings → Currencies): show prices in other currencies
+(on); start from the visitor's location (on); the anchor piece's QAR price
+(1399). Off → everyone sees QAR and the header code is plain text again.
+
+**Where it comes from:** `GET /api/locale` reads the host's country header
+(Vercel, Cloudflare or CloudFront) and returns that country's currency when it
+can be quoted; no header means no guess, QAR. `GET /api/locale/options` lists
+countries and quotable currencies, cached for five minutes. Outside production
+`?country=GB` stands in for the header.
+
+**In the browser** (`src/providers/Locale/`): pages still render QAR on the
+server, so prerendered pages stay prerendered. The browser then swaps in the
+visitor's figure. The choice is remembered on the browser and refreshed once a
+session, in case she has changed a price. `Money` and `useMoney` do the
+formatting, and `ChargedInQar` puts the QAR figure beside a converted one.
+
+**The picker** (`src/components/locale/LocalePicker.tsx`) uses the old site's
+words, "Where shall we deliver?". The currency follows the country and can
+then be changed on its own. A country she cannot deliver to says why here,
+rather than at checkout. It opens from the currency code in the header and
+from "Country · CODE" in the footer.
+
+**Where prices changed:** shop cards, the homepage band, the product page
+(with "Charged in QAR 1,399.00"), the embroidery fee, the bag ("Charged in QAR
+… before delivery"). **Checkout stays in QAR**, what the card is charged, with
+one guide line: "About AED 1,430 in UAE Dirham, as a guide — your bank
+converts at its own rate." Orders and emails stay in QAR.
+
+**Verified in a browser:**
+
+- From the UAE: product AED 1,410 with the QAR line, embroidery "From AED 160",
+  the shop at AED 1,410, header "AED", footer "United Arab Emirates · AED".
+- The bag shows AED with "Charged in QAR 1,399.00 before delivery". Checkout
+  shows "Pay QAR 1,419.00" with "About AED 1,430".
+- In the picker, choosing the UK moved the currency to GBP and the product
+  showed £285. Iran showed its blocked reason.
+- With no location, QAR and no extra line. With currencies off, QAR and no
+  picker. With detection off, QAR with the picker. Both back on, AED again.
+
+5 unit tests (`tests/int/currency.int.spec.ts`). Integration **162 passing**,
+e2e 38.
+
+**Also fixed:** the two wheel email tests timed out under the full suite
+(importing the sender loaded the Payload config). The pure builder now lives
+in `src/email/spinRewardEmail.ts`.
+
+**Note:** Windows does not draw flag emoji, so the picker shows the two
+letters there ("🇶🇦" reads "QA"). Other systems show the flag.

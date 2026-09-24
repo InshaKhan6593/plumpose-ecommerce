@@ -61,7 +61,7 @@ export const Currencies: CollectionConfig = {
       type: 'number',
       admin: {
         description:
-          'Hand-set retail price in this currency. Leave empty to derive it from the rate.',
+          'What Al Shaheen Nights (QAR 1,399 — Site settings → Currencies) costs in this currency, set by hand. Shown exactly; other amounts convert at the rate it implies. Leave empty to use the rate.',
       },
       label: 'Price set by hand',
       min: 0,

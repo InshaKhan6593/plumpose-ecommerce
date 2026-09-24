@@ -1,5 +1,8 @@
 'use client'
 
+import { toMinor } from '@/lib/pricing/money'
+import { Money } from '@/providers/Locale'
+
 import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -223,7 +226,7 @@ export function EmbroideryDrawer({
           <footer className="border-t border-line px-7 py-6 md:px-10">
             <div className="flex items-baseline justify-between">
               <span className="caps text-[0.625rem]">Embroidery</span>
-              <span className="text-sm tabular-nums">QAR {rules.feeQar}</span>
+              <Money className="text-sm tabular-nums" minor={toMinor(rules.feeQar)} />
             </div>
             <p className="mt-2 text-xs leading-relaxed text-ink-soft">
               {rules.leadTime ? `Made to order in ${rules.leadTime}. ` : ''}

@@ -8,6 +8,7 @@ import React, { Suspense, useEffect, useState } from 'react'
 import { Wordmark } from '@/components/brand/Wordmark'
 import { Cart } from '@/components/Cart'
 import { OpenCartButton } from '@/components/Cart/OpenCart'
+import { LocaleButton } from '@/components/locale/LocalePicker'
 import { cn } from '@/utilities/cn'
 
 export const NAV = [
@@ -181,7 +182,7 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
 
           {/* Right: currency, search, account, bag */}
           <div className="flex items-center justify-end gap-4 md:gap-5">
-            <span className="caps hidden border-r border-current/25 pr-5 text-[0.625rem] md:inline">QAR</span>
+            <LocaleButton className="caps hidden border-r border-current/25 pr-5 text-[0.625rem] md:inline" />
             <Link aria-label="Search" className="hidden md:block" href="/shop">
               <Search className="size-[1.15rem]" strokeWidth={1.25} />
             </Link>
@@ -213,7 +214,7 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
               <Link className="caps text-[0.625rem]" href="/account">
                 Account
               </Link>
-              <span className="caps text-[0.625rem] text-ink-soft">QAR</span>
+              <LocaleButton className="caps text-[0.625rem] text-ink-soft" variant="country" />
             </div>
           </nav>
         ) : null}

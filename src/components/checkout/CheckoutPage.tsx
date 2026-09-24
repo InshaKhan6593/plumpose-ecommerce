@@ -11,6 +11,7 @@ import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 import { formatQar } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
 import { WHEEL_CODE_KEY } from '@/components/spin/RewardWheel'
+import { useLocale, useMoney } from '@/providers/Locale'
 import { cn } from '@/utilities/cn'
 
 /**
@@ -138,6 +139,9 @@ export function CheckoutPage({
   testMode: boolean
 }) {
   const { user } = useAuth()
+  // Checkout is in QAR — what is charged. The visitor's own currency appears once, as a guide.
+  const { currency } = useLocale()
+  const money = useMoney()
   const { cart, isLoading: cartLoading } = useCart()
   const { initiatePayment, paymentMethods } = usePayments()
 
@@ -720,6 +724,9 @@ export function CheckoutPage({
 
             <p className="mt-4 text-xs leading-relaxed text-ink-soft">
               Charged in Qatari riyal (QAR).
+              {currency && quote && !quote.deliveryPending
+                ? ` About ${money(quote.totals.total)} in ${currency.name}, as a guide — your bank converts at its own rate.`
+                : ''}
               {hasEmbroidery ? ' Hand-embroidered pieces are made for you and cannot be returned.' : ''}
             </p>
 

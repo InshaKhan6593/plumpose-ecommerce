@@ -37,6 +37,7 @@ import { Subscribers } from '@/collections/Subscribers'
 import { Users } from '@/collections/Users'
 import { WebhookLog } from '@/collections/WebhookLog'
 import { emailAdapter } from '@/email/config'
+import { localeEndpoint, localeOptionsEndpoint } from '@/endpoints/locale'
 import { quoteEndpoint } from '@/endpoints/quote'
 import { spinEndpoint, wheelEndpoint } from '@/endpoints/spin'
 import { Footer } from '@/globals/Footer'
@@ -145,8 +146,8 @@ export default buildConfig({
   }),
   /** Resend when RESEND_API_KEY is set; otherwise Payload logs emails to the console. See @/email/config. */
   email: emailAdapter(),
-  /** POST /api/quote — prices a bag. GET/POST /api/spin — the reward wheel. */
-  endpoints: [quoteEndpoint, wheelEndpoint, spinEndpoint],
+  /** POST /api/quote — prices a bag. GET/POST /api/spin — the reward wheel. GET /api/locale(/options) — display currency. */
+  endpoints: [quoteEndpoint, wheelEndpoint, spinEndpoint, localeEndpoint, localeOptionsEndpoint],
   globals: [Header, Footer, SiteSettings],
   /** Required for the responsive imageSizes on the Media collection. */
   sharp,

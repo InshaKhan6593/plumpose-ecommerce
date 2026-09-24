@@ -4,7 +4,7 @@ import React from 'react'
 import type { Media as MediaType, Spotted } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { formatQar } from '@/lib/pricing/money'
+import { Money } from '@/providers/Locale'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { splitTitle } from '@/utilities/splitTitle'
 
@@ -64,7 +64,7 @@ export function ProductBand({
           </p>
         ) : null}
         <p className="mt-7 text-base tracking-[0.12em] tabular-nums" data-reveal>
-          {formatQar(priceMinor)}
+          <Money minor={priceMinor} />
         </p>
         <div data-reveal>
           <Link className="caps mt-9 inline-flex h-12 items-center bg-ink px-12 text-[0.6875rem] text-white hover:bg-ink/85" href={href}>

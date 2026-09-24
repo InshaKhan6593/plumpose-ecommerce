@@ -161,6 +161,47 @@ export const SiteSettings: GlobalConfig = {
           label: 'Stock alerts',
         },
         {
+          /**
+           * Display currencies (src/lib/pricing/currency.ts). The prices
+           * themselves are set per currency under Shop settings → Currencies.
+           */
+          fields: [
+            {
+              name: 'currencyDisplayEnabled',
+              type: 'checkbox',
+              admin: {
+                description:
+                  'Visitors can see prices in their own currency. Every order is still charged in QAR, and the site says so beside every price.',
+              },
+              defaultValue: true,
+              label: 'Show prices in the visitor’s currency',
+            },
+            {
+              name: 'currencyDetectLocation',
+              type: 'checkbox',
+              admin: {
+                condition: (data) => data?.currencyDisplayEnabled !== false,
+                description: 'Start a first-time visitor in the currency of the country they are browsing from. They can always change it.',
+              },
+              defaultValue: true,
+              label: 'Choose the currency from where they are',
+            },
+            {
+              name: 'currencyAnchorQar',
+              type: 'number',
+              admin: {
+                condition: (data) => data?.currencyDisplayEnabled !== false,
+                description:
+                  'The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.',
+              },
+              defaultValue: 1399,
+              label: 'Hand-set prices are for a piece at (QAR)',
+              min: 1,
+            },
+          ],
+          label: 'Currencies',
+        },
+        {
           fields: [
             {
               name: 'spinWheelEnabled',

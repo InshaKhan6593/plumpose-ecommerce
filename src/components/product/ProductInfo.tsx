@@ -6,10 +6,11 @@ import Link from 'next/link'
 import React, { Suspense, useState } from 'react'
 
 import { AddToCart } from '@/components/Cart/AddToCart'
-import { Price } from '@/components/Price'
 import { RichText } from '@/components/RichText'
 import { Reveal } from '@/motion/Reveal'
 import { splitTitle } from '@/utilities/splitTitle'
+import { toMinor } from '@/lib/pricing/money'
+import { ChargedInQar, Money } from '@/providers/Locale'
 
 import { describeChoice, type EmbroideryChoice, type EmbroideryOption, type EmbroideryRules } from './embroidery'
 import { EmbroideryDrawer } from './EmbroideryDrawer'
@@ -93,7 +94,8 @@ export function ProductInfo({
 
       {typeof price === 'number' ? (
         <div className="mt-7" data-reveal>
-          <Price amount={price} className="text-base tracking-[0.12em] tabular-nums" />
+          <Money className="text-base tracking-[0.12em] tabular-nums" minor={price} />
+          <ChargedInQar className="mt-1.5 block text-[0.75rem] text-ink-soft" minor={price} />
         </div>
       ) : null}
 
@@ -147,7 +149,7 @@ export function ProductInfo({
             </ul>
           ) : (
             <p className="mt-2 text-sm text-ink-soft">
-              Add initials or a symbol. From <span className="text-ink">QAR {embroideryRules.feeQar}</span>.
+              Add initials or a symbol. From <Money className="text-ink" minor={toMinor(embroideryRules.feeQar)} />.
             </p>
           )}
 

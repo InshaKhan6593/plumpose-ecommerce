@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AdminBar } from '@/components/AdminBar'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
+import { LocalePicker } from '@/components/locale/LocalePicker'
 import { RewardWheel } from '@/components/spin/RewardWheel'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { ensureStartsWith } from '@/utilities/ensureStartsWith'
@@ -90,6 +91,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <SiteFooter />
             {/* First-visit reward wheel — decides for itself whether to appear. */}
             <RewardWheel />
+            <LocalePicker />
           </MotionProvider>
         </Providers>
       </body>

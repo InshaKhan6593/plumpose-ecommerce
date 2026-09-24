@@ -152,7 +152,7 @@ client's reference recording (`../brand-assets/reference/`):
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
   outside production only.
-- Currency display (data ready), reviews aggregate, CSV exports,
+- Reviews aggregate, CSV exports,
   a Homepage global so she can edit the copy, storage adapter (uploads write
   to local disk and will not survive a serverless deploy).
 
@@ -168,7 +168,7 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (157) |
+| `pnpm test:int` | Integration tests (162) |
 | `pnpm test:e2e` | Playwright (38 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
@@ -270,6 +270,9 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **After signing in or out, tell the ecommerce plugin** (`onLogin` /
   `onLogout` from `useEcommerce`), or the bag is lost and it fetches as a
   user who has gone. See `src/components/account/AuthForms.tsx`.
+- **Show a price with `<Money>` / `useMoney()`**, never `formatQar` directly
+  on the storefront, so it follows the visitor's currency (BUILD-LOG §23).
+  Checkout, orders and emails stay in QAR — that is what is charged.
 - **No `loading.tsx` above a page that redirects** — under a loading boundary
   `redirect()` becomes a 200 and a client-side meta refresh.
 - **URL messages are codes** (`src/components/account/notices.ts`); never

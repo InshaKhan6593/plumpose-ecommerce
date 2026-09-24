@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
 import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
-import { formatQar } from '@/lib/pricing/money'
+import { ChargedInQar, useMoney } from '@/providers/Locale'
 import { useLenis } from '@/motion/MotionProvider'
 import { cn } from '@/utilities/cn'
 
@@ -57,6 +57,8 @@ const describe = (p: QuoteLine['personalisation'][number]) =>
  */
 export function CartModal() {
   const { cart, decrementItem, incrementItem, isLoading, removeItem } = useCart()
+  // Figures in the visitor's currency (@/providers/Locale); the charge itself is QAR.
+  const money = useMoney()
   const [isOpen, setIsOpen] = useState(false)
   const [quote, setQuote] = useState<null | Quote>(null)
   const pathname = usePathname()
@@ -189,7 +191,7 @@ export function CartModal() {
                           <Link className="serif-display text-lg leading-snug" href={`/products/${product.slug}`}>
                             {product.title.split(/\s+[—–]\s+/)[0]}
                           </Link>
-                          <span className="shrink-0 text-sm tabular-nums">{formatQar(lineTotal)}</span>
+                          <span className="shrink-0 text-sm tabular-nums">{money(lineTotal)}</span>
                         </div>
                         {size ? <p className="mt-1 text-xs text-ink-soft">Size {size}</p> : null}
                         {madeToOrderCount ? (
@@ -243,17 +245,25 @@ export function CartModal() {
 
               <footer className="border-t border-line px-7 py-6">
                 <dl className="flex flex-col gap-2 text-sm">
-                  <Row label="Pieces" value={quote ? formatQar(quote.totals.subtotal) : '—'} />
+                  <Row label="Pieces" value={quote ? money(quote.totals.subtotal) : '—'} />
                   {quote && quote.totals.personalisation > 0 ? (
-                    <Row label="Embroidery" value={formatQar(quote.totals.personalisation)} />
+                    <Row label="Embroidery" value={money(quote.totals.personalisation)} />
                   ) : null}
                   <Row label="Delivery" muted value="Calculated at checkout" />
                   <div className="mt-2 flex items-baseline justify-between border-t border-line pt-3">
                     <dt className="caps text-[0.625rem]">Total</dt>
-                    <dd className="text-base tabular-nums">{quote ? formatQar(quote.totals.total) : '—'}</dd>
+                    <dd className="text-base tabular-nums">{quote ? money(quote.totals.total) : '—'}</dd>
                   </div>
                 </dl>
-                <p className="mt-3 text-xs text-ink-soft">All orders are charged in QAR.</p>
+                <p className="mt-3 text-xs text-ink-soft">
+                  All orders are charged in QAR.
+                  {quote ? (
+                    <>
+                      {' '}
+                      <ChargedInQar minor={quote.totals.total} /> before delivery.
+                    </>
+                  ) : null}
+                </p>
                 {quote?.stock?.refusal ? (
                   <p className="mt-4 text-[0.8125rem] leading-relaxed text-[#8a2424]" role="alert">
                     {quote.stock.refusal}

@@ -4,7 +4,7 @@ import React from 'react'
 import type { Media as MediaType, Product } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { formatQar } from '@/lib/pricing/money'
+import { Money } from '@/providers/Locale'
 import { splitTitle } from '@/utilities/splitTitle'
 
 /**
@@ -54,7 +54,7 @@ export function ProductCard({ priority, product }: { priority?: boolean; product
       <div className="mt-5">
         <h2 className="serif-display text-[1.75rem] leading-tight">{name}</h2>
         {subtitle ? <p className="serif-italic mt-1 text-base text-ink-soft">{subtitle}</p> : null}
-        {typeof price === 'number' ? <p className="mt-3 text-sm tracking-[0.1em] tabular-nums">{formatQar(price)}</p> : null}
+        {typeof price === 'number' ? <p className="mt-3 text-sm tracking-[0.1em] tabular-nums"><Money minor={price} /></p> : null}
       </div>
     </Link>
   )
