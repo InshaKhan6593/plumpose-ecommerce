@@ -1,38 +1,32 @@
 import type { Metadata } from 'next'
 
-import { RenderParams } from '@/components/RenderParams'
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import React from 'react'
-import { headers as getHeaders } from 'next/headers'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
 
-import { CreateAccountForm } from '@/components/forms/CreateAccountForm'
-import { redirect } from 'next/navigation'
-
-export default async function CreateAccount() {
-  const headers = await getHeaders()
-  const payload = await getPayload({ config: configPromise })
-  const { user } = await payload.auth({ headers })
-
-  if (user) {
-    redirect(`/account?warning=${encodeURIComponent('You are already logged in.')}`)
-  }
-
-  return (
-    <div className="container py-16">
-      <h1 className="text-xl mb-4">Create Account</h1>
-      <RenderParams />
-      <CreateAccountForm />
-    </div>
-  )
-}
+import { AuthShell } from '@/components/account'
+import { CreateAccountForm } from '@/components/account/AuthForms'
+import { redirectIfSignedIn } from '@/components/account/session'
+import { TextLink } from '@/components/editorial'
 
 export const metadata: Metadata = {
-  description: 'Create an account or log in to your existing account.',
-  openGraph: mergeOpenGraph({
-    title: 'Account',
-    url: '/account',
-  }),
-  title: 'Account',
+  description: 'Create a plumpose account to keep your orders and addresses in one place.',
+  robots: { follow: false, index: false },
+  title: 'Create an account',
+}
+
+type Props = { searchParams: Promise<{ redirect?: string }> }
+
+export default async function CreateAccountPage({ searchParams }: Props) {
+  const { redirect } = await searchParams
+  await redirectIfSignedIn()
+  const query = redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''
+
+  return (
+    <AuthShell
+      footer={<TextLink href={`/login${query}`}>I already have an account</TextLink>}
+      intro="Keep your orders and addresses in one place."
+      title="Create an account"
+    >
+      <CreateAccountForm redirect={redirect} />
+    </AuthShell>
+  )
 }

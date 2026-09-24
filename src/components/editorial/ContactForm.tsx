@@ -2,13 +2,10 @@
 
 import React, { useState } from 'react'
 
+import { HouseAlert, HouseButton, HouseField as Field, houseInput as inputClass } from '@/components/forms/house'
 import { cn } from '@/utilities/cn'
 
 type State = 'idle' | 'sending' | 'done' | 'error'
-
-/** Underlined single-line inputs, as the checkout uses. */
-const inputClass =
-  'w-full border-0 border-b border-line bg-transparent px-0 pt-2 pb-3 text-[0.9375rem] placeholder:text-ink-faint focus:border-ink focus:ring-0 focus-visible:outline-none'
 
 /**
  * The contact page's enquiry form (REQUIREMENTS S12, A16). Posts to the
@@ -104,30 +101,11 @@ export function ContactForm({
       </div>
 
       <div className="flex flex-wrap items-center gap-6 sm:col-span-2">
-        <button
-          className="caps inline-flex h-12 items-center border border-ink px-12 text-[0.6875rem] transition-colors hover:bg-ink hover:text-white disabled:opacity-40"
-          disabled={state === 'sending'}
-          type="submit"
-        >
+        <HouseButton disabled={state === 'sending'} variant="outline">
           {state === 'sending' ? 'Sending…' : 'Send'}
-        </button>
-        {state === 'error' ? (
-          <p className="text-[0.8125rem] text-[#8a2424]" role="alert">
-            That didn’t send. Please try again, or write to us directly.
-          </p>
-        ) : null}
+        </HouseButton>
+        {state === 'error' ? <HouseAlert>That didn’t send. Please try again, or write to us directly.</HouseAlert> : null}
       </div>
     </form>
-  )
-}
-
-function Field({ children, className, id, label }: { children: React.ReactNode; className?: string; id: string; label: string }) {
-  return (
-    <div className={className}>
-      <label className="caps block text-[0.5625rem] text-ink-soft" htmlFor={id}>
-        {label}
-      </label>
-      {children}
-    </div>
   )
 }

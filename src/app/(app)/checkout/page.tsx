@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
 
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
 import React from 'react'
 
-import { CheckoutPage, type CheckoutCity, type CheckoutCountry } from '@/components/checkout/CheckoutPage'
+import { getSessionUser } from '@/components/account/session'
+import {
+  CheckoutPage,
+  type CheckoutCity,
+  type CheckoutCountry,
+  type CheckoutSavedAddress,
+} from '@/components/checkout/CheckoutPage'
 import { QATAR_COUNTRY_CODE } from '@/lib/pricing/shipping'
 
 export const dynamic = 'force-dynamic'
@@ -19,12 +23,15 @@ export const metadata: Metadata = {
  * the form needs — every country, including the blocked ones so a customer is
  * told why rather than failing at payment, and the Qatar delivery cities —
  * and the form does the rest. Prices always come from `/api/quote`.
+ *
+ * A signed-in customer's most recent saved address is passed in to pre-fill
+ * the form (their account's address book, /account/addresses).
  */
 export default async function Checkout({ searchParams }: { searchParams: Promise<{ payment?: string }> }) {
-  const payload = await getPayload({ config: configPromise })
+  const { payload, user } = await getSessionUser()
   const { payment } = await searchParams
 
-  const [countries, cities] = await Promise.all([
+  const [countries, cities, addresses] = await Promise.all([
     payload.find({
       collection: 'countries',
       depth: 0,
@@ -42,6 +49,18 @@ export default async function Checkout({ searchParams }: { searchParams: Promise
       sort: '_order',
       where: { active: { not_equals: false } },
     }),
+    user
+      ? payload.find({
+          collection: 'addresses',
+          depth: 0,
+          limit: 1,
+          overrideAccess: false,
+          pagination: false,
+          sort: '-updatedAt',
+          user,
+          where: { customer: { equals: user.id } },
+        })
+      : null,
   ])
 
   // Qatar first — most orders are local — then everyone else alphabetically.
@@ -53,8 +72,26 @@ export default async function Checkout({ searchParams }: { searchParams: Promise
     .filter((c) => c.key)
     .map((c) => ({ feeQar: c.feeQar, key: c.key as string, name: c.name }))
 
+  // The saved address, in the form's shape. In Qatar the city is matched to its delivery key by name.
+  const latest = addresses?.docs[0]
+  const saved: CheckoutSavedAddress | undefined = latest
+    ? {
+        addressLine1: latest.addressLine1 ?? '',
+        addressLine2: latest.addressLine2 ?? '',
+        city: latest.city ?? '',
+        cityKey:
+          latest.country === QATAR_COUNTRY_CODE ? (cityList.find((c) => c.name === latest.city)?.key ?? '') : '',
+        country: latest.country,
+        firstName: latest.firstName ?? '',
+        lastName: latest.lastName ?? '',
+        phone: latest.phone ?? '',
+        postalCode: latest.postalCode ?? '',
+      }
+    : undefined
+
   return (
     <CheckoutPage
+      saved={saved}
       cancelled={payment === 'cancelled'}
       cities={cityList}
       countries={countryList}

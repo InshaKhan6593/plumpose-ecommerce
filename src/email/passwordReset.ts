@@ -6,16 +6,22 @@ import { button, heading, label, layout, muted, paragraph } from './layout'
 /**
  * The "forgot password" email, in the brand rather than Payload's default.
  *
- * The link goes to the admin's reset screen, which works for any account.
- * Customers will want a storefront reset page instead; when the storefront
- * gets one, branch on the user's roles here.
+ * Customers are sent to the storefront's own page (/reset-password), in the
+ * brand; the client and her staff to the admin's reset screen, where they
+ * work. Both take the same single-use Payload token.
  */
 
 export const passwordResetSubject = (): string => 'Reset your plumpose password'
 
-export const passwordResetHtml = (args?: { req?: PayloadRequest; token?: string }): string => {
+export const passwordResetHtml = (args?: {
+  req?: PayloadRequest
+  token?: string
+  user?: { roles?: null | string[] }
+}): string => {
+  const token = encodeURIComponent(args?.token ?? '')
+  const staff = args?.user?.roles?.some((role) => role === 'admin' || role === 'staff')
   const adminRoute = args?.req?.payload.config.routes.admin ?? '/admin'
-  const href = `${siteUrl()}${adminRoute}/reset/${args?.token ?? ''}`
+  const href = staff ? `${siteUrl()}${adminRoute}/reset/${token}` : `${siteUrl()}/reset-password?token=${token}`
 
   return layout({
     body: [

@@ -1,69 +1,62 @@
 import type { Metadata } from 'next'
 
-import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
-import { headers as getHeaders } from 'next/headers.js'
-import configPromise from '@payload-config'
-import { Order } from '@/payload-types'
-import { getPayload } from 'payload'
-import { redirect } from 'next/navigation'
-import { AddressListing } from '@/components/addresses/AddressListing'
-import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
+import React from 'react'
 
-export default async function AddressesPage() {
-  const headers = await getHeaders()
-  const payload = await getPayload({ config: configPromise })
-  const { user } = await payload.auth({ headers })
+import type { Address } from '@/payload-types'
 
-  let orders: Order[] | null = null
-
-  if (!user) {
-    redirect(
-      `/login?warning=${encodeURIComponent('Please login to access your account settings.')}`,
-    )
-  }
-
-  try {
-    const ordersResult = await payload.find({
-      collection: 'orders',
-      limit: 5,
-      user,
-      overrideAccess: false,
-      pagination: false,
-      where: {
-        customer: {
-          equals: user?.id,
-        },
-      },
-    })
-
-    orders = ordersResult?.docs || []
-  } catch (error) {
-    // when deploying this template on Payload Cloud, this page needs to build before the APIs are live
-    // so swallow the error here and simply render the page with fallback data where necessary
-    // in production you may want to redirect to a 404  page or at least log the error somewhere
-    // console.error(error)
-  }
-
-  return (
-    <>
-      <div className="border p-8 rounded-lg bg-primary-foreground">
-        <h1 className="text-3xl font-medium mb-8">Addresses</h1>
-
-        <div className="mb-8">
-          <AddressListing />
-        </div>
-
-        <CreateAddressModal />
-      </div>
-    </>
-  )
-}
+import { AddressBook } from '@/components/account/AddressBook'
+import { requireUser } from '@/components/account/session'
+import { COUNTRY_OPTIONS } from '@/data/countryOptions'
+import { QATAR_COUNTRY_CODE } from '@/lib/pricing/shipping'
 
 export const metadata: Metadata = {
-  description: 'Manage your addresses.',
-  openGraph: mergeOpenGraph({
-    title: 'Addresses',
-    url: '/account/addresses',
-  }),
-  title: 'Addresses',
+  robots: { follow: false, index: false },
+  title: 'Your addresses',
+}
+
+export default async function AccountAddressesPage() {
+  const { payload, user } = await requireUser('/account/addresses')
+
+  const [addresses, cities] = await Promise.all([
+    payload.find({
+      collection: 'addresses',
+      depth: 0,
+      limit: 50,
+      overrideAccess: false,
+      pagination: false,
+      sort: '-updatedAt',
+      user,
+      where: { customer: { equals: user.id } },
+    }),
+    payload.find({
+      collection: 'shippingCities',
+      depth: 0,
+      limit: 100,
+      pagination: false,
+      select: { key: true, name: true },
+      sort: '_order',
+      where: { active: { not_equals: false } },
+    }),
+  ])
+
+  // Qatar first — most customers are local — as at checkout.
+  const countries = [...COUNTRY_OPTIONS]
+    .sort((a, b) => Number(b.value === QATAR_COUNTRY_CODE) - Number(a.value === QATAR_COUNTRY_CODE))
+    .map((c) => ({ code: c.value, name: c.label }))
+
+  return (
+    <div className="flex flex-col gap-10">
+      <div>
+        <h1 className="caps text-[0.6875rem]">Addresses</h1>
+        <p className="mt-3 max-w-md text-[0.8125rem] leading-relaxed text-ink-soft">
+          Your most recent address fills in at checkout, so you only type it once.
+        </p>
+      </div>
+      <AddressBook
+        addresses={addresses.docs as Address[]}
+        cities={cities.docs.filter((c) => c.key).map((c) => ({ key: c.key as string, name: c.name }))}
+        countries={countries}
+      />
+    </div>
+  )
 }

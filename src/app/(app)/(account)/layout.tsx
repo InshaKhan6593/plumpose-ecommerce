@@ -1,26 +1,30 @@
 import type { ReactNode } from 'react'
 
-import { headers as getHeaders } from 'next/headers.js'
-import configPromise from '@payload-config'
-import { getPayload } from 'payload'
-import { RenderParams } from '@/components/RenderParams'
-import { AccountNav } from '@/components/AccountNav'
+import React from 'react'
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
-  const headers = await getHeaders()
-  const payload = await getPayload({ config: configPromise })
-  const { user } = await payload.auth({ headers })
+import { AccountNav } from '@/components/account/AccountNav'
+import { getSessionUser } from '@/components/account/session'
+
+/**
+ * The account area (docs/SCREEN-PROMPTS 17): a small caps label and the
+ * customer's name, the account's own navigation beside the page. Each page
+ * checks the session itself (`requireUser`), so a signed-out visitor is sent
+ * to sign in and brought back to the page they asked for.
+ */
+export default async function AccountLayout({ children }: { children: ReactNode }) {
+  const { user } = await getSessionUser()
 
   return (
-    <div>
-      <div className="container">
-        <RenderParams className="" />
-      </div>
-
-      <div className="container mt-16 pb-8 flex gap-8">
-        {user && <AccountNav className="max-w-62 grow flex-col items-start gap-4 hidden md:flex" />}
-
-        <div className="flex flex-col gap-12 grow">{children}</div>
+    <div className="mx-auto max-w-[90rem] px-4 pt-14 md:px-7 md:pt-20">
+      {user ? (
+        <header className="border-b border-line pb-10">
+          <p className="caps text-[0.625rem] text-ink-soft">Your account</p>
+          <p className="serif-display mt-4 text-[clamp(2.5rem,5vw,4.5rem)]">{user.name || user.email}</p>
+        </header>
+      ) : null}
+      <div className="grid gap-10 pt-10 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-20 lg:pt-14">
+        <aside className="lg:sticky lg:top-32 lg:self-start">{user ? <AccountNav /> : null}</aside>
+        <div className="min-w-0">{children}</div>
       </div>
     </div>
   )

@@ -6,6 +6,7 @@ import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
 import { QAR } from '@/currencies'
+import { COUNTRY_OPTIONS } from '@/data/countryOptions'
 import { createStripeSandboxAdapter, isStripeSandboxEnabled } from '@/payments/stripeSandbox'
 
 import { Page, Product } from '@/payload-types'
@@ -17,7 +18,9 @@ import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
 import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
+import { sendEnquiryAlert } from '@/email/enquiryAlert'
 import { resendConfirmationEndpoint, sendOrderEmails } from '@/email/orderHooks'
+import { validateEnquiry } from '@/hooks/validateEnquiry'
 import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { orderTotalsFields } from '@/fields/orderTotals'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
@@ -55,6 +58,14 @@ export const plugins: Plugin[] = [
         useAsTitle: 'id',
       },
       defaultSort: '-createdAt',
+      /*
+       * The plugin checks nothing about what is submitted and emails values
+       * unescaped: validate on the server, and send our own escaped alert.
+       */
+      hooks: {
+        afterChange: [sendEnquiryAlert],
+        beforeValidate: [validateEnquiry],
+      },
       labels: { singular: 'Enquiry', plural: 'Enquiries' },
     },
     formOverrides: {
@@ -395,6 +406,8 @@ export const plugins: Plugin[] = [
       }),
     },
     addresses: {
+      // The plugin's default list has 40 countries and no Qatar — the store's own table instead.
+      supportedCountries: COUNTRY_OPTIONS,
       addressesCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
         admin: {

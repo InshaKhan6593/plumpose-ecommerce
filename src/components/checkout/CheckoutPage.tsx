@@ -28,6 +28,10 @@ import { cn } from '@/utilities/cn'
 
 export type CheckoutCountry = { blockedReason: null | string; code: string; name: string }
 export type CheckoutCity = { feeQar: number; key: string; name: string }
+/** A signed-in customer's most recent saved address, already in the form's shape. */
+export type CheckoutSavedAddress = Partial<
+  Pick<Form, 'addressLine1' | 'addressLine2' | 'city' | 'cityKey' | 'country' | 'firstName' | 'lastName' | 'phone' | 'postalCode'>
+>
 
 type QuoteLine = {
   personalisation: Array<{ lettering: string; placementName: string; symbolName: string; threadName: string }>
@@ -121,11 +125,13 @@ export function CheckoutPage({
   cancelled,
   cities,
   countries,
+  saved,
   testMode,
 }: {
   cancelled: boolean
   cities: CheckoutCity[]
   countries: CheckoutCountry[]
+  saved?: CheckoutSavedAddress
   testMode: boolean
 }) {
   const { user } = useAuth()
@@ -146,10 +152,18 @@ export function CheckoutPage({
   const stripeReady = paymentMethods.some((m) => m.name === 'stripe')
 
   /* ---------- draft: restore once, then keep ---------- */
+  /*
+   * A signed-in customer's saved address fills the blanks; anything already
+   * typed in this visit (the draft) wins, field by field. Empty draft values
+   * are skipped, so a draft saved before the address was typed cannot blank
+   * the saved one out.
+   */
   useEffect(() => {
-    const draft = loadDraft()
-    setForm((f) => ({ ...f, ...draft }))
+    const draft = Object.fromEntries(Object.entries(loadDraft()).filter(([, v]) => v !== '')) as Partial<Form>
+    setForm((f) => ({ ...f, ...saved, ...draft }))
     setRestored(true)
+    // Once, on arrival: `saved` comes from the server and does not change on this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

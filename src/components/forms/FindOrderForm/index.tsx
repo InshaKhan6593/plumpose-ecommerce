@@ -4,8 +4,8 @@ import { useAuth } from '@/providers/Auth'
 import React, { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { HouseAlert, HouseButton, HouseField, houseInput } from '@/components/forms/house'
 import { TRACK_PAGE } from '@/content/pages'
-import { cn } from '@/utilities/cn'
 
 import { sendOrderAccessEmail } from './sendOrderAccessEmail'
 
@@ -17,10 +17,6 @@ type FormData = {
 type Props = {
   initialEmail?: string
 }
-
-/** Underlined single-line inputs, as the checkout uses. */
-const inputClass =
-  'w-full border-0 border-b border-line bg-transparent px-0 pt-2 pb-3 text-[0.9375rem] placeholder:text-ink-faint focus:border-ink focus:ring-0 focus-visible:outline-none'
 
 /**
  * Email + order number → a private link to the order, by email. The server
@@ -77,27 +73,20 @@ export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
 
   return (
     <form className="flex flex-col gap-9" noValidate onSubmit={handleSubmit(onSubmit)}>
-      <div>
-        <label className="caps block text-[0.5625rem] text-ink-soft" htmlFor="email">
-          Email
-        </label>
+      <HouseField error={errors.email?.message} id="email" label="Email">
         <input
           aria-invalid={Boolean(errors.email)}
           autoComplete="email"
-          className={inputClass}
+          className={houseInput}
           id="email"
           {...register('email', { required: 'Please enter the email you ordered with.' })}
           type="email"
         />
-        {errors.email ? <p className="mt-2 text-[0.8125rem] text-[#8a2424]">{errors.email.message}</p> : null}
-      </div>
-      <div>
-        <label className="caps block text-[0.5625rem] text-ink-soft" htmlFor="orderID">
-          Order number
-        </label>
+      </HouseField>
+      <HouseField error={errors.orderID?.message} id="orderID" label="Order number">
         <input
           aria-invalid={Boolean(errors.orderID)}
-          className={inputClass}
+          className={houseInput}
           id="orderID"
           inputMode="numeric"
           placeholder="e.g. 105"
@@ -107,23 +96,11 @@ export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
           })}
           type="text"
         />
-        {errors.orderID ? <p className="mt-2 text-[0.8125rem] text-[#8a2424]">{errors.orderID.message}</p> : null}
-      </div>
-      {submitError ? (
-        <p className="text-[0.8125rem] text-[#8a2424]" role="alert">
-          {submitError}
-        </p>
-      ) : null}
-      <button
-        className={cn(
-          'caps inline-flex h-12 w-full items-center justify-center bg-ink text-[0.6875rem] text-white transition-colors hover:bg-ink/85',
-          isSubmitting && 'opacity-60',
-        )}
-        disabled={isSubmitting}
-        type="submit"
-      >
+      </HouseField>
+      {submitError ? <HouseAlert>{submitError}</HouseAlert> : null}
+      <HouseButton className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Sending…' : 'Find my order'}
-      </button>
+      </HouseButton>
     </form>
   )
 }

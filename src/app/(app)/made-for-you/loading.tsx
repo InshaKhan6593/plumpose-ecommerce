@@ -1,11 +1,12 @@
 import React from 'react'
 
 /**
- * The fallback skeleton for every storefront page rendered per request that
- * has no skeleton of its own (Made for You, Contact, Track order, account
- * pages…). A quiet heading and a few lines in paper — never a spinner — so a
- * click always answers at once. Pages prerendered at build time (the
- * homepage, Our Story, FAQ…) are prefetched whole and never show it.
+ * Made for You skeleton (MOTION-SPEC D5). The page and its project pages are
+ * rendered per request, so without this a click showed nothing until the page
+ * was complete. Scoped here rather than to every page on purpose: under a
+ * loading boundary a page streams, and `redirect()` can then only redirect in
+ * the browser (a meta refresh after a 200) — which would break the real 307s
+ * of the account pages and the payment return.
  */
 export default function Loading() {
   const block = 'animate-pulse bg-paper-3 [animation-duration:1.6s]'
