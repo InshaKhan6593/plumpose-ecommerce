@@ -2,7 +2,7 @@ import type { Endpoint, PayloadRequest } from 'payload'
 
 import { createHmac } from 'node:crypto'
 
-import type { DiscountCode, SiteSetting, SpinSegment } from '@/payload-types'
+import type { DiscountCode, Media, SiteSetting, SpinSegment } from '@/payload-types'
 
 import { scheduleSpinRewardEmail } from '@/email/spinReward'
 import { describeReward, drawableSegments, newRewardCode, pickSegment, rewardExpiry } from '@/lib/spin/wheel'
@@ -74,12 +74,21 @@ export const wheelEndpoint: Endpoint = {
       where: { active: { not_equals: false } },
     })
 
+    // The print, for the wheel's centre — the square crop of the seeded macro photograph.
+    const print = (
+      await req.payload.find({ collection: 'media', depth: 0, limit: 1, where: { filename: { equals: 'brand-02-print-macro.jpg' } } })
+    ).docs[0] as Media | undefined
+    // For the fine print: how long a code lasts (the shortest, if prizes differ).
+    const days = (docs as SpinSegment[]).filter((s) => s.rewardType !== 'rollAgain').map((s) => s.expiryDays ?? 30)
+
     return json({
       body: settings.body,
+      centreImage: print?.sizes?.square?.url ?? print?.url ?? null,
       enabled: docs.length > 0,
       heading: settings.heading,
       // Label and colour only — `weight` is admin-only at field level, and is not asked for here anyway.
       segments: (docs as SpinSegment[]).map((s) => ({ colour: s.colour ?? '#f6f4f0', id: s.id, label: s.label })),
+      validDays: days.length ? Math.min(...days) : 30,
     })
   },
   method: 'get',

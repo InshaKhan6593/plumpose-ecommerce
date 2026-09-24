@@ -1417,3 +1417,35 @@ Test spins, codes and subscribers deleted; odds restored.
 **Next:** the pop-up (docs/SCREEN-PROMPTS 15 — a preview prompt was given):
 when it appears (first visit, once, not at checkout), the spin animation
 towards the segment the server chose, and the result screen with the code.
+
+### The pop-up — 25 Sep 2026
+
+`src/components/spin/RewardWheel.tsx`, mounted in the app layout, built to the
+approved preview (the client's generated mockup) and SCREEN-PROMPTS 15.
+
+- **When:** once per browser, ~6 s into a visit; never on checkout, order,
+  account, sign-in or Track order pages; never again once won or closed
+  (localStorage, fails safe to "may show again"). Nothing loads before then.
+- **The wheel** is drawn in SVG from the live segments — a prize she adds,
+  renames or switches off appears as it is. Labels stay level at every angle
+  (they counter-rotate as the wheel turns); the pointer is fixed.
+- **The spin:** the server decides first; the wheel then turns five times and
+  settles on that segment over 5.2 s (`cubic-bezier(0.12, 0.8, 0.18, 1)` —
+  silk, not snap), landing inside the segment, not on its line. Reduced
+  motion: no turn, straight to the result. It cannot be closed mid-spin.
+- **Roll again** → "One more turn" / "Spin again"; **won** → the segment in
+  ink, the others dimmed, "Yours", the code with Copy, "Valid until … · One
+  use", Shop the collection. Errors from the server show under the field.
+- **Checkout offers the code** in its code field (not applied — it only works
+  for the winning email, and checkout says so if the email differs).
+- Focus lands on the pop-up itself — not the ×, not the email field (which
+  would raise a phone's keyboard before a word is read).
+
+**Verified in a browser**, desktop and iPhone 13: appears at ~5.5 s, spins,
+wins, stores the code, does not reappear on the next page, no errors; the
+phone layout keeps the email and button on the first screen. The per-device
+limit also showed itself locally — every local request shares one address.
+
+**Open:** the centre uses a square crop of the print photograph, which
+catches the cream piping. A clean single-shark artwork (Darna Studio's print
+file, or a generated one) should replace it — a prompt was given.

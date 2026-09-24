@@ -10,6 +10,7 @@ import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
 import { formatQar } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
+import { WHEEL_CODE_KEY } from '@/components/spin/RewardWheel'
 import { cn } from '@/utilities/cn'
 
 /**
@@ -152,6 +153,20 @@ export function CheckoutPage({
 
   const items = useMemo(() => cart?.items ?? [], [cart])
   const stripeReady = paymentMethods.some((m) => m.name === 'stripe')
+
+  /*
+   * A code won on the reward wheel is offered in the code field, not applied:
+   * it only works for the email that won it, and checkout says so plainly if
+   * the email typed is a different one.
+   */
+  useEffect(() => {
+    try {
+      const won = window.localStorage.getItem(WHEEL_CODE_KEY)
+      if (won) setCodeInput((current) => current || won)
+    } catch {
+      /* storage unavailable */
+    }
+  }, [])
 
   /* ---------- draft: restore once, then keep ---------- */
   /*

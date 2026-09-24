@@ -152,7 +152,7 @@ client's reference recording (`../brand-assets/reference/`):
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
   outside production only.
-- Spin wheel **pop-up** (the logic and `/api/spin` are built, §22), currency display (data ready), reviews aggregate, CSV exports,
+- Currency display (data ready), reviews aggregate, CSV exports,
   a Homepage global so she can edit the copy, storage adapter (uploads write
   to local disk and will not survive a serverless deploy).
 
