@@ -1601,3 +1601,44 @@ same gap and is fine: + is disabled at 1 of 1.
 **Admin menu review** — in the menu but unused by the site: **Header** and
 **Footer** (template globals; the header and footer read Site settings and
 code). Left in place pending her decision; see the reply of 25 Sep.
+
+## 26. Admin trimmed to what she uses — 25 Sep 2026
+
+Every field on every screen she sees was checked against the storefront and
+email code (backup first: `../backups/plumpose-before-admin-trim-2026-09-25.dump`).
+
+**Removed** — screens and fields that edited nothing she could see:
+
+- **Settings → Header** and **Settings → Footer.** The template's globals. The
+  storefront's header and footer come from Site settings and code, so those
+  screens changed nothing. Globals and their six tables deleted.
+- **Products → "You may also like".** Nothing renders it, so a choice there did
+  nothing. Field and its `products_id` relation column deleted. Add it back
+  together with a section that shows it.
+
+**Hidden** — **Shop settings → Sizes & colours.** S, M and L are set once, and
+renaming one renames that size on every product. New products still offer
+Size (checked on the create screen).
+
+**Found on the way:** in Payload 3 a hidden collection has **no admin screen at
+all** — `/admin/collections/<slug>` answers 404. Comments that said
+transactions, bags and sizes were "still reachable by URL" were wrong and are
+corrected. The rows are kept and readable through the API as admin; un-hide a
+collection to work in it.
+
+Everything else in the menu is in use. The one near-miss is **Content → Pages**:
+unused today, kept for terms and privacy pages, whose blocks are still the
+template's and unstyled.
+
+The menu is now: **Shop** (Discount codes, Reward wheel, Wheel spins, Sizes &
+stock, Products, Orders) · **Content** (Made for You, FAQs, Press, Spotted,
+Reviews, Subscribers, Pages, Collections, Media, Enquiries) · **Shop settings**
+(Personalisation, Shipping zones, Qatar delivery, Countries, Currencies) ·
+**Users** · **Settings** (Site settings).
+
+Integration 162, e2e 38, `pnpm audit:admin` clean. All storefront pages 200.
+
+**Schema pushes in dev prompt on data loss.** Removing a field made the running
+dev server stop at "Accept warnings and push schema? (y/N)", which nothing can
+answer, and every request hung. Drop the column yourself, then restart the dev
+server.

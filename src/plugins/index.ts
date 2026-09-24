@@ -335,6 +335,13 @@ export const plugins: Plugin[] = [
             defaultColumns: ['label', 'variantType', 'value'],
             description: 'The individual sizes and colours a product can come in.',
             group: 'Shop settings',
+            /**
+             * Hidden: S, M and L are set once, and renaming one renames that
+             * size on every product. Products still offer them. A hidden
+             * collection has no admin screen at all (Payload 3 answers 404), so
+             * a new size such as XL is added through the API or by un-hiding.
+             */
+            hidden: true,
           },
           hooks: withStorefrontRefresh(defaultCollection.hooks),
           labels: { singular: 'Size or colour', plural: 'Sizes & colours' },
@@ -350,8 +357,9 @@ export const plugins: Plugin[] = [
           group: 'Shop',
           /**
            * Hidden: one row per payment attempt, including failures. The
-           * order record is what she works from. Kept for audit and
-           * reachable by URL when a payment needs investigating.
+           * order record is what she works from. Kept for audit; a hidden
+           * collection has no admin screen (404), so read it through the API
+           * (GET /api/transactions, signed in as admin) or un-hide it.
            */
           hidden: true,
           listSearchableFields: ['customerEmail'],
@@ -409,7 +417,8 @@ export const plugins: Plugin[] = [
           /**
            * Hidden from the nav. The useful read here is abandoned carts,
            * which needs a report rather than a raw row list — until that
-           * exists this is just noise to the client. Still reachable by URL.
+           * exists this is just noise to the client. No admin screen while
+           * hidden (404); the rows are kept and readable through the API.
            */
           defaultColumns: ['id', 'customer', 'status', 'subtotal', 'updatedAt'],
           group: 'Shop',

@@ -276,6 +276,11 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Show a price with `<Money>` / `useMoney()`**, never `formatQar` directly
   on the storefront, so it follows the visitor's currency (BUILD-LOG §23).
   Checkout, orders and emails stay in QAR — that is what is charged.
+- **A hidden collection has no admin screen** (`admin.hidden` → 404 at
+  `/admin/collections/<slug>`). Its data is still there through the API.
+- **Removing a field in dev can hang the server**: the schema push stops at a
+  data-loss prompt nothing can answer. Drop the column, then restart the dev
+  server (BUILD-LOG §26).
 - **No `loading.tsx` above a page that redirects** — under a loading boundary
   `redirect()` becomes a 200 and a client-side meta refresh.
 - **URL messages are codes** (`src/components/account/notices.ts`); never

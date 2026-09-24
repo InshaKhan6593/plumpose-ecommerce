@@ -261,10 +261,6 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   label: 'This piece comes in different sizes',
                 },
                 priceInQAREnabled: { label: 'Set a price' },
-                relatedProducts: {
-                  description: 'Shown at the bottom of the product page as suggestions.',
-                  label: 'You may also like',
-                },
                 variantTypes: {
                   description: 'Which options this piece is offered in — for example Size.',
                   label: 'Options offered',
@@ -286,29 +282,11 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
 
               return field
             }) as typeof defaultCollection.fields),
-            {
-              name: 'relatedProducts',
-              type: 'relationship',
-              filterOptions: ({ id }) => {
-                if (id) {
-                  return {
-                    id: {
-                      not_in: [id],
-                    },
-                  }
-                }
-
-                // ID comes back as undefined during seeding so we need to handle that case
-                return {
-                  id: {
-                    exists: true,
-                  },
-                }
-              },
-              hasMany: true,
-              label: 'You may also like',
-              relationTo: 'products',
-            },
+            /*
+             * The template's "You may also like" picker was removed: nothing on
+             * the storefront shows it, so anything she chose there did nothing.
+             * Add it back together with the section that renders it.
+             */
           ],
           label: 'Price & sizes',
         },
