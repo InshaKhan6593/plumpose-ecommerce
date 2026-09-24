@@ -110,6 +110,57 @@ export const SiteSettings: GlobalConfig = {
           label: 'Shipping',
         },
         {
+          /**
+           * Emails about stock, sent when a sale changes it (src/email/stockAlert.ts).
+           * Everything here is hers to change; an empty field falls back to the
+           * sensible default rather than switching anything off.
+           */
+          fields: [
+            {
+              name: 'stockAlertsEnabled',
+              type: 'checkbox',
+              admin: { description: 'Untick to stop all stock emails. The dashboard still shows low stock.' },
+              defaultValue: true,
+              label: 'Email me about stock',
+            },
+            {
+              name: 'stockAlertEmail',
+              type: 'email',
+              admin: {
+                condition: (data) => data?.stockAlertsEnabled !== false,
+                description: 'Leave empty to use “New-order alerts go to”, or else the contact email.',
+              },
+              label: 'Stock emails go to',
+            },
+            {
+              name: 'lowStockThreshold',
+              type: 'number',
+              admin: {
+                description: 'A size counts as running low at this many pieces or fewer. Also used on the dashboard.',
+              },
+              defaultValue: 2,
+              label: 'Running low at',
+              min: 0,
+            },
+            {
+              type: 'row',
+              admin: { condition: (data) => data?.stockAlertsEnabled !== false },
+              fields: [
+                { name: 'alertLowStock', type: 'checkbox', defaultValue: true, label: 'When a size runs low' },
+                { name: 'alertSoldOut', type: 'checkbox', defaultValue: true, label: 'When a size sells out' },
+                {
+                  name: 'alertBeyondStock',
+                  type: 'checkbox',
+                  admin: { description: 'Made to order, or oversold when made to order is off.' },
+                  defaultValue: true,
+                  label: 'When an order goes beyond stock',
+                },
+              ],
+            },
+          ],
+          label: 'Stock alerts',
+        },
+        {
           fields: [
             { name: 'spinWheelEnabled', type: 'checkbox', defaultValue: true },
             { name: 'spinWheelHeading', type: 'text', defaultValue: 'Before anyone else.' },

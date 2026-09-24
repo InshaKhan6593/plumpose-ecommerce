@@ -1,12 +1,15 @@
 import type { CollectionAfterChangeHook } from 'payload'
 
-import type { Order, Product, Transaction, Variant } from '@/payload-types'
+import type { Order, Product, SiteSetting, Transaction, Variant } from '@/payload-types'
+
+import { scheduleStockAlert, type StockEvent, stockAlertSettings, stockEventFor } from '@/email/stockAlert'
+import { sizeLabel } from '@/lib/pricing/stock'
 
 const idOf = (value: unknown): null | number =>
   typeof value === 'number' ? value : value && typeof value === 'object' && 'id' in value ? Number((value as { id: unknown }).id) : null
 
 /**
- * Stock after a payment settles — the safety net under `./../lib/pricing/stock.ts`.
+ * Stock after a payment settles — the safety net under `@/lib/pricing/stock`.
  *
  * The plugin takes each piece off stock with a raw `$inc` when it creates the
  * order (`endpoints/confirmOrder.js`), and nothing stops that going below
@@ -20,13 +23,19 @@ const idOf = (value: unknown): null | number =>
  *     always means "ready to send", never a debt;
  *   - the order gets a line in its internal notes saying which sizes went
  *     beyond stock: **made to order** when the product allows it, or
- *     **oversold — contact the customer** when it does not.
+ *     **oversold — contact the customer** when it does not;
+ *   - a stock alert is scheduled for whatever she asked to hear about
+ *     (Site settings → Stock alerts; see `@/email/stockAlert`).
  */
 export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({ doc, previousDoc, req }) => {
   if (doc.status !== 'succeeded' || previousDoc?.status === 'succeeded') return doc
   const orderID = idOf(doc.order)
   if (!orderID) return doc
 
+  const settings = stockAlertSettings(
+    (await req.payload.findGlobal({ depth: 0, req, slug: 'siteSettings' }).catch(() => ({}))) as Partial<SiteSetting>,
+  )
+  const events: StockEvent[] = []
   const notes: string[] = []
 
   for (const item of doc.items ?? []) {
@@ -34,26 +43,32 @@ export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({ d
     const productID = idOf(item.product)
     const collection = variantID ? 'variants' : 'products'
     const id = variantID ?? productID
-    if (!id) continue
+    if (!id || !productID) continue
 
     const record = (await req.payload
       .findByID({ collection, depth: 0, id, overrideAccess: true, req })
       .catch(() => null)) as null | Product | Variant
-    if (!record || (record.inventory ?? 0) >= 0) continue
-
-    const beyond = -(record.inventory ?? 0)
-    await req.payload.db.updateOne({ collection, data: { inventory: 0 }, id, req })
+    if (!record) continue
 
     const product = variantID
-      ? ((await req.payload.findByID({ collection: 'products', depth: 0, id: productID!, overrideAccess: true, req }).catch(() => null)) as null | Product)
+      ? ((await req.payload.findByID({ collection: 'products', depth: 0, id: productID, overrideAccess: true, req }).catch(() => null)) as null | Product)
       : (record as Product)
-    const what = (record as Variant).title ?? product?.title ?? `item ${id}`
+    const madeToOrder = product?.madeToOrder !== false
+    // "Al Shaheen Nights, size M" — the storefront's own wording.
+    const what = product ? sizeLabel(product, variantID ? (record as Variant) : null) : ((record as Variant).title ?? `item ${id}`)
+    const after = record.inventory ?? 0
 
-    notes.push(
-      product?.madeToOrder === false
-        ? `OVERSOLD — ${what}: ${beyond} more than were in stock when paid. Contact the customer.`
-        : `Made to order — ${what}: ${beyond} beyond ready stock when paid.`,
-    )
+    const event = stockEventFor({ after, before: after + (item.quantity ?? 0), label: what, madeToOrder, threshold: settings.threshold })
+    if (event) events.push(event)
+
+    if (after < 0) {
+      await req.payload.db.updateOne({ collection, data: { inventory: 0 }, id, req })
+      notes.push(
+        madeToOrder
+          ? `Made to order — ${what}: ${-after} beyond ready stock when paid.`
+          : `OVERSOLD — ${what}: ${-after} more than were in stock when paid. Contact the customer.`,
+      )
+    }
   }
 
   if (notes.length) {
@@ -70,6 +85,8 @@ export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({ d
     })
     req.payload.logger.warn({ notes, order: orderID }, 'Stock went beyond what was ready; clamped to zero and noted on the order.')
   }
+
+  scheduleStockAlert(req.payload, { events, orderId: orderID, settings })
 
   return doc
 }

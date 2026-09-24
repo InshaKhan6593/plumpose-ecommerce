@@ -97,7 +97,7 @@ export const stockSummary = (lines: StockLine[]): StockSummary => ({
 })
 
 /** "Al Shaheen Nights, size M" — the size is the variant title's last part. */
-const sizeLabel = (product: Product, variant?: null | Variant): string => {
+export const sizeLabel = (product: Product, variant?: null | Variant): string => {
   const name = product.title.split(' — ')[0]
   const size = variant?.title?.split(' — ').pop()
   return size && size !== product.title ? `${name}, size ${size}` : name

@@ -168,7 +168,7 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (137) |
+| `pnpm test:int` | Integration tests (146) |
 | `pnpm test:e2e` | Playwright (38 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
@@ -265,6 +265,8 @@ From Git Bash, prefix commands taking a leading-slash argument with
   (`src/lib/pricing/stock.ts`) runs inside `priceOrder()`, and
   `stockAfterSale` clamps and notes after payment. The product's *Made to
   order* switch decides the rule; storefront, quote and payment share it.
+  Stock alert emails are configured in Site settings → Stock alerts
+  (`src/email/stockAlert.ts`); empty settings mean the default, never off.
 - **After signing in or out, tell the ecommerce plugin** (`onLogin` /
   `onLogout` from `useEcommerce`), or the bag is lost and it fetches as a
   user who has gone. See `src/components/account/AuthForms.tsx`.

@@ -27,6 +27,9 @@ const money = (minorUnits: number) =>
  */
 export const BeforeDashboard: React.FC = async () => {
   const payload = await getPayload({ config })
+  // The same "running low" figure the stock alerts use (Site settings → Stock alerts).
+  const settings = await payload.findGlobal({ depth: 0, slug: 'siteSettings' }).catch(() => null)
+  const lowAt = Math.max(0, settings?.lowStockThreshold ?? 2)
   const today = startOfToday()
 
   const [ordersToday, awaiting, lowStock, pendingReviews, pendingSpotted, liveProducts] =
@@ -45,7 +48,7 @@ export const BeforeDashboard: React.FC = async () => {
         collection: 'variants',
         depth: 1,
         limit: 10,
-        where: { inventory: { less_than_equal: 2 } },
+        where: { inventory: { less_than_equal: lowAt } },
       }),
       payload.count({ collection: 'reviews', where: { status: { equals: 'pending' } } }),
       payload.count({ collection: 'spotted', where: { status: { equals: 'pending' } } }),
@@ -93,7 +96,7 @@ export const BeforeDashboard: React.FC = async () => {
           {(lowStock?.totalDocs ?? 0) > 0 && (
             <p>
               <strong>{lowStock?.totalDocs}</strong>{' '}
-              {lowStock?.totalDocs === 1 ? 'size is' : 'sizes are'} down to the last two pieces.
+              {lowStock?.totalDocs === 1 ? 'size is' : 'sizes are'} down to {lowAt === 0 ? 'none' : `${lowAt} or fewer`}.
             </p>
           )}
         </div>

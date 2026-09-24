@@ -3227,6 +3227,24 @@ export interface SiteSetting {
    * Added to every international zone fee. Use when carrier fuel costs rise.
    */
   intlSurchargePct?: number | null;
+  /**
+   * Untick to stop all stock emails. The dashboard still shows low stock.
+   */
+  stockAlertsEnabled?: boolean | null;
+  /**
+   * Leave empty to use “New-order alerts go to”, or else the contact email.
+   */
+  stockAlertEmail?: string | null;
+  /**
+   * A size counts as running low at this many pieces or fewer. Also used on the dashboard.
+   */
+  lowStockThreshold?: number | null;
+  alertLowStock?: boolean | null;
+  alertSoldOut?: boolean | null;
+  /**
+   * Made to order, or oversold when made to order is off.
+   */
+  alertBeyondStock?: boolean | null;
   spinWheelEnabled?: boolean | null;
   spinWheelHeading?: string | null;
   spinWheelBody?: string | null;
@@ -3314,6 +3332,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   freeShippingEnabled?: T;
   freeShippingThresholdQar?: T;
   intlSurchargePct?: T;
+  stockAlertsEnabled?: T;
+  stockAlertEmail?: T;
+  lowStockThreshold?: T;
+  alertLowStock?: T;
+  alertSoldOut?: T;
+  alertBeyondStock?: T;
   spinWheelEnabled?: T;
   spinWheelHeading?: T;
   spinWheelBody?: T;

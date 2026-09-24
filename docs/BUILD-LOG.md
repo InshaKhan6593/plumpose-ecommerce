@@ -1329,5 +1329,39 @@ M cannot each pass alone. Negative stock reads as zero everywhere.
 
 - The client should still confirm the rule she wants at launch — the switch
   is hers to flip. REQUIREMENTS §9.3 Q8 / CLIENT-REQUEST §6.1.
-- No low-stock or oversold alert email; the dashboard's low-stock panel and
-  the order note are the signals.
+- ~~No low-stock or oversold alert email~~ — built, §21.
+
+---
+
+## 21. Stock alerts — 24 Sep 2026
+
+An email to the shop when a sale changes stock in a way she asked to hear
+about. **All of it is hers to configure** in **Site settings → Stock alerts**:
+
+| Setting | Default | Notes |
+|---|---|---|
+| Email me about stock | On | Off stops every stock email; the dashboard still shows low stock |
+| Stock emails go to | *(empty)* | Empty = "New-order alerts go to", else the contact email |
+| Running low at | 2 | Also drives the dashboard's low-stock panel (was hard-coded to 2) |
+| When a size runs low · sells out · an order goes beyond stock | All on | Each can be unticked |
+
+- **Crossings, not states.** Each event is worked out from the stock before
+  and after the sale (`stockEventFor`), so a size already low does not email
+  on every later sale. Only sales alert; editing a figure in the admin never does.
+- **Beyond stock** says *"2 to make"* when the product is made to order, and
+  *"OVERSOLD by 1. Contact the customer."* when it is not; the subject leads
+  with the most serious event.
+- Sent after the order commits, on a fresh read — no alert for an order that
+  rolled back (`src/email/stockAlert.ts`, scheduled from `stockAfterSale`).
+- Empty settings mean the default, never "off": the global row predates the
+  fields, so `stockAlertSettings()` applies defaults itself.
+- Sizes now read "Al Shaheen Nights, size M" in the alert and the order note
+  (the storefront's own `sizeLabel`), and the admin collection is named
+  **Sizes & stock** — it was the plugin's "Variants", which the email would
+  not have matched.
+
+**Verified:** 9 unit tests (`tests/int/stock-alert.int.spec.ts`); integration
+**146 passing**, e2e **38 passing**. A real test purchase beyond stock built
+and sent the alert after commit (order 149); Resend refused delivery only
+because plumpose.com is not verified — the same state as every shop email.
+The settings tab and the email were checked on screen.

@@ -157,7 +157,7 @@ test.describe('checkout, end to end', () => {
 
       expect(await readStock(request, 2), 'stock must never go below zero').toBe(0)
       const order = await readOrder(request, orderId)
-      expect(order.adminNotes).toMatch(/Made to order — .*M: 1 beyond ready stock/)
+      expect(order.adminNotes).toMatch(/Made to order — Al Shaheen Nights, size M: 1 beyond ready stock/)
     } finally {
       await setStock(request, 2, before)
     }

@@ -312,6 +312,8 @@ export const plugins: Plugin[] = [
             group: 'Shop',
             listSearchableFields: ['title'],
           },
+          // Her words, not the plugin's: the stock alert emails point her here by this name.
+          labels: { plural: 'Sizes & stock', singular: 'Size & stock' },
         }),
         variantTypesCollectionOverride: ({ defaultCollection }) => ({
           ...defaultCollection,
