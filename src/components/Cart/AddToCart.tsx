@@ -83,9 +83,13 @@ export function AddToCart({ onAdded, personalisation = [], product }: Props) {
     return line?.quantity ?? 0
   }, [cart?.items, product.enableVariants, product.id, selectedVariant?.id])
 
-  const needsSize = Boolean(product.enableVariants && !selectedVariant)
+  /** Every size gone and none made to order: nothing to choose, so the button says so rather than "Select a size". */
+  const everySizeSoldOut =
+    Boolean(product.enableVariants && variants.length) &&
+    variants.every((v) => typeof v === 'object' && purchaseLimit(product, v) === 0)
+  const needsSize = Boolean(product.enableVariants && !selectedVariant) && !everySizeSoldOut
   const limit = record ? purchaseLimit(product, record) : 0
-  const soldOut = Boolean(record) && limit === 0
+  const soldOut = everySizeSoldOut || (Boolean(record) && limit === 0)
   const atLimit = Boolean(record) && !soldOut && inBag >= limit
   const disabled = needsSize || soldOut || atLimit
   /** The next one added would be beyond what is ready to send. */

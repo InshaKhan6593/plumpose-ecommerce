@@ -174,6 +174,7 @@ pnpm seed                    # idempotent
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
 | `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
 | `pnpm test-shots` | Import test photographs (see `../docs/TEST-SHOTS.md`) |
+| `pnpm demo:seed` / `demo:remove` | 20 demo pieces with Pexels photos, to see a full shop; removes only `demo-` records (BUILD-LOG §24) |
 | `sh scripts/encode-videos.sh` | Rebuild `public/video/` from the camera originals |
 
 **A production build locally:** `pnpm build`, then `next start` with
@@ -289,6 +290,8 @@ From Git Bash, prefix commands taking a leading-slash argument with
   `js-motion` and `data-theme="light"` — there is no before-paint script.
 - **The film is a portrait source.** `hero-wide` is cut from the 4K original;
   check a new crop at several points in the loop and at several screen shapes.
+- **Tests must not assume "the first product" is hers** — with the demo
+  catalogue loaded it is not. Find `al-shaheen-nights` by its web address.
 - **Client media is never committed** (public repo): `seed-assets/`,
   `public/video/`, `public/media`. Test photographs (`pnpm test-shots`) only
   show while `TEST_SHOTS=on`.

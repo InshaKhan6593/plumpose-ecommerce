@@ -19,6 +19,8 @@
     "shoot:admin": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/shoot-admin.ts",
     "test-shots": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/import-test-shots.ts",
     "seed": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx src/seed/run.ts",
+    "demo:seed": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/demo-catalogue.ts seed",
+    "demo:remove": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" tsx scripts/demo-catalogue.ts remove",
     "reinstall": "cross-env NODE_OPTIONS=--no-deprecation rm -rf node_modules && rm pnpm-lock.yaml && pnpm --ignore-workspace install",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "stripe-webhooks": "stripe listen --events checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed --forward-to localhost:3000/api/payments/stripe/webhooks",

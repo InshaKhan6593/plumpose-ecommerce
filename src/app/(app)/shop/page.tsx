@@ -82,7 +82,7 @@ export default async function ShopPage({ searchParams }: Props) {
       draft: false,
       limit: 48,
       overrideAccess: false,
-      populate: { variants: { priceInQAR: true } },
+      populate: { variants: { inventory: true, priceInQAR: true } },
       sort: sortKey ? SORTS[sortKey].sort : ['_order', 'createdAt'],
       where,
     }),

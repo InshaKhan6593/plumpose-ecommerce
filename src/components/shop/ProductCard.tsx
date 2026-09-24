@@ -4,6 +4,7 @@ import React from 'react'
 import type { Media as MediaType, Product } from '@/payload-types'
 
 import { Media } from '@/components/Media'
+import { readyStock } from '@/lib/pricing/stock'
 import { Money } from '@/providers/Locale'
 import { splitTitle } from '@/utilities/splitTitle'
 
@@ -12,7 +13,9 @@ import { splitTitle } from '@/utilities/splitTitle'
  *
  * Hover swaps to the second photograph (MOTION-SPEC D2): a 0.6s crossfade
  * with a slight settle in scale — on devices that can hover. On a phone the
- * first photograph simply stays. No badges, no ratings, no sale flags.
+ * first photograph simply stays. No badges, no ratings, no sale flags — the
+ * one word it adds is "Sold out", beside the price, when nothing can be
+ * ordered: every size gone and the piece not made to order.
  */
 export function ProductCard({ priority, product }: { priority?: boolean; product: Product }) {
   const images = (product.gallery ?? [])
@@ -24,6 +27,14 @@ export function ProductCard({ priority, product }: { priority?: boolean; product
     .map((v) => (typeof v === 'object' ? v.priceInQAR : null))
     .filter((p): p is number => typeof p === 'number')
   const price = variantPrices.length ? Math.min(...variantPrices) : product.priceInQAR
+
+  // The product page's rule (lib/pricing/stock): made to order never sells out.
+  const variants = (product.variants?.docs ?? []).filter((v) => typeof v === 'object')
+  const soldOut =
+    product.madeToOrder === false &&
+    (product.enableVariants && variants.length
+      ? variants.every((v) => readyStock(v) === 0)
+      : readyStock(product) === 0)
 
   const { name, subtitle } = splitTitle(product.title)
 
@@ -54,7 +65,12 @@ export function ProductCard({ priority, product }: { priority?: boolean; product
       <div className="mt-5">
         <h2 className="serif-display text-[1.75rem] leading-tight">{name}</h2>
         {subtitle ? <p className="serif-italic mt-1 text-base text-ink-soft">{subtitle}</p> : null}
-        {typeof price === 'number' ? <p className="mt-3 text-sm tracking-[0.1em] tabular-nums"><Money minor={price} /></p> : null}
+        {typeof price === 'number' ? (
+          <p className="mt-3 text-sm tracking-[0.1em] tabular-nums">
+            <Money className={soldOut ? 'text-ink-soft' : undefined} minor={price} />
+            {soldOut ? <span className="caps ml-3 text-[0.625rem] text-ink-soft">Sold out</span> : null}
+          </p>
+        ) : null}
       </div>
     </Link>
   )

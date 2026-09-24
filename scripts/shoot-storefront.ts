@@ -14,6 +14,10 @@ import path from 'path'
  *                   fold is visible (scroll reveals would otherwise hide it)
  *   - `…-fold.png`  the first screen with motion on, after the intro animations
  *                   have finished — what a visitor actually sees on arrival
+ *
+ * The reward wheel is marked as seen, so its pop-up does not cover the page
+ * (set SHOOT_WHEEL=on to see it). Full-page shots scroll through first, so
+ * lazily loaded photographs further down have loaded.
  */
 const BASE = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
 const OUT = path.resolve('.screenshots/storefront')
@@ -36,6 +40,9 @@ const run = async () => {
   for (const size of SIZES) {
     for (const reducedMotion of ['reduce', 'no-preference'] as const) {
       const context = await browser.newContext({ ...size.options, reducedMotion })
+      if (process.env.SHOOT_WHEEL !== 'on') {
+        await context.addInitScript(() => window.localStorage.setItem('plumpose:wheel', 'done'))
+      }
       const page = await context.newPage()
       const errors: string[] = []
       page.on('pageerror', (error) => errors.push(error.message))
@@ -48,6 +55,18 @@ const run = async () => {
         await page.waitForTimeout(reducedMotion === 'reduce' ? 1500 : 2600)
 
         const kind = reducedMotion === 'reduce' ? 'full' : 'fold'
+        if (kind === 'full') {
+          // A screen at a time, so each lazy photograph enters the viewport and loads.
+          await page.evaluate(async () => {
+            for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight * 0.8) {
+              window.scrollTo(0, y)
+              await new Promise((resolve) => setTimeout(resolve, 250))
+            }
+            window.scrollTo(0, 0)
+          })
+          await page.waitForLoadState('networkidle')
+          await page.waitForTimeout(500)
+        }
         const file = path.join(OUT, `${slug(url)}-${size.name}-${kind}.png`)
         await page.screenshot({ fullPage: kind === 'full', path: file })
         console.log(`  ${response?.status()} ${size.name.padEnd(7)} ${kind}  ${url}  →  ${path.relative(process.cwd(), file)}`)

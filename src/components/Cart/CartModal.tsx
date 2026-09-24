@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
 import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
-import { ChargedInQar, useMoney } from '@/providers/Locale'
+import { ChargedInQar, useLocale, useMoney } from '@/providers/Locale'
 import { useLenis } from '@/motion/MotionProvider'
 import { cn } from '@/utilities/cn'
 
@@ -59,6 +59,7 @@ export function CartModal() {
   const { cart, decrementItem, incrementItem, isLoading, removeItem } = useCart()
   // Figures in the visitor's currency (@/providers/Locale); the charge itself is QAR.
   const money = useMoney()
+  const { currency } = useLocale()
   const [isOpen, setIsOpen] = useState(false)
   const [quote, setQuote] = useState<null | Quote>(null)
   const pathname = usePathname()
@@ -257,7 +258,8 @@ export function CartModal() {
                 </dl>
                 <p className="mt-3 text-xs text-ink-soft">
                   All orders are charged in QAR.
-                  {quote ? (
+                  {/* Only beside a converted figure; in QAR the first sentence says it all. */}
+                  {quote && currency ? (
                     <>
                       {' '}
                       <ChargedInQar minor={quote.totals.total} /> before delivery.

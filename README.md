@@ -106,6 +106,7 @@ photography and film are hers and unreleased. After cloning, with the client's
 |---|---|
 | `pnpm dev` | Development server |
 | `pnpm seed` | Seed reference and demo data |
+| `pnpm demo:seed` / `pnpm demo:remove` | Add or remove a 20-piece demo catalogue (Pexels photos; needs `PEXELS_API_KEY`). Development only |
 | `pnpm audit:admin` | Print every collection's resolved admin config and flag gaps |
 | `pnpm shoot:admin` | Screenshot all admin screens (logs in as the dev fixture) |
 | `pnpm generate:types` | Regenerate `payload-types.ts` |

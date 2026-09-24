@@ -47,10 +47,11 @@ describe('pricing engine against seeded data', () => {
     payload = await getPayload({ config: await config })
     context = await load()
 
+    // Her real piece by name — not "the first product", which a demo catalogue changes.
     const products = await payload.find({
       collection: 'products',
       limit: 1,
-      where: { _status: { equals: 'published' } },
+      where: { and: [{ _status: { equals: 'published' } }, { slug: { equals: 'al-shaheen-nights' } }] },
     })
     productId = products.docs[0]?.id
   }, 120_000)

@@ -1513,3 +1513,50 @@ in `src/email/spinRewardEmail.ts`.
 
 **Note:** Windows does not draw flag emoji, so the picker shows the two
 letters there ("🇶🇦" reads "QA"). Other systems show the flag.
+
+## 24. Demo catalogue and data clean-up — 25 Sep 2026
+
+**Data cleared** (local database, backed up first to
+`../backups/plumpose-before-demo-2026-09-25.dump`): every test order,
+transaction, bag, discount code, spin, webhook log entry and enquiry, plus the
+template's `admin@test.com` customer. Kept: her product, photographs, the store
+setup from her old site (countries, currencies, delivery, embroidery, FAQs,
+settings), the Made for You samples (dev only), and both admin logins.
+
+**Demo catalogue** (`scripts/demo-catalogue.ts`), to see the shop with more
+than one piece:
+
+- `pnpm demo:seed` adds 20 pieces in four collections (Pyjama Sets, Robes,
+  Slips, Sleep Accessories) with 54 photographs from the Pexels API
+  (`PEXELS_API_KEY` in `.env`). Photos are cached in `seed-assets/demo/`
+  (gitignored), so a re-seed does not download them again.
+- `pnpm demo:remove` deletes all of it, and only that: web addresses starting
+  `demo-`, photographs named `demo-pexels-<id>.jpg`. Tested: afterwards only
+  her product, its three sizes and its 19 photographs remained.
+- The stock covers every state: plenty, low, one size sold out, all sold out,
+  made to order, and three pieces with no sizes.
+- Refuses to run in production. The photos are stand-ins, never product
+  photographs.
+
+**Found by it and fixed:**
+
+- **All sizes sold out, button said "Select a size".** It now says "Sold out"
+  and is disabled (`AddToCart.tsx`).
+- **Shop cards had no sold-out state.** A quiet "Sold out" now sits beside the
+  price when nothing can be ordered (every size gone, not made to order).
+- **The bag said "All orders are charged in QAR. before delivery."** when
+  showing QAR. The second sentence now appears only beside a converted
+  currency.
+- **Full-page screenshots showed blank cards and the wheel pop-up.**
+  `shoot-storefront.ts` now scrolls through so lazy photographs load, and marks
+  the wheel as seen (`SHOOT_WHEEL=on` to see it).
+- `pricing-live.int.spec.ts` priced "the first product"; it now finds her
+  piece by its web address.
+
+**Worth deciding (not changed):** on a phone the shop is one column, so 21
+pieces make a very long page, and the six collection filters wrap onto five
+lines before the first piece. Two columns on a phone, and a single scrolling
+filter row, are the usual answers.
+
+Integration **162 passing**, e2e 38. The test runs' orders were cleared again
+afterwards, and her stock restored to S 4 · M 6 · L 4.
