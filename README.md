@@ -28,8 +28,12 @@ gift note and discount code, priced live; payment on Stripe's hosted page (a
 redirect, the same shape as SkipCash); a confirmation page reached by the
 order's private link.
 
-**Not built yet:** track-order page, account pages, Our Story / FAQ / Press /
-Spotted / Made for You / Shipping & Returns, the spin wheel, currency display.
+**Content pages.** Our Story (with the café film), FAQ, Shipping & Returns,
+Made for You with project pages, Press, Spotted, Contact (enquiry form) and
+Track order. Some copy is placeholder until the client confirms it — see
+[docs/BUILD-LOG.md](docs/BUILD-LOG.md) §17.
+
+**Not built yet:** account pages, the spin wheel, currency display.
 SkipCash is pending credentials. 121 integration and 36 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and

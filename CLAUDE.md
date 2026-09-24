@@ -134,6 +134,10 @@ client's reference recording (`../brand-assets/reference/`):
   `content.ts`.
 - Shop, product page, embroidery drawer (`EmbroideryDrawer.tsx`), bag drawer
   (`CartModal.tsx`, priced by `/api/quote`, never by `cart.subtotal`).
+- Content pages (§17): Our Story, FAQ, Shipping & Returns, Made for You (+
+  project pages), Press, Spotted, Contact, Track order. Shared parts in
+  `src/components/editorial/`, copy in `src/content/pages.ts`, photographs via
+  `loadPageMedia()`. Anything showing a fee reads the live tables (`rateCard()`).
 - Motion: `src/motion/` — GSAP + ScrollTrigger + SplitText, Lenis. `Reveal`,
   `RevealImage`. Everything off under `prefers-reduced-motion`.
 
@@ -144,12 +148,13 @@ client's reference recording (`../brand-assets/reference/`):
 - **SkipCash.** Blocked on credentials. The checkout is already a redirect
   flow; the adapter replaces `stripeSandbox.ts` and must price through
   `priceOrder()`.
-- **Track order** (`/find-order`) is still the template's form.
+- **Content-page copy is partly placeholder.** Every block in
+  `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
+  to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
+  outside production only.
 - **Saved addresses** (account area) use the plugin's country list, which has
   no Qatar — fix before building account pages.
-- Storefront still on the template: account pages, and the pages
-  the nav links to — Our Story, FAQ, Press, Spotted, Made for You, Shipping &
-  Returns (they land on the branded not-found page).
+- Storefront still on the template: account pages.
 - Spin wheel, currency display (data ready), reviews aggregate, CSV exports,
   a Homepage global so she can edit the copy, storage adapter (uploads write
   to local disk and will not survive a serverless deploy).
@@ -252,6 +257,17 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **An image hidden by a clip or mask must be `loading="eager"`.** The browser
   does not count a fully clipped image as visible, so a lazy one starts loading
   as its reveal begins and pops in mid-animation (`Media` takes `loading`).
+- **Static pages need a refresh hook.** Most storefront pages are prerendered.
+  A new collection a page reads must use `withStorefrontRefresh()`
+  (`src/hooks/revalidateStorefront.ts`), or her edits never reach the live site.
+- **A dynamic route needs a `loading.tsx`**, or clicks to it show nothing until
+  the whole page has rendered (BUILD-LOG §18).
+- **Film: H.264, standard range, CRF 22.** VP9 from this ffmpeg is visibly
+  softer and Chrome prefers it; the café originals are full range. See
+  `scripts/encode-videos.sh` and BUILD-LOG §18.
+- **Never invent social proof.** Reviews, Spotted and Press show only what she
+  has approved or added; empty states say so. Sample Made-for-You projects are
+  dev-only.
 - **Nothing may slide over text.** Floating photographs live outside the
   column the words occupy — two client reviews flagged overlap.
 - **Animate only `transform`, `opacity`, `clip-path`.** Pictures that move

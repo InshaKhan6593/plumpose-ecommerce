@@ -1,7 +1,7 @@
 # plumpose — Build Log
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
-**Phase reached:** Backend, email, the core storefront and checkout are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Account, track-order and content pages still to do; SkipCash pending credentials.
+**Phase reached:** Backend, email, the storefront, checkout and the content pages are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Account pages still to do; content-page copy partly placeholder (§17); SkipCash pending credentials.
 **Last updated:** 24 Sep 2026
 
 This is the running record of what has actually been built, tested and
@@ -18,7 +18,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Admin config audit | **No problems** |
 | Integration tests | **121 passing** |
 | End-to-end tests | **36 passing** (21 skipped — the template storefront spec) |
-| Storefront | **Homepage, shop, product page, embroidery drawer, bag, checkout, order confirmation** — built (§15, §16). Account, track-order and content pages still template |
+| Storefront | **Homepage, shop, product page, embroidery drawer, bag, checkout, order confirmation, and every content page** — built (§15–§17). Account pages still template |
 | Email | Built (§14); sending from plumpose.com waits on domain verification |
 | Payments | Stripe sandbox, hosted Checkout (redirect flow), working end to end; SkipCash blocked on credentials |
 
@@ -994,3 +994,194 @@ and still covers guests only (§13).
   fix before building account pages.
 - A bag of ~8+ lines could exceed Stripe's 500-character metadata limit on
   `cartItemsSnapshot` (the plugin has the same ceiling).
+
+---
+
+## 17. Content pages — 24 Sep 2026
+
+Every page the nav and footer link to now exists. Before this they landed on
+the not-found page.
+
+| Page | Route | Built from |
+|---|---|---|
+| **Our story** | `/our-story` | Opener film → the house → behind the print (`#the-print`) → the silk (`#the-silk`) → the atelier (`#atelier`) → closing line |
+| **FAQ** | `/faq` | The FAQs collection, grouped by category, native `<details>` (opens without JS, find-in-page reaches closed answers), FAQPage structured data |
+| **Shipping & returns** | `/shipping-returns` | `#delivery` rate tables from `rateCard()` — the function checkout prices against, so the page cannot quote a fee checkout would not charge; `#returns` her policy; `#gifting` |
+| **Made for you** | `/made-for-you`, `/made-for-you/[slug]` | What she makes (four categories, one photograph each), how a commission runs 01–04, then her published projects with a category filter; each project has its own page |
+| **Press** | `/press` | Published press items; with none, a press-enquiries band. **No publication is named that she has not added** |
+| **Spotted** | `/spotted` | Approved posts only; with none, her own campaign photographs, **labelled as the campaign** |
+| **Contact** | `/contact` | Channels from Site settings (WhatsApp appears once the number is filled in) + an enquiry form. `?subject=` preselects the topic |
+| **Track order** | `/find-order` | Restyled; same lookup. Accepts "#105" as well as "105" |
+
+Shared parts: `src/components/editorial/` (heading, split band, prose, closing
+band, `StoryOpener`, `ContactForm`); copy in `src/content/pages.ts`; photographs
+through `loadPageMedia()` (`src/utilities/pageMedia.ts`), which also handles
+test shots. Footer gains *The silk* and *Contact us*.
+
+### Media — every client asset now has a job
+
+- **Our Story opener uses the unused café clip** (EK3A2414, the pillow) — the
+  homepage uses EK3A2406, so no footage repeats. Encoded as `story-pillow`
+  (portrait, half speed, 2.8 MB MP4 / 3.4 MB WebM). A landscape crop was tried
+  and dropped: from a portrait source it is only her face. Desktop shows the
+  film in a portrait half-screen frame that opens from a card; on a phone it
+  opens to the full screen and the heading turns white where the film reaches
+  it (the Print band's two-copies trick). Verified by wheel-scrolling
+  headlessly at 1440×900 and iPhone 13: card → full frame, film playing,
+  face in frame, no errors.
+- `scripts/encode-videos.sh`: this machine's ffmpeg rejects `-b:v 0` with
+  `-maxrate` for VP9 ("Rate control parameters set without a bitrate"), so every
+  WebM came out empty. Now capped quality (`-crf 36 -b:v <rate>k`).
+- **Every film now has a place, and none repeats on the same device:**
+
+  | Film | Homepage | Content pages |
+  |---|---|---|
+  | EK3A2406 café breakfast | desktop hero (`hero-wide`) | Made for You, Bridal tile (`story-cafe`, portrait) — phone visitors see it only here |
+  | IMG_5839 corridor → print close-up | phone hero (`hero-mobile`) | Our Story, behind the print — desktop visitors see it only here; replaces the print macro still, which is already the homepage Print band |
+  | EK3A2414 café pillow | — | Our Story opener (`story-pillow`) |
+
+  Below-the-fold films use `InViewFilm` (`src/components/editorial/InViewFilm.tsx`):
+  poster first, sources attached only within a screen of the viewport, paused
+  off screen, poster only under reduced motion. `SplitBand` takes `film` in place
+  of `image`. Verified headlessly: the corridor film is not requested until
+  scrolled near, then plays; the opener pauses once off screen; no errors.
+- All seven photographs are used across the pages.
+
+### Seeded (`pnpm seed`)
+
+- **Product details, from her old site verbatim**, filled only where empty:
+  colour, composition, fabric, weight, trims, fit note, material & care, gift
+  packaging. Delivery & returns left empty on purpose so the product page
+  keeps building it from the live rates.
+- **10 more FAQs** (16 total), each restating something the old site already
+  said. None quotes a fee — they point to Shipping & returns.
+- **The Contact form** (form-builder). Submissions land in Content → Enquiries.
+- **Three SAMPLE Made-for-You projects** — `sample-a-bridal-morning`,
+  `sample-initials-in-gold`, `sample-cut-to-measure`. **Not real
+  commissions**; seeded only outside production, like the dev admin.
+
+### Verified
+
+Type check clean. All nine routes 200 at desktop and phone, no console
+errors (`scripts/shoot-storefront.ts`). Contact: a submission is stored
+(201), anonymous read of submissions is 403; test rows deleted.
+
+### Copy — what is hers and what is ours
+
+Every block in `src/content/pages.ts` is marked **LEGACY** (her old site,
+verbatim) or **PLACEHOLDER** (ours, to confirm).
+
+**Hers, verbatim:** behind the print · the three silk pillars · returns
+policy · gift packaging · material & care · product details · "Slip into the
+evening." · "Silk nightwear, hand-finished to order." · the contact intro.
+
+**Ours — the client must confirm or replace before launch:**
+1. Our Story opener: "For the hours that belong to you" (from her footer line, reworded).
+2. The house: "Made in Doha, for slow evenings" and its two paragraphs — the founder paragraph she was asked for.
+3. The atelier paragraph.
+4. Made for You: the intro, the four offers (does she take each kind of commission?), the four process steps ("we send a photograph before it leaves" is a promise).
+5. Contact subjects; Press and Spotted empty-state lines.
+6. The three sample projects — replace with real work or delete.
+
+**Contradiction on her old site:** "Pure 22-momme silk" and "97% silk, 3%
+spandex" both appear. Both are carried over (Our Story, product details,
+FAQ). Ask which is right.
+
+### Not done / follow-ups
+
+- **No email when an enquiry arrives.** The form plugin writes submitted values
+  into the email HTML unescaped; add a `beforeEmail` hook that escapes them,
+  then add an email to the Contact form.
+- **Form-builder does not enforce required fields server-side** — a
+  submission with only a name is accepted (201). The page validates in the
+  browser; a `beforeValidate` hook on form-submissions would close it.
+- The order-access email sent from Track order is still the template's plain
+  HTML, and finds guest orders only (`customerEmail`); a signed-in customer's
+  order has no `customerEmail` — use `customerEmailOf()` there too.
+- Copy lives in code; next is an admin-editable global for these pages (A18).
+
+### Test-shot slots (`PAGE_TEST_MEDIA`, used only with `TEST_SHOTS=on`)
+
+| File in `brand-assets/test-shots/` | Appears on | Stands in for |
+|---|---|---|
+| `our-story-portrait.jpg` | Our Story — the house | doorway |
+| `atelier-hands.jpg` | Our Story — the atelier | qatar book |
+| `embroidery-initials.jpg` | Made for You — special embroidery (falls back to `atelier-hands.jpg`, then piping) | piping |
+| `packaging.jpg` | Shipping — gift wrapping; Made for You — collaborations | qatar book |
+| `doha-sea.jpg` | Our Story — a wide band after behind the print; **the band exists only while there is a sea photograph** (`pick.only`) | — |
+
+**Imported 24 Sep:** atelier-hands, packaging, our-story-portrait, doha-sea.
+Still wanted: `embroidery-initials.jpg` — the image supplied under that name
+showed a plain pocket with no embroidery; kept aside, unused, in
+`brand-assets/test-shots/unused/model-bedroom.jpg` (the importer reads only
+the top level). The packaging shot's bag wordmark and "Thank you for being
+here" card text were drawn by the image model — test only, as ever.
+| `print-wide.jpg` | Our Story — third silk pillar (already imported) | print macro |
+
+---
+
+## 18. Hero film quality and click response — 24 Sep 2026
+
+### Why the hero film looked soft
+
+Measured against the camera original (SSIM, frame-aligned):
+
+| Encode | Size | Bitrate | SSIM | Note |
+|---|---|---|---|---|
+| Old `hero-wide.webm` | 3.2 MB | 1.6 Mbps | **0.937** | **What Chrome played** — WebM was listed first |
+| Old `hero-wide.mp4` | 3.3 MB | 1.6 Mbps | 0.964 | |
+| New `hero-wide.mp4` | 7.2 MB | 3.4 Mbps | **0.975** | H.264 CRF 22, standard range |
+
+Three causes, all fixed in `scripts/encode-videos.sh`:
+1. **Bitrate far too low** for a full-screen 1080p close-up: 1.6 Mbps smeared
+   skin texture, fine hair and the print on the collar.
+2. **The browser picked the worse file.** VP9 from this libvpx tops out at
+   SSIM ≈0.94 whatever the bitrate (a 13.5 MB WebM scored 0.939), and Chrome
+   takes the first `<source>` it can play — the WebM.
+3. **The café films are full-range colour** straight from the camera
+   (`yuvj420p`, `pc`), which some browser/decoder pairs misread as limited range.
+   Now converted to standard range with BT.709 tags.
+
+The café films (`hero-wide`, `story-cafe`, `story-pillow`) now ship as H.264
+only; `webm` is optional in every film component. `hero-mobile` (standard-range
+source) keeps both formats. Desktop hero download: 3.3 → 7.2 MB; phones never
+load it.
+
+### Why clicks felt unresponsive
+
+Measured with real mouse input (Playwright), time until the screen changes / the new page is ready:
+
+| Click | Dev, before | Production, after |
+|---|---|---|
+| Hero "Discover the collection" → product | 6.3 s / 2.5 s warm, **nothing on screen meanwhile** | **53–70 ms** / 0.4 s |
+| Hero "Our story" | 1.8 s / 0.8 s | 83–100 ms / 0.1 s |
+| Nav "Shop" / "Made for you" | 0.3–0.7 s | 28–44 ms / 0.35 s |
+
+- **`/products/[slug]` is dynamic and had no `loading.tsx`**, so Next could
+  not prefetch it and kept the old page on screen until the whole product page
+  rendered (Next 16 docs, *Linking and navigating → Dynamic routes without
+  loading.tsx*). Added a product skeleton, and `(app)/loading.tsx` as the
+  fallback for every other dynamic page. Prerendered pages are prefetched whole
+  and never show it.
+- The product page looked the product up **twice** per request (metadata and
+  page), three levels deep, then ran its other queries one after another. Now
+  one `cache()`d lookup (keyed by the slug string — `cache` matches arguments by
+  identity) and the rest in parallel.
+- Dev mode compiles and renders every page on demand, which is most of the 6 s.
+  Judge speed on `pnpm build` + the `plumpose-prod` launch entry.
+
+### Found on the way: content edits never reached the live site
+
+`/`, `/faq`, `/press`, `/spotted`, `/our-story`, `/shipping-returns` are
+prerendered at build time, and only Site settings cleared the cache — so an FAQ
+edit, an approved review or Spotted post, a price or a delivery fee would not
+appear until the next deploy (the homepage had this before §17 too).
+`src/hooks/revalidateStorefront.ts` marks the storefront for refresh
+(`revalidatePath('/', 'layout')`) on any change to FAQs, Press, Spotted,
+Reviews, Projects, shipping cities and zones, personalisation options and
+products. Verified on the production build: an FAQ edited over the API showed
+on `/faq` at the next visit, and again when reverted. Not covered: variants
+(per-size price and stock) — the product page is dynamic so it is always
+current; the homepage's "from" price would lag until another refresh.
+
+121 integration tests pass; type check clean.
