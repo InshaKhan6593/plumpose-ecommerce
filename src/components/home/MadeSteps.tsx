@@ -138,10 +138,16 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
 
       {pinned ? (
         <div data-steps-track style={{ height: `${steps.length * PER_STEP + 100}svh` }}>
-          <div className="sticky top-0 flex h-svh items-center overflow-hidden">
-            <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-center gap-8 px-6 lg:grid-cols-[1fr_minmax(0,26rem)_1fr] lg:gap-12 lg:px-7">
+          {/*
+            The header stays over this stage (5rem, 6rem from md), so the stage
+            leaves that room and centres the step in what is left — centred on
+            the whole screen, the photograph sat hard against the header line
+            with an empty band beneath it.
+          */}
+          <div className="sticky top-0 flex h-svh items-center overflow-hidden pt-20 md:pt-24">
+            <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-center gap-5 px-6 lg:grid-cols-[1fr_minmax(0,26rem)_1fr] lg:gap-12 lg:px-7">
               {/* Title and counter */}
-              <div className="relative order-2 h-24 overflow-hidden lg:order-1 lg:h-36">
+              <div className="relative order-2 h-20 overflow-hidden lg:order-1 lg:h-36">
                 {steps.map((step, i) => (
                   <div className="absolute inset-0" data-step-title key={step.title}>
                     <h3 className="serif-italic text-[clamp(1.75rem,2.6vw,2.5rem)] leading-tight">{step.title}</h3>
@@ -150,8 +156,15 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
                 ))}
               </div>
 
-              {/* The photographs, each rising over the last */}
-              <div className="order-1 mx-auto w-[min(70vw,24rem)] lg:order-2 lg:w-full">
+              {/*
+                The photographs, each rising over the last. Sized by the screen's
+                height as well as its width (4:5, so width = 0.8 × height), so a
+                short laptop screen gets a smaller photograph with the same
+                breathing room above and below, never one tucked under the header.
+                Phone: header, title, words, bar and gaps take ~22rem of the height.
+                Desktop: header and bar ~7rem, plus ~3rem of air each side.
+              */}
+              <div className="order-1 mx-auto w-[min(70vw,24rem,calc((100svh_-_22rem)*0.8))] lg:order-2 lg:w-[min(100%,calc((100svh_-_13rem)*0.8))]">
                 <div className="relative aspect-[4/5] overflow-hidden bg-paper-3">
                   {steps.map((step, i) =>
                     step.image ? (
