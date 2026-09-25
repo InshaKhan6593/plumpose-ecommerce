@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { prefersReducedMotion } from '@/motion/gsap'
 import { afterPageLoad } from '@/utilities/afterPageLoad'

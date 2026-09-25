@@ -15,7 +15,10 @@ export default function NotFound() {
         The page you were looking for has moved or doesn’t exist.
       </p>
       <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
-        <Link className="caps bg-ink px-8 py-4 text-[0.6875rem] text-white hover:bg-ink/85" href="/shop">
+        <Link
+          className="caps bg-ink px-8 py-4 text-[0.6875rem] text-white hover:bg-ink/85"
+          href="/shop"
+        >
           Visit the shop
         </Link>
         <Link className="caps border-b border-ink pb-1 text-[0.6875rem]" href="/">

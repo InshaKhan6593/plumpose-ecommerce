@@ -24,7 +24,10 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
   const valid = typeof token === 'string' && /^[a-f0-9]{20,}$/i.test(token)
 
   return (
-    <AuthShell footer={<TextLink href="/login">Back to sign in</TextLink>} title="Choose a new password">
+    <AuthShell
+      footer={<TextLink href="/login">Back to sign in</TextLink>}
+      title="Choose a new password"
+    >
       {valid ? (
         <ResetPasswordForm token={token} />
       ) : (

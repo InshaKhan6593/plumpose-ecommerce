@@ -8,21 +8,37 @@ import { formatDifference, rateCheck } from '@/lib/pricing/rates'
 const anchorOf = async (req: Parameters<FieldHook>[0]['req']): Promise<number> => {
   const ctx = req.context as { anchorQar?: number }
   if (ctx.anchorQar) return ctx.anchorQar
-  const settings = await req.payload.findGlobal({ depth: 0, req, slug: 'siteSettings' }).catch(() => null)
-  ctx.anchorQar = settings?.currencyAnchorQar && settings.currencyAnchorQar > 0 ? settings.currencyAnchorQar : 1399
+  const settings = await req.payload
+    .findGlobal({ depth: 0, req, slug: 'siteSettings' })
+    .catch(() => null)
+  ctx.anchorQar =
+    settings?.currencyAnchorQar && settings.currencyAnchorQar > 0
+      ? settings.currencyAnchorQar
+      : 1399
   return ctx.anchorQar
 }
 
 const atTodaysRate: FieldHook = async ({ req, siblingData }) => {
-  const check = rateCheck({ anchorQar: await anchorOf(req), price: siblingData?.priceOverride, rate: siblingData?.rate })
+  const check = rateCheck({
+    anchorQar: await anchorOf(req),
+    price: siblingData?.priceOverride,
+    rate: siblingData?.rate,
+  })
   if (!check) return null
   const decimals = typeof siblingData?.decimals === 'number' ? siblingData.decimals : 0
-  return check.atRate.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals })
+  return check.atRate.toLocaleString('en-GB', {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+  })
 }
 
 const difference: FieldHook = async ({ req, siblingData }) => {
   if (!siblingData?.priceOverride) return null
-  const check = rateCheck({ anchorQar: await anchorOf(req), price: siblingData.priceOverride, rate: siblingData.rate })
+  const check = rateCheck({
+    anchorQar: await anchorOf(req),
+    price: siblingData.priceOverride,
+    rate: siblingData.rate,
+  })
   return check ? formatDifference(check.difference) : null
 }
 
@@ -43,7 +59,14 @@ export const Currencies: CollectionConfig = {
   labels: { singular: 'Currency', plural: 'Currencies' },
   admin: {
     components: { beforeListTable: ['@/components/admin/RefreshRatesButton#RefreshRatesButton'] },
-    defaultColumns: ['code', 'name', 'priceOverride', 'atTodaysRate', 'difference', 'rateUpdatedAt'],
+    defaultColumns: [
+      'code',
+      'name',
+      'priceOverride',
+      'atTodaysRate',
+      'difference',
+      'rateUpdatedAt',
+    ],
     description:
       'Display prices only — every card is charged in QAR. Set a price by hand for the markets that matter.',
     group: 'Shop settings',
@@ -108,7 +131,11 @@ export const Currencies: CollectionConfig = {
     {
       name: 'atTodaysRate',
       type: 'text',
-      admin: { description: 'What the anchor piece costs at the rate above — a check on the price set by hand.', readOnly: true },
+      admin: {
+        description:
+          'What the anchor piece costs at the rate above — a check on the price set by hand.',
+        readOnly: true,
+      },
       hooks: { afterRead: [atTodaysRate] },
       label: 'At today’s rate',
       virtual: true,
@@ -116,7 +143,10 @@ export const Currencies: CollectionConfig = {
     {
       name: 'difference',
       type: 'text',
-      admin: { description: 'How far the price set by hand is from today’s rate (+ means above it).', readOnly: true },
+      admin: {
+        description: 'How far the price set by hand is from today’s rate (+ means above it).',
+        readOnly: true,
+      },
       hooks: { afterRead: [difference] },
       label: 'Difference',
       virtual: true,

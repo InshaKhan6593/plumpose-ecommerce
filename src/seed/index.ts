@@ -31,7 +31,9 @@ const para = (text: string) => ({
     children: [
       {
         type: 'paragraph',
-        children: [{ type: 'text', detail: 0, format: 0, mode: 'normal', style: '', text, version: 1 }],
+        children: [
+          { type: 'text', detail: 0, format: 0, mode: 'normal', style: '', text, version: 1 },
+        ],
         direction: 'ltr' as const,
         format: '' as const,
         indent: 0,
@@ -150,7 +152,10 @@ export async function seed(payload: Payload): Promise<void> {
    */
   const brandShots: Array<[string, string]> = [
     ['brand-01-window.jpg', 'Al Shaheen Nights silk pyjama set, full length by a window'],
-    ['brand-02-print-macro.jpg', 'The hand-drawn whale-shark print on navy silk, with cream piping'],
+    [
+      'brand-02-print-macro.jpg',
+      'The hand-drawn whale-shark print on navy silk, with cream piping',
+    ],
     ['brand-03-piping.jpg', 'The shirt front: cream piping, mother-of-pearl buttons and pocket'],
     ['brand-04-corridor.jpg', 'Walking in the Al Shaheen Nights set along a hotel corridor'],
     ['brand-05-armchair.jpg', 'Seated in a blue armchair wearing the Al Shaheen Nights set'],
@@ -217,9 +222,9 @@ export async function seed(payload: Payload): Promise<void> {
     .filter((f) => images[f])
     .map((f) => images[f].id as number)
 
-  const gallery = (
-    brandImages.length ? brandImages.map((m) => m.id as number) : legacyGallery
-  ).map((id) => ({ image: id }))
+  const gallery = (brandImages.length ? brandImages.map((m) => m.id as number) : legacyGallery).map(
+    (id) => ({ image: id }),
+  )
 
   const existingProduct = await payload.find({
     collection: 'products',
@@ -327,10 +332,7 @@ export async function seed(payload: Payload): Promise<void> {
       payload,
       'variants',
       {
-        and: [
-          { product: { equals: product.id } },
-          { options: { equals: sizeOptions[size].id } },
-        ],
+        and: [{ product: { equals: product.id } }, { options: { equals: sizeOptions[size].id } }],
       },
       {
         product: product.id,
@@ -352,7 +354,7 @@ export async function seed(payload: Payload): Promise<void> {
     ['cuff', 'Cuff'],
     ['collar', 'Collar'],
   ]
-  for (const [i, [key, name]] of placements.entries()) {
+  for (const [key, name] of placements) {
     await upsert(
       payload,
       'personalisationOptions',
@@ -367,7 +369,7 @@ export async function seed(payload: Payload): Promise<void> {
     ['symbol', 'Symbol only', 'One hand-stitched motif.'],
     ['both', 'Letters + symbol', 'Lettering with a motif beside it.'],
   ]
-  for (const [i, [key, name, note]] of styles.entries()) {
+  for (const [key, name, note] of styles) {
     await upsert(
       payload,
       'personalisationOptions',
@@ -395,7 +397,7 @@ export async function seed(payload: Payload): Promise<void> {
       'M12 7.6a4.4 4.4 0 1 0 0 8.8 4.4 4.4 0 0 0 0-8.8zM12 1.4v3.2M12 19.4v3.2M1.4 12h3.2M19.4 12h3.2M4.5 4.5l2.3 2.3M17.2 17.2l2.3 2.3M19.5 4.5l-2.3 2.3M6.8 17.2l-2.3 2.3',
     ],
   ]
-  for (const [i, [key, name, svgPath]] of symbols.entries()) {
+  for (const [key, name, svgPath] of symbols) {
     await upsert(
       payload,
       'personalisationOptions',
@@ -412,7 +414,7 @@ export async function seed(payload: Payload): Promise<void> {
     ['red', 'Red', '#9C1C25'],
     ['pink', 'Pink', '#D69FAB'],
   ]
-  for (const [i, [key, name, hex]] of threads.entries()) {
+  for (const [key, name, hex] of threads) {
     await upsert(
       payload,
       'personalisationOptions',
@@ -439,7 +441,7 @@ export async function seed(payload: Payload): Promise<void> {
     ['mesaieed', 'Mesaieed', OUTSIDE],
     ['ras-laffan', 'Ras Laffan', OUTSIDE],
   ]
-  for (const [i, [key, name, feeQar]] of cities.entries()) {
+  for (const [key, name, feeQar] of cities) {
     await upsert(
       payload,
       'shippingCities',
@@ -461,7 +463,7 @@ export async function seed(payload: Payload): Promise<void> {
     ['oceania', 'Australia & New Zealand', 270],
     ['world', 'Rest of world', 300],
   ]
-  for (const [i, [key, name, feeQar]] of zones.entries()) {
+  for (const [key, name, feeQar] of zones) {
     await upsert(
       payload,
       'shippingZones',
@@ -511,7 +513,7 @@ export async function seed(payload: Payload): Promise<void> {
     ['Free delivery', 'freeShipping', undefined, 25, '#f6f4f0'],
     ['Roll again', 'rollAgain', undefined, 20, '#eae5db'],
   ]
-  for (const [i, [label, rewardType, rewardValue, weight, colour]] of segments.entries()) {
+  for (const [label, rewardType, rewardValue, weight, colour] of segments) {
     await upsert(
       payload,
       'spinSegments',
@@ -612,7 +614,7 @@ export async function seed(payload: Payload): Promise<void> {
       'The set comes in S, M and L, cut in the signature plumpose silhouette with elegantly long trousers designed for a graceful drape. Our model is 175cm and wears a size M. If you are unsure, write to us and we will help you choose.',
     ],
   ]
-  for (const [i, [question, category, answer]] of faqs.entries()) {
+  for (const [question, category, answer] of faqs) {
     await upsert(
       payload,
       'faqs',
@@ -630,7 +632,13 @@ export async function seed(payload: Payload): Promise<void> {
    * unescaped, so it waits for an escaping `beforeEmail` hook (BUILD-LOG §17).
    */
   log('contact form…')
-  const formField = (blockType: string, name: string, label: string, required: boolean, width = 50) => ({
+  const formField = (
+    blockType: string,
+    name: string,
+    label: string,
+    required: boolean,
+    width = 50,
+  ) => ({
     blockType,
     label,
     name,
@@ -642,7 +650,9 @@ export async function seed(payload: Payload): Promise<void> {
     'forms',
     { title: { equals: 'Contact' } },
     {
-      confirmationMessage: para('Thank you. Your message is with us. We usually reply within a day.'),
+      confirmationMessage: para(
+        'Thank you. Your message is with us. We usually reply within a day.',
+      ),
       confirmationType: 'message',
       fields: [
         formField('text', 'name', 'Name', true),
@@ -666,7 +676,9 @@ export async function seed(payload: Payload): Promise<void> {
    */
   if (process.env.NODE_ENV !== 'production' && brandImages.length >= 7) {
     log('made for you (samples, dev only)…')
-    const [window, print, piping, corridor, armchair, doorway, qatarBook] = brandImages.map((m) => m.id as number)
+    const [window, print, piping, corridor, armchair, doorway, qatarBook] = brandImages.map(
+      (m) => m.id as number,
+    )
     const samples: Array<{
       category: string
       coverImage: number
@@ -685,7 +697,8 @@ export async function seed(payload: Payload): Promise<void> {
         ],
         gallery: [armchair, piping, qatarBook],
         slug: 'sample-a-bridal-morning',
-        summary: 'Sets for a bride and her sisters, each pocket embroidered with an initial in gold.',
+        summary:
+          'Sets for a bride and her sisters, each pocket embroidered with an initial in gold.',
         title: 'A bridal morning',
       },
       {

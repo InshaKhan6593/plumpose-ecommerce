@@ -19,7 +19,13 @@ describe('stock alerts — what counts as news', () => {
   })
 
   it('reports a sale beyond stock — the most serious event wins', () => {
-    expect(event(1, -2)).toEqual({ beyond: 2, kind: 'beyond', label: M, madeToOrder: true, stock: 0 })
+    expect(event(1, -2)).toEqual({
+      beyond: 2,
+      kind: 'beyond',
+      label: M,
+      madeToOrder: true,
+      stock: 0,
+    })
     expect(event(0, -1, false)).toMatchObject({ beyond: 1, kind: 'beyond', madeToOrder: false })
   })
 
@@ -31,7 +37,10 @@ describe('stock alerts — what counts as news', () => {
 
 describe('stock alerts — her settings', () => {
   it('defaults to on, every event, the order-alert address, low at 2', () => {
-    const s = stockAlertSettings({ contactEmail: 'info@plumpose.com', orderAlertEmail: 'orders@plumpose.com' })
+    const s = stockAlertSettings({
+      contactEmail: 'info@plumpose.com',
+      orderAlertEmail: 'orders@plumpose.com',
+    })
     expect(s).toMatchObject({ enabled: true, recipient: 'orders@plumpose.com', threshold: 2 })
     expect([...s.kinds].sort()).toEqual(['beyond', 'low', 'soldOut'])
   })

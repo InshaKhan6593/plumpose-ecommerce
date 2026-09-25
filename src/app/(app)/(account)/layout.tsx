@@ -19,7 +19,9 @@ export default async function AccountLayout({ children }: { children: ReactNode 
       {user ? (
         <header className="border-b border-line pb-10">
           <p className="caps text-[0.625rem] text-ink-soft">Your account</p>
-          <p className="serif-display mt-4 text-[clamp(2.5rem,5vw,4.5rem)]">{user.name || user.email}</p>
+          <p className="serif-display mt-4 text-[clamp(2.5rem,5vw,4.5rem)]">
+            {user.name || user.email}
+          </p>
         </header>
       ) : null}
       <div className="grid gap-10 pt-10 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-20 lg:pt-14">

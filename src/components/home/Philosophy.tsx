@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 import type { Media as MediaType } from '@/payload-types'
 
@@ -62,10 +62,34 @@ export function Philosophy({
    * `top` is % of the section's height.
    */
   const floats: Float[] = [
-    { className: 'right-[calc(50%+29vw)] top-[12%] w-[7.5vw]', image: images.corridor, key: 'corridor', side: 'left', speed: 40 },
-    { className: 'right-[calc(50%+31vw)] top-[58%] w-[6vw]', image: images.piping, key: 'piping', side: 'left', speed: 80 },
-    { className: 'left-[calc(50%+29vw)] top-[26%] w-[8.5vw]', image: images.print, key: 'print', side: 'right', speed: 70 },
-    { className: 'left-[calc(50%+31vw)] top-[70%] w-[6.5vw]', image: images.qatarBook, key: 'book', side: 'right', speed: 50 },
+    {
+      className: 'right-[calc(50%+29vw)] top-[12%] w-[7.5vw]',
+      image: images.corridor,
+      key: 'corridor',
+      side: 'left',
+      speed: 40,
+    },
+    {
+      className: 'right-[calc(50%+31vw)] top-[58%] w-[6vw]',
+      image: images.piping,
+      key: 'piping',
+      side: 'left',
+      speed: 80,
+    },
+    {
+      className: 'left-[calc(50%+29vw)] top-[26%] w-[8.5vw]',
+      image: images.print,
+      key: 'print',
+      side: 'right',
+      speed: 70,
+    },
+    {
+      className: 'left-[calc(50%+31vw)] top-[70%] w-[6.5vw]',
+      image: images.qatarBook,
+      key: 'book',
+      side: 'right',
+      speed: 50,
+    },
   ]
 
   useLayoutEffect(() => {
@@ -90,11 +114,20 @@ export function Philosophy({
          * never popping in on a timer.
          */
         const arrive = { end: 'top 25%', scrub: 1, start: 'top 95%', trigger: el }
-        if (label) gsap.fromTo(label, { opacity: 0, y: 20 }, { ease: 'none', opacity: 1, scrollTrigger: arrive, y: 0 })
+        if (label)
+          gsap.fromTo(
+            label,
+            { opacity: 0, y: 20 },
+            { ease: 'none', opacity: 1, scrollTrigger: arrive, y: 0 },
+          )
         if (headline) {
           gsap.set(headline, { opacity: 1 })
           const split = splitLines(headline)
-          gsap.fromTo(split.lines, { yPercent: LINE_HIDDEN }, { ease: 'none', scrollTrigger: arrive, stagger: 0.12, yPercent: 0 })
+          gsap.fromTo(
+            split.lines,
+            { yPercent: LINE_HIDDEN },
+            { ease: 'none', scrollTrigger: arrive, stagger: 0.12, yPercent: 0 },
+          )
         }
 
         const mm = gsap.matchMedia()
@@ -110,7 +143,11 @@ export function Philosophy({
             gsap.fromTo(
               drift,
               { yPercent: speed },
-              { ease: 'none', scrollTrigger: { end: 'bottom top', scrub: 1.2, start: 'top bottom', trigger: el }, yPercent: -speed },
+              {
+                ease: 'none',
+                scrollTrigger: { end: 'bottom top', scrub: 1.2, start: 'top bottom', trigger: el },
+                yPercent: -speed,
+              },
             )
 
             /*
@@ -141,14 +178,22 @@ export function Philosophy({
   }, [])
 
   return (
-    <section aria-label={copy.label} className="relative z-10 bg-background md:h-[220svh]" ref={root}>
+    <section
+      aria-label={copy.label}
+      className="relative z-10 bg-background md:h-[220svh]"
+      ref={root}
+    >
       {/* The words hold the centre while the photographs pass. */}
       <div className="relative z-10 flex items-center justify-center px-6 pt-28 pb-14 md:sticky md:top-0 md:h-svh md:py-0">
         <div className="max-w-[62rem] text-center md:max-w-[54vw]">
           <p className="caps text-[0.625rem] text-ink-soft" data-philosophy-label data-reveal>
             {copy.label}
           </p>
-          <h2 className="mt-7 text-[clamp(2.4rem,4.4vw,4.6rem)] leading-[1.08] text-balance text-ink" data-philosophy-headline data-reveal-lines>
+          <h2
+            className="mt-7 text-[clamp(2.4rem,4.4vw,4.6rem)] leading-[1.08] text-balance text-ink"
+            data-philosophy-headline
+            data-reveal-lines
+          >
             {copy.headline.map((part, i) =>
               part.italic ? (
                 <em className="serif-italic" key={i}>
@@ -177,7 +222,13 @@ export function Philosophy({
           >
             <div className="will-change-transform">
               <div className="relative aspect-[4/5] overflow-hidden bg-paper-3">
-                <Media className="absolute inset-0" fill imgClassName="object-cover" resource={float.image} size="9vw" />
+                <Media
+                  className="absolute inset-0"
+                  fill
+                  imgClassName="object-cover"
+                  resource={float.image}
+                  size="9vw"
+                />
               </div>
             </div>
           </div>
@@ -188,9 +239,18 @@ export function Philosophy({
       <div className="grid grid-cols-2 gap-3 px-6 pb-24 md:hidden">
         {[images.corridor, images.qatarBook].map((image, i) =>
           image ? (
-            <RevealImage className={cn('relative aspect-[4/5] overflow-hidden bg-paper-3', i === 1 && 'mt-12')} key={image.id}>
+            <RevealImage
+              className={cn('relative aspect-[4/5] overflow-hidden bg-paper-3', i === 1 && 'mt-12')}
+              key={image.id}
+            >
               <div className="absolute inset-0">
-                <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="45vw" />
+                <Media
+                  className="absolute inset-0"
+                  fill
+                  imgClassName="object-cover"
+                  resource={image}
+                  size="45vw"
+                />
               </div>
             </RevealImage>
           ) : null,

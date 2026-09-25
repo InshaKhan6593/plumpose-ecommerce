@@ -7,11 +7,20 @@ import { button, esc, heading, label, layout, muted, paragraph } from './layout'
  * ./spinReward.ts, which loads the Payload config, so it can be tested alone.
  */
 
-const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', timeZone: 'Asia/Qatar', year: 'numeric' })
+const dateFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'Asia/Qatar',
+  year: 'numeric',
+})
 
 /** The prize in words, from the issued code itself (what the discount engine will honour). */
 const rewardOf = (code: Pick<DiscountCode, 'type' | 'value'>) =>
-  code.type === 'percent' ? `${code.value}% off` : code.type === 'fixed' ? `QAR ${code.value} off` : 'Free delivery'
+  code.type === 'percent'
+    ? `${code.value}% off`
+    : code.type === 'fixed'
+      ? `QAR ${code.value} off`
+      : 'Free delivery'
 
 /** The email that carries a won code. */
 export const buildSpinRewardEmail = (args: {
@@ -45,4 +54,3 @@ export const buildSpinRewardEmail = (args: {
 
   return { html, subject: `Your plumpose code: ${reward}`, text }
 }
-

@@ -258,8 +258,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               /** The plugin's own labels are written for developers. */
               const relabel: Record<string, { description?: string; label: string }> = {
                 enableVariants: {
-                  description:
-                    'Tick this if the piece is made in more than one size or colour.',
+                  description: 'Tick this if the piece is made in more than one size or colour.',
                   label: 'This piece comes in different sizes',
                 },
                 priceInQAREnabled: { label: 'Set a price' },
@@ -299,14 +298,23 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               currency: QAR,
               overrides: {
                 admin: {
-                  description: 'Optional — for a sale. The price it was, shown crossed out beside the price. Leave empty when it is not on sale.',
+                  description:
+                    'Optional — for a sale. The price it was, shown crossed out beside the price. Leave empty when it is not on sale.',
                 },
                 label: 'Was price',
                 name: 'compareAtPriceInQAR',
-                validate: (value: null | number | undefined, { siblingData }: { siblingData: Record<string, unknown> }) => {
+                validate: (
+                  value: null | number | undefined,
+                  { siblingData }: { siblingData: Record<string, unknown> },
+                ) => {
                   if (value === null || value === undefined) return true
-                  const price = typeof siblingData?.priceInQAR === 'number' ? siblingData.priceInQAR : null
-                  return price === null || value > price || 'The was-price must be higher than the price, or empty.'
+                  const price =
+                    typeof siblingData?.priceInQAR === 'number' ? siblingData.priceInQAR : null
+                  return (
+                    price === null ||
+                    value > price ||
+                    'The was-price must be higher than the price, or empty.'
+                  )
                 },
               } as never,
             }),

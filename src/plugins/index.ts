@@ -47,7 +47,12 @@ const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
  */
 const readOnlyFields = (fields: Field[]): Field[] =>
   fields.map((field) =>
-    !('name' in field) || field.type === 'ui' ? field : ({ ...field, admin: { ...('admin' in field ? field.admin : {}), readOnly: true } } as Field),
+    !('name' in field) || field.type === 'ui'
+      ? field
+      : ({
+          ...field,
+          admin: { ...('admin' in field ? field.admin : {}), readOnly: true },
+        } as Field),
   )
 
 /** "What happened" on a payment: its status, plus any card declines logged during that checkout. */
@@ -70,7 +75,9 @@ const paymentOutcomeField: FieldHook = async ({ data, req }) => {
         req,
         select: { createdAt: true },
         sort: 'createdAt',
-        where: { and: [{ cart: { equals: cartId } }, { createdAt: { greater_than: data.createdAt } }] },
+        where: {
+          and: [{ cart: { equals: cartId } }, { createdAt: { greater_than: data.createdAt } }],
+        },
       })
       .catch(() => null)
     const until = next?.docs[0]?.createdAt
@@ -119,7 +126,8 @@ export const plugins: Plugin[] = [
        */
       admin: {
         defaultColumns: ['status', 'from', 'about', 'preview', 'createdAt'],
-        description: 'Messages from the Contact page. Opening a new one marks it read; set Replied or Archived as you go.',
+        description:
+          'Messages from the Contact page. Opening a new one marks it read; set Replied or Archived as you go.',
         group: 'Content',
         // Computed fields cannot be the title; the From column carries who it is from.
         useAsTitle: 'id',
@@ -142,17 +150,21 @@ export const plugins: Plugin[] = [
             { label: 'Archived', value: 'archived' },
           ],
         },
-        { name: 'markRead', type: 'ui', admin: { components: { Field: '@/components/admin/MarkEnquiryRead#MarkEnquiryRead' } } },
-        ...(['from', 'about', 'preview'] as const).map(
-          (name): Field => ({
-            name,
-            type: 'text',
-            admin: { readOnly: true },
-            hooks: { afterRead: [({ siblingData }) => enquirySummary(siblingData?.submissionData)[name]] },
-            label: { about: 'About', from: 'From', preview: 'Message' }[name],
-            virtual: true,
-          }),
-        ),
+        {
+          name: 'markRead',
+          type: 'ui',
+          admin: { components: { Field: '@/components/admin/MarkEnquiryRead#MarkEnquiryRead' } },
+        },
+        ...(['from', 'about', 'preview'] as const).map((name): Field => ({
+          name,
+          type: 'text',
+          admin: { readOnly: true },
+          hooks: {
+            afterRead: [({ siblingData }) => enquirySummary(siblingData?.submissionData)[name]],
+          },
+          label: { about: 'About', from: 'From', preview: 'Message' }[name],
+          virtual: true,
+        })),
       ],
       /*
        * The plugin checks nothing about what is submitted and emails values
@@ -226,7 +238,10 @@ export const plugins: Plugin[] = [
             ...defaultCollection?.admin?.components,
             // A spreadsheet of the orders the list shows (REQUIREMENTS A6); see @/endpoints/exports.
             beforeListTable: [
-              { clientProps: { kind: 'orders', label: 'Download as a spreadsheet' }, path: '@/components/admin/ExportButton#ExportButton' },
+              {
+                clientProps: { kind: 'orders', label: 'Download as a spreadsheet' },
+                path: '@/components/admin/ExportButton#ExportButton',
+              },
             ],
           },
           defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'fulfilment', 'createdAt'],
@@ -342,19 +357,17 @@ export const plugins: Plugin[] = [
               ['notificationEmailSentAt', 'New-order alert sent'],
               ['shippedEmailSentAt', 'Shipped email sent'],
             ] as const
-          ).map(
-            ([name, label]): Field => ({
-              name,
-              type: 'date',
-              access: { update: neverEditable },
-              admin: {
-                date: { displayFormat: 'd MMM yyyy, HH:mm', pickerAppearance: 'dayAndTime' },
-                position: 'sidebar',
-                readOnly: true,
-              },
-              label,
-            }),
-          ),
+          ).map(([name, label]): Field => ({
+            name,
+            type: 'date',
+            access: { update: neverEditable },
+            admin: {
+              date: { displayFormat: 'd MMM yyyy, HH:mm', pickerAppearance: 'dayAndTime' },
+              position: 'sidebar',
+              readOnly: true,
+            },
+            label,
+          })),
           {
             name: 'emailError',
             type: 'text',
@@ -469,7 +482,11 @@ export const plugins: Plugin[] = [
           {
             name: 'outcome',
             type: 'text',
-            admin: { description: 'Worked out from the payment status and the card declines the gateway reported.', readOnly: true },
+            admin: {
+              description:
+                'Worked out from the payment status and the card declines the gateway reported.',
+              readOnly: true,
+            },
             hooks: { afterRead: [paymentOutcomeField] },
             label: 'What happened',
             virtual: true,

@@ -39,6 +39,7 @@ import { WebhookLog } from '@/collections/WebhookLog'
 import { emailAdapter } from '@/email/config'
 import { localeEndpoint, localeOptionsEndpoint } from '@/endpoints/locale'
 import { ordersExportEndpoint, subscribersExportEndpoint } from '@/endpoints/exports'
+import { storefrontRefreshEndpoint } from '@/hooks/revalidateStorefront'
 import { quoteEndpoint } from '@/endpoints/quote'
 import { spinEndpoint, wheelEndpoint } from '@/endpoints/spin'
 import { PageText } from '@/globals/PageText'
@@ -155,6 +156,7 @@ export default buildConfig({
     localeOptionsEndpoint,
     ordersExportEndpoint,
     subscribersExportEndpoint,
+    storefrontRefreshEndpoint,
   ],
   /*
    * Site settings only. The template's Header and Footer globals were removed:

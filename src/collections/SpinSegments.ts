@@ -72,6 +72,14 @@ export const SpinSegments: CollectionConfig = {
       admin: { description: 'How many days the issued code stays valid.' },
       defaultValue: 30,
     },
-    { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
+    {
+      name: 'active',
+      type: 'checkbox',
+      admin: {
+        components: { Cell: '@/components/admin/BooleanCell#BooleanCell' },
+        position: 'sidebar',
+      },
+      defaultValue: true,
+    },
   ],
 }

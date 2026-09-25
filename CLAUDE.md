@@ -260,8 +260,12 @@ From Git Bash, prefix commands taking a leading-slash argument with
   does not count a fully clipped image as visible, so a lazy one starts loading
   as its reveal begins and pops in mid-animation (`Media` takes `loading`).
 - **Static pages need a refresh hook.** Most storefront pages are prerendered.
-  A new collection a page reads must use `withStorefrontRefresh()`
-  (`src/hooks/revalidateStorefront.ts`), or her edits never reach the live site.
+  A new collection a page reads must use `withStorefrontRefresh()`, a global
+  `refreshStorefront(req, …)` (`src/hooks/revalidateStorefront.ts`), or her
+  edits never reach the live site. **Never call `revalidatePath` /
+  `revalidateTag` from a Payload hook directly**: hooks run before the commit,
+  and a rebuild in that moment keeps the old data (BUILD-LOG §30). The helper
+  also refreshes after the commit, via a signed request to itself.
   Prove it with `npx tsx scripts/check-admin-reflects.ts` against `pnpm build`
   + `pnpm start` — never against dev, where every page is fresh (BUILD-LOG §25).
 - **A dynamic route needs a `loading.tsx`**, or clicks to it show nothing until

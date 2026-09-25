@@ -47,11 +47,21 @@ export const startCheckout = async (
   const cartRes = await request.post(`${BASE}/api/carts`, {
     data: {
       currency: 'QAR',
-      items: [{ personalisation: opts.personalisation ?? [], product: 1, quantity: opts.quantity ?? 1, variant: 2 }],
+      items: [
+        {
+          personalisation: opts.personalisation ?? [],
+          product: 1,
+          quantity: opts.quantity ?? 1,
+          variant: 2,
+        },
+      ],
     },
     headers: opts.headers,
   })
-  expect(cartRes.ok(), `creating the cart failed: ${cartRes.status()} ${await cartRes.text()}`).toBe(true)
+  expect(
+    cartRes.ok(),
+    `creating the cart failed: ${cartRes.status()} ${await cartRes.text()}`,
+  ).toBe(true)
   const cart = (await cartRes.json()).doc
 
   const initiated = await request.post(`${BASE}/api/payments/stripe/initiate`, {
@@ -70,9 +80,14 @@ export const startCheckout = async (
   })
   // Assert before reading fields off it (see CLAUDE.md): a failed initiate would
   // otherwise surface later as a navigation to "undefined".
-  expect(initiated.ok(), `initiating payment failed: ${initiated.status()} ${await initiated.text()}`).toBe(true)
+  expect(
+    initiated.ok(),
+    `initiating payment failed: ${initiated.status()} ${await initiated.text()}`,
+  ).toBe(true)
   const body = await initiated.json()
-  expect(body.redirectURL, 'initiate returned no redirectURL').toMatch(/^https:\/\/checkout\.stripe\.com\//)
+  expect(body.redirectURL, 'initiate returned no redirectURL').toMatch(
+    /^https:\/\/checkout\.stripe\.com\//,
+  )
 
   return { cart, redirectURL: body.redirectURL, sessionId: body.checkoutSessionID }
 }

@@ -11,9 +11,24 @@ import { type Cell, dohaTime, riyals } from './csv'
  * items, sizes and embroidery read exactly as the customer was told.
  */
 
-const ORDER_STATUS: Record<string, string> = { cancelled: 'Cancelled', completed: 'Completed', processing: 'Paid', refunded: 'Refunded' }
-const FULFILMENT: Record<string, string> = { delivered: 'Delivered', inAtelier: 'In the atelier', shipped: 'Shipped', unfulfilled: 'Awaiting fulfilment' }
-const SOURCE: Record<string, string> = { checkout: 'Checkout', footer: 'Footer signup', manual: 'Added by hand', spinWheel: 'Reward wheel' }
+const ORDER_STATUS: Record<string, string> = {
+  cancelled: 'Cancelled',
+  completed: 'Completed',
+  processing: 'Paid',
+  refunded: 'Refunded',
+}
+const FULFILMENT: Record<string, string> = {
+  delivered: 'Delivered',
+  inAtelier: 'In the atelier',
+  shipped: 'Shipped',
+  unfulfilled: 'Awaiting fulfilment',
+}
+const SOURCE: Record<string, string> = {
+  checkout: 'Checkout',
+  footer: 'Footer signup',
+  manual: 'Added by hand',
+  spinWheel: 'Reward wheel',
+}
 
 export const ORDER_COLUMNS = [
   'Order',
@@ -42,14 +57,28 @@ export const ORDER_COLUMNS = [
 ]
 
 export function orderRow(order: Order): Cell[] {
-  const view = toOrderView(order, { adminUrl: '', footer: {} as Footer, leadTime: '', orderUrl: '' })
+  const view = toOrderView(order, {
+    adminUrl: '',
+    footer: {} as Footer,
+    leadTime: '',
+    orderUrl: '',
+  })
   const address = order.shippingAddress ?? {}
-  const street = [address.company, address.addressLine1, address.addressLine2, address.postalCode].filter(Boolean).join(', ')
-  const items = view.lines.map((l) => `${l.quantity} × ${l.title}${l.size ? ` (${l.size})` : ''}`).join('; ')
+  const street = [address.company, address.addressLine1, address.addressLine2, address.postalCode]
+    .filter(Boolean)
+    .join(', ')
+  const items = view.lines
+    .map((l) => `${l.quantity} × ${l.title}${l.size ? ` (${l.size})` : ''}`)
+    .join('; ')
   const embroidery = view.lines
     .flatMap((l) =>
       l.embroidery.map((e) =>
-        [`${l.title.split(' — ')[0]}: ${e.placement}`, e.lettering ? `"${e.lettering}"` : '', e.symbol ? `${e.symbol} symbol` : '', e.thread ? `${e.thread} thread` : '']
+        [
+          `${l.title.split(' — ')[0]}: ${e.placement}`,
+          e.lettering ? `"${e.lettering}"` : '',
+          e.symbol ? `${e.symbol} symbol` : '',
+          e.thread ? `${e.thread} thread` : '',
+        ]
           .filter(Boolean)
           .join(', '),
       ),
@@ -86,4 +115,9 @@ export function orderRow(order: Order): Cell[] {
 
 export const SUBSCRIBER_COLUMNS = ['Email', 'Joined (Doha)', 'Signed up from', 'Unsubscribed']
 
-export const subscriberRow = (s: Subscriber): Cell[] => [s.email, dohaTime(s.createdAt), SOURCE[s.source ?? ''] ?? '', Boolean(s.unsubscribed)]
+export const subscriberRow = (s: Subscriber): Cell[] => [
+  s.email,
+  dohaTime(s.createdAt),
+  SOURCE[s.source ?? ''] ?? '',
+  Boolean(s.unsubscribed),
+]

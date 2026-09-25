@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import React from 'react'
 
 import type { Media as MediaType, Spotted } from '@/payload-types'
 
@@ -48,8 +47,17 @@ export function ProductBand({
     <section className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 pt-10 pb-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-24 lg:pt-12 lg:pb-10">
       {image ? (
         // Opens as soon as it enters, so it arrives already unveiling rather than as an empty frame.
-        <RevealImage className="relative aspect-[4/5] overflow-hidden bg-paper-3 lg:aspect-square" start="top bottom">
-          <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="(min-width: 1024px) 45vw, 100vw" />
+        <RevealImage
+          className="relative aspect-[4/5] overflow-hidden bg-paper-3 lg:aspect-square"
+          start="top bottom"
+        >
+          <Media
+            className="absolute inset-0"
+            fill
+            imgClassName="object-cover"
+            resource={image}
+            size="(min-width: 1024px) 45vw, 100vw"
+          />
         </RevealImage>
       ) : null}
 
@@ -72,7 +80,10 @@ export function ProductBand({
           <Money minor={priceMinor} />
         </p>
         <div data-reveal>
-          <Link className="caps mt-9 inline-flex h-12 items-center bg-ink px-12 text-[0.6875rem] text-white hover:bg-ink/85" href={href}>
+          <Link
+            className="caps mt-9 inline-flex h-12 items-center bg-ink px-12 text-[0.6875rem] text-white hover:bg-ink/85"
+            href={href}
+          >
             Discover
           </Link>
         </div>
@@ -92,7 +103,9 @@ export function ReviewsBand({ reviews }: { reviews: PublicReview[] }) {
       <ul className="mt-12 grid gap-12 md:grid-cols-3 md:gap-8">
         {reviews.map((review) => (
           <li data-reveal key={review.id}>
-            <blockquote className="serif-italic text-[1.75rem] leading-snug">“{review.body}”</blockquote>
+            <blockquote className="serif-italic text-[1.75rem] leading-snug">
+              “{review.body}”
+            </blockquote>
             <p className="caps mt-5 text-[0.625rem] text-ink-soft">{review.name}</p>
           </li>
         ))}
@@ -101,7 +114,15 @@ export function ReviewsBand({ reviews }: { reviews: PublicReview[] }) {
   )
 }
 
-export function SpottedBand({ handle, instagramUrl, items }: { handle: null | string; instagramUrl: null | string; items: Spotted[] }) {
+export function SpottedBand({
+  handle,
+  instagramUrl,
+  items,
+}: {
+  handle: null | string
+  instagramUrl: null | string
+  items: Spotted[]
+}) {
   const withImages = items.filter((item) => typeof item.image === 'object' && item.image)
   if (!withImages.length) return null
 
@@ -110,15 +131,30 @@ export function SpottedBand({ handle, instagramUrl, items }: { handle: null | st
       <div className="text-center" data-reveal>
         <h2 className="caps text-[0.6875rem]">Spotted</h2>
         {handle ? (
-          <a className="serif-italic mt-2 inline-block text-ink-soft" href={instagramUrl ?? '#'} rel="noopener noreferrer" target="_blank">
+          <a
+            className="serif-italic mt-2 inline-block text-ink-soft"
+            href={instagramUrl ?? '#'}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             {handle}
           </a>
         ) : null}
       </div>
       <ul className="mt-10 grid grid-cols-2 gap-2.5 md:grid-cols-4">
         {withImages.slice(0, 4).map((item) => (
-          <li className="relative aspect-square overflow-hidden bg-paper-3" data-reveal key={item.id}>
-            <Media className="absolute inset-0" fill imgClassName="object-cover" resource={item.image as MediaType} size="(min-width: 768px) 25vw, 50vw" />
+          <li
+            className="relative aspect-square overflow-hidden bg-paper-3"
+            data-reveal
+            key={item.id}
+          >
+            <Media
+              className="absolute inset-0"
+              fill
+              imgClassName="object-cover"
+              resource={item.image as MediaType}
+              size="(min-width: 768px) 25vw, 50vw"
+            />
           </li>
         ))}
       </ul>

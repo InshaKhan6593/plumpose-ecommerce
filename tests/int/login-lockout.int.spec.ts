@@ -18,15 +18,26 @@ let userId: number
 
 beforeAll(async () => {
   payload = await getPayload({ config: await config })
-  await payload.delete({ collection: 'users', overrideAccess: true, where: { email: { equals: EMAIL } } }).catch(() => undefined)
-  userId = (await payload.create({ collection: 'users', data: { email: EMAIL, password: PASSWORD, roles: ['customer'] } as never, overrideAccess: true })).id
+  await payload
+    .delete({ collection: 'users', overrideAccess: true, where: { email: { equals: EMAIL } } })
+    .catch(() => undefined)
+  userId = (
+    await payload.create({
+      collection: 'users',
+      data: { email: EMAIL, password: PASSWORD, roles: ['customer'] } as never,
+      overrideAccess: true,
+    })
+  ).id
 }, 120_000)
 
 afterAll(async () => {
-  await payload.delete({ collection: 'users', id: userId, overrideAccess: true }).catch(() => undefined)
+  await payload
+    .delete({ collection: 'users', id: userId, overrideAccess: true })
+    .catch(() => undefined)
 })
 
-const tryLogin = (password: string) => payload.login({ collection: 'users', data: { email: EMAIL, password } })
+const tryLogin = (password: string) =>
+  payload.login({ collection: 'users', data: { email: EMAIL, password } })
 
 describe('login lockout', () => {
   it('is set to five attempts and fifteen minutes', () => {
@@ -43,10 +54,24 @@ describe('login lockout', () => {
   it('records the lock on the account, and clears it on unlock', async () => {
     // (A successful login is not repeated here: signing its token needs Node's own crypto,
     //  which this test environment replaces. The storefront sign-in covers it end to end.)
-    const locked = (await payload.findByID({ collection: 'users', id: userId, overrideAccess: true, showHiddenFields: true })) as { lockUntil?: null | string; loginAttempts?: number }
+    const locked = (await payload.findByID({
+      collection: 'users',
+      id: userId,
+      overrideAccess: true,
+      showHiddenFields: true,
+    })) as { lockUntil?: null | string; loginAttempts?: number }
     expect(new Date(locked.lockUntil!).getTime()).toBeGreaterThan(Date.now() + 14 * 60 * 1000)
-    await payload.unlock({ collection: 'users', data: { email: EMAIL } as never, overrideAccess: true })
-    const open = (await payload.findByID({ collection: 'users', id: userId, overrideAccess: true, showHiddenFields: true })) as { lockUntil?: null | string; loginAttempts?: number }
+    await payload.unlock({
+      collection: 'users',
+      data: { email: EMAIL } as never,
+      overrideAccess: true,
+    })
+    const open = (await payload.findByID({
+      collection: 'users',
+      id: userId,
+      overrideAccess: true,
+      showHiddenFields: true,
+    })) as { lockUntil?: null | string; loginAttempts?: number }
     expect(open.loginAttempts ?? 0).toBe(0)
     expect(open.lockUntil ?? null).toBeNull()
   })

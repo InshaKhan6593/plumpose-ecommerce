@@ -29,7 +29,11 @@ export const metadata: Metadata = {
  * shown here is the rare moment where the payment is taken but not yet
  * confirmable, and that page keeps checking by itself.
  */
-export default async function CheckoutReturn({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
+export default async function CheckoutReturn({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>
+}) {
   const { session_id: sessionId } = await searchParams
 
   if (!sessionId || !/^cs_[A-Za-z0-9_]+$/.test(sessionId) || !isStripeSandboxEnabled()) {
@@ -48,7 +52,9 @@ export default async function CheckoutReturn({ searchParams }: { searchParams: P
   })
 
   if (result.status === 'confirmed') {
-    redirect(`/order/${result.orderId}?${new URLSearchParams({ placed: '1', token: result.accessToken })}`)
+    redirect(
+      `/order/${result.orderId}?${new URLSearchParams({ placed: '1', token: result.accessToken })}`,
+    )
   }
   if (result.status === 'unpaid') {
     redirect('/checkout?payment=cancelled')

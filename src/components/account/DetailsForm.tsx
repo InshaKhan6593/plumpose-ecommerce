@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import type { User } from '@/payload-types'
@@ -31,9 +31,15 @@ export function DetailsForm({ user }: { user: Pick<User, 'email' | 'id' | 'name'
       method: 'PATCH',
     })
     if (!res.ok) {
-      const json = (await res.json().catch(() => ({}))) as { errors?: Array<{ data?: { errors?: Array<{ path?: string }> } }> }
+      const json = (await res.json().catch(() => ({}))) as {
+        errors?: Array<{ data?: { errors?: Array<{ path?: string }> } }>
+      }
       const taken = json.errors?.some((e) => e.data?.errors?.some((f) => f.path === 'email'))
-      throw new Error(taken ? 'There is already an account with this email.' : 'That didn’t save. Please try again.')
+      throw new Error(
+        taken
+          ? 'There is already an account with this email.'
+          : 'That didn’t save. Please try again.',
+      )
     }
     const { doc } = (await res.json()) as { doc: User }
     setUser(doc)
@@ -77,7 +83,14 @@ function ProfileForm({
   return (
     <form className="flex max-w-lg flex-col gap-8" noValidate onSubmit={onSubmit}>
       <HouseField error={errors.name?.message} id="name" label="Name">
-        <input aria-invalid={Boolean(errors.name)} autoComplete="name" className={houseInput} id="name" maxLength={120} {...register('name', { required: 'Please tell us your name.' })} />
+        <input
+          aria-invalid={Boolean(errors.name)}
+          autoComplete="name"
+          className={houseInput}
+          id="name"
+          maxLength={120}
+          {...register('name', { required: 'Please tell us your name.' })}
+        />
       </HouseField>
       <HouseField
         error={errors.email?.message}
@@ -91,7 +104,10 @@ function ProfileForm({
           className={houseInput}
           id="email"
           type="email"
-          {...register('email', { pattern: { message: 'Please check the email address.', value: EMAIL }, required: 'Please enter your email.' })}
+          {...register('email', {
+            pattern: { message: 'Please check the email address.', value: EMAIL },
+            required: 'Please enter your email.',
+          })}
         />
       </HouseField>
       {status ? <HouseAlert tone={status.tone}>{status.text}</HouseAlert> : null}
@@ -126,7 +142,12 @@ function PasswordForm({ onSave }: { onSave: (data: { password: string }) => Prom
   return (
     <form className="flex max-w-lg flex-col gap-8" noValidate onSubmit={onSubmit}>
       <h2 className="caps border-b border-line pb-4 text-[0.6875rem]">Change password</h2>
-      <HouseField error={errors.password?.message} hint={`At least ${MIN_PASSWORD} characters.`} id="new-password" label="New password">
+      <HouseField
+        error={errors.password?.message}
+        hint={`At least ${MIN_PASSWORD} characters.`}
+        id="new-password"
+        label="New password"
+      >
         <input
           aria-invalid={Boolean(errors.password)}
           autoComplete="new-password"
@@ -134,12 +155,19 @@ function PasswordForm({ onSave }: { onSave: (data: { password: string }) => Prom
           id="new-password"
           type="password"
           {...register('password', {
-            minLength: { message: `Please use at least ${MIN_PASSWORD} characters.`, value: MIN_PASSWORD },
+            minLength: {
+              message: `Please use at least ${MIN_PASSWORD} characters.`,
+              value: MIN_PASSWORD,
+            },
             required: 'Please choose a new password.',
           })}
         />
       </HouseField>
-      <HouseField error={errors.passwordConfirm?.message} id="new-password-confirm" label="New password, again">
+      <HouseField
+        error={errors.passwordConfirm?.message}
+        id="new-password-confirm"
+        label="New password, again"
+      >
         <input
           aria-invalid={Boolean(errors.passwordConfirm)}
           autoComplete="new-password"
@@ -148,7 +176,8 @@ function PasswordForm({ onSave }: { onSave: (data: { password: string }) => Prom
           type="password"
           {...register('passwordConfirm', {
             required: 'Please type it again.',
-            validate: (value) => value === getValues('password') || 'The two passwords don’t match.',
+            validate: (value) =>
+              value === getValues('password') || 'The two passwords don’t match.',
           })}
         />
       </HouseField>

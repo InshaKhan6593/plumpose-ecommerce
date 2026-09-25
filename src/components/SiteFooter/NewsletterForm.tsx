@@ -44,7 +44,9 @@ export function NewsletterForm() {
       }
       const duplicate = body.errors?.some((e) => e.data?.errors?.some((f) => f.path === 'email'))
       setState(duplicate ? 'done' : 'error')
-      setMessage(duplicate ? 'Thank you — you’re on the list.' : 'That didn’t work. Please try again.')
+      setMessage(
+        duplicate ? 'Thank you — you’re on the list.' : 'That didn’t work. Please try again.',
+      )
     } catch {
       setState('error')
       setMessage('That didn’t work. Please try again.')

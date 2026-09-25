@@ -12,15 +12,31 @@ import { type Minor, toMinor } from './money'
  * Priced exactly as the engine prices them (./shipping.ts): minor units, the
  * international surcharge applied to zones and rounded the same way.
  */
-export type DeliveryRange = { intlLow: Minor | null; qatarHigh: Minor | null; qatarLow: Minor | null }
+export type DeliveryRange = {
+  intlLow: Minor | null
+  qatarHigh: Minor | null
+  qatarLow: Minor | null
+}
 
 export const deliveryRange = async (
   payload: Payload,
   settings: Pick<SiteSetting, 'intlSurchargePct'>,
 ): Promise<DeliveryRange> => {
   const [cities, zones] = await Promise.all([
-    payload.find({ collection: 'shippingCities', depth: 0, limit: 100, pagination: false, where: { active: { equals: true } } }),
-    payload.find({ collection: 'shippingZones', depth: 0, limit: 100, pagination: false, where: { active: { equals: true } } }),
+    payload.find({
+      collection: 'shippingCities',
+      depth: 0,
+      limit: 100,
+      pagination: false,
+      where: { active: { equals: true } },
+    }),
+    payload.find({
+      collection: 'shippingZones',
+      depth: 0,
+      limit: 100,
+      pagination: false,
+      where: { active: { equals: true } },
+    }),
   ])
 
   const qatar = cities.docs.map((city) => toMinor(city.feeQar))

@@ -8,7 +8,13 @@ import { embroiderySignature, plumposeCartItemMatcher } from '@/lib/cart/itemMat
  * lose the embroidery. See src/lib/cart/itemMatcher.ts.
  */
 
-const gold = { lettering: 'M.K', placement: 'pocket', style: 'both', symbol: 'star', thread: 'gold' }
+const gold = {
+  lettering: 'M.K',
+  placement: 'pocket',
+  style: 'both',
+  symbol: 'star',
+  thread: 'gold',
+}
 const silverCuff = { lettering: 'N', placement: 'cuff', style: 'text', thread: 'silver' }
 
 const match = (existingItem: object, newItem: object) =>
@@ -28,8 +34,12 @@ describe('cart line matching', () => {
   })
 
   it('never folds an embroidered piece into a plain one', () => {
-    expect(match({ product: 1, variant: 2 }, { personalisation: [gold], product: 1, variant: 2 })).toBe(false)
-    expect(match({ personalisation: [gold], product: 1, variant: 2 }, { product: 1, variant: 2 })).toBe(false)
+    expect(
+      match({ product: 1, variant: 2 }, { personalisation: [gold], product: 1, variant: 2 }),
+    ).toBe(false)
+    expect(
+      match({ personalisation: [gold], product: 1, variant: 2 }, { product: 1, variant: 2 }),
+    ).toBe(false)
   })
 
   it('keeps different embroidery apart', () => {
@@ -53,6 +63,8 @@ describe('cart line matching', () => {
   it('treats an empty list the same as no embroidery', () => {
     expect(embroiderySignature([])).toBe('')
     expect(embroiderySignature(undefined)).toBe('')
-    expect(match({ personalisation: [], product: 1, variant: 2 }, { product: 1, variant: 2 })).toBe(true)
+    expect(match({ personalisation: [], product: 1, variant: 2 }, { product: 1, variant: 2 })).toBe(
+      true,
+    )
   })
 })

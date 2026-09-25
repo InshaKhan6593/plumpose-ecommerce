@@ -1,10 +1,15 @@
-import type { Endpoint, PayloadRequest } from 'payload'
-
+import type { Endpoint } from 'payload'
 
 import type { DiscountCode, Media, SiteSetting, SpinSegment } from '@/payload-types'
 
 import { scheduleSpinRewardEmail } from '@/email/spinReward'
-import { describeReward, drawableSegments, newRewardCode, pickSegment, rewardExpiry } from '@/lib/spin/wheel'
+import {
+  describeReward,
+  drawableSegments,
+  newRewardCode,
+  pickSegment,
+  rewardExpiry,
+} from '@/lib/spin/wheel'
 import { deviceOf } from '@/utilities/deviceOf'
 
 /**
@@ -34,10 +39,16 @@ import { deviceOf } from '@/utilities/deviceOf'
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 const json = (body: unknown, status = 200): Response =>
-  new Response(JSON.stringify(body), { headers: { 'Cache-Control': 'no-store', 'Content-Type': 'application/json' }, status })
+  new Response(JSON.stringify(body), {
+    headers: { 'Cache-Control': 'no-store', 'Content-Type': 'application/json' },
+    status,
+  })
 
 /** The same reply for "already won" and "has ordered", so neither can be probed. */
-const NOT_AGAIN = { message: 'This email has already had its spin.', outcome: 'alreadySpun' } as const
+const NOT_AGAIN = {
+  message: 'This email has already had its spin.',
+  outcome: 'alreadySpun',
+} as const
 
 const settingsFor = (s: Partial<SiteSetting>) => ({
   body: s.spinWheelBody ?? '',
@@ -48,10 +59,11 @@ const settingsFor = (s: Partial<SiteSetting>) => ({
   newCustomersOnly: s.spinWheelNewCustomersOnly === true,
 })
 
-
 export const wheelEndpoint: Endpoint = {
   handler: async (req) => {
-    const settings = settingsFor((await req.payload.findGlobal({ depth: 0, slug: 'siteSettings' })) as Partial<SiteSetting>)
+    const settings = settingsFor(
+      (await req.payload.findGlobal({ depth: 0, slug: 'siteSettings' })) as Partial<SiteSetting>,
+    )
     if (!settings.enabled) return json({ enabled: false })
 
     const { docs } = await req.payload.find({
@@ -65,10 +77,17 @@ export const wheelEndpoint: Endpoint = {
 
     // The print, for the wheel's centre — the square crop of the seeded macro photograph.
     const print = (
-      await req.payload.find({ collection: 'media', depth: 0, limit: 1, where: { filename: { equals: 'brand-02-print-macro.jpg' } } })
+      await req.payload.find({
+        collection: 'media',
+        depth: 0,
+        limit: 1,
+        where: { filename: { equals: 'brand-02-print-macro.jpg' } },
+      })
     ).docs[0] as Media | undefined
     // For the fine print: how long a code lasts (the shortest, if prizes differ).
-    const days = (docs as SpinSegment[]).filter((s) => s.rewardType !== 'rollAgain').map((s) => s.expiryDays ?? 30)
+    const days = (docs as SpinSegment[])
+      .filter((s) => s.rewardType !== 'rollAgain')
+      .map((s) => s.expiryDays ?? 30)
 
     return json({
       body: settings.body,
@@ -76,7 +95,11 @@ export const wheelEndpoint: Endpoint = {
       enabled: docs.length > 0,
       heading: settings.heading,
       // Label and colour only — `weight` is admin-only at field level, and is not asked for here anyway.
-      segments: (docs as SpinSegment[]).map((s) => ({ colour: s.colour ?? '#f6f4f0', id: s.id, label: s.label })),
+      segments: (docs as SpinSegment[]).map((s) => ({
+        colour: s.colour ?? '#f6f4f0',
+        id: s.id,
+        label: s.label,
+      })),
       validDays: days.length ? Math.min(...days) : 30,
     })
   },
@@ -91,14 +114,21 @@ export const spinEndpoint: Endpoint = {
     let email: string
     try {
       const body = ((await req.json?.()) ?? {}) as { email?: unknown }
-      email = String(body.email ?? '').trim().toLowerCase().slice(0, 200)
+      email = String(body.email ?? '')
+        .trim()
+        .toLowerCase()
+        .slice(0, 200)
     } catch {
       return json({ message: 'Could not read that request.', outcome: 'invalid' }, 400)
     }
-    if (!EMAIL.test(email)) return json({ message: 'Please enter your email address.', outcome: 'invalid' }, 400)
+    if (!EMAIL.test(email))
+      return json({ message: 'Please enter your email address.', outcome: 'invalid' }, 400)
 
-    const settings = settingsFor((await payload.findGlobal({ depth: 0, req, slug: 'siteSettings' })) as Partial<SiteSetting>)
-    if (!settings.enabled) return json({ message: 'The wheel is resting for now.', outcome: 'closed' }, 404)
+    const settings = settingsFor(
+      (await payload.findGlobal({ depth: 0, req, slug: 'siteSettings' })) as Partial<SiteSetting>,
+    )
+    if (!settings.enabled)
+      return json({ message: 'The wheel is resting for now.', outcome: 'closed' }, 404)
 
     // ---- one device, a few spins a day ----
     const device = deviceOf(req)
@@ -111,12 +141,23 @@ export const spinEndpoint: Endpoint = {
         where: { and: [{ ipHash: { equals: device } }, { createdAt: { greater_than: since } }] },
       })
       if (recent.totalDocs >= settings.dailyLimit) {
-        return json({ message: 'That is enough spins for today. Please come back tomorrow.', outcome: 'tooMany' }, 429)
+        return json(
+          {
+            message: 'That is enough spins for today. Please come back tomorrow.',
+            outcome: 'tooMany',
+          },
+          429,
+        )
       }
     }
 
     // ---- one prize per email ----
-    const won = await payload.count({ collection: 'spinEntries', overrideAccess: true, req, where: { winnerEmail: { equals: email } } })
+    const won = await payload.count({
+      collection: 'spinEntries',
+      overrideAccess: true,
+      req,
+      where: { winnerEmail: { equals: email } },
+    })
     if (won.totalDocs > 0) return json(NOT_AGAIN, 409)
 
     if (settings.newCustomersOnly) {
@@ -124,14 +165,23 @@ export const spinEndpoint: Endpoint = {
         collection: 'orders',
         overrideAccess: true,
         req,
-        where: { or: [{ customerEmail: { equals: email } }, { 'customer.email': { equals: email } }] },
+        where: {
+          or: [{ customerEmail: { equals: email } }, { 'customer.email': { equals: email } }],
+        },
       })
       if (ordered.totalDocs > 0) return json(NOT_AGAIN, 409)
     }
 
     // ---- the draw ----
     const [segments, rerolls] = await Promise.all([
-      payload.find({ collection: 'spinSegments', depth: 0, limit: 20, overrideAccess: true, pagination: false, req }),
+      payload.find({
+        collection: 'spinSegments',
+        depth: 0,
+        limit: 20,
+        overrideAccess: true,
+        pagination: false,
+        req,
+      }),
       payload.count({
         collection: 'spinEntries',
         overrideAccess: true,
@@ -144,7 +194,12 @@ export const spinEndpoint: Endpoint = {
     if (!segment) return json({ message: 'The wheel is resting for now.', outcome: 'closed' }, 503)
 
     if (segment.rewardType === 'rollAgain') {
-      await payload.create({ collection: 'spinEntries', data: { email, ipHash: device ?? undefined, segment: segment.id }, overrideAccess: true, req })
+      await payload.create({
+        collection: 'spinEntries',
+        data: { email, ipHash: device ?? undefined, segment: segment.id },
+        overrideAccess: true,
+        req,
+      })
       return json({ outcome: 'rollAgain', segmentId: segment.id, spinsLeft: rerollsLeft - 1 })
     }
 
@@ -164,7 +219,10 @@ export const spinEndpoint: Endpoint = {
             source: 'spinWheel',
             type: segment.rewardType as DiscountCode['type'],
             usageLimit: 1,
-            value: segment.rewardType === 'freeShipping' ? undefined : (segment.rewardValue ?? undefined),
+            value:
+              segment.rewardType === 'freeShipping'
+                ? undefined
+                : (segment.rewardValue ?? undefined),
           },
           overrideAccess: true,
           req,
@@ -172,25 +230,46 @@ export const spinEndpoint: Endpoint = {
         // A clash on the (unique) code: draw another.
         .catch(() => null)) as DiscountCode | null
     }
-    if (!code) return json({ message: 'That didn’t work. Please try again.', outcome: 'error' }, 500)
+    if (!code)
+      return json({ message: 'That didn’t work. Please try again.', outcome: 'error' }, 500)
 
     try {
       await payload.create({
         collection: 'spinEntries',
-        data: { email, ipHash: device ?? undefined, issuedCode: code.id, segment: segment.id, winnerEmail: email },
+        data: {
+          email,
+          ipHash: device ?? undefined,
+          issuedCode: code.id,
+          segment: segment.id,
+          winnerEmail: email,
+        },
         overrideAccess: true,
         req,
       })
     } catch {
       // The unique winnerEmail refused a second win arriving at the same moment: withdraw this code.
-      await payload.delete({ collection: 'discountCodes', id: code.id, overrideAccess: true, req }).catch(() => undefined)
+      await payload
+        .delete({ collection: 'discountCodes', id: code.id, overrideAccess: true, req })
+        .catch(() => undefined)
       return json(NOT_AGAIN, 409)
     }
 
     // The wheel's words promise the list; a repeat address is simply already on it.
-    const listed = await payload.count({ collection: 'subscribers', overrideAccess: true, req, where: { email: { equals: email } } })
+    const listed = await payload.count({
+      collection: 'subscribers',
+      overrideAccess: true,
+      req,
+      where: { email: { equals: email } },
+    })
     if (!listed.totalDocs) {
-      await payload.create({ collection: 'subscribers', data: { email, source: 'spinWheel' }, overrideAccess: true, req }).catch(() => undefined)
+      await payload
+        .create({
+          collection: 'subscribers',
+          data: { email, source: 'spinWheel' },
+          overrideAccess: true,
+          req,
+        })
+        .catch(() => undefined)
     }
 
     scheduleSpinRewardEmail(payload, { codeId: code.id, email })

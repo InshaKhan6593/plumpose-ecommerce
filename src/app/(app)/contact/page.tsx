@@ -46,12 +46,25 @@ export default async function ContactPage({ searchParams }: Props) {
 
   const whatsappDigits = settings.whatsappNumber?.replace(/[^\d]/g, '')
   const instagramHref =
-    settings.instagramUrl || (settings.instagramHandle ? `https://instagram.com/${settings.instagramHandle.replace(/^@/, '')}` : null)
+    settings.instagramUrl ||
+    (settings.instagramHandle
+      ? `https://instagram.com/${settings.instagramHandle.replace(/^@/, '')}`
+      : null)
 
   const channels = [
-    settings.contactEmail ? { href: `mailto:${settings.contactEmail}`, label: 'Email', value: settings.contactEmail } : null,
-    whatsappDigits ? { href: `https://wa.me/${whatsappDigits}`, label: 'WhatsApp', value: settings.whatsappNumber! } : null,
-    instagramHref ? { href: instagramHref, label: 'Instagram', value: settings.instagramHandle ?? 'Instagram' } : null,
+    settings.contactEmail
+      ? { href: `mailto:${settings.contactEmail}`, label: 'Email', value: settings.contactEmail }
+      : null,
+    whatsappDigits
+      ? {
+          href: `https://wa.me/${whatsappDigits}`,
+          label: 'WhatsApp',
+          value: settings.whatsappNumber!,
+        }
+      : null,
+    instagramHref
+      ? { href: instagramHref, label: 'Instagram', value: settings.instagramHandle ?? 'Instagram' }
+      : null,
   ].filter((c): c is { href: string; label: string; value: string } => Boolean(c))
 
   return (
@@ -66,7 +79,9 @@ export default async function ContactPage({ searchParams }: Props) {
                 <a
                   className="serif-display mt-2 inline-block text-[1.75rem] transition-opacity hover:opacity-60"
                   href={channel.href}
-                  {...(channel.href.startsWith('http') ? { rel: 'noopener noreferrer', target: '_blank' } : {})}
+                  {...(channel.href.startsWith('http')
+                    ? { rel: 'noopener noreferrer', target: '_blank' }
+                    : {})}
                 >
                   {channel.value}
                 </a>
@@ -85,7 +100,12 @@ export default async function ContactPage({ searchParams }: Props) {
               {CONTACT_PAGE.formHeading}
             </h2>
             <div className="mt-10" data-reveal>
-              <ContactForm formId={formId} initialSubject={subject} subjects={CONTACT_PAGE.subjects} thanks={CONTACT_PAGE.thanks} />
+              <ContactForm
+                formId={formId}
+                initialSubject={subject}
+                subjects={CONTACT_PAGE.subjects}
+                thanks={CONTACT_PAGE.thanks}
+              />
             </div>
           </Reveal>
         ) : null}

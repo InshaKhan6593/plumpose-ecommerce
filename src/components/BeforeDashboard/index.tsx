@@ -37,41 +37,62 @@ export const BeforeDashboard: React.FC = async () => {
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [ordersToday, awaiting, lowStock, pendingReviews, pendingSpotted, liveProducts, recentPayments, newEnquiries, latestRate] =
-    await Promise.all([
-      payload.find({
-        collection: 'orders',
-        depth: 0,
-        limit: 100,
-        where: { createdAt: { greater_than_equal: today } },
-      }),
-      payload.count({
-        collection: 'orders',
-        where: { fulfilment: { in: ['unfulfilled', 'inAtelier'] } },
-      }),
-      payload.find({
-        collection: 'variants',
-        depth: 1,
-        pagination: false,
-        // A product populates with a few fields by default; these two decide what counts.
-        populate: { products: { _status: true, madeToOrder: true } },
-        where: { inventory: { less_than_equal: lowAt } },
-      }),
-      payload.count({ collection: 'reviews', where: { status: { equals: 'pending' } } }),
-      payload.count({ collection: 'spotted', where: { status: { equals: 'pending' } } }),
-      payload.count({ collection: 'products', where: { _status: { equals: 'published' } } }),
-      // Checkouts in the last week that did not end in a payment (REQUIREMENTS P11).
-      payload.find({
-        collection: 'transactions',
-        depth: 0,
-        pagination: false,
-        select: { createdAt: true, status: true },
-        where: { and: [{ createdAt: { greater_than_equal: weekAgo } }, { status: { not_equals: 'succeeded' } }] },
-      }),
-      payload.count({ collection: 'form-submissions', where: { status: { equals: 'new' } } }),
-      // When exchange rates were last refreshed (REQUIREMENTS A14).
-      payload.find({ collection: 'currencies', depth: 0, limit: 1, select: { rateUpdatedAt: true }, sort: '-rateUpdatedAt', where: { rateUpdatedAt: { exists: true } } }),
-    ]).catch(() => [null, null, null, null, null, null, null, null, null] as any)
+  const [
+    ordersToday,
+    awaiting,
+    lowStock,
+    pendingReviews,
+    pendingSpotted,
+    liveProducts,
+    recentPayments,
+    newEnquiries,
+    latestRate,
+  ] = await Promise.all([
+    payload.find({
+      collection: 'orders',
+      depth: 0,
+      limit: 100,
+      where: { createdAt: { greater_than_equal: today } },
+    }),
+    payload.count({
+      collection: 'orders',
+      where: { fulfilment: { in: ['unfulfilled', 'inAtelier'] } },
+    }),
+    payload.find({
+      collection: 'variants',
+      depth: 1,
+      pagination: false,
+      // A product populates with a few fields by default; these two decide what counts.
+      populate: { products: { _status: true, madeToOrder: true } },
+      where: { inventory: { less_than_equal: lowAt } },
+    }),
+    payload.count({ collection: 'reviews', where: { status: { equals: 'pending' } } }),
+    payload.count({ collection: 'spotted', where: { status: { equals: 'pending' } } }),
+    payload.count({ collection: 'products', where: { _status: { equals: 'published' } } }),
+    // Checkouts in the last week that did not end in a payment (REQUIREMENTS P11).
+    payload.find({
+      collection: 'transactions',
+      depth: 0,
+      pagination: false,
+      select: { createdAt: true, status: true },
+      where: {
+        and: [
+          { createdAt: { greater_than_equal: weekAgo } },
+          { status: { not_equals: 'succeeded' } },
+        ],
+      },
+    }),
+    payload.count({ collection: 'form-submissions', where: { status: { equals: 'new' } } }),
+    // When exchange rates were last refreshed (REQUIREMENTS A14).
+    payload.find({
+      collection: 'currencies',
+      depth: 0,
+      limit: 1,
+      select: { rateUpdatedAt: true },
+      sort: '-rateUpdatedAt',
+      where: { rateUpdatedAt: { exists: true } },
+    }),
+  ]).catch(() => [null, null, null, null, null, null, null, null, null] as any)
 
   const revenueToday =
     ordersToday?.docs?.reduce((sum: number, o: any) => sum + (o.amount || 0), 0) ?? 0
@@ -79,7 +100,11 @@ export const BeforeDashboard: React.FC = async () => {
   const stats: Array<{ hint?: string; label: string; value: string }> = [
     { label: 'Orders today', value: String(ordersToday?.totalDocs ?? 0) },
     { label: 'Taken today', value: money(revenueToday) },
-    { hint: 'Needs packing or posting', label: 'Awaiting fulfilment', value: String(awaiting?.totalDocs ?? 0) },
+    {
+      hint: 'Needs packing or posting',
+      label: 'Awaiting fulfilment',
+      value: String(awaiting?.totalDocs ?? 0),
+    },
     { label: 'Live products', value: String(liveProducts?.totalDocs ?? 0) },
   ]
 
@@ -91,21 +116,25 @@ export const BeforeDashboard: React.FC = async () => {
   const liveSizes = ((lowStock?.docs ?? []) as any[]).filter(
     (v) => typeof v.product === 'object' && v.product?._status === 'published',
   )
-  const soldOut = liveSizes.filter((v) => (v.inventory ?? 0) <= 0 && v.product.madeToOrder === false).length
+  const soldOut = liveSizes.filter(
+    (v) => (v.inventory ?? 0) <= 0 && v.product.madeToOrder === false,
+  ).length
   const runningLow = liveSizes.filter((v) => (v.inventory ?? 0) > 0).length
   const sizesLink = '/admin/collections/variants?sort=inventory'
 
-  const notPaid = ((recentPayments?.docs ?? []) as Array<{ createdAt: string; status?: string }>).filter(
-    (t) => !paymentOutcome({ createdAt: t.createdAt, status: t.status }).fine,
-  ).length
+  const notPaid = (
+    (recentPayments?.docs ?? []) as Array<{ createdAt: string; status?: string }>
+  ).filter((t) => !paymentOutcome({ createdAt: t.createdAt, status: t.status }).fine).length
   const paymentsLink = '/admin/collections/transactions?where[status][not_equals]=succeeded'
 
   const ratesAt = latestRate?.docs?.[0]?.rateUpdatedAt as string | undefined
-  const ratesAgeDays = ratesAt ? Math.floor((Date.now() - new Date(ratesAt).getTime()) / 86_400_000) : null
-  const ratesStale = latestRate !== null && (ratesAgeDays === null || ratesAgeDays > RATES_STALE_DAYS)
+  const ratesAgeDays = ratesAt
+    ? Math.floor((Date.now() - new Date(ratesAt).getTime()) / 86_400_000)
+    : null
+  const ratesStale =
+    latestRate !== null && (ratesAgeDays === null || ratesAgeDays > RATES_STALE_DAYS)
 
-  const toReview =
-    (pendingReviews?.totalDocs ?? 0) + (pendingSpotted?.totalDocs ?? 0)
+  const toReview = (pendingReviews?.totalDocs ?? 0) + (pendingSpotted?.totalDocs ?? 0)
 
   return (
     <div className={baseClass}>
@@ -124,18 +153,26 @@ export const BeforeDashboard: React.FC = async () => {
         ))}
       </div>
 
-      {(toReview > 0 || soldOut > 0 || runningLow > 0 || notPaid > 0 || (newEnquiries?.totalDocs ?? 0) > 0 || ratesStale) && (
+      {(toReview > 0 ||
+        soldOut > 0 ||
+        runningLow > 0 ||
+        notPaid > 0 ||
+        (newEnquiries?.totalDocs ?? 0) > 0 ||
+        ratesStale) && (
         <div className={`${baseClass}__alerts`}>
           {toReview > 0 && (
             <p>
-              <strong>{toReview}</strong>{' '}
-              {toReview === 1 ? 'submission is' : 'submissions are'} waiting for your approval.
+              <strong>{toReview}</strong> {toReview === 1 ? 'submission is' : 'submissions are'}{' '}
+              waiting for your approval.
             </p>
           )}
           {(newEnquiries?.totalDocs ?? 0) > 0 && (
             <p>
-              <strong>{newEnquiries.totalDocs}</strong> new {newEnquiries.totalDocs === 1 ? 'enquiry' : 'enquiries'}.{' '}
-              <a href="/admin/collections/form-submissions?where[status][equals]=new">Read {newEnquiries.totalDocs === 1 ? 'it' : 'them'}</a>
+              <strong>{newEnquiries.totalDocs}</strong> new{' '}
+              {newEnquiries.totalDocs === 1 ? 'enquiry' : 'enquiries'}.{' '}
+              <a href="/admin/collections/form-submissions?where[status][equals]=new">
+                Read {newEnquiries.totalDocs === 1 ? 'it' : 'them'}
+              </a>
             </p>
           )}
           {notPaid > 0 && (
@@ -146,8 +183,11 @@ export const BeforeDashboard: React.FC = async () => {
           )}
           {ratesStale && (
             <p>
-              Exchange rates {ratesAgeDays === null ? 'have not been fetched yet' : `were last refreshed ${ratesAgeDays} days ago`}.{' '}
-              <a href="/admin/collections/currencies">Refresh them</a>
+              Exchange rates{' '}
+              {ratesAgeDays === null
+                ? 'have not been fetched yet'
+                : `were last refreshed ${ratesAgeDays} days ago`}
+              . <a href="/admin/collections/currencies">Refresh them</a>
             </p>
           )}
           {soldOut > 0 && (
@@ -158,8 +198,8 @@ export const BeforeDashboard: React.FC = async () => {
           )}
           {runningLow > 0 && (
             <p>
-              <strong>{runningLow}</strong> {runningLow === 1 ? 'size is' : 'sizes are'} down to {lowAt} or fewer.{' '}
-              <a href={sizesLink}>See sizes &amp; stock</a>
+              <strong>{runningLow}</strong> {runningLow === 1 ? 'size is' : 'sizes are'} down to{' '}
+              {lowAt} or fewer. <a href={sizesLink}>See sizes &amp; stock</a>
             </p>
           )}
         </div>

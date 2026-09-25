@@ -27,14 +27,36 @@ const PAGES = args.length ? args : ['/', '/shop', '/products/al-shaheen-nights',
 
 const collector = () => {
   const w = window as any
-  w.__perf = { cls: 0, events: [] as number[], frames: [] as number[], lcp: 0, longTasks: [] as number[], rec: false }
-  new PerformanceObserver((l) => l.getEntries().forEach((e) => w.__perf.longTasks.push(e.duration))).observe({ buffered: true, type: 'longtask' })
-  new PerformanceObserver((l) => l.getEntries().forEach((e) => (w.__perf.lcp = e.startTime))).observe({ buffered: true, type: 'largest-contentful-paint' })
-  new PerformanceObserver((l) => l.getEntries().forEach((e: any) => { if (!e.hadRecentInput) w.__perf.cls += e.value })).observe({ buffered: true, type: 'layout-shift' })
-  new PerformanceObserver((l) => l.getEntries().forEach((e: any) => w.__perf.events.push(e.duration))).observe({ durationThreshold: 16, type: 'event' } as any)
-  const loop = (t: number) => { if (w.__perf.rec) w.__perf.frames.push(t); requestAnimationFrame(loop) }
+  w.__perf = {
+    cls: 0,
+    events: [] as number[],
+    frames: [] as number[],
+    lcp: 0,
+    longTasks: [] as number[],
+    rec: false,
+  }
+  new PerformanceObserver((l) =>
+    l.getEntries().forEach((e) => w.__perf.longTasks.push(e.duration)),
+  ).observe({ buffered: true, type: 'longtask' })
+  new PerformanceObserver((l) =>
+    l.getEntries().forEach((e) => (w.__perf.lcp = e.startTime)),
+  ).observe({ buffered: true, type: 'largest-contentful-paint' })
+  new PerformanceObserver((l) =>
+    l.getEntries().forEach((e: any) => {
+      if (!e.hadRecentInput) w.__perf.cls += e.value
+    }),
+  ).observe({ buffered: true, type: 'layout-shift' })
+  new PerformanceObserver((l) =>
+    l.getEntries().forEach((e: any) => w.__perf.events.push(e.duration)),
+  ).observe({ durationThreshold: 16, type: 'event' } as any)
+  const loop = (t: number) => {
+    if (w.__perf.rec) w.__perf.frames.push(t)
+    requestAnimationFrame(loop)
+  }
   requestAnimationFrame(loop)
-  try { localStorage.setItem('plumpose:wheel', 'done') } catch {}
+  try {
+    localStorage.setItem('plumpose:wheel', 'done')
+  } catch {}
 }
 
 const frameStats = (times: number[]) => {
@@ -47,15 +69,27 @@ const frameStats = (times: number[]) => {
 }
 
 async function record(page: Page, ms: number, action?: () => Promise<void>) {
-  await page.evaluate(() => { const w = window as any; w.__perf.frames = []; w.__perf.rec = true })
+  await page.evaluate(() => {
+    const w = window as any
+    w.__perf.frames = []
+    w.__perf.rec = true
+  })
   if (action) await action()
   else await page.waitForTimeout(ms)
-  return page.evaluate(() => { const w = window as any; w.__perf.rec = false; return w.__perf.frames as number[] })
+  return page.evaluate(() => {
+    const w = window as any
+    w.__perf.rec = false
+    return w.__perf.frames as number[]
+  })
 }
 
 async function run() {
-  const browser = await chromium.launch({ args: ['--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-angle=d3d11'] })
-  const context = await browser.newContext(PHONE ? { ...devices['Pixel 7'] } : { viewport: { height: 900, width: 1440 } })
+  const browser = await chromium.launch({
+    args: ['--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-angle=d3d11'],
+  })
+  const context = await browser.newContext(
+    PHONE ? { ...devices['Pixel 7'] } : { viewport: { height: 900, width: 1440 } },
+  )
   // tsx names functions with a `__name` helper, which does not exist inside the page.
   await context.addInitScript({ content: 'window.__name = (f) => f' })
   await context.addInitScript(collector)
@@ -68,7 +102,8 @@ async function run() {
   })
   console.log(`${BASE}  ·  GPU: ${gpu}\n`)
 
-  if (PHONE) await (await context.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 })
+  if (PHONE)
+    await (await context.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 })
 
   for (const path of PAGES) {
     await page.goto(`${BASE}${path}`, { timeout: 180_000, waitUntil: 'load' })
@@ -78,7 +113,8 @@ async function run() {
       const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
       const fcp = performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? 0
       const res = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-      const kb = (f: (r: PerformanceResourceTiming) => boolean) => Math.round(res.filter(f).reduce((s, r) => s + (r.encodedBodySize || 0), 0) / 1024)
+      const kb = (f: (r: PerformanceResourceTiming) => boolean) =>
+        Math.round(res.filter(f).reduce((s, r) => s + (r.encodedBodySize || 0), 0) / 1024)
       const w = window as any
       return {
         cls: w.__perf.cls.toFixed(3),
@@ -118,7 +154,10 @@ async function run() {
     })
     // While the page is scrolled part way: which films are still playing (and dropping)?
     const filmsScrolled = await page.evaluate(() =>
-      [...document.querySelectorAll('video')].map((v) => `${(v.currentSrc.split('/').pop() || '').padEnd(18)} ${v.paused ? 'paused' : 'PLAYING'}`),
+      [...document.querySelectorAll('video')].map(
+        (v) =>
+          `${(v.currentSrc.split('/').pop() || '').padEnd(18)} ${v.paused ? 'paused' : 'PLAYING'}`,
+      ),
     )
 
     // A click on something interactive, then how long the page took to answer it.
@@ -129,14 +168,20 @@ async function run() {
     const clicks = await page.evaluate(() => (window as any).__perf.events as number[])
 
     console.log(`■ ${path}`)
-    console.log(`  load      first byte ${load.ttfb} ms · first paint ${load.fcp} ms · largest paint ${load.lcp} ms · layout shift ${load.cls}`)
+    console.log(
+      `  load      first byte ${load.ttfb} ms · first paint ${load.fcp} ms · largest paint ${load.lcp} ms · layout shift ${load.cls}`,
+    )
     console.log(`  sent      JavaScript ${load.js} KB · film ${load.video} KB so far`)
-    console.log(`  blocking  ${load.longCount} long tasks, ${load.longMs} ms in total, worst ${load.longWorst} ms`)
+    console.log(
+      `  blocking  ${load.longCount} long tasks, ${load.longMs} ms in total, worst ${load.longWorst} ms`,
+    )
     console.log(`  intro     ${frameStats(intro)}`)
     console.log(`  scroll    ${frameStats(scroll)}`)
     for (const f of films) console.log(`  film      ${f}`)
     for (const f of filmsScrolled) console.log(`  scrolled  ${f}`)
-    console.log(`  click     ${clicks.length ? `slowest answered in ${Math.round(Math.max(...clicks))} ms` : 'answered within a frame'}\n`)
+    console.log(
+      `  click     ${clicks.length ? `slowest answered in ${Math.round(Math.max(...clicks))} ms` : 'answered within a frame'}\n`,
+    )
   }
 
   await browser.close()

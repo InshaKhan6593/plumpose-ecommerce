@@ -38,7 +38,12 @@ const run = async () => {
   for (const file of files) {
     const alt = `${ALT_PREFIX} ${path.parse(file).name}`
 
-    const existing = await payload.find({ collection: 'media', depth: 0, limit: 10, where: { alt: { equals: alt } } })
+    const existing = await payload.find({
+      collection: 'media',
+      depth: 0,
+      limit: 10,
+      where: { alt: { equals: alt } },
+    })
     for (const doc of existing.docs) await payload.delete({ collection: 'media', id: doc.id })
 
     // Uploaded under test-<name> so the site finds it by name.
@@ -46,7 +51,9 @@ const run = async () => {
     fs.copyFileSync(path.join(DIR, file), staged)
     try {
       const doc = await payload.create({ collection: 'media', data: { alt }, filePath: staged })
-      console.log(`  ${existing.docs.length ? 'replaced' : 'imported'}  ${file}  →  ${doc.filename}`)
+      console.log(
+        `  ${existing.docs.length ? 'replaced' : 'imported'}  ${file}  →  ${doc.filename}`,
+      )
     } finally {
       fs.rmSync(staged, { force: true })
     }

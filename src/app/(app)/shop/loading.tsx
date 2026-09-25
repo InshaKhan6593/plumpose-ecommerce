@@ -6,7 +6,11 @@ import React from 'react'
  */
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-[90rem] px-4 pt-14 md:px-7 md:pt-20" aria-busy aria-label="Loading the collection">
+    <div
+      className="mx-auto max-w-[90rem] px-4 pt-14 md:px-7 md:pt-20"
+      aria-busy
+      aria-label="Loading the collection"
+    >
       <div className="mx-auto h-16 w-80 max-w-full animate-pulse bg-paper-3 [animation-duration:1.6s]" />
       <div className="mt-24 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
         {Array.from({ length: 3 }, (_, i) => (

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import React, { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 import type { Media as MediaType } from '@/payload-types'
 
@@ -60,7 +60,9 @@ export function PrintBand({
       mm.add({ desktop: '(min-width: 1024px)', phone: '(max-width: 1023px)' }, (c) => {
         const { desktop } = c.conditions as { desktop: boolean }
         // The card's starting size: a small portrait card, as in the reference.
-        const start = desktop ? 'inset(24% 41% 22% 41% round 0px)' : 'inset(26% 22% 22% 22% round 0px)'
+        const start = desktop
+          ? 'inset(24% 41% 22% 41% round 0px)'
+          : 'inset(26% 22% 22% 22% round 0px)'
 
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
@@ -81,9 +83,19 @@ export function PrintBand({
           },
         })
 
-        tl.fromTo(frame, { clipPath: start }, { clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 1, ease: 'power1.inOut' }, 0)
+        tl.fromTo(
+          frame,
+          { clipPath: start },
+          { clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 1, ease: 'power1.inOut' },
+          0,
+        )
           .fromTo(picture, { scale: 1.3 }, { duration: 1.3, scale: 1 }, 0)
-          .fromTo(more, { opacity: 0, y: 24 }, { duration: 0.3, ease: 'power2.out', opacity: 1, stagger: 0.05, y: 0 }, 1)
+          .fromTo(
+            more,
+            { opacity: 0, y: 24 },
+            { duration: 0.3, ease: 'power2.out', opacity: 1, stagger: 0.05, y: 0 },
+            1,
+          )
           .to({}, { duration: 0.2 })
       })
     }, el)
@@ -94,7 +106,11 @@ export function PrintBand({
   if (!image) return null
 
   return (
-    <section aria-label={copy.label} className="relative h-svh overflow-hidden bg-background" ref={root}>
+    <section
+      aria-label={copy.label}
+      className="relative h-svh overflow-hidden bg-background"
+      ref={root}
+    >
       {/* The words in ink, on the paper around the card. The frame covers them wherever the picture is. */}
       <Words aria-hidden copy={copy} facts={facts} tone="ink" />
 
@@ -107,14 +123,24 @@ export function PrintBand({
           <Media
             className="absolute inset-0"
             fill
-            imgClassName={(image.width ?? 0) > (image.height ?? 0) ? 'object-cover' : 'object-cover object-[50%_22%]'}
+            imgClassName={
+              (image.width ?? 0) > (image.height ?? 0)
+                ? 'object-cover'
+                : 'object-cover object-[50%_22%]'
+            }
             resource={image}
             size="100vw"
           />
         </div>
         {/* Shade under the white words: top-left for the heading, bottom-right for the figures. */}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-ink/65 via-ink/10 to-transparent" />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-tl from-ink/55 via-transparent to-transparent" />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-br from-ink/65 via-ink/10 to-transparent"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-tl from-ink/55 via-transparent to-transparent"
+        />
 
         {/* The same words in white, inside the frame — revealed letter by letter as it grows. */}
         <Words copy={copy} facts={facts} href={href} tone="white" />
@@ -144,9 +170,14 @@ function Words({
   const white = tone === 'white'
 
   return (
-    <div aria-hidden={ariaHidden} className={cn('pointer-events-none absolute inset-0', white ? 'text-white' : 'text-ink')}>
+    <div
+      aria-hidden={ariaHidden}
+      className={cn('pointer-events-none absolute inset-0', white ? 'text-white' : 'text-ink')}
+    >
       <div className="absolute top-[15%] left-6 max-w-xl md:left-14">
-        <p className={cn('caps text-[0.625rem]', white ? 'text-white/80' : 'text-ink-soft')}>{copy.label}</p>
+        <p className={cn('caps text-[0.625rem]', white ? 'text-white/80' : 'text-ink-soft')}>
+          {copy.label}
+        </p>
         <h2 className="serif-display mt-4 text-[clamp(2.75rem,5.5vw,5rem)] leading-[1]">
           {copy.heading.map((line) => (
             <span className="block" key={line}>
@@ -156,11 +187,17 @@ function Words({
         </h2>
         {white && href ? (
           <div className="pointer-events-auto">
-            <p className="mt-6 max-w-md text-[0.9375rem] leading-relaxed text-white/85" data-print-more>
+            <p
+              className="mt-6 max-w-md text-[0.9375rem] leading-relaxed text-white/85"
+              data-print-more
+            >
               {copy.body}
             </p>
             <div data-print-more>
-              <Link className="caps mt-7 inline-block border-b border-white pb-1 text-[0.625rem]" href={href}>
+              <Link
+                className="caps mt-7 inline-block border-b border-white pb-1 text-[0.625rem]"
+                href={href}
+              >
                 {copy.cta}
               </Link>
             </div>
@@ -173,8 +210,17 @@ function Words({
         <dl className="absolute right-6 bottom-[12%] hidden gap-14 md:right-14 md:flex">
           {facts.map((fact) => (
             <div key={fact.label}>
-              <dd className="serif-display text-[clamp(2.5rem,4vw,3.75rem)] leading-none">{fact.value}</dd>
-              <dt className={cn('caps mt-3 text-[0.5625rem]', white ? 'text-white/75' : 'text-ink-soft')}>{fact.label}</dt>
+              <dd className="serif-display text-[clamp(2.5rem,4vw,3.75rem)] leading-none">
+                {fact.value}
+              </dd>
+              <dt
+                className={cn(
+                  'caps mt-3 text-[0.5625rem]',
+                  white ? 'text-white/75' : 'text-ink-soft',
+                )}
+              >
+                {fact.label}
+              </dt>
             </div>
           ))}
         </dl>

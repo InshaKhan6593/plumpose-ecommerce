@@ -38,7 +38,11 @@ export const sendOrderEmails: CollectionAfterChangeHook<Order> = ({
     })
   }
 
-  if (operation === 'update' && doc.fulfilment === 'shipped' && previousDoc?.fulfilment !== 'shipped') {
+  if (
+    operation === 'update' &&
+    doc.fulfilment === 'shipped' &&
+    previousDoc?.fulfilment !== 'shipped'
+  ) {
     runAfterResponse(payload, () => sendOrderEmail(payload, doc.id, 'shipped'))
   }
 

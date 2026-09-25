@@ -124,7 +124,8 @@ export const toOrderView = (
   const customerName = [address.firstName, address.lastName].filter(Boolean).join(' ').trim()
 
   const lines: OrderLineView[] = (order.items ?? []).map((item) => {
-    const product = item.product && typeof item.product === 'object' ? (item.product as Product) : null
+    const product =
+      item.product && typeof item.product === 'object' ? (item.product as Product) : null
 
     return {
       embroidery: (item.personalisation ?? []).map((p) => ({
@@ -225,7 +226,10 @@ const totalsHtml = (view: OrderView): string => {
 
   if (t.discount > 0) {
     rows.push(
-      row(`Discount${view.discountCode ? ` (${esc(view.discountCode)})` : ''}`, `− ${formatQar(t.discount)}`),
+      row(
+        `Discount${view.discountCode ? ` (${esc(view.discountCode)})` : ''}`,
+        `− ${formatQar(t.discount)}`,
+      ),
     )
   }
 
@@ -237,14 +241,15 @@ const totalsHtml = (view: OrderView): string => {
   return table(rows.join(''))
 }
 
-const addressHtml = (view: OrderView): string =>
-  view.address.map((line) => esc(line)).join('<br>')
+const addressHtml = (view: OrderView): string => view.address.map((line) => esc(line)).join('<br>')
 
 const linesText = (lines: OrderLineView[]): string =>
   lines
     .map((line) => {
       const head = `- ${line.title}${line.size ? `, size ${line.size}` : ''} × ${line.quantity}`
-      const emb = line.embroidery.map((e) => `    Embroidery — ${e.placement}: ${embroideryText(e)}`)
+      const emb = line.embroidery.map(
+        (e) => `    Embroidery — ${e.placement}: ${embroideryText(e)}`,
+      )
       return [head, ...emb].join('\n')
     })
     .join('\n')
@@ -255,7 +260,9 @@ const totalsText = (view: OrderView): string => {
     `Pieces: ${formatQar(t.pieces)}`,
     t.embroidery > 0 ? `Embroidery: ${formatQar(t.embroidery)}` : '',
     `${view.shippingLabel || 'Delivery'}: ${t.shipping > 0 ? formatQar(t.shipping) : 'Complimentary'}`,
-    t.discount > 0 ? `Discount${view.discountCode ? ` (${view.discountCode})` : ''}: −${formatQar(t.discount)}` : '',
+    t.discount > 0
+      ? `Discount${view.discountCode ? ` (${view.discountCode})` : ''}: −${formatQar(t.discount)}`
+      : '',
     `Total paid: ${formatQar(t.total)}`,
   ]
     .filter(Boolean)
@@ -293,7 +300,9 @@ export const customerConfirmation = (view: OrderView): EmailContent => {
           `Wrapped as a gift, without a price on the invoice.${view.giftNote ? `<br><em>“${esc(view.giftNote)}”</em>` : ''}`,
         )
       : '',
-    view.orderUrl ? `<div style="height:8px;"></div>${button(view.orderUrl, 'View your order')}` : '',
+    view.orderUrl
+      ? `<div style="height:8px;"></div>${button(view.orderUrl, 'View your order')}`
+      : '',
     rule(),
     muted('Questions about your order? Simply reply to this email.'),
   ].join('\n')
@@ -317,7 +326,11 @@ export const customerConfirmation = (view: OrderView): EmailContent => {
   ].join('\n')
 
   return {
-    html: layout({ body, footer: view.footer, preheader: `Order #${view.id} is confirmed — ${formatQar(view.totals.total)}` }),
+    html: layout({
+      body,
+      footer: view.footer,
+      preheader: `Order #${view.id} is confirmed — ${formatQar(view.totals.total)}`,
+    }),
     subject: `Your plumpose order #${view.id} is confirmed`,
     text,
   }
@@ -341,7 +354,9 @@ export const ownerNotification = (view: OrderView): EmailContent => {
   const body = [
     label(`New order #${view.id}`),
     heading(formatQar(view.totals.total)),
-    paragraph(`From ${esc(who)}.${hasEmbroidery(view) ? ' <strong>Includes embroidery.</strong>' : ''}${view.gift ? ' <strong>Gift order.</strong>' : ''}`),
+    paragraph(
+      `From ${esc(who)}.${hasEmbroidery(view) ? ' <strong>Includes embroidery.</strong>' : ''}${view.gift ? ' <strong>Gift order.</strong>' : ''}`,
+    ),
     button(view.adminUrl, 'Open the order'),
     rule(),
     label('Pieces'),
@@ -425,7 +440,13 @@ export const shippedNotification = (view: OrderView): EmailContent => {
   ].join('\n')
 
   return {
-    html: layout({ body, footer: view.footer, preheader: view.trackingNumber ? `Tracking number ${view.trackingNumber}` : `Order #${view.id} has shipped` }),
+    html: layout({
+      body,
+      footer: view.footer,
+      preheader: view.trackingNumber
+        ? `Tracking number ${view.trackingNumber}`
+        : `Order #${view.id} has shipped`,
+    }),
     subject: `Your plumpose order #${view.id} is on its way`,
     text,
   }

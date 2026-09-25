@@ -14,7 +14,10 @@ export const Subscribers: CollectionConfig = {
   admin: {
     components: {
       beforeListTable: [
-        { clientProps: { kind: 'subscribers', label: 'Download as a spreadsheet' }, path: '@/components/admin/ExportButton#ExportButton' },
+        {
+          clientProps: { kind: 'subscribers', label: 'Download as a spreadsheet' },
+          path: '@/components/admin/ExportButton#ExportButton',
+        },
       ],
     },
     defaultColumns: ['email', 'source', 'createdAt'],

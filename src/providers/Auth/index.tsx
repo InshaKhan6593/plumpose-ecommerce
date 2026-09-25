@@ -17,7 +17,8 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
  * none of them worked.)
  */
 
-export type AuthErrorCode = 'email-taken' | 'invalid-credentials' | 'invalid-token' | 'locked' | 'unknown'
+export type AuthErrorCode =
+  'email-taken' | 'invalid-credentials' | 'invalid-token' | 'locked' | 'unknown'
 
 export class AuthError extends Error {
   constructor(public code: AuthErrorCode) {
@@ -72,7 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await post('/login', { email, password })
       if (res.ok) return signedIn(((await res.json()) as { user: User }).user)
       // Payload answers 401 for a wrong password, 403 once the account is locked after repeated failures.
-      throw new AuthError(res.status === 401 ? 'invalid-credentials' : res.status === 403 ? 'locked' : 'unknown')
+      throw new AuthError(
+        res.status === 401 ? 'invalid-credentials' : res.status === 403 ? 'locked' : 'unknown',
+      )
     },
     [signedIn],
   )
@@ -123,7 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   return (
-    <Context.Provider value={{ create, forgotPassword, login, logout, resetPassword, setUser, status, user }}>
+    <Context.Provider
+      value={{ create, forgotPassword, login, logout, resetPassword, setUser, status, user }}
+    >
       {children}
     </Context.Provider>
   )

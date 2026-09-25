@@ -47,7 +47,10 @@ const useBagSync = () => {
 /** Where to go after signing in: `?redirect=` if it is a path on this site, else the account. */
 const destination = (redirect: string | undefined, user: User) =>
   // The client runs the shop from the admin; everyone else lands in their account.
-  getSafeRedirect({ fallbackTo: user.roles?.includes('admin') ? '/admin' : '/account', redirectTo: redirect ?? '' })
+  getSafeRedirect({
+    fallbackTo: user.roles?.includes('admin') ? '/admin' : '/account',
+    redirectTo: redirect ?? '',
+  })
 
 /* ---------------------------------------------------------------- sign in */
 
@@ -85,7 +88,10 @@ export function SignInForm({ redirect }: { redirect?: string }) {
           className={houseInput}
           id="email"
           type="email"
-          {...register('email', { pattern: { message: 'Please check the email address.', value: EMAIL }, required: 'Please enter your email.' })}
+          {...register('email', {
+            pattern: { message: 'Please check the email address.', value: EMAIL },
+            required: 'Please enter your email.',
+          })}
         />
       </HouseField>
       <HouseField error={errors.password?.message} id="password" label="Password">
@@ -98,7 +104,10 @@ export function SignInForm({ redirect }: { redirect?: string }) {
           {...register('password', { required: 'Please enter your password.' })}
         />
       </HouseField>
-      <Link className="-mt-4 self-end text-[0.8125rem] text-ink-soft underline-offset-4 hover:text-ink hover:underline" href={`/forgot-password${query}`}>
+      <Link
+        className="-mt-4 self-end text-[0.8125rem] text-ink-soft underline-offset-4 hover:text-ink hover:underline"
+        href={`/forgot-password${query}`}
+      >
         Forgotten your password?
       </Link>
       {error ? <HouseAlert>{error}</HouseAlert> : null}
@@ -126,7 +135,11 @@ export function CreateAccountForm({ redirect }: { redirect?: string }) {
   const onSubmit = handleSubmit(async (data) => {
     setError(null)
     try {
-      const user = await create({ email: data.email.trim(), name: data.name.trim(), password: data.password })
+      const user = await create({
+        email: data.email.trim(),
+        name: data.name.trim(),
+        password: data.password,
+      })
       await afterSignIn()
       const next = destination(redirect, user)
       router.push(next === '/account' ? noticeHref('/account', 'account-created') : next)
@@ -155,10 +168,18 @@ export function CreateAccountForm({ redirect }: { redirect?: string }) {
           className={houseInput}
           id="email"
           type="email"
-          {...register('email', { pattern: { message: 'Please check the email address.', value: EMAIL }, required: 'Please enter your email.' })}
+          {...register('email', {
+            pattern: { message: 'Please check the email address.', value: EMAIL },
+            required: 'Please enter your email.',
+          })}
         />
       </HouseField>
-      <HouseField error={errors.password?.message} hint={`At least ${MIN_PASSWORD} characters.`} id="password" label="Password">
+      <HouseField
+        error={errors.password?.message}
+        hint={`At least ${MIN_PASSWORD} characters.`}
+        id="password"
+        label="Password"
+      >
         <input
           aria-invalid={Boolean(errors.password)}
           autoComplete="new-password"
@@ -166,12 +187,19 @@ export function CreateAccountForm({ redirect }: { redirect?: string }) {
           id="password"
           type="password"
           {...register('password', {
-            minLength: { message: `Please use at least ${MIN_PASSWORD} characters.`, value: MIN_PASSWORD },
+            minLength: {
+              message: `Please use at least ${MIN_PASSWORD} characters.`,
+              value: MIN_PASSWORD,
+            },
             required: 'Please choose a password.',
           })}
         />
       </HouseField>
-      <HouseField error={errors.passwordConfirm?.message} id="passwordConfirm" label="Password, again">
+      <HouseField
+        error={errors.passwordConfirm?.message}
+        id="passwordConfirm"
+        label="Password, again"
+      >
         <input
           aria-invalid={Boolean(errors.passwordConfirm)}
           autoComplete="new-password"
@@ -180,7 +208,8 @@ export function CreateAccountForm({ redirect }: { redirect?: string }) {
           type="password"
           {...register('passwordConfirm', {
             required: 'Please type your password again.',
-            validate: (value) => value === getValues('password') || 'The two passwords don’t match.',
+            validate: (value) =>
+              value === getValues('password') || 'The two passwords don’t match.',
           })}
         />
       </HouseField>
@@ -223,7 +252,8 @@ export function ForgotPasswordForm() {
       <div aria-live="polite" className="border border-line px-7 py-8 text-center">
         <p className="serif-display text-[2rem]">Check your email</p>
         <p className="mx-auto mt-3 max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft">
-          If there is an account for that address, a link to choose a new password is on its way. It works for one hour.
+          If there is an account for that address, a link to choose a new password is on its way. It
+          works for one hour.
         </p>
       </div>
     )
@@ -238,7 +268,10 @@ export function ForgotPasswordForm() {
           className={houseInput}
           id="email"
           type="email"
-          {...register('email', { pattern: { message: 'Please check the email address.', value: EMAIL }, required: 'Please enter your email.' })}
+          {...register('email', {
+            pattern: { message: 'Please check the email address.', value: EMAIL },
+            required: 'Please enter your email.',
+          })}
         />
       </HouseField>
       {error ? <HouseAlert>{error}</HouseAlert> : null}
@@ -278,7 +311,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
   return (
     <form className="flex flex-col gap-8" noValidate onSubmit={onSubmit}>
-      <HouseField error={errors.password?.message} hint={`At least ${MIN_PASSWORD} characters.`} id="password" label="New password">
+      <HouseField
+        error={errors.password?.message}
+        hint={`At least ${MIN_PASSWORD} characters.`}
+        id="password"
+        label="New password"
+      >
         <input
           aria-invalid={Boolean(errors.password)}
           autoComplete="new-password"
@@ -286,12 +324,19 @@ export function ResetPasswordForm({ token }: { token: string }) {
           id="password"
           type="password"
           {...register('password', {
-            minLength: { message: `Please use at least ${MIN_PASSWORD} characters.`, value: MIN_PASSWORD },
+            minLength: {
+              message: `Please use at least ${MIN_PASSWORD} characters.`,
+              value: MIN_PASSWORD,
+            },
             required: 'Please choose a new password.',
           })}
         />
       </HouseField>
-      <HouseField error={errors.passwordConfirm?.message} id="passwordConfirm" label="New password, again">
+      <HouseField
+        error={errors.passwordConfirm?.message}
+        id="passwordConfirm"
+        label="New password, again"
+      >
         <input
           aria-invalid={Boolean(errors.passwordConfirm)}
           autoComplete="new-password"
@@ -300,7 +345,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
           type="password"
           {...register('passwordConfirm', {
             required: 'Please type it again.',
-            validate: (value) => value === getValues('password') || 'The two passwords don’t match.',
+            validate: (value) =>
+              value === getValues('password') || 'The two passwords don’t match.',
           })}
         />
       </HouseField>
@@ -341,7 +387,8 @@ export function SignOut() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (state === 'working') return <p className="text-center text-[0.9375rem] text-ink-soft">Signing you out…</p>
+  if (state === 'working')
+    return <p className="text-center text-[0.9375rem] text-ink-soft">Signing you out…</p>
   if (state === 'error') return <HouseAlert>That didn’t work. Please try again.</HouseAlert>
   return null
 }

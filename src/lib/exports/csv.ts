@@ -26,7 +26,7 @@ export const csvCell = (value: Cell): string => {
 
 /** A whole file: the header row, then the rows, CRLF line ends as Excel expects. */
 export const toCsv = (header: string[], rows: Cell[][]): string =>
-  '﻿' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n'
+  '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n'
 
 /** A QAR amount in minor units as a plain number of riyals, for a spreadsheet column. */
 export const riyals = (minor: null | number | undefined): number => Math.round(minor ?? 0) / 100
@@ -48,4 +48,5 @@ export const dohaTime = (iso: null | string | undefined): string => {
 }
 
 /** "plumpose-orders-2026-09-25.csv" */
-export const exportFilename = (what: string, now = new Date()) => `plumpose-${what}-${dohaTime(now.toISOString()).slice(0, 10)}.csv`
+export const exportFilename = (what: string, now = new Date()) =>
+  `plumpose-${what}-${dohaTime(now.toISOString()).slice(0, 10)}.csv`

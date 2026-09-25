@@ -1,9 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildSpinRewardEmail } from '@/email/spinRewardEmail'
-import { describeReward, drawableSegments, newRewardCode, pickSegment, rewardExpiry } from '@/lib/spin/wheel'
+import {
+  describeReward,
+  drawableSegments,
+  newRewardCode,
+  pickSegment,
+  rewardExpiry,
+} from '@/lib/spin/wheel'
 
-type Seg = { active?: boolean; id: number; label: string; rewardType: 'fixed' | 'freeShipping' | 'percent' | 'rollAgain'; rewardValue?: number; weight: number }
+type Seg = {
+  active?: boolean
+  id: number
+  label: string
+  rewardType: 'fixed' | 'freeShipping' | 'percent' | 'rollAgain'
+  rewardValue?: number
+  weight: number
+}
 
 // The seeded wheel: 10% off (40) · QAR 100 off (15) · Free delivery (25) · Roll again (20).
 const WHEEL: Seg[] = [
@@ -22,7 +35,14 @@ describe('reward wheel — what can be won', () => {
   it('never issues a prize worth nothing, or a segment she has switched off', () => {
     const broken: Seg[] = [
       { active: true, id: 5, label: 'Oops', rewardType: 'percent', weight: 50 },
-      { active: true, id: 6, label: 'Too much', rewardType: 'percent', rewardValue: 150, weight: 50 },
+      {
+        active: true,
+        id: 6,
+        label: 'Too much',
+        rewardType: 'percent',
+        rewardValue: 150,
+        weight: 50,
+      },
       { active: false, id: 7, label: 'Off', rewardType: 'freeShipping', weight: 50 },
       { active: true, id: 8, label: 'Weightless', rewardType: 'freeShipping', weight: 0 },
     ]
@@ -63,7 +83,8 @@ describe('reward wheel — the draw', () => {
 
 describe('reward wheel — the code', () => {
   it('reads PLUM-XXXX-XX with no look-alike characters', () => {
-    for (let i = 0; i < 200; i++) expect(newRewardCode()).toMatch(/^PLUM-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{2}$/)
+    for (let i = 0; i < 200; i++)
+      expect(newRewardCode()).toMatch(/^PLUM-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{2}$/)
   })
 
   it('differs every time', () => {
@@ -73,18 +94,30 @@ describe('reward wheel — the code', () => {
 
   it('expires at the end of the day in Doha, the given number of days on', () => {
     // 25 Sep 2026, 10:00 in Doha → 30 days → 25 Oct 2026, 23:59:59 Doha = 20:59:59 UTC.
-    expect(rewardExpiry(30, new Date('2026-09-25T07:00:00Z')).toISOString()).toBe('2026-10-25T20:59:59.000Z')
+    expect(rewardExpiry(30, new Date('2026-09-25T07:00:00Z')).toISOString()).toBe(
+      '2026-10-25T20:59:59.000Z',
+    )
   })
 
   it('describes the prize in words', () => {
-    expect(WHEEL.map(describeReward)).toEqual(['10% off', 'QAR 100 off', 'Free delivery', 'Another spin'])
+    expect(WHEEL.map(describeReward)).toEqual([
+      '10% off',
+      'QAR 100 off',
+      'Free delivery',
+      'Another spin',
+    ])
   })
 })
 
 describe('reward wheel — the code email', () => {
   it('carries the code, the prize, the expiry in Doha and the one-use rule', () => {
     const email = buildSpinRewardEmail({
-      code: { code: 'PLUM-7K4Q-X2', expiresAt: '2026-10-25T20:59:59.000Z', type: 'percent', value: 10 },
+      code: {
+        code: 'PLUM-7K4Q-X2',
+        expiresAt: '2026-10-25T20:59:59.000Z',
+        type: 'percent',
+        value: 10,
+      },
       shopUrl: 'http://localhost:3000/shop',
     })
     expect(email.subject).toBe('Your plumpose code: 10% off')
@@ -95,7 +128,8 @@ describe('reward wheel — the code email', () => {
 
   it('names free delivery and fixed amounts in words', () => {
     const at = (type: 'fixed' | 'freeShipping', value?: number) =>
-      buildSpinRewardEmail({ code: { code: 'X', expiresAt: null, type, value }, shopUrl: 'x' }).subject
+      buildSpinRewardEmail({ code: { code: 'X', expiresAt: null, type, value }, shopUrl: 'x' })
+        .subject
     expect(at('fixed', 100)).toBe('Your plumpose code: QAR 100 off')
     expect(at('freeShipping')).toBe('Your plumpose code: Free delivery')
   })

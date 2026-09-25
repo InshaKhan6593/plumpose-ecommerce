@@ -35,15 +35,27 @@ export default async function SpottedPage() {
   const settings = await getCachedGlobal('siteSettings', 0)()
 
   const [{ docs }, pick] = await Promise.all([
-    payload.find({ collection: 'spotted', depth: 1, limit: 120, overrideAccess: false, pagination: false, sort: '_order' }),
+    payload.find({
+      collection: 'spotted',
+      depth: 1,
+      limit: 120,
+      overrideAccess: false,
+      pagination: false,
+      sort: '_order',
+    }),
     loadPageMedia(payload),
   ])
   const posts = (docs as Spotted[]).filter((p) => typeof p.image === 'object' && p.image)
-  const campaign = [pick('window'), pick('corridor'), pick('armchair'), pick('doorway')].filter((m): m is MediaType => Boolean(m))
+  const campaign = [pick('window'), pick('corridor'), pick('armchair'), pick('doorway')].filter(
+    (m): m is MediaType => Boolean(m),
+  )
 
   const handle = settings.instagramHandle ?? '@plumpose'
   const instagramHref =
-    settings.instagramUrl || (settings.instagramHandle ? `https://instagram.com/${settings.instagramHandle.replace(/^@/, '')}` : null)
+    settings.instagramUrl ||
+    (settings.instagramHandle
+      ? `https://instagram.com/${settings.instagramHandle.replace(/^@/, '')}`
+      : null)
 
   return (
     <>
@@ -58,12 +70,24 @@ export default async function SpottedPage() {
                 <li key={post.id}>
                   <Tag
                     className="group relative block aspect-square overflow-hidden bg-paper-3"
-                    {...(post.postUrl ? { href: post.postUrl, rel: 'noopener noreferrer', target: '_blank' } : {})}
+                    {...(post.postUrl
+                      ? { href: post.postUrl, rel: 'noopener noreferrer', target: '_blank' }
+                      : {})}
                   >
-                    <Media className="absolute inset-0" fill imgClassName="object-cover" resource={post.image as MediaType} size="(min-width: 768px) 25vw, 50vw" />
+                    <Media
+                      className="absolute inset-0"
+                      fill
+                      imgClassName="object-cover"
+                      resource={post.image as MediaType}
+                      size="(min-width: 768px) 25vw, 50vw"
+                    />
                     <span className="absolute inset-0 flex flex-col items-center justify-center bg-ink/55 px-4 text-center text-white opacity-0 transition-opacity duration-500 ease-brand group-hover:opacity-100 group-focus-visible:opacity-100">
                       <span className="caps text-[0.625rem]">{post.instagramHandle}</span>
-                      {post.caption ? <span className="mt-2 text-[0.8125rem] leading-snug text-white/85">{post.caption}</span> : null}
+                      {post.caption ? (
+                        <span className="mt-2 text-[0.8125rem] leading-snug text-white/85">
+                          {post.caption}
+                        </span>
+                      ) : null}
                     </span>
                   </Tag>
                 </li>
@@ -72,12 +96,20 @@ export default async function SpottedPage() {
           </ul>
         ) : campaign.length ? (
           <section className="mt-14 md:mt-20">
-            <p className="caps text-center text-[0.5625rem] text-ink-soft">{SPOTTED_PAGE.empty.label}</p>
+            <p className="caps text-center text-[0.5625rem] text-ink-soft">
+              {SPOTTED_PAGE.empty.label}
+            </p>
             <ul className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4">
               {campaign.map((image, n) => (
                 <li className={cn(n % 2 === 1 && 'mt-10 md:mt-16')} key={image.id}>
                   <RevealImage className="relative aspect-[3/4] overflow-hidden bg-paper-3">
-                    <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="(min-width: 768px) 25vw, 50vw" />
+                    <Media
+                      className="absolute inset-0"
+                      fill
+                      imgClassName="object-cover"
+                      resource={image}
+                      size="(min-width: 768px) 25vw, 50vw"
+                    />
                   </RevealImage>
                 </li>
               ))}
@@ -90,9 +122,16 @@ export default async function SpottedPage() {
           </section>
         ) : null}
         {/* Customers send their own (REQUIREMENTS S15); nothing shows until she approves it. */}
-        <section aria-labelledby="spotted-send" className="mt-24 border-t border-line pt-14 md:mt-32">
+        <section
+          aria-labelledby="spotted-send"
+          className="mt-24 border-t border-line pt-14 md:mt-32"
+        >
           <Reveal className="mb-10 max-w-xl">
-            <h2 className="serif-display text-[clamp(2rem,3.4vw,3rem)] leading-[1.05]" data-reveal id="spotted-send">
+            <h2
+              className="serif-display text-[clamp(2rem,3.4vw,3rem)] leading-[1.05]"
+              data-reveal
+              id="spotted-send"
+            >
               {SPOTTED_PAGE.form.heading}
             </h2>
             <p className="mt-4 text-[0.9375rem] leading-relaxed text-ink-soft" data-reveal>
@@ -103,7 +142,11 @@ export default async function SpottedPage() {
         </section>
       </PageShell>
 
-      <ClosingBand body={SPOTTED_PAGE.invite.body} className="mt-24 md:mt-36" line={SPOTTED_PAGE.invite.heading}>
+      <ClosingBand
+        body={SPOTTED_PAGE.invite.body}
+        className="mt-24 md:mt-36"
+        line={SPOTTED_PAGE.invite.heading}
+      >
         {instagramHref ? <TextLink href={instagramHref}>{`Tag ${handle}`}</TextLink> : null}
       </ClosingBand>
     </>

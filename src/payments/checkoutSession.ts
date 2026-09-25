@@ -67,9 +67,9 @@ const text = (value: unknown, max: number): string =>
  */
 export const readCheckoutDetails = (data: unknown): CheckoutDetails => {
   const body = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>
-  const address = (body.shippingAddress && typeof body.shippingAddress === 'object'
-    ? body.shippingAddress
-    : {}) as Record<string, unknown>
+  const address = (
+    body.shippingAddress && typeof body.shippingAddress === 'object' ? body.shippingAddress : {}
+  ) as Record<string, unknown>
 
   const gift = body.gift === true
 
@@ -108,7 +108,12 @@ export const itemsForGateway = (items: unknown[] = []): Record<string, unknown>[
     const idOf = (value: unknown) =>
       value && typeof value === 'object' && 'id' in value ? (value as { id: unknown }).id : value
     const variantID = variant ? idOf(variant) : undefined
-    return { ...rest, product: idOf(product), quantity: item.quantity, ...(variantID ? { variant: variantID } : {}) }
+    return {
+      ...rest,
+      product: idOf(product),
+      quantity: item.quantity,
+      ...(variantID ? { variant: variantID } : {}),
+    }
   })
 
 /* -------------------------------------------------------------------------- */
@@ -123,7 +128,10 @@ export type SettleResult =
   | { status: 'unpaid' }
   | { reason: string; status: 'error' }
 
-const findTransactionForSession = async (payload: Payload, sessionId: string): Promise<null | Transaction> => {
+const findTransactionForSession = async (
+  payload: Payload,
+  sessionId: string,
+): Promise<null | Transaction> => {
   const found = await payload.find({
     collection: 'transactions',
     depth: 0,
@@ -207,7 +215,9 @@ export const settleCheckoutSession = async (args: {
 
   const cartID = typeof transaction.cart === 'number' ? transaction.cart : transaction.cart?.id
   const cart = cartID
-    ? await payload.findByID({ collection: 'carts', depth: 0, id: cartID, overrideAccess: true }).catch(() => null)
+    ? await payload
+        .findByID({ collection: 'carts', depth: 0, id: cartID, overrideAccess: true })
+        .catch(() => null)
     : null
 
   const origin = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
@@ -219,13 +229,24 @@ export const settleCheckoutSession = async (args: {
       /** A guest is authorised by the cart's own secret, the way the browser would be. */
       secret: cart?.secret ?? undefined,
     }),
-    headers: { 'Content-Type': 'application/json', ...(args.cookie ? { cookie: args.cookie } : {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(args.cookie ? { cookie: args.cookie } : {}),
+    },
     method: 'POST',
   }).catch(() => null)
 
   if (response?.ok) {
-    const body = (await response.json().catch(() => ({}))) as { accessToken?: string; orderID?: number }
-    if (body.orderID) return { accessToken: body.accessToken ?? '', orderId: Number(body.orderID), status: 'confirmed' }
+    const body = (await response.json().catch(() => ({}))) as {
+      accessToken?: string
+      orderID?: number
+    }
+    if (body.orderID)
+      return {
+        accessToken: body.accessToken ?? '',
+        orderId: Number(body.orderID),
+        status: 'confirmed',
+      }
   }
 
   /** The other caller may have won the race while we were confirming. */
@@ -234,14 +255,22 @@ export const settleCheckoutSession = async (args: {
 
   const detail = response ? await response.text().catch(() => '') : 'no response'
   payload.logger.error(
-    { detail: detail.slice(0, 300), sessionId, status: response?.status, transaction: transaction.id },
+    {
+      detail: detail.slice(0, 300),
+      sessionId,
+      status: response?.status,
+      transaction: transaction.id,
+    },
     'A paid Checkout Session could not be confirmed into an order.',
   )
   return { status: 'pending' }
 }
 
 /** Marks the transaction behind an abandoned session as expired (P11). */
-export const expireCheckoutSession = async (req: PayloadRequest, sessionId: string): Promise<boolean> => {
+export const expireCheckoutSession = async (
+  req: PayloadRequest,
+  sessionId: string,
+): Promise<boolean> => {
   const transaction = await findTransactionForSession(req.payload, sessionId)
   if (!transaction || transaction.status !== 'pending') return false
   await req.payload.update({

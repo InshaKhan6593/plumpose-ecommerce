@@ -151,7 +151,11 @@ export const createStripeWebhookEndpoint = (args: {
      */
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
-      const result = await settleCheckoutSession({ payload, sessionId: session.id, stripe: args.stripe })
+      const result = await settleCheckoutSession({
+        payload,
+        sessionId: session.id,
+        stripe: args.stripe,
+      })
 
       await record({ ...base, applied: result.status === 'confirmed' })
 
@@ -204,7 +208,9 @@ export const createStripeWebhookEndpoint = (args: {
      * let go, never retried.
      */
     const sessions = paymentId
-      ? await args.stripe.checkout.sessions.list({ limit: 1, payment_intent: paymentId }).catch(() => null)
+      ? await args.stripe.checkout.sessions
+          .list({ limit: 1, payment_intent: paymentId })
+          .catch(() => null)
       : null
     const session = sessions?.data[0]
 
@@ -213,8 +219,16 @@ export const createStripeWebhookEndpoint = (args: {
       return ok({ received: true, reason: 'not a checkout payment' })
     }
 
-    const result = await settleCheckoutSession({ payload, sessionId: session.id, stripe: args.stripe })
-    await record({ ...base, applied: result.status === 'confirmed', orderRef: session.metadata?.cartID })
+    const result = await settleCheckoutSession({
+      payload,
+      sessionId: session.id,
+      stripe: args.stripe,
+    })
+    await record({
+      ...base,
+      applied: result.status === 'confirmed',
+      orderRef: session.metadata?.cartID,
+    })
 
     if (result.status === 'pending') {
       return ok({ error: 'Could not confirm the order yet.' }, 500)

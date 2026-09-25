@@ -1,14 +1,61 @@
 import { describe, expect, it } from 'vitest'
 
-import { convertMinor, type DisplayCurrency, displayMinor, formatMoney, impliedRate, isQuotable } from '@/lib/pricing/currency'
+import {
+  convertMinor,
+  type DisplayCurrency,
+  displayMinor,
+  formatMoney,
+  impliedRate,
+  isQuotable,
+} from '@/lib/pricing/currency'
 
 // From the seeded table (her old site's list): Al Shaheen Nights, QAR 1,399.
 const ANCHOR = 1399
-const AED: DisplayCurrency = { code: 'AED', decimals: 0, name: 'UAE Dirham', price: 1410, rate: null, step: 10, symbol: 'AED' }
-const GBP: DisplayCurrency = { code: 'GBP', decimals: 0, name: 'Pound Sterling', price: 295, rate: null, step: 5, symbol: '£' }
-const KWD: DisplayCurrency = { code: 'KWD', decimals: 1, name: 'Kuwaiti Dinar', price: 118, rate: null, step: 1, symbol: 'KWD' }
-const RATE_ONLY: DisplayCurrency = { code: 'XYZ', decimals: 2, name: 'Test', price: null, rate: 0.5, step: 1, symbol: 'X' }
-const NONE: DisplayCurrency = { code: 'NOP', decimals: 0, name: 'Nothing', price: null, rate: null, step: 1, symbol: 'N' }
+const AED: DisplayCurrency = {
+  code: 'AED',
+  decimals: 0,
+  name: 'UAE Dirham',
+  price: 1410,
+  rate: null,
+  step: 10,
+  symbol: 'AED',
+}
+const GBP: DisplayCurrency = {
+  code: 'GBP',
+  decimals: 0,
+  name: 'Pound Sterling',
+  price: 295,
+  rate: null,
+  step: 5,
+  symbol: '£',
+}
+const KWD: DisplayCurrency = {
+  code: 'KWD',
+  decimals: 1,
+  name: 'Kuwaiti Dinar',
+  price: 118,
+  rate: null,
+  step: 1,
+  symbol: 'KWD',
+}
+const RATE_ONLY: DisplayCurrency = {
+  code: 'XYZ',
+  decimals: 2,
+  name: 'Test',
+  price: null,
+  rate: 0.5,
+  step: 1,
+  symbol: 'X',
+}
+const NONE: DisplayCurrency = {
+  code: 'NOP',
+  decimals: 0,
+  name: 'Nothing',
+  price: null,
+  rate: null,
+  step: 1,
+  symbol: 'N',
+}
 
 describe('currency — her hand-set price is sacred', () => {
   it('shows exactly the figure she set for one piece, and exactly twice it for two', () => {
@@ -41,7 +88,15 @@ describe('currency — reading as the market reads', () => {
   })
 
   it('falls back to QAR for QAR itself, for no choice, and for a currency that cannot be priced', () => {
-    const QAR: DisplayCurrency = { code: 'QAR', decimals: 0, name: 'Qatari Riyal', price: 1399, rate: 1, step: 5, symbol: 'QAR' }
+    const QAR: DisplayCurrency = {
+      code: 'QAR',
+      decimals: 0,
+      name: 'Qatari Riyal',
+      price: 1399,
+      rate: 1,
+      step: 5,
+      symbol: 'QAR',
+    }
     expect(displayMinor(139900, QAR, ANCHOR)).toBe('QAR 1,399.00')
     expect(displayMinor(139900, null, ANCHOR)).toBe('QAR 1,399.00')
     expect(isQuotable(NONE, ANCHOR)).toBe(false)

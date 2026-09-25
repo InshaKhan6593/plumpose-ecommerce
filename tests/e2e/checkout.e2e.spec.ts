@@ -64,7 +64,9 @@ test.describe('checkout, end to end', () => {
    */
   test.afterAll(async ({ request }) => {
     for (const id of madeCodes) {
-      await request.delete(`${BASE}/api/discountCodes/${id}`, { headers: admin() }).catch(() => undefined)
+      await request
+        .delete(`${BASE}/api/discountCodes/${id}`, { headers: admin() })
+        .catch(() => undefined)
     }
   })
 
@@ -77,9 +79,16 @@ test.describe('checkout, end to end', () => {
     expect(session.currency).toBe('qar')
   })
 
-  test('creates an order carrying the money breakdown, address and gift note', async ({ page, request }) => {
+  test('creates an order carrying the money breakdown, address and gift note', async ({
+    page,
+    request,
+  }) => {
     const email = shopper('order')
-    const { redirectURL } = await startCheckout(request, { email, gift: true, giftNote: 'With love, from Doha.' })
+    const { redirectURL } = await startCheckout(request, {
+      email,
+      gift: true,
+      giftNote: 'With love, from Doha.',
+    })
     const landed = await payAndReturn(page, redirectURL)
 
     expect(landed.placed).toBe('1')
@@ -96,7 +105,11 @@ test.describe('checkout, end to end', () => {
     expect(order.customerEmail).toBe(email)
     expect(order.gift).toBe(true)
     expect(order.giftNote).toBe('With love, from Doha.')
-    expect(order.shippingAddress).toMatchObject({ addressLine1: 'Building 12, Street 340', city: 'Doha', country: 'QA' })
+    expect(order.shippingAddress).toMatchObject({
+      addressLine1: 'Building 12, Street 340',
+      city: 'Doha',
+      country: 'QA',
+    })
   })
 
   test('carries embroidery instructions onto the order', async ({ page, request }) => {
@@ -126,11 +139,17 @@ test.describe('checkout, end to end', () => {
    * puts both it and the product's switch back afterwards.
    */
   const setStock = async (request: APIRequestContext, variantId: number, inventory: number) => {
-    const res = await request.patch(`${BASE}/api/variants/${variantId}`, { data: { inventory }, headers: admin() })
+    const res = await request.patch(`${BASE}/api/variants/${variantId}`, {
+      data: { inventory },
+      headers: admin(),
+    })
     expect(res.ok(), `setting stock failed: ${res.status()}`).toBe(true)
   }
   const setMadeToOrder = async (request: APIRequestContext, madeToOrder: boolean) => {
-    const res = await request.patch(`${BASE}/api/products/1`, { data: { madeToOrder }, headers: admin() })
+    const res = await request.patch(`${BASE}/api/products/1`, {
+      data: { madeToOrder },
+      headers: admin(),
+    })
     expect(res.ok(), `setting made to order failed: ${res.status()}`).toBe(true)
   }
 
@@ -147,17 +166,25 @@ test.describe('checkout, end to end', () => {
     }
   })
 
-  test('made to order: a sale beyond stock goes through, stock stops at zero, the order is noted', async ({ page, request }) => {
+  test('made to order: a sale beyond stock goes through, stock stops at zero, the order is noted', async ({
+    page,
+    request,
+  }) => {
     const before = await readStock(request, 2)
     await setMadeToOrder(request, true)
     await setStock(request, 2, 1)
     try {
-      const { redirectURL } = await startCheckout(request, { email: shopper('beyond'), quantity: 2 })
+      const { redirectURL } = await startCheckout(request, {
+        email: shopper('beyond'),
+        quantity: 2,
+      })
       const { orderId } = await payAndReturn(page, redirectURL)
 
       expect(await readStock(request, 2), 'stock must never go below zero').toBe(0)
       const order = await readOrder(request, orderId)
-      expect(order.adminNotes).toMatch(/Made to order — Al Shaheen Nights, size M: 1 beyond ready stock/)
+      expect(order.adminNotes).toMatch(
+        /Made to order — Al Shaheen Nights, size M: 1 beyond ready stock/,
+      )
     } finally {
       await setStock(request, 2, before)
     }
@@ -171,7 +198,10 @@ test.describe('checkout, end to end', () => {
       const cart = (
         await (
           await request.post(`${BASE}/api/carts`, {
-            data: { currency: 'QAR', items: [{ personalisation: [], product: 1, quantity: 1, variant: 2 }] },
+            data: {
+              currency: 'QAR',
+              items: [{ personalisation: [], product: 1, quantity: 1, variant: 2 }],
+            },
           })
         ).json()
       ).doc
@@ -181,7 +211,14 @@ test.describe('checkout, end to end', () => {
           currency: 'QAR',
           customerEmail: shopper('soldout'),
           secret: cart.secret,
-          shippingAddress: { addressLine1: 'x', city: 'Doha', country: 'QA', firstName: 'x', lastName: 'x', phone: '1234567' },
+          shippingAddress: {
+            addressLine1: 'x',
+            city: 'Doha',
+            country: 'QA',
+            firstName: 'x',
+            lastName: 'x',
+            phone: '1234567',
+          },
           shippingCityKey: 'doha',
         },
       })
@@ -214,10 +251,16 @@ test.describe('checkout, end to end', () => {
     const started = await startCheckout(request, { discountCode: code, email })
 
     // 10% off QAR 1,399 goods; delivery untouched.
-    expect((await stripe.checkout.sessions.retrieve(started.sessionId)).amount_total).toBe(139900 - 13990 + 2000)
+    expect((await stripe.checkout.sessions.retrieve(started.sessionId)).amount_total).toBe(
+      139900 - 13990 + 2000,
+    )
 
     const usage = async () =>
-      (await (await request.get(`${BASE}/api/discountCodes/${codeId}`, { headers: admin() })).json()).usageCount ?? 0
+      (
+        await (
+          await request.get(`${BASE}/api/discountCodes/${codeId}`, { headers: admin() })
+        ).json()
+      ).usageCount ?? 0
 
     // Opening the payment page must not consume the code.
     expect(await usage()).toBe(0)
@@ -229,7 +272,9 @@ test.describe('checkout, end to end', () => {
 
     expect(await usage()).toBe(1)
     const uses = await (
-      await request.get(`${BASE}/api/discountUses?where[code][equals]=${codeId}`, { headers: admin() })
+      await request.get(`${BASE}/api/discountUses?where[code][equals]=${codeId}`, {
+        headers: admin(),
+      })
     ).json()
     expect(uses.totalDocs).toBe(1)
     // A guest's redemption is recorded against the address they checked out with.
@@ -246,9 +291,12 @@ test.describe('checkout, end to end', () => {
     await page.waitForURL(/\/checkout\?payment=cancelled/, { timeout: 30_000 })
 
     const transactions = await (
-      await request.get(`${BASE}/api/transactions?where[stripe.checkoutSessionID][equals]=${started.sessionId}`, {
-        headers: admin(),
-      })
+      await request.get(
+        `${BASE}/api/transactions?where[stripe.checkoutSessionID][equals]=${started.sessionId}`,
+        {
+          headers: admin(),
+        },
+      )
     ).json()
     expect(transactions.docs[0].status).toBe('pending')
     expect(transactions.docs[0].order ?? null).toBeNull()
@@ -277,13 +325,18 @@ test.describe('checkout, end to end', () => {
     const cart = (
       await (
         await request.post(`${BASE}/api/carts`, {
-          data: { currency: 'QAR', items: [{ personalisation: [], product: 1, quantity: 1, variant: 2 }] },
+          data: {
+            currency: 'QAR',
+            items: [{ personalisation: [], product: 1, quantity: 1, variant: 2 }],
+          },
         })
       ).json()
     ).doc
 
     const blocked = (
-      await (await request.get(`${BASE}/api/countries?where[blockedReason][exists]=true&limit=1`)).json()
+      await (
+        await request.get(`${BASE}/api/countries?where[blockedReason][exists]=true&limit=1`)
+      ).json()
     ).docs[0]
     test.skip(!blocked, 'no blocked country seeded')
 
@@ -293,10 +346,16 @@ test.describe('checkout, end to end', () => {
         currency: 'QAR',
         customerEmail: shopper('blocked'),
         secret: cart.secret,
-        shippingAddress: { addressLine1: 'x', city: 'x', country: blocked.code, firstName: 'x', lastName: 'x', phone: '1234567' },
+        shippingAddress: {
+          addressLine1: 'x',
+          city: 'x',
+          country: blocked.code,
+          firstName: 'x',
+          lastName: 'x',
+          phone: '1234567',
+        },
       },
     })
     expect(res.ok()).toBe(false)
   })
 })
-

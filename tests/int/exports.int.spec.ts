@@ -16,7 +16,9 @@ describe('exports — cells a spreadsheet reads safely', () => {
   })
 
   it('never lets a customer’s text run as a formula', () => {
-    expect(csvCell('=HYPERLINK("http://evil","click")')).toBe(`"'=HYPERLINK(""http://evil"",""click"")"`)
+    expect(csvCell('=HYPERLINK("http://evil","click")')).toBe(
+      `"'=HYPERLINK(""http://evil"",""click"")"`,
+    )
     expect(csvCell('+97455551234')).toBe("'+97455551234")
     expect(csvCell('@SUM(A1)')).toBe("'@SUM(A1)")
     expect(csvCell('-cmd')).toBe("'-cmd")
@@ -33,14 +35,16 @@ describe('exports — cells a spreadsheet reads safely', () => {
   it('starts with a byte-order mark so Excel reads Arabic names, and ends lines as Excel expects', () => {
     const csv = toCsv(['Name'], [['مريم']])
     expect(csv.charCodeAt(0)).toBe(0xfeff)
-    expect(csv).toBe('﻿Name\r\nمريم\r\n')
+    expect(csv).toBe('\uFEFFName\r\nمريم\r\n')
   })
 
   it('writes riyals, Doha time and a dated file name', () => {
     expect(riyals(139900)).toBe(1399)
     expect(riyals(null)).toBe(0)
     expect(dohaTime('2026-09-25T21:30:00Z')).toBe('2026-09-26 00:30')
-    expect(exportFilename('orders', new Date('2026-09-25T21:30:00Z'))).toBe('plumpose-orders-2026-09-26.csv')
+    expect(exportFilename('orders', new Date('2026-09-25T21:30:00Z'))).toBe(
+      'plumpose-orders-2026-09-26.csv',
+    )
   })
 })
 
@@ -58,14 +62,35 @@ describe('exports — an order, one row, in her words', () => {
     id: 17,
     items: [
       {
-        personalisation: [{ feeQar: 16000, lettering: 'M.K', placement: 'pocket', placementName: 'Pocket', style: 'initials', thread: 'gold', threadName: 'Gold' }],
+        personalisation: [
+          {
+            feeQar: 16000,
+            lettering: 'M.K',
+            placement: 'pocket',
+            placementName: 'Pocket',
+            style: 'initials',
+            thread: 'gold',
+            threadName: 'Gold',
+          },
+        ],
         product: { id: 1, title: 'Al Shaheen Nights — Silk Pyjama Set' },
         quantity: 1,
-        variant: { id: 2, options: [{ label: 'M' }], title: 'Al Shaheen Nights — Silk Pyjama Set — M' },
+        variant: {
+          id: 2,
+          options: [{ label: 'M' }],
+          title: 'Al Shaheen Nights — Silk Pyjama Set — M',
+        },
       },
     ],
     personalisationTotalQar: 16000,
-    shippingAddress: { addressLine1: 'Building 12, Street 870', city: 'Doha', country: 'QA', firstName: 'Mariam', lastName: 'Al-Thani', phone: '+974 5555 1234' },
+    shippingAddress: {
+      addressLine1: 'Building 12, Street 870',
+      city: 'Doha',
+      country: 'QA',
+      firstName: 'Mariam',
+      lastName: 'Al-Thani',
+      phone: '+974 5555 1234',
+    },
     shippingQar: 2000,
     status: 'processing',
     subtotalQar: 139900,
@@ -80,19 +105,19 @@ describe('exports — an order, one row, in her words', () => {
 
   it('reads as the customer was told', () => {
     expect(row).toMatchObject({
-      'Customer': 'Mariam Al-Thani',
+      Customer: 'Mariam Al-Thani',
       'Date (Doha)': '2026-09-25 12:00',
       'Delivery (QAR)': 20,
-      'Email': 'mariam@example.com',
+      Email: 'mariam@example.com',
       'Embroidery (QAR)': 160,
-      'Fulfilment': 'In the atelier',
-      'Gift': true,
+      Fulfilment: 'In the atelier',
+      Gift: true,
       'Gift note': 'Happy birthday, sister',
       'Goods (QAR)': 1399,
       'Internal notes': 'Call before delivery',
-      'Order': 17,
-      'Payment': 'Paid',
-      'Pieces': 1,
+      Order: 17,
+      Payment: 'Paid',
+      Pieces: 1,
       'Total (QAR)': 1579,
     })
     expect(row['Items']).toBe('1 × Al Shaheen Nights — Silk Pyjama Set (M)')
@@ -101,7 +126,12 @@ describe('exports — an order, one row, in her words', () => {
   })
 
   it('a subscriber row names where they signed up', () => {
-    const s = { createdAt: '2026-09-25T09:00:00Z', email: 'a@b.qa', source: 'spinWheel', unsubscribed: false } as Subscriber
+    const s = {
+      createdAt: '2026-09-25T09:00:00Z',
+      email: 'a@b.qa',
+      source: 'spinWheel',
+      unsubscribed: false,
+    } as Subscriber
     expect(subscriberRow(s)).toEqual(['a@b.qa', '2026-09-25 12:00', 'Reward wheel', false])
     expect(subscriberRow(s)).toHaveLength(SUBSCRIBER_COLUMNS.length)
   })

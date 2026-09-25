@@ -51,7 +51,9 @@ describe('pricing engine against seeded data', () => {
     const products = await payload.find({
       collection: 'products',
       limit: 1,
-      where: { and: [{ _status: { equals: 'published' } }, { slug: { equals: 'al-shaheen-nights' } }] },
+      where: {
+        and: [{ _status: { equals: 'published' } }, { slug: { equals: 'al-shaheen-nights' } }],
+      },
     })
     productId = products.docs[0]?.id
   }, 120_000)

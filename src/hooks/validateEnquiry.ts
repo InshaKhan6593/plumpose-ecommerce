@@ -27,7 +27,8 @@ type Row = { field?: unknown; value?: unknown }
 export const validateEnquiry: CollectionBeforeValidateHook = async ({ data, operation, req }) => {
   if (operation !== 'create' || !data || req.user) return data
 
-  const formID = typeof data.form === 'object' && data.form ? (data.form as { id: unknown }).id : data.form
+  const formID =
+    typeof data.form === 'object' && data.form ? (data.form as { id: unknown }).id : data.form
   const form = (await req.payload
     .findByID({ collection: 'forms', depth: 0, id: formID as number, req })
     .catch(() => null)) as Form | null
@@ -44,7 +45,9 @@ export const validateEnquiry: CollectionBeforeValidateHook = async ({ data, oper
   for (const row of (Array.isArray(data.submissionData) ? data.submissionData : []) as Row[]) {
     const name = typeof row.field === 'string' ? row.field : ''
     if (!defined.has(name) || values.has(name)) continue
-    const value = String(row.value ?? '').trim().slice(0, MAX_VALUE)
+    const value = String(row.value ?? '')
+      .trim()
+      .slice(0, MAX_VALUE)
     if (value) values.set(name, value)
   }
 
@@ -52,7 +55,10 @@ export const validateEnquiry: CollectionBeforeValidateHook = async ({ data, oper
   for (const [name, field] of defined) {
     const value = values.get(name)
     if ('required' in field && field.required && !value) {
-      errors.push({ message: `${('label' in field && field.label) || name} is required.`, path: name })
+      errors.push({
+        message: `${('label' in field && field.label) || name} is required.`,
+        path: name,
+      })
     } else if (value && field.blockType === 'email' && !EMAIL.test(value)) {
       errors.push({ message: 'Please check the email address.', path: name })
     }

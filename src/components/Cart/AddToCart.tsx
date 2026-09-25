@@ -77,8 +77,14 @@ export function AddToCart({ onAdded, personalisation = [], product }: Props) {
   const inBag = useMemo(() => {
     const line = cart?.items?.find((item) => {
       const productID = typeof item.product === 'object' ? item.product?.id : item.product
-      const variantID = item.variant ? (typeof item.variant === 'object' ? item.variant?.id : item.variant) : undefined
-      return productID === product.id && (!product.enableVariants || variantID === selectedVariant?.id)
+      const variantID = item.variant
+        ? typeof item.variant === 'object'
+          ? item.variant?.id
+          : item.variant
+        : undefined
+      return (
+        productID === product.id && (!product.enableVariants || variantID === selectedVariant?.id)
+      )
     })
     return line?.quantity ?? 0
   }, [cart?.items, product.enableVariants, product.id, selectedVariant?.id])
@@ -93,7 +99,8 @@ export function AddToCart({ onAdded, personalisation = [], product }: Props) {
   const atLimit = Boolean(record) && !soldOut && inBag >= limit
   const disabled = needsSize || soldOut || atLimit
   /** The next one added would be beyond what is ready to send. */
-  const madeToOrder = Boolean(record) && product.madeToOrder !== false && readyStock(record!) <= inBag
+  const madeToOrder =
+    Boolean(record) && product.madeToOrder !== false && readyStock(record!) <= inBag
 
   /** What is still to choose, by name: "Select a size", "Select a colour", "Select a size and colour". */
   const missing = (product.variantTypes ?? [])

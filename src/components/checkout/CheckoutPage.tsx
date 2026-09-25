@@ -32,11 +32,27 @@ export type CheckoutCountry = { blockedReason: null | string; code: string; name
 export type CheckoutCity = { feeQar: number; key: string; name: string }
 /** A signed-in customer's most recent saved address, already in the form's shape. */
 export type CheckoutSavedAddress = Partial<
-  Pick<Form, 'addressLine1' | 'addressLine2' | 'city' | 'cityKey' | 'country' | 'firstName' | 'lastName' | 'phone' | 'postalCode'>
+  Pick<
+    Form,
+    | 'addressLine1'
+    | 'addressLine2'
+    | 'city'
+    | 'cityKey'
+    | 'country'
+    | 'firstName'
+    | 'lastName'
+    | 'phone'
+    | 'postalCode'
+  >
 >
 
 type QuoteLine = {
-  personalisation: Array<{ lettering: string; placementName: string; symbolName: string; threadName: string }>
+  personalisation: Array<{
+    lettering: string
+    placementName: string
+    symbolName: string
+    threadName: string
+  }>
   personalisationTotal: number
   subtotal: number
 }
@@ -180,7 +196,9 @@ export function CheckoutPage({
    * the saved one out.
    */
   useEffect(() => {
-    const draft = Object.fromEntries(Object.entries(loadDraft()).filter(([, v]) => v !== '')) as Partial<Form>
+    const draft = Object.fromEntries(
+      Object.entries(loadDraft()).filter(([, v]) => v !== ''),
+    ) as Partial<Form>
     setForm((f) => ({ ...f, ...saved, ...draft }))
     setRestored(true)
     // Once, on arrival: `saved` comes from the server and does not change on this page.
@@ -230,7 +248,9 @@ export function CheckoutPage({
       setQuoteState((s) => (s.status === 'ok' ? s : { status: 'loading' }))
       fetch('/api/quote', {
         body: JSON.stringify({
-          ...(destinationReady ? { city: inQatar ? form.cityKey : undefined, country: form.country } : {}),
+          ...(destinationReady
+            ? { city: inQatar ? form.cityKey : undefined, country: form.country }
+            : {}),
           discountCode: appliedCode || undefined,
           email: emailValid ? email : undefined,
           items: items.map((item) => ({
@@ -247,11 +267,18 @@ export function CheckoutPage({
         .then(async (res) => {
           const body = await res.json().catch(() => ({}))
           if (res.ok) setQuoteState({ quote: body as Quote, status: 'ok' })
-          else setQuoteState({ error: (body as { error?: string }).error || 'This bag cannot be priced.', status: 'refused' })
+          else
+            setQuoteState({
+              error: (body as { error?: string }).error || 'This bag cannot be priced.',
+              status: 'refused',
+            })
         })
         .catch((error: unknown) => {
           if ((error as { name?: string })?.name !== 'AbortError') {
-            setQuoteState({ error: 'Prices could not be loaded. Check your connection.', status: 'refused' })
+            setQuoteState({
+              error: 'Prices could not be loaded. Check your connection.',
+              status: 'refused',
+            })
           }
         })
     }, 250)
@@ -270,10 +297,12 @@ export function CheckoutPage({
   /* ---------- validation ---------- */
   const validate = (): Partial<Record<FieldName, string>> => {
     const next: Partial<Record<FieldName, string>> = {}
-    if (!user && !EMAIL.test(form.email.trim())) next.email = 'Enter the email address for your receipt.'
+    if (!user && !EMAIL.test(form.email.trim()))
+      next.email = 'Enter the email address for your receipt.'
     if (!form.firstName.trim()) next.firstName = 'Enter your first name.'
     if (!form.lastName.trim()) next.lastName = 'Enter your last name.'
-    if (form.phone.replace(/\D/g, '').length < 7) next.phone = 'Enter a phone number the courier can call.'
+    if (form.phone.replace(/\D/g, '').length < 7)
+      next.phone = 'Enter a phone number the courier can call.'
     if (!form.country) next.country = 'Choose where this is going.'
     if (inQatar && !form.cityKey) next.cityKey = 'Choose your city.'
     if (!inQatar && !form.city.trim()) next.city = 'Enter your city.'
@@ -294,7 +323,9 @@ export function CheckoutPage({
     }
     if (blocked || quoteState.status !== 'ok' || !destinationReady) return
 
-    const cityName = inQatar ? (cities.find((c) => c.key === form.cityKey)?.name ?? '') : form.city.trim()
+    const cityName = inQatar
+      ? (cities.find((c) => c.key === form.cityKey)?.name ?? '')
+      : form.city.trim()
     const address = {
       addressLine1: form.addressLine1.trim(),
       addressLine2: form.addressLine2.trim(),
@@ -337,9 +368,14 @@ export function CheckoutPage({
   if (!cartLoading && !items.length) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-6 py-24 text-center">
-        <h1 className="serif-display text-[clamp(2.25rem,4vw,3.25rem)] leading-tight">Your bag is empty.</h1>
+        <h1 className="serif-display text-[clamp(2.25rem,4vw,3.25rem)] leading-tight">
+          Your bag is empty.
+        </h1>
         <p className="mt-4 text-ink-soft">Every piece is hand-finished to order in Doha.</p>
-        <Link className="caps mt-10 bg-ink px-10 py-4 text-[0.6875rem] text-white hover:bg-ink/85" href="/shop">
+        <Link
+          className="caps mt-10 bg-ink px-10 py-4 text-[0.6875rem] text-white hover:bg-ink/85"
+          href="/shop"
+        >
           Visit the shop
         </Link>
       </div>
@@ -358,25 +394,38 @@ export function CheckoutPage({
             : formatQar(quote.totals.shipping)
           : '—'
 
-  const canPay = stripeReady && !submitting && !blocked && destinationReady && quoteState.status === 'ok'
+  const canPay =
+    stripeReady && !submitting && !blocked && destinationReady && quoteState.status === 'ok'
 
   return (
     <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-24 md:px-7 md:pt-14">
       <h1 className="serif-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-none">Checkout</h1>
 
       {cancelled ? (
-        <p className="mt-6 max-w-2xl border-l border-ink pl-4 text-[0.9375rem] text-ink-soft" role="status">
+        <p
+          className="mt-6 max-w-2xl border-l border-ink pl-4 text-[0.9375rem] text-ink-soft"
+          role="status"
+        >
           Payment cancelled — nothing was charged. Your bag and details are just as you left them.
         </p>
       ) : null}
       {!stripeReady ? (
-        <p className="mt-6 max-w-2xl border-l border-[#8a2424] pl-4 text-[0.9375rem] text-ink-soft" role="alert">
+        <p
+          className="mt-6 max-w-2xl border-l border-[#8a2424] pl-4 text-[0.9375rem] text-ink-soft"
+          role="alert"
+        >
           Payments are not switched on for this site yet.
         </p>
       ) : null}
 
       <div className="mt-10 grid gap-14 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-20 xl:gap-28">
-        <form className="flex flex-col gap-14" id="checkout-form" noValidate onSubmit={pay} ref={formRef}>
+        <form
+          className="flex flex-col gap-14"
+          id="checkout-form"
+          noValidate
+          onSubmit={pay}
+          ref={formRef}
+        >
           {/* 01 — Contact */}
           <Section n="01" title="Contact">
             {user ? (
@@ -401,7 +450,10 @@ export function CheckoutPage({
                 </Field>
                 <p className="mt-3 text-xs text-ink-soft" id="email-hint">
                   Your receipt and updates on your order go here. No account needed.{' '}
-                  <Link className="underline underline-offset-4 hover:text-ink" href="/login?redirect=/checkout">
+                  <Link
+                    className="underline underline-offset-4 hover:text-ink"
+                    href="/login?redirect=/checkout"
+                  >
                     Sign in
                   </Link>
                 </p>
@@ -436,7 +488,11 @@ export function CheckoutPage({
                   </select>
                 </SelectBox>
                 {blocked ? (
-                  <p className="mt-3 text-[0.8125rem] leading-relaxed text-[#8a2424]" id="country-blocked" role="alert">
+                  <p
+                    className="mt-3 text-[0.8125rem] leading-relaxed text-[#8a2424]"
+                    id="country-blocked"
+                    role="alert"
+                  >
                     We cannot deliver to {country?.name}. {blocked}
                   </p>
                 ) : null}
@@ -470,7 +526,11 @@ export function CheckoutPage({
                   <SelectBox>
                     <select
                       aria-invalid={Boolean(errors.cityKey)}
-                      className={cn(inputClass, 'appearance-none pr-8', !form.cityKey && 'text-ink-faint')}
+                      className={cn(
+                        inputClass,
+                        'appearance-none pr-8',
+                        !form.cityKey && 'text-ink-faint',
+                      )}
                       id="cityKey"
                       name="cityKey"
                       onChange={(e) => set('cityKey', e.target.value)}
@@ -489,7 +549,12 @@ export function CheckoutPage({
                 </Field>
               ) : null}
 
-              <Field className="sm:col-span-2" error={errors.addressLine1} id="addressLine1" label="Street and building">
+              <Field
+                className="sm:col-span-2"
+                error={errors.addressLine1}
+                id="addressLine1"
+                label="Street and building"
+              >
                 <input
                   aria-invalid={Boolean(errors.addressLine1)}
                   autoComplete="address-line1"
@@ -501,7 +566,11 @@ export function CheckoutPage({
                   value={form.addressLine1}
                 />
               </Field>
-              <Field className="sm:col-span-2" id="addressLine2" label={inQatar ? 'Zone, apartment (optional)' : 'Apartment, area (optional)'}>
+              <Field
+                className="sm:col-span-2"
+                id="addressLine2"
+                label={inQatar ? 'Zone, apartment (optional)' : 'Apartment, area (optional)'}
+              >
                 <input
                   autoComplete="address-line2"
                   className={inputClass}
@@ -584,7 +653,10 @@ export function CheckoutPage({
                   rows={3}
                   value={form.giftNote}
                 />
-                <p className="mt-2 text-right text-[0.6875rem] text-ink-soft tabular-nums" id="giftNote-count">
+                <p
+                  className="mt-2 text-right text-[0.6875rem] text-ink-soft tabular-nums"
+                  id="giftNote-count"
+                >
                   {form.giftNote.length} / {GIFT_NOTE_MAX}
                 </p>
               </Field>
@@ -636,7 +708,9 @@ export function CheckoutPage({
               {discountRejected ? (
                 <span className="text-[#8a2424]">{discountRejected}</span>
               ) : appliedCode && quote?.deliveryPending ? (
-                <span className="text-ink-soft">{appliedCode} will be checked once you choose where it is going.</span>
+                <span className="text-ink-soft">
+                  {appliedCode} will be checked once you choose where it is going.
+                </span>
               ) : appliedCode && quote?.totals.discountCode ? (
                 <span className="text-ink-soft">
                   {quote.totals.discountCode} applied
@@ -661,28 +735,47 @@ export function CheckoutPage({
                   ?.map((o) => (typeof o === 'object' ? (o as VariantOption).label : null))
                   .filter(Boolean)
                   .join(' / ')
-                const image = product.gallery?.find((g) => typeof g.image === 'object')?.image as Media | undefined
+                const image = product.gallery?.find((g) => typeof g.image === 'object')?.image as
+                  Media | undefined
                 const line = lineQuotes?.[index]
                 const unit = variant?.priceInQAR ?? product.priceInQAR ?? 0
-                const lineTotal = line ? line.subtotal + line.personalisationTotal : unit * (item.quantity || 1)
+                const lineTotal = line
+                  ? line.subtotal + line.personalisationTotal
+                  : unit * (item.quantity || 1)
 
                 return (
-                  <li className="flex gap-4 border-b border-line py-5 first:pt-0" key={item.id ?? index}>
+                  <li
+                    className="flex gap-4 border-b border-line py-5 first:pt-0"
+                    key={item.id ?? index}
+                  >
                     <div className="relative aspect-[4/5] w-16 shrink-0 overflow-hidden bg-background">
                       {image?.url ? (
-                        <Image alt={image.alt || product.title} className="object-cover" fill sizes="64px" src={image.url} />
+                        <Image
+                          alt={image.alt || product.title}
+                          className="object-cover"
+                          fill
+                          sizes="64px"
+                          src={image.url}
+                        />
                       ) : null}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-3">
-                        <p className="serif-display text-[1.0625rem] leading-snug">{product.title.split(/\s+[—–]\s+/)[0]}</p>
-                        <span className="shrink-0 text-sm tabular-nums">{formatQar(lineTotal)}</span>
+                        <p className="serif-display text-[1.0625rem] leading-snug">
+                          {product.title.split(/\s+[—–]\s+/)[0]}
+                        </p>
+                        <span className="shrink-0 text-sm tabular-nums">
+                          {formatQar(lineTotal)}
+                        </span>
                       </div>
                       <p className="mt-1 text-xs text-ink-soft">
                         {size ? `Size ${size} · ` : ''}Qty {item.quantity}
                       </p>
                       {line?.personalisation.map((p) => (
-                        <p className="serif-italic mt-1 text-[0.8125rem] text-ink-soft" key={p.placementName}>
+                        <p
+                          className="serif-italic mt-1 text-[0.8125rem] text-ink-soft"
+                          key={p.placementName}
+                        >
                           Embroidery — {describe(p)}
                         </p>
                       ))}
@@ -692,15 +785,26 @@ export function CheckoutPage({
               })}
             </ul>
 
-            <dl className="mt-6 flex flex-col gap-2.5 text-sm" aria-busy={quoteState.status === 'loading'}>
+            <dl
+              className="mt-6 flex flex-col gap-2.5 text-sm"
+              aria-busy={quoteState.status === 'loading'}
+            >
               <Row label="Pieces" value={quote ? formatQar(quote.totals.subtotal) : '—'} />
-              {hasEmbroidery && quote ? <Row label="Embroidery" value={formatQar(quote.totals.personalisation)} /> : null}
+              {hasEmbroidery && quote ? (
+                <Row label="Embroidery" value={formatQar(quote.totals.personalisation)} />
+              ) : null}
               <Row
-                label={quote?.totals.shippingLabel && !quote.deliveryPending ? quote.totals.shippingLabel : 'Delivery'}
+                label={
+                  quote?.totals.shippingLabel && !quote.deliveryPending
+                    ? quote.totals.shippingLabel
+                    : 'Delivery'
+                }
                 muted={!quote || Boolean(quote.deliveryPending)}
                 value={deliveryValue}
               />
-              {quote?.totals.discount ? <Row label="Discount" value={`− ${formatQar(quote.totals.discount)}`} /> : null}
+              {quote?.totals.discount ? (
+                <Row label="Discount" value={`− ${formatQar(quote.totals.discount)}`} />
+              ) : null}
               <div className="mt-3 flex items-baseline justify-between border-t border-line pt-4">
                 <dt className="caps text-[0.6875rem]">Total</dt>
                 <dd className="text-lg tabular-nums">
@@ -718,7 +822,10 @@ export function CheckoutPage({
             {quote?.stock?.madeToOrder.length ? (
               <p className="mt-4 text-xs leading-relaxed text-ink-soft">
                 Made to order, so it takes a little longer to reach you:{' '}
-                {quote.stock.madeToOrder.map((m) => `${m.label}${m.count > 1 ? ` (${m.count})` : ''}`).join(', ')}.
+                {quote.stock.madeToOrder
+                  .map((m) => `${m.label}${m.count > 1 ? ` (${m.count})` : ''}`)
+                  .join(', ')}
+                .
               </p>
             ) : null}
 
@@ -727,7 +834,9 @@ export function CheckoutPage({
               {currency && quote && !quote.deliveryPending
                 ? ` About ${money(quote.totals.total)} in ${currency.name}, as a guide — your bank converts at its own rate.`
                 : ''}
-              {hasEmbroidery ? ' Hand-embroidered pieces are made for you and cannot be returned.' : ''}
+              {hasEmbroidery
+                ? ' Hand-embroidered pieces are made for you and cannot be returned.'
+                : ''}
             </p>
 
             <button

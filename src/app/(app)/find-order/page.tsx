@@ -30,7 +30,11 @@ export default async function FindOrderPage() {
         <FindOrderForm initialEmail={user?.email} sent={TRACK_PAGE.sent} />
       </div>
       <div className="mt-16 flex flex-wrap justify-center gap-8 border-t border-line pt-8">
-        {user ? <TextLink href="/orders">Your orders</TextLink> : <TextLink href="/login">Sign in</TextLink>}
+        {user ? (
+          <TextLink href="/orders">Your orders</TextLink>
+        ) : (
+          <TextLink href="/login">Sign in</TextLink>
+        )}
         <TextLink href="/shipping-returns#delivery">Delivery times</TextLink>
         <TextLink href="/contact?subject=An+order">Ask us</TextLink>
       </div>

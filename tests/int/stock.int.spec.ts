@@ -2,12 +2,28 @@ import { describe, expect, it } from 'vitest'
 
 import type { Product, Variant } from '@/payload-types'
 
-import { purchaseLimit, readyStock, stockRefusal, stockShortages, stockSummary } from '@/lib/pricing/stock'
+import {
+  purchaseLimit,
+  readyStock,
+  stockRefusal,
+  stockShortages,
+  stockSummary,
+} from '@/lib/pricing/stock'
 
 const product = (madeToOrder: boolean): Product =>
-  ({ id: 1, madeToOrder, priceInQAR: 139900, title: 'Al Shaheen Nights — Silk Pyjama Set' }) as unknown as Product
+  ({
+    id: 1,
+    madeToOrder,
+    priceInQAR: 139900,
+    title: 'Al Shaheen Nights — Silk Pyjama Set',
+  }) as unknown as Product
 const size = (id: number, label: string, inventory: null | number): Variant =>
-  ({ id, inventory, priceInQAR: 139900, title: `Al Shaheen Nights — Silk Pyjama Set — ${label}` }) as unknown as Variant
+  ({
+    id,
+    inventory,
+    priceInQAR: 139900,
+    title: `Al Shaheen Nights — Silk Pyjama Set — ${label}`,
+  }) as unknown as Variant
 
 describe('stock — ready stock', () => {
   it('never counts below zero, whatever the database says', () => {
@@ -49,7 +65,9 @@ describe('stock — made to order off: stock is a hard limit', () => {
   })
 
   it('treats negative stock as sold out', () => {
-    expect(stockRefusal([{ product: p, quantity: 1, variant: size(2, 'M', -24) }])).toMatch(/sold out/)
+    expect(stockRefusal([{ product: p, quantity: 1, variant: size(2, 'M', -24) }])).toMatch(
+      /sold out/,
+    )
   })
 
   it('passes a basket that fits', () => {
@@ -68,7 +86,9 @@ describe('stock — made to order on: never refused, noted instead', () => {
   it('sells a size with no stock, and says how many will be made', () => {
     const lines = [{ product: p, quantity: 3, variant: size(2, 'M', 1) }]
     expect(stockRefusal(lines)).toBeNull()
-    expect(stockSummary(lines).madeToOrder).toEqual([{ count: 2, label: 'Al Shaheen Nights, size M', variantId: 2 }])
+    expect(stockSummary(lines).madeToOrder).toEqual([
+      { count: 2, label: 'Al Shaheen Nights, size M', variantId: 2 },
+    ])
   })
 
   it('reports nothing when everything is ready to send', () => {
@@ -83,8 +103,16 @@ describe('stock — naming a choice', () => {
   const v = (title: string) => ({ id: 1, inventory: 0, title }) as unknown as Variant
 
   it('a size reads as "size M"; a size and colour in brackets', () => {
-    expect(stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — M') }])).toMatch(/^Classic, size M is sold out/)
-    expect(stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — M — Blush') }])).toMatch(/^Classic \(M \/ Blush\) is sold out/)
-    expect(stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — Blush') }])).toMatch(/^Classic \(Blush\) is sold out/)
+    expect(
+      stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — M') }]),
+    ).toMatch(/^Classic, size M is sold out/)
+    expect(
+      stockRefusal([
+        { product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — M — Blush') },
+      ]),
+    ).toMatch(/^Classic \(M \/ Blush\) is sold out/)
+    expect(
+      stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — Blush') }]),
+    ).toMatch(/^Classic \(Blush\) is sold out/)
   })
 })

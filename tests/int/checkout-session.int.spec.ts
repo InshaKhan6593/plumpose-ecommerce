@@ -48,7 +48,11 @@ describe('readCheckoutDetails', () => {
     const long = readCheckoutDetails({
       ...form,
       giftNote: 'x'.repeat(5000),
-      shippingAddress: { ...form.shippingAddress, addressLine1: 'y'.repeat(5000), country: 'QATAR' },
+      shippingAddress: {
+        ...form.shippingAddress,
+        addressLine1: 'y'.repeat(5000),
+        country: 'QATAR',
+      },
     })
     expect(long.giftNote).toHaveLength(GIFT_NOTE_MAX)
     expect(long.address.addressLine1).toHaveLength(120)
@@ -126,7 +130,10 @@ describe('orderTotalsFromSnapshot with delivery details', () => {
   })
 
   it('never keeps a gift note on an order that is not a gift', () => {
-    const totals = orderTotalsFromSnapshot({ ...snapshot, delivery: { ...snapshot.delivery!, gift: false } })
+    const totals = orderTotalsFromSnapshot({
+      ...snapshot,
+      delivery: { ...snapshot.delivery!, gift: false },
+    })
     expect(totals.gift).toBe(false)
     expect(totals.giftNote).toBeUndefined()
   })
@@ -141,7 +148,9 @@ describe('orderTotalsFromSnapshot with delivery details', () => {
 
 describe('customerEmailOf', () => {
   it('uses the address a guest typed', () => {
-    expect(customerEmailOf({ customer: null, customerEmail: 'guest@example.com' })).toBe('guest@example.com')
+    expect(customerEmailOf({ customer: null, customerEmail: 'guest@example.com' })).toBe(
+      'guest@example.com',
+    )
   })
 
   it("falls back to a signed-in customer's account, whose orders carry no customerEmail", () => {

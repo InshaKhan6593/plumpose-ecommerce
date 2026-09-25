@@ -40,7 +40,10 @@ export function SpottedForm() {
     const chosen = event.target.files?.[0] ?? null
     setErrors((e) => ({ ...e, file: undefined }))
     if (chosen && chosen.size > MAX_MB * 1024 * 1024) {
-      setErrors((e) => ({ ...e, file: `That photograph is over ${MAX_MB} MB — please send a smaller one.` }))
+      setErrors((e) => ({
+        ...e,
+        file: `That photograph is over ${MAX_MB} MB — please send a smaller one.`,
+      }))
       setFile(null)
       return
     }
@@ -52,7 +55,8 @@ export function SpottedForm() {
     const form = new FormData(event.currentTarget)
     const local: Errors = {}
     if (!file) local.file = 'Please choose a photograph.'
-    if (!String(form.get('handle') ?? '').trim()) local.handle = 'Please add your Instagram name, like @yourname.'
+    if (!String(form.get('handle') ?? '').trim())
+      local.handle = 'Please add your Instagram name, like @yourname.'
     if (form.get('consent') !== 'on') local.consent = 'Please confirm we may share your photograph.'
     setErrors(local)
     setFailure('')
@@ -86,41 +90,102 @@ export function SpottedForm() {
   }
 
   return (
-    <form className="grid gap-10 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:gap-14" noValidate onSubmit={submit}>
+    <form
+      className="grid gap-10 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:gap-14"
+      noValidate
+      onSubmit={submit}
+    >
       <div>
         <label className="group relative flex aspect-[4/5] cursor-pointer items-center justify-center overflow-hidden border border-dashed border-line bg-paper-3 text-center transition-colors hover:border-ink">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img alt="Your photograph" className="absolute inset-0 h-full w-full object-cover" src={preview} />
+            <img
+              alt="Your photograph"
+              className="absolute inset-0 h-full w-full object-cover"
+              src={preview}
+            />
           ) : (
-            <span className="caps px-6 text-[0.5625rem] leading-relaxed text-ink-soft">Choose a photograph</span>
+            <span className="caps px-6 text-[0.5625rem] leading-relaxed text-ink-soft">
+              Choose a photograph
+            </span>
           )}
-          <input accept="image/jpeg,image/png,image/webp" aria-label="Your photograph" className="sr-only" name="file" onChange={pick} type="file" />
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            aria-label="Your photograph"
+            className="sr-only"
+            name="file"
+            onChange={pick}
+            type="file"
+          />
         </label>
-        <p className="mt-3 text-[0.75rem] text-ink-soft">{errors.file ? <span className="text-[#8a2424]">{errors.file}</span> : `JPEG, PNG or WebP, up to ${MAX_MB} MB.`}</p>
+        <p className="mt-3 text-[0.75rem] text-ink-soft">
+          {errors.file ? (
+            <span className="text-[#8a2424]">{errors.file}</span>
+          ) : (
+            `JPEG, PNG or WebP, up to ${MAX_MB} MB.`
+          )}
+        </p>
       </div>
 
       <div className="flex flex-col gap-7">
         <div className="grid gap-7 sm:grid-cols-2">
           <HouseField error={errors.handle} id="spotted-handle" label="Your Instagram">
-            <input aria-invalid={Boolean(errors.handle)} autoCapitalize="none" className={houseInput} id="spotted-handle" maxLength={31} name="handle" placeholder="@yourname" />
+            <input
+              aria-invalid={Boolean(errors.handle)}
+              autoCapitalize="none"
+              className={houseInput}
+              id="spotted-handle"
+              maxLength={31}
+              name="handle"
+              placeholder="@yourname"
+            />
           </HouseField>
-          <HouseField error={errors.email} hint="Optional. Never shown." id="spotted-email" label="Email">
-            <input aria-invalid={Boolean(errors.email)} autoComplete="email" className={houseInput} id="spotted-email" name="email" type="email" />
+          <HouseField
+            error={errors.email}
+            hint="Optional. Never shown."
+            id="spotted-email"
+            label="Email"
+          >
+            <input
+              aria-invalid={Boolean(errors.email)}
+              autoComplete="email"
+              className={houseInput}
+              id="spotted-email"
+              name="email"
+              type="email"
+            />
           </HouseField>
         </div>
         <HouseField id="spotted-caption" label="A line to go with it (optional)">
           <input className={houseInput} id="spotted-caption" maxLength={200} name="caption" />
         </HouseField>
-        <HouseField error={errors.postUrl} hint="Optional — if it is on Instagram, the link to the post." id="spotted-post" label="Link to your post">
-          <input aria-invalid={Boolean(errors.postUrl)} className={houseInput} id="spotted-post" name="postUrl" placeholder="https://instagram.com/p/…" type="url" />
+        <HouseField
+          error={errors.postUrl}
+          hint="Optional — if it is on Instagram, the link to the post."
+          id="spotted-post"
+          label="Link to your post"
+        >
+          <input
+            aria-invalid={Boolean(errors.postUrl)}
+            className={houseInput}
+            id="spotted-post"
+            name="postUrl"
+            placeholder="https://instagram.com/p/…"
+            type="url"
+          />
         </HouseField>
 
         <label className="flex items-start gap-3 text-[0.8125rem] leading-relaxed text-ink-soft">
-          <input className="mt-1 size-4 accent-[var(--color-ink,#1a1714)]" name="consent" type="checkbox" />
+          <input
+            className="mt-1 size-4 accent-[var(--color-ink,#1a1714)]"
+            name="consent"
+            type="checkbox"
+          />
           <span>
             The photograph is mine, and plumpose may share it on this site with my Instagram name.
-            {errors.consent ? <span className="mt-1 block text-[#8a2424]">{errors.consent}</span> : null}
+            {errors.consent ? (
+              <span className="mt-1 block text-[#8a2424]">{errors.consent}</span>
+            ) : null}
           </span>
         </label>
 
@@ -128,7 +193,9 @@ export function SpottedForm() {
 
         <div className="flex flex-wrap items-center gap-6">
           <HouseButton disabled={sending}>{sending ? 'Sending…' : 'Send photograph'}</HouseButton>
-          <p className="text-[0.75rem] text-ink-soft">We look at every photograph before it appears.</p>
+          <p className="text-[0.75rem] text-ink-soft">
+            We look at every photograph before it appears.
+          </p>
         </div>
       </div>
     </form>

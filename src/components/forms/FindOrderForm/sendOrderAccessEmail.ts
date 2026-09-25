@@ -61,9 +61,13 @@ export async function sendOrderAccessEmail({ email, orderID }: Args): Promise<Re
         body: [
           label(`Order no. ${order.id}`),
           heading('Your order'),
-          paragraph('Here is the private link to your order, where you can see each step from our atelier to your door.'),
+          paragraph(
+            'Here is the private link to your order, where you can see each step from our atelier to your door.',
+          ),
           button(href, 'View your order'),
-          muted('Keep this email to yourself — anyone with the link can see the order. If you did not ask for it, you can ignore it.'),
+          muted(
+            'Keep this email to yourself — anyone with the link can see the order. If you did not ask for it, you can ignore it.',
+          ),
         ].join('\n'),
         footer: {
           contactEmail: settings.contactEmail,

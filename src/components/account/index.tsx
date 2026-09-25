@@ -42,7 +42,11 @@ export function AuthShell({
           <Notice code={notice} />
           {children}
         </div>
-        {footer ? <div className="mt-14 flex flex-wrap justify-center gap-x-8 gap-y-4 border-t border-line pt-8">{footer}</div> : null}
+        {footer ? (
+          <div className="mt-14 flex flex-wrap justify-center gap-x-8 gap-y-4 border-t border-line pt-8">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   )

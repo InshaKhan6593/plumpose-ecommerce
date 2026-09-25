@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import React from 'react'
 
 import { Wordmark } from '@/components/brand/Wordmark'
 import { LocaleButton } from '@/components/locale/LocalePicker'
@@ -111,7 +110,10 @@ export async function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 md:flex-row md:items-center md:justify-between">
-          <LocaleButton className="caps self-start text-left text-[0.5625rem] text-ink-soft" variant="country" />
+          <LocaleButton
+            className="caps self-start text-left text-[0.5625rem] text-ink-soft"
+            variant="country"
+          />
           <p className="caps text-[0.5625rem] text-ink-soft">
             All orders are charged in QAR · © {new Date().getFullYear()} plumpose
           </p>

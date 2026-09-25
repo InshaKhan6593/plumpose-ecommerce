@@ -56,12 +56,33 @@ export default async function HomePage() {
       limit: 1,
       populate: { variants: { priceInQAR: true } },
       sort: ['_order', 'createdAt'],
-      where: { and: [{ _status: { equals: 'published' } }, ...(featuredProductId ? [{ id: { equals: featuredProductId } }] : [])] },
+      where: {
+        and: [
+          { _status: { equals: 'published' } },
+          ...(featuredProductId ? [{ id: { equals: featuredProductId } }] : []),
+        ],
+      },
     }),
     // Featured first (she ticks "Feature on the homepage"), then the newest.
-    payload.find({ collection: 'reviews', depth: 0, limit: 3, overrideAccess: false, sort: ['-featured', '-createdAt'], where: { status: { equals: 'approved' } } }),
-    payload.find({ collection: 'spotted', depth: 1, limit: 4, sort: '-createdAt', where: { status: { equals: 'approved' } } }),
-    payload.count({ collection: 'personalisationOptions', where: { and: [{ type: { equals: 'thread' } }, { active: { not_equals: false } }] } }),
+    payload.find({
+      collection: 'reviews',
+      depth: 0,
+      limit: 3,
+      overrideAccess: false,
+      sort: ['-featured', '-createdAt'],
+      where: { status: { equals: 'approved' } },
+    }),
+    payload.find({
+      collection: 'spotted',
+      depth: 1,
+      limit: 4,
+      sort: '-createdAt',
+      where: { status: { equals: 'approved' } },
+    }),
+    payload.count({
+      collection: 'personalisationOptions',
+      where: { and: [{ type: { equals: 'thread' } }, { active: { not_equals: false } }] },
+    }),
     deliveryRange(payload, settings),
   ])
 
@@ -69,7 +90,8 @@ export default async function HomePage() {
   /** Test shots win while TEST_SHOTS=on (docs/TEST-SHOTS.md); the real photograph otherwise. */
   const testing = process.env.TEST_SHOTS === 'on'
   const image = (key: HomeMediaKey) =>
-    (testing && TEST_MEDIA[key] ? byFile.get(TEST_MEDIA[key]) : undefined) ?? byFile.get(HOME_MEDIA[key])
+    (testing && TEST_MEDIA[key] ? byFile.get(TEST_MEDIA[key]) : undefined) ??
+    byFile.get(HOME_MEDIA[key])
 
   // Her featured piece; if it has since been unpublished, the first in the shop, so the band never disappears.
   const product = (products.docs[0] ??
@@ -90,14 +112,20 @@ export default async function HomePage() {
     .map((v) => (typeof v === 'object' ? v.priceInQAR : null))
     .filter((p): p is number => typeof p === 'number')
   const priceMinor = variantPrices.length ? Math.min(...variantPrices) : (product?.priceInQAR ?? 0)
-  const category = product?.categories?.find((c): c is Category => typeof c === 'object' && c !== null)
+  const category = product?.categories?.find(
+    (c): c is Category => typeof c === 'object' && c !== null,
+  )
 
   // ---- facts, all from her settings and tables ----
   const leadTime = settings.personalisationLeadTime ?? null // e.g. "4–10 working days"
   const leadMatch = leadTime?.match(/^\s*([\d–-]+)\s*(.*)$/)
   const facts: PrintFact[] = [
-    ...(leadMatch ? [{ label: `${leadMatch[2] || 'days'} to hand-finish`, value: leadMatch[1] }] : []),
-    ...(threads.totalDocs ? [{ label: 'Embroidery thread colours', value: String(threads.totalDocs) }] : []),
+    ...(leadMatch
+      ? [{ label: `${leadMatch[2] || 'days'} to hand-finish`, value: leadMatch[1] }]
+      : []),
+    ...(threads.totalDocs
+      ? [{ label: 'Embroidery thread colours', value: String(threads.totalDocs) }]
+      : []),
   ]
 
   const fee = settings.personalisationFeeQar

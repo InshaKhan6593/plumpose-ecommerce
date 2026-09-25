@@ -1,9 +1,7 @@
 import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
 
-// `.js`: the e2e suite loads this config as strict ESM, where `next/cache` alone does not resolve.
-import { revalidatePath, revalidateTag } from 'next/cache.js'
-
 import { adminOnly } from '@/access/adminOnly'
+import { refreshStorefront } from '@/hooks/revalidateStorefront'
 import { pageTextTabs } from '@/content/pageTextSchema'
 
 /**
@@ -11,14 +9,8 @@ import { pageTextTabs } from '@/content/pageTextSchema'
  * so a save clears both: her words are live on the next page load.
  */
 const refreshPages: GlobalAfterChangeHook = ({ doc, req }) => {
-  if (!req.context?.disableRevalidate) {
-    try {
-      revalidateTag('global_pageText', { expire: 0 })
-      revalidatePath('/', 'layout')
-    } catch {
-      // Outside a Next request (seed script, Local API) there is no cache to clear.
-    }
-  }
+  // At once, and again once the save has committed — see refreshStorefront.
+  refreshStorefront(req, { layout: true, tags: ['global_pageText'] })
   return doc
 }
 
@@ -32,7 +24,8 @@ export const PageText: GlobalConfig = {
   slug: 'pageText',
   label: 'Page text',
   admin: {
-    description: 'The words on the homepage and the other pages. Prices, fees and delivery times come from their own settings, not from here.',
+    description:
+      'The words on the homepage and the other pages. Prices, fees and delivery times come from their own settings, not from here.',
     group: 'Settings',
   },
   access: {
@@ -48,7 +41,10 @@ export const PageText: GlobalConfig = {
           {
             name: 'featuredProduct',
             type: 'relationship',
-            admin: { description: 'The piece the homepage shows and links to. Leave empty for the first piece in the shop.' },
+            admin: {
+              description:
+                'The piece the homepage shows and links to. Leave empty for the first piece in the shop.',
+            },
             filterOptions: { _status: { equals: 'published' } },
             label: 'Featured piece',
             relationTo: 'products',

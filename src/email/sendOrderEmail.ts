@@ -54,9 +54,7 @@ const BUILD: Record<OrderEmailKind, (view: OrderView) => EmailContent> = {
   shipped: shippedNotification,
 }
 
-export type SendResult =
-  | { ok: false; reason: string; skipped?: true }
-  | { ok: true; to: string }
+export type SendResult = { ok: false; reason: string; skipped?: true } | { ok: true; to: string }
 
 /** Tells the orders hook that this write is ours, so it does not schedule another email. */
 export const ORDER_EMAIL_CONTEXT = { skipOrderEmails: true } as const
@@ -82,7 +80,10 @@ export const sendOrderEmail = async (
     .catch(() => null)) as null | Order
 
   if (!order) {
-    payload.logger.warn({ kind, order: orderId }, 'Order email skipped — the order does not exist (rolled back?).')
+    payload.logger.warn(
+      { kind, order: orderId },
+      'Order email skipped — the order does not exist (rolled back?).',
+    )
     return { ok: false, reason: 'Order not found.', skipped: true }
   }
 
@@ -91,7 +92,11 @@ export const sendOrderEmail = async (
     return { ok: false, reason: 'Already sent.', skipped: true }
   }
 
-  const settings = await payload.findGlobal({ depth: 0, overrideAccess: true, slug: 'siteSettings' })
+  const settings = await payload.findGlobal({
+    depth: 0,
+    overrideAccess: true,
+    slug: 'siteSettings',
+  })
 
   const to =
     kind === 'notification'
@@ -127,7 +132,9 @@ export const sendOrderEmail = async (
    * reach the customer, so she can answer an order question in one step.
    */
   const replyTo =
-    kind === 'notification' ? customerEmailOf(order) || undefined : settings.contactEmail || undefined
+    kind === 'notification'
+      ? customerEmailOf(order) || undefined
+      : settings.contactEmail || undefined
 
   try {
     await payload.sendEmail({

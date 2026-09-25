@@ -7,7 +7,6 @@ import { useSearchParams } from 'next/navigation'
 import { Media } from '@/components/Media'
 import { RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
-import React from 'react'
 
 /**
  * The product page's photographs.
@@ -25,11 +24,19 @@ import React from 'react'
  * option is chosen, alongside the photographs tied to none (REQUIREMENTS A4).
  * Before anything is chosen, every photograph shows.
  */
-export function ProductGallery({ items }: { items: Array<{ image: MediaType; optionId: null | number }> }) {
+export function ProductGallery({
+  items,
+}: {
+  items: Array<{ image: MediaType; optionId: null | number }>
+}) {
   const searchParams = useSearchParams()
   const chosen = new Set(Array.from(searchParams.values()))
   const tagged = items.filter((item) => item.optionId !== null && chosen.has(String(item.optionId)))
-  const images = (tagged.length ? items.filter((item) => item.optionId === null || chosen.has(String(item.optionId))) : items).map((item) => item.image)
+  const images = (
+    tagged.length
+      ? items.filter((item) => item.optionId === null || chosen.has(String(item.optionId)))
+      : items
+  ).map((item) => item.image)
 
   if (!images.length) return null
 

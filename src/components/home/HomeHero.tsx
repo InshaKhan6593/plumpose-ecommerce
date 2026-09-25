@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { Media as MediaType } from '@/payload-types'
 
@@ -58,7 +58,9 @@ export function HomeHero({
   // The poster is the first paint; the film joins once the page has loaded (see afterPageLoad).
   useEffect(() => {
     if (prefersReducedMotion()) return
-    return afterPageLoad(() => setFilm(window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile'))
+    return afterPageLoad(() =>
+      setFilm(window.matchMedia('(min-width: 1024px)').matches ? 'desktop' : 'mobile'),
+    )
   }, [])
 
   useLayoutEffect(() => {
@@ -88,14 +90,24 @@ export function HomeHero({
         // ---------- intro ----------
         const intro = gsap.timeline({ defaults: { ease: 'expo.out' } })
         // The film settles from a slow push-in, like a shot opening.
-        intro.fromTo(filmLayer, { opacity: 0, scale: 1.18 }, { duration: 2.6, opacity: 1, scale: 1 }, 0)
+        intro.fromTo(
+          filmLayer,
+          { opacity: 0, scale: 1.18 },
+          { duration: 2.6, opacity: 1, scale: 1 },
+          0,
+        )
 
         if (tagline) {
           gsap.set(tagline, { opacity: 1 })
           const split = splitLines(tagline)
           intro.from(split.lines, { duration: 1.5, stagger: 0.14, yPercent: LINE_HIDDEN }, 0.45)
         }
-        intro.fromTo(words, { opacity: 0, y: 18 }, { duration: 1.3, opacity: 1, stagger: 0.12, y: 0 }, 1)
+        intro.fromTo(
+          words,
+          { opacity: 0, y: 18 },
+          { duration: 1.3, opacity: 1, stagger: 0.12, y: 0 },
+          1,
+        )
 
         // The detail: its frame draws open, the print settles inside, the label slides in.
         if (detailFrame) {
@@ -105,13 +117,27 @@ export function HomeHero({
             { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4 },
             1.3,
           )
-          if (detailPicture) intro.fromTo(detailPicture, { scale: 1.6 }, { duration: 2, scale: 1.1 }, 1.3)
+          if (detailPicture)
+            intro.fromTo(detailPicture, { scale: 1.6 }, { duration: 2, scale: 1.1 }, 1.3)
         }
-        if (detailLabel) intro.fromTo(detailLabel, { opacity: 0, x: -14 }, { duration: 1.1, opacity: 1, x: 0 }, 1.9)
+        if (detailLabel)
+          intro.fromTo(
+            detailLabel,
+            { opacity: 0, x: -14 },
+            { duration: 1.1, opacity: 1, x: 0 },
+            1.9,
+          )
 
         // The detail keeps breathing — slow, so the film stays the main motion.
         if (detailPicture) {
-          gsap.to(detailPicture, { delay: 3.4, duration: 9, ease: 'sine.inOut', repeat: -1, scale: 1.24, yoyo: true })
+          gsap.to(detailPicture, {
+            delay: 3.4,
+            duration: 9,
+            ease: 'sine.inOut',
+            repeat: -1,
+            scale: 1.24,
+            yoyo: true,
+          })
         }
 
         // ---------- curtain: as the next section covers the hero ----------
@@ -127,11 +153,28 @@ export function HomeHero({
         const cover = { end: '+=100%', scrub: 1, start: 'top top', trigger: el }
         if (depth) {
           // Scaling to 1.1 leaves 5% spare above the frame, so a 5% sink never uncovers its top edge.
-          gsap.fromTo(depth, { scale: 1, yPercent: 0 }, { ease: 'none', immediateRender: false, scale: 1.1, scrollTrigger: cover, yPercent: 5 })
+          gsap.fromTo(
+            depth,
+            { scale: 1, yPercent: 0 },
+            { ease: 'none', immediateRender: false, scale: 1.1, scrollTrigger: cover, yPercent: 5 },
+          )
         }
-        if (dim) gsap.fromTo(dim, { opacity: 0 }, { ease: 'none', opacity: 0.7, scrollTrigger: cover })
-        if (copy) gsap.to(copy, { ease: 'none', opacity: 0, scrollTrigger: { ...cover, end: '+=55%' }, yPercent: -30 })
-        if (detailBlock) gsap.to(detailBlock, { ease: 'none', opacity: 0, scrollTrigger: { ...cover, end: '+=55%' }, yPercent: -40 })
+        if (dim)
+          gsap.fromTo(dim, { opacity: 0 }, { ease: 'none', opacity: 0.7, scrollTrigger: cover })
+        if (copy)
+          gsap.to(copy, {
+            ease: 'none',
+            opacity: 0,
+            scrollTrigger: { ...cover, end: '+=55%' },
+            yPercent: -30,
+          })
+        if (detailBlock)
+          gsap.to(detailBlock, {
+            ease: 'none',
+            opacity: 0,
+            scrollTrigger: { ...cover, end: '+=55%' },
+            yPercent: -40,
+          })
       }, el)
 
       ScrollTrigger.refresh()
@@ -144,43 +187,75 @@ export function HomeHero({
   }, [])
 
   return (
-    <section aria-label="Welcome" className="relative h-svh min-h-[36rem] overflow-hidden bg-ink text-white" ref={root}>
+    <section
+      aria-label="Welcome"
+      className="relative h-svh min-h-[36rem] overflow-hidden bg-ink text-white"
+      ref={root}
+    >
       {/* The film — the outer layer carries the curtain's depth, the inner the intro. */}
       <div className="absolute inset-0 will-change-transform" data-hero-depth>
         <div className="absolute inset-0" data-hero-film>
           <div className="absolute inset-0 hidden lg:block">
-            <FilmOrPoster active={film === 'desktop'} film={films.desktop} label="The Al Shaheen Nights set, worn in a café" />
+            <FilmOrPoster
+              active={film === 'desktop'}
+              film={films.desktop}
+              label="The Al Shaheen Nights set, worn in a café"
+            />
           </div>
           <div className="absolute inset-0 lg:hidden">
-            <FilmOrPoster active={film === 'mobile'} film={films.mobile} label="The Al Shaheen Nights set, worn in a café" />
+            <FilmOrPoster
+              active={film === 'mobile'}
+              film={films.mobile}
+              label="The Al Shaheen Nights set, worn in a café"
+            />
           </div>
         </div>
       </div>
 
       {/* Shade for legibility: header on top, words bottom-left. */}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-ink/45 via-transparent to-transparent" />
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-tr from-ink/75 via-ink/15 to-transparent" />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-b from-ink/45 via-transparent to-transparent"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-tr from-ink/75 via-ink/15 to-transparent"
+      />
       {/* Deepens as the next section slides over. */}
       <div aria-hidden className="absolute inset-0 bg-ink opacity-0" data-hero-dim />
 
       <div className="absolute inset-x-4 bottom-[9%] md:inset-x-7" data-hero-copy>
         <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-[clamp(4.25rem,10vw,10.5rem)] leading-[0.9]" data-hero-tagline data-reveal-lines>
+            <h1
+              className="text-[clamp(4.25rem,10vw,10.5rem)] leading-[0.9]"
+              data-hero-tagline
+              data-reveal-lines
+            >
               <span className="serif-display block">{copy.tagline[0]}</span>
               <span className="serif-italic block">{copy.tagline[1]}</span>
             </h1>
             <div className="mt-8 flex flex-wrap items-center gap-7" data-hero-word data-reveal>
-              <Link className="caps bg-white px-8 py-4 text-[0.625rem] text-ink transition-opacity hover:opacity-85" href={ctaHref}>
+              <Link
+                className="caps bg-white px-8 py-4 text-[0.625rem] text-ink transition-opacity hover:opacity-85"
+                href={ctaHref}
+              >
                 {copy.cta}
               </Link>
-              <Link className="caps border-b border-white/70 pb-1 text-[0.625rem]" href="/our-story">
+              <Link
+                className="caps border-b border-white/70 pb-1 text-[0.625rem]"
+                href="/our-story"
+              >
                 Our story ↗
               </Link>
             </div>
           </div>
 
-          <p className="hidden max-w-[17rem] text-sm leading-relaxed text-white/80 lg:block" data-hero-word data-reveal>
+          <p
+            className="hidden max-w-[17rem] text-sm leading-relaxed text-white/80 lg:block"
+            data-hero-word
+            data-reveal
+          >
             {copy.intro}
           </p>
         </div>
@@ -192,13 +267,31 @@ export function HomeHero({
         right of centre, so anywhere nearer the middle would cover her face.
       */}
       {detail ? (
-        <div className="absolute top-[26%] right-4 hidden md:right-7 lg:block" data-hero-detail-block>
-          <div className="relative size-[clamp(7rem,10vw,11rem)] overflow-hidden border border-white" data-hero-detail data-reveal-image>
+        <div
+          className="absolute top-[26%] right-4 hidden md:right-7 lg:block"
+          data-hero-detail-block
+        >
+          <div
+            className="relative size-[clamp(7rem,10vw,11rem)] overflow-hidden border border-white"
+            data-hero-detail
+            data-reveal-image
+          >
             <div className="absolute inset-0" data-hero-detail-picture>
-              <Media className="absolute inset-0" fill imgClassName="object-cover" priority resource={detail} size="176px" />
+              <Media
+                className="absolute inset-0"
+                fill
+                imgClassName="object-cover"
+                priority
+                resource={detail}
+                size="176px"
+              />
             </div>
           </div>
-          <div className="w-[clamp(7rem,10vw,11rem)] bg-white px-3 py-2.5 text-ink" data-hero-detail-label data-reveal>
+          <div
+            className="w-[clamp(7rem,10vw,11rem)] bg-white px-3 py-2.5 text-ink"
+            data-hero-detail-label
+            data-reveal
+          >
             <p className="caps text-[0.5rem] text-ink-soft">The print</p>
             <p className="mt-0.5 text-[0.75rem]">Hand-drawn whale shark</p>
           </div>
@@ -230,7 +323,12 @@ function FilmOrPoster({ active, film, label }: { active: boolean; film: Film; la
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img alt={label} className="absolute inset-0 h-full w-full object-cover" src={film.poster} style={{ objectPosition: FOCUS }} />
+      <img
+        alt={label}
+        className="absolute inset-0 h-full w-full object-cover"
+        src={film.poster}
+        style={{ objectPosition: FOCUS }}
+      />
       {active ? (
         <video
           aria-hidden

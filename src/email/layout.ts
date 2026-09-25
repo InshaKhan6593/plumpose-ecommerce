@@ -105,7 +105,11 @@ const footerHtml = (footer: Footer): string => {
  * Wraps a body in the page: paper background, a white card, the wordmark, the
  * contact footer. `preheader` is the grey line inboxes show after the subject.
  */
-export const layout = (args: { body: string; footer: Footer; preheader: string }): string => `<!doctype html>
+export const layout = (args: {
+  body: string
+  footer: Footer
+  preheader: string
+}): string => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">

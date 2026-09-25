@@ -19,7 +19,10 @@ import { PAGE_MEDIA, PAGE_TEST_MEDIA, type PageMediaKey, type PageTestKey } from
  */
 export async function loadPageMedia(payload: Payload) {
   const testing = process.env.TEST_SHOTS === 'on'
-  const filenames = [...Object.values(PAGE_MEDIA), ...(testing ? Object.values(PAGE_TEST_MEDIA) : [])]
+  const filenames = [
+    ...Object.values(PAGE_MEDIA),
+    ...(testing ? Object.values(PAGE_TEST_MEDIA) : []),
+  ]
 
   const { docs } = await payload.find({
     collection: 'media',
@@ -45,7 +48,8 @@ export async function loadPageMedia(payload: Payload) {
    * only while there is a picture for it (e.g. the sea band on Our Story).
    * Always undefined in production.
    */
-  const only = (test: PageTestKey): Media | undefined => (testing ? byFile.get(PAGE_TEST_MEDIA[test]) : undefined)
+  const only = (test: PageTestKey): Media | undefined =>
+    testing ? byFile.get(PAGE_TEST_MEDIA[test]) : undefined
 
   return Object.assign(pick, { only })
 }

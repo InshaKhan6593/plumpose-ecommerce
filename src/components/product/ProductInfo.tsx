@@ -3,7 +3,7 @@
 import type { Product } from '@/payload-types'
 
 import Link from 'next/link'
-import React, { Suspense, useState } from 'react'
+import { Suspense, useState } from 'react'
 
 import { AddToCart } from '@/components/Cart/AddToCart'
 import { RichText } from '@/components/RichText'
@@ -15,7 +15,12 @@ import { ChargedInQar, Money } from '@/providers/Locale'
 import { Stars } from './Stars'
 import { WasPrice } from './WasPrice'
 
-import { describeChoice, type EmbroideryChoice, type EmbroideryOption, type EmbroideryRules } from './embroidery'
+import {
+  describeChoice,
+  type EmbroideryChoice,
+  type EmbroideryOption,
+  type EmbroideryRules,
+} from './embroidery'
 import { EmbroideryDrawer } from './EmbroideryDrawer'
 import { VariantSelector } from './VariantSelector'
 
@@ -55,8 +60,12 @@ export function ProductInfo({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<null | number>(null)
 
-  const canEmbroider = Boolean(product.personalisationEnabled && embroideryRules && embroideryOptions.length)
-  const canAddPlacement = embroideryRules ? embroidery.length < embroideryRules.maxPlacements : false
+  const canEmbroider = Boolean(
+    product.personalisationEnabled && embroideryRules && embroideryOptions.length,
+  )
+  const canAddPlacement = embroideryRules
+    ? embroidery.length < embroideryRules.maxPlacements
+    : false
 
   const openDrawer = (index: null | number) => {
     setEditing(index)
@@ -100,14 +109,22 @@ export function ProductInfo({
 
       {typeof price === 'number' ? (
         <div className="mt-7" data-reveal>
-          <WasPrice className="text-base tracking-[0.12em] tabular-nums" price={price} was={product.compareAtPriceInQAR} />
+          <WasPrice
+            className="text-base tracking-[0.12em] tabular-nums"
+            price={price}
+            was={product.compareAtPriceInQAR}
+          />
           <Money className="text-base tracking-[0.12em] tabular-nums" minor={price} />
           <ChargedInQar className="mt-1.5 block text-[0.75rem] text-ink-soft" minor={price} />
           {rating ? (
-            <a className="mt-3 inline-flex items-center gap-3 text-[0.8125rem] text-ink-soft transition-colors hover:text-ink" href="#reviews">
+            <a
+              className="mt-3 inline-flex items-center gap-3 text-[0.8125rem] text-ink-soft transition-colors hover:text-ink"
+              href="#reviews"
+            >
               <Stars value={rating.average} />
               <span className="tabular-nums">
-                {rating.average.toFixed(1)} · {rating.count} {rating.count === 1 ? 'review' : 'reviews'}
+                {rating.average.toFixed(1)} · {rating.count}{' '}
+                {rating.count === 1 ? 'review' : 'reviews'}
               </span>
             </a>
           ) : null}
@@ -132,7 +149,11 @@ export function ProductInfo({
       </div>
 
       {canEmbroider && embroideryRules ? (
-        <div className="mt-7 max-w-lg border border-line px-7 py-6" data-reveal id="personalisation">
+        <div
+          className="mt-7 max-w-lg border border-line px-7 py-6"
+          data-reveal
+          id="personalisation"
+        >
           <div className="flex items-baseline justify-between gap-4">
             <p className="caps text-[0.625rem] text-ink">Hand embroidery</p>
             {embroidery.length ? (
@@ -145,10 +166,17 @@ export function ProductInfo({
           {embroidery.length ? (
             <ul className="mt-3 flex flex-col gap-2">
               {embroidery.map((choice, index) => (
-                <li className="flex items-baseline justify-between gap-4 text-sm" key={choice.placement}>
+                <li
+                  className="flex items-baseline justify-between gap-4 text-sm"
+                  key={choice.placement}
+                >
                   <span className="text-ink-soft">{describeChoice(choice, embroideryOptions)}</span>
                   <span className="flex shrink-0 gap-4">
-                    <button className="caps text-[0.5625rem] underline-offset-4 hover:underline" onClick={() => openDrawer(index)} type="button">
+                    <button
+                      className="caps text-[0.5625rem] underline-offset-4 hover:underline"
+                      onClick={() => openDrawer(index)}
+                      type="button"
+                    >
                       Edit
                     </button>
                     <button
@@ -164,7 +192,8 @@ export function ProductInfo({
             </ul>
           ) : (
             <p className="mt-2 text-sm text-ink-soft">
-              Add initials or a symbol. From <Money className="text-ink" minor={toMinor(embroideryRules.feeQar)} />.
+              Add initials or a symbol. From{' '}
+              <Money className="text-ink" minor={toMinor(embroideryRules.feeQar)} />.
             </p>
           )}
 
@@ -192,7 +221,11 @@ export function ProductInfo({
 
       <div className="mt-7 max-w-sm" data-reveal>
         <Suspense fallback={<div className="h-12 bg-ink/80" />}>
-          <AddToCart onAdded={() => setEmbroidery([])} personalisation={embroidery} product={product} />
+          <AddToCart
+            onAdded={() => setEmbroidery([])}
+            personalisation={embroidery}
+            product={product}
+          />
         </Suspense>
       </div>
 

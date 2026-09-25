@@ -30,6 +30,14 @@ export const ShippingCities: CollectionConfig = {
     { name: 'name', type: 'text', required: true },
     autoKey('name'),
     { name: 'feeQar', type: 'number', label: 'Delivery fee (QAR)', min: 0, required: true },
-    { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
+    {
+      name: 'active',
+      type: 'checkbox',
+      admin: {
+        components: { Cell: '@/components/admin/BooleanCell#BooleanCell' },
+        position: 'sidebar',
+      },
+      defaultValue: true,
+    },
   ],
 }

@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React from 'react'
 
 import { cn } from '@/utilities/cn'
 
@@ -25,7 +24,10 @@ export function AccountNav() {
             <li key={link.href}>
               <Link
                 aria-current={active ? 'page' : undefined}
-                className={cn('caps text-[0.625rem] transition-colors', active ? 'text-ink' : 'text-ink-soft hover:text-ink')}
+                className={cn(
+                  'caps text-[0.625rem] transition-colors',
+                  active ? 'text-ink' : 'text-ink-soft hover:text-ink',
+                )}
                 href={link.href}
               >
                 {link.label}
@@ -34,7 +36,10 @@ export function AccountNav() {
           )
         })}
         <li className="lg:mt-4">
-          <Link className="caps text-[0.625rem] text-ink-soft transition-colors hover:text-ink" href="/logout">
+          <Link
+            className="caps text-[0.625rem] text-ink-soft transition-colors hover:text-ink"
+            href="/logout"
+          >
             Sign out
           </Link>
         </li>

@@ -106,7 +106,13 @@ describe('customer confirmation', () => {
   const email = customerConfirmation(view)
 
   it('shows the breakdown that was charged, adding up to the total', () => {
-    for (const figure of ['QAR 1,399.00', 'QAR 160.00', 'QAR 50.00', 'QAR 100.00', 'QAR 1,509.00']) {
+    for (const figure of [
+      'QAR 1,399.00',
+      'QAR 160.00',
+      'QAR 50.00',
+      'QAR 100.00',
+      'QAR 1,509.00',
+    ]) {
       expect(email.html).toContain(figure)
       expect(email.text).toContain(figure)
     }
@@ -177,12 +183,20 @@ describe('email config', () => {
   })
 
   it('accepts a bare address, and falls back when empty', () => {
-    expect(parseFrom('orders@plumpose.com')).toEqual({ address: 'orders@plumpose.com', name: 'plumpose' })
+    expect(parseFrom('orders@plumpose.com')).toEqual({
+      address: 'orders@plumpose.com',
+      name: 'plumpose',
+    })
     expect(parseFrom('')).toEqual({ address: 'onboarding@resend.dev', name: 'plumpose' })
   })
 
   it('never sends to reserved test domains', () => {
-    for (const address of ['shopper@plumpose.local', 'a@b.test', 'her@example.com', 'X@Example.COM']) {
+    for (const address of [
+      'shopper@plumpose.local',
+      'a@b.test',
+      'her@example.com',
+      'X@Example.COM',
+    ]) {
       expect(isUndeliverable(address)).toBe(true)
     }
     for (const address of ['her@plumpose.com', 'someone@gmail.com', 'a@local.qa']) {

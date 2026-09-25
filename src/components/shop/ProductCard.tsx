@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import React from 'react'
 
 import type { Media as MediaType, Product } from '@/payload-types'
 
@@ -66,12 +65,20 @@ export function ProductCard({ priority, product }: { priority?: boolean; product
       {/* Sized for two to a row on a phone, three on a desktop. */}
       <div className="mt-3 sm:mt-5">
         <h2 className="serif-display text-[1.25rem] leading-tight sm:text-[1.75rem]">{name}</h2>
-        {subtitle ? <p className="serif-italic mt-0.5 text-[0.8125rem] leading-snug text-ink-soft sm:mt-1 sm:text-base">{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="serif-italic mt-0.5 text-[0.8125rem] leading-snug text-ink-soft sm:mt-1 sm:text-base">
+            {subtitle}
+          </p>
+        ) : null}
         {typeof price === 'number' ? (
           <p className="mt-2 text-[0.75rem] tracking-[0.1em] tabular-nums sm:mt-3 sm:text-sm">
             <WasPrice price={price} was={product.compareAtPriceInQAR} />
             <Money className={soldOut ? 'text-ink-soft' : undefined} minor={price} />
-            {soldOut ? <span className="caps ml-2 text-[0.5625rem] whitespace-nowrap text-ink-soft sm:ml-3 sm:text-[0.625rem]">Sold out</span> : null}
+            {soldOut ? (
+              <span className="caps ml-2 text-[0.5625rem] whitespace-nowrap text-ink-soft sm:ml-3 sm:text-[0.625rem]">
+                Sold out
+              </span>
+            ) : null}
           </p>
         ) : null}
       </div>

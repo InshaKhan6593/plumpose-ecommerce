@@ -1,9 +1,7 @@
 import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
 
-// `.js`: the e2e suite loads this config as strict ESM, where `next/cache` alone does not resolve.
-import { revalidateTag } from 'next/cache.js'
-
 import { adminOnly } from '@/access/adminOnly'
+import { refreshStorefront } from '@/hooks/revalidateStorefront'
 
 /**
  * The storefront reads these through `getCachedGlobal('siteSettings')`, which
@@ -12,13 +10,8 @@ import { adminOnly } from '@/access/adminOnly'
  * she expects to see her change on the next page load, not eventually.
  */
 const revalidateSiteSettings: GlobalAfterChangeHook = ({ doc, req }) => {
-  if (!req.context?.disableRevalidate) {
-    try {
-      revalidateTag('global_siteSettings', { expire: 0 })
-    } catch {
-      // Outside a Next request (seed script, Local API) there is no cache to clear.
-    }
-  }
+  // At once, and again once the save has committed — see refreshStorefront.
+  refreshStorefront(req, { tags: ['global_siteSettings'] })
   return doc
 }
 
@@ -45,7 +38,8 @@ export const SiteSettings: GlobalConfig = {
               name: 'contactEmail',
               type: 'email',
               admin: {
-                description: 'Shown on the site, and where customers’ replies to order emails arrive.',
+                description:
+                  'Shown on the site, and where customers’ replies to order emails arrive.',
               },
               defaultValue: 'info@plumpose.com',
             },
@@ -53,7 +47,8 @@ export const SiteSettings: GlobalConfig = {
               name: 'orderAlertEmail',
               type: 'email',
               admin: {
-                description: 'Every new order is emailed here. Leave empty to use the contact email.',
+                description:
+                  'Every new order is emailed here. Leave empty to use the contact email.',
               },
               label: 'New-order alerts go to',
             },
@@ -119,7 +114,10 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'stockAlertsEnabled',
               type: 'checkbox',
-              admin: { description: 'Untick to stop all stock emails. The dashboard still shows low stock.' },
+              admin: {
+                description:
+                  'Untick to stop all stock emails. The dashboard still shows low stock.',
+              },
               defaultValue: true,
               label: 'Email me about stock',
             },
@@ -128,7 +126,8 @@ export const SiteSettings: GlobalConfig = {
               type: 'email',
               admin: {
                 condition: (data) => data?.stockAlertsEnabled !== false,
-                description: 'Leave empty to use “New-order alerts go to”, or else the contact email.',
+                description:
+                  'Leave empty to use “New-order alerts go to”, or else the contact email.',
               },
               label: 'Stock emails go to',
             },
@@ -136,7 +135,8 @@ export const SiteSettings: GlobalConfig = {
               name: 'lowStockThreshold',
               type: 'number',
               admin: {
-                description: 'A size counts as running low at this many pieces or fewer. Also used on the dashboard.',
+                description:
+                  'A size counts as running low at this many pieces or fewer. Also used on the dashboard.',
               },
               defaultValue: 2,
               label: 'Running low at',
@@ -146,8 +146,18 @@ export const SiteSettings: GlobalConfig = {
               type: 'row',
               admin: { condition: (data) => data?.stockAlertsEnabled !== false },
               fields: [
-                { name: 'alertLowStock', type: 'checkbox', defaultValue: true, label: 'When a size runs low' },
-                { name: 'alertSoldOut', type: 'checkbox', defaultValue: true, label: 'When a size sells out' },
+                {
+                  name: 'alertLowStock',
+                  type: 'checkbox',
+                  defaultValue: true,
+                  label: 'When a size runs low',
+                },
+                {
+                  name: 'alertSoldOut',
+                  type: 'checkbox',
+                  defaultValue: true,
+                  label: 'When a size sells out',
+                },
                 {
                   name: 'alertBeyondStock',
                   type: 'checkbox',
@@ -181,7 +191,8 @@ export const SiteSettings: GlobalConfig = {
               type: 'checkbox',
               admin: {
                 condition: (data) => data?.currencyDisplayEnabled !== false,
-                description: 'Start a first-time visitor in the currency of the country they are browsing from. They can always change it.',
+                description:
+                  'Start a first-time visitor in the currency of the country they are browsing from. They can always change it.',
               },
               defaultValue: true,
               label: 'Choose the currency from where they are',
@@ -206,16 +217,27 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'spinWheelEnabled',
               type: 'checkbox',
-              admin: { description: 'Untick to take the wheel off the site. Codes already issued keep working.' },
+              admin: {
+                description:
+                  'Untick to take the wheel off the site. Codes already issued keep working.',
+              },
               defaultValue: true,
               label: 'Show the wheel to first-time visitors',
             },
-            { name: 'spinWheelHeading', type: 'text', defaultValue: 'Before anyone else.', label: 'Heading' },
+            {
+              name: 'spinWheelHeading',
+              type: 'text',
+              defaultValue: 'Before anyone else.',
+              label: 'Heading',
+            },
             { name: 'spinWheelBody', type: 'textarea', label: 'Words under the heading' },
             {
               name: 'spinWheelMaxRerolls',
               type: 'number',
-              admin: { description: 'How many extra spins "Roll again" can give one person. After that it cannot be landed on.' },
+              admin: {
+                description:
+                  'How many extra spins "Roll again" can give one person. After that it cannot be landed on.',
+              },
               defaultValue: 1,
               label: 'Extra spins from "Roll again"',
               max: 5,

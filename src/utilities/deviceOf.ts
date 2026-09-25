@@ -12,5 +12,8 @@ export const deviceOf = (req: Pick<PayloadRequest, 'headers'>): null | string =>
   const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
   const ip = forwarded || req.headers.get('x-real-ip')?.trim()
   if (!ip) return null
-  return createHmac('sha256', process.env.PAYLOAD_SECRET || 'plumpose').update(ip).digest('hex').slice(0, 40)
+  return createHmac('sha256', process.env.PAYLOAD_SECRET || 'plumpose')
+    .update(ip)
+    .digest('hex')
+    .slice(0, 40)
 }

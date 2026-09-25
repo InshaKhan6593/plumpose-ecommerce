@@ -28,9 +28,13 @@ const csvResponse = (body: string, what: string): Response =>
   })
 
 const refuse = (): Response =>
-  new Response(JSON.stringify({ error: 'Only an admin can download this.' }), { headers: { 'Content-Type': 'application/json' }, status: 403 })
+  new Response(JSON.stringify({ error: 'Only an admin can download this.' }), {
+    headers: { 'Content-Type': 'application/json' },
+    status: 403,
+  })
 
-const isAdmin = (req: PayloadRequest) => Boolean(req.user && checkRole(['admin'], req.user as never))
+const isAdmin = (req: PayloadRequest) =>
+  Boolean(req.user && checkRole(['admin'], req.user as never))
 
 /** The list's own filter, as the admin passes it in the URL (?where[...]). */
 const whereOf = (req: PayloadRequest): undefined | Where => {
@@ -68,7 +72,10 @@ export const subscribersExportEndpoint: Endpoint = {
       sort: '-createdAt',
       where: whereOf(req),
     })
-    return csvResponse(toCsv(SUBSCRIBER_COLUMNS, (docs as Subscriber[]).map(subscriberRow)), 'subscribers')
+    return csvResponse(
+      toCsv(SUBSCRIBER_COLUMNS, (docs as Subscriber[]).map(subscriberRow)),
+      'subscribers',
+    )
   },
   method: 'get',
   path: '/exports/subscribers',

@@ -184,7 +184,11 @@ export function RevealImage({
               gsap.fromTo(
                 inner,
                 { yPercent: -3 },
-                { ease: 'none', scrollTrigger: { end: 'bottom top', scrub: 1, start: 'top bottom', trigger: el }, yPercent: 3 },
+                {
+                  ease: 'none',
+                  scrollTrigger: { end: 'bottom top', scrub: 1, start: 'top bottom', trigger: el },
+                  yPercent: 3,
+                },
               )
             })
           })

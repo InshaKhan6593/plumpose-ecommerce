@@ -49,7 +49,13 @@ export default async function ShopPage({ searchParams }: Props) {
   const settings = await getCachedGlobal('siteSettings', 0)()
 
   const categories = (
-    await payload.find({ collection: 'categories', depth: 0, limit: 50, pagination: false, sort: 'title' })
+    await payload.find({
+      collection: 'categories',
+      depth: 0,
+      limit: 50,
+      pagination: false,
+      sort: 'title',
+    })
   ).docs as Category[]
   const active = categories.find((c) => c.slug === params.collection) ?? null
 
@@ -88,7 +94,12 @@ export default async function ShopPage({ searchParams }: Props) {
       sort: sortKey ? SORTS[sortKey].sort : ['_order', 'createdAt'],
       where,
     }),
-    payload.find({ collection: 'media', depth: 0, limit: 1, where: { filename: { equals: 'brand-05-armchair.jpg' } } }),
+    payload.find({
+      collection: 'media',
+      depth: 0,
+      limit: 1,
+      where: { filename: { equals: 'brand-05-armchair.jpg' } },
+    }),
   ])
 
   const docs = products.docs as Product[]
@@ -136,7 +147,12 @@ export default async function ShopPage({ searchParams }: Props) {
             return (
               <Link
                 aria-current={selected ? 'page' : undefined}
-                className={cn('caps text-[0.625rem]', selected ? 'text-ink underline underline-offset-[6px]' : 'text-ink-soft hover:text-ink')}
+                className={cn(
+                  'caps text-[0.625rem]',
+                  selected
+                    ? 'text-ink underline underline-offset-[6px]'
+                    : 'text-ink-soft hover:text-ink',
+                )}
                 href={href({ collection: c.slug ?? null })}
                 key={c.slug ?? 'all'}
               >
@@ -147,7 +163,11 @@ export default async function ShopPage({ searchParams }: Props) {
         </nav>
 
         <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:gap-x-7 md:gap-y-3">
-          <form action="/shop" className="flex items-center gap-2 border-b border-line focus-within:border-ink" role="search">
+          <form
+            action="/shop"
+            className="flex items-center gap-2 border-b border-line focus-within:border-ink"
+            role="search"
+          >
             <label className="sr-only" htmlFor="shop-search">
               Search the shop
             </label>
@@ -167,7 +187,12 @@ export default async function ShopPage({ searchParams }: Props) {
             {(Object.keys(SORTS) as SortKey[]).map((key) => (
               <Link
                 aria-current={sortKey === key ? 'true' : undefined}
-                className={cn('caps text-[0.625rem]', sortKey === key ? 'text-ink underline underline-offset-[6px]' : 'text-ink-soft hover:text-ink')}
+                className={cn(
+                  'caps text-[0.625rem]',
+                  sortKey === key
+                    ? 'text-ink underline underline-offset-[6px]'
+                    : 'text-ink-soft hover:text-ink',
+                )}
                 href={href({ sort: sortKey === key ? null : key })}
                 key={key}
               >
@@ -199,27 +224,37 @@ export default async function ShopPage({ searchParams }: Props) {
               {/* After the first piece: the embroidery, as an editorial tile. */}
               {index === 0 && showTile && embroideryHost ? (
                 <Reveal className="col-span-2 sm:col-span-1">
-                <Link className="group relative block" data-reveal href={`/products/${embroideryHost.slug}#personalisation`}>
-                  <RevealImage className="relative aspect-[5/4] overflow-hidden bg-paper-3 sm:aspect-[4/5]">
-                    {tile ? (
-                      <Media
-                        className="absolute inset-0 transition-transform duration-[900ms] ease-brand [@media(hover:hover)]:group-hover:scale-[1.03]"
-                        fill
-                        imgClassName="object-cover"
-                        resource={tile}
-                        size="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 95vw"
+                  <Link
+                    className="group relative block"
+                    data-reveal
+                    href={`/products/${embroideryHost.slug}#personalisation`}
+                  >
+                    <RevealImage className="relative aspect-[5/4] overflow-hidden bg-paper-3 sm:aspect-[4/5]">
+                      {tile ? (
+                        <Media
+                          className="absolute inset-0 transition-transform duration-[900ms] ease-brand [@media(hover:hover)]:group-hover:scale-[1.03]"
+                          fill
+                          imgClassName="object-cover"
+                          resource={tile}
+                          size="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 95vw"
+                        />
+                      ) : null}
+                      <div
+                        aria-hidden
+                        className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent"
                       />
-                    ) : null}
-                    <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent" />
-                    <div className="absolute inset-x-6 bottom-7 text-white">
-                      <p className="caps text-[0.625rem]">Hand embroidery</p>
-                      <p className="serif-display mt-3 text-[2rem] leading-[1.05]">Your initials, stitched by hand</p>
-                      <p className="mt-3 text-sm text-white/85">
-                        From <Money minor={toMinor(settings.personalisationFeeQar)} /> · on any piece
-                      </p>
-                    </div>
-                  </RevealImage>
-                </Link>
+                      <div className="absolute inset-x-6 bottom-7 text-white">
+                        <p className="caps text-[0.625rem]">Hand embroidery</p>
+                        <p className="serif-display mt-3 text-[2rem] leading-[1.05]">
+                          Your initials, stitched by hand
+                        </p>
+                        <p className="mt-3 text-sm text-white/85">
+                          From <Money minor={toMinor(settings.personalisationFeeQar)} /> · on any
+                          piece
+                        </p>
+                      </div>
+                    </RevealImage>
+                  </Link>
                 </Reveal>
               ) : null}
             </React.Fragment>
@@ -228,7 +263,10 @@ export default async function ShopPage({ searchParams }: Props) {
       ) : (
         <div className="mx-auto max-w-md py-24 text-center">
           <p className="serif-display text-3xl">Nothing matches that — yet.</p>
-          <Link className="caps mt-8 inline-block border-b border-ink pb-1 text-[0.625rem]" href="/shop">
+          <Link
+            className="caps mt-8 inline-block border-b border-ink pb-1 text-[0.625rem]"
+            href="/shop"
+          >
             See the whole collection
           </Link>
         </div>

@@ -20,12 +20,23 @@ export type Rates = { rates: Record<string, number>; updatedAt: string }
 export async function fetchRates(fetcher: typeof fetch = fetch): Promise<Rates> {
   const res = await fetcher(RATES_URL, { cache: 'no-store', signal: AbortSignal.timeout(15_000) })
   if (!res.ok) throw new Error(`The rate service answered ${res.status}.`)
-  const json = (await res.json()) as { base_code?: string; rates?: Record<string, unknown>; result?: string; time_last_update_unix?: number }
-  if (json.result !== 'success' || json.base_code !== 'QAR' || !json.rates) throw new Error('The rate service did not return QAR rates.')
+  const json = (await res.json()) as {
+    base_code?: string
+    rates?: Record<string, unknown>
+    result?: string
+    time_last_update_unix?: number
+  }
+  if (json.result !== 'success' || json.base_code !== 'QAR' || !json.rates)
+    throw new Error('The rate service did not return QAR rates.')
   const rates = Object.fromEntries(
-    Object.entries(json.rates).filter((entry): entry is [string, number] => typeof entry[1] === 'number' && entry[1] > 0 && /^[A-Z]{3}$/.test(entry[0])),
+    Object.entries(json.rates).filter(
+      (entry): entry is [string, number] =>
+        typeof entry[1] === 'number' && entry[1] > 0 && /^[A-Z]{3}$/.test(entry[0]),
+    ),
   )
-  const updatedAt = json.time_last_update_unix ? new Date(json.time_last_update_unix * 1000).toISOString() : new Date().toISOString()
+  const updatedAt = json.time_last_update_unix
+    ? new Date(json.time_last_update_unix * 1000).toISOString()
+    : new Date().toISOString()
   return { rates, updatedAt }
 }
 
@@ -33,7 +44,11 @@ export async function fetchRates(fetcher: typeof fetch = fetch): Promise<Rates> 
  * Her hand-set price against today's rate: "At today's rate 1,411" and
  * "+0.1%" (her price is that much above the rate). Null when either is missing.
  */
-export function rateCheck(args: { anchorQar: number; price?: null | number; rate?: null | number }): null | { atRate: number; difference: number } {
+export function rateCheck(args: {
+  anchorQar: number
+  price?: null | number
+  rate?: null | number
+}): null | { atRate: number; difference: number } {
   const { anchorQar, price, rate } = args
   if (!rate || rate <= 0 || !anchorQar) return null
   const atRate = anchorQar * rate

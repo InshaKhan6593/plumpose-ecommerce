@@ -21,7 +21,8 @@ import { cn } from '@/utilities/cn'
  */
 
 /** A country code as its flag: two regional-indicator letters. */
-const flag = (code: string) => String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)))
+const flag = (code: string) =>
+  String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)))
 
 export function LocalePicker() {
   const { country, currency, loadOptions, pickerOpen, setLocale, setPickerOpen } = useLocale()
@@ -43,7 +44,9 @@ export function LocalePicker() {
   }, [country?.code, currency?.code, lenis, loadOptions, pickerOpen])
 
   const countries = options
-    ? [...options.countries].sort((a, b) => Number(b.code === 'QA') - Number(a.code === 'QA') || a.name.localeCompare(b.name))
+    ? [...options.countries].sort(
+        (a, b) => Number(b.code === 'QA') - Number(a.code === 'QA') || a.name.localeCompare(b.name),
+      )
     : []
   const quotable = new Set([BASE_CURRENCY, ...(options?.currencies.map((c) => c.code) ?? [])])
   const chosen = countries.find((c) => c.code === countryCode)
@@ -58,7 +61,10 @@ export function LocalePicker() {
   const save = async (event: React.FormEvent) => {
     event.preventDefault()
     setSaving(true)
-    await setLocale({ country: chosen ? { code: chosen.code, name: chosen.name } : null, currencyCode })
+    await setLocale({
+      country: chosen ? { code: chosen.code, name: chosen.name } : null,
+      currencyCode,
+    })
     setSaving(false)
     setPickerOpen(false)
   }
@@ -77,21 +83,29 @@ export function LocalePicker() {
           }}
           tabIndex={-1}
         >
-          <Dialog.Close aria-label="Close" className="absolute top-4 right-4 p-2 text-ink-soft transition-colors hover:text-ink">
+          <Dialog.Close
+            aria-label="Close"
+            className="absolute top-4 right-4 p-2 text-ink-soft transition-colors hover:text-ink"
+          >
             <X className="size-5" strokeWidth={1.25} />
           </Dialog.Close>
 
           <p className="caps text-[0.625rem] text-ink-soft">Welcome to plumpose</p>
-          <Dialog.Title className="serif-display mt-3 text-[2.25rem] leading-[1.05]">Where shall we deliver?</Dialog.Title>
+          <Dialog.Title className="serif-display mt-3 text-[2.25rem] leading-[1.05]">
+            Where shall we deliver?
+          </Dialog.Title>
           <p className="mt-4 text-[0.9375rem] leading-[1.7] text-ink-soft" id="locale-words">
-            Tell us where you are. Everything will be shown in your own currency, with delivery to your door worked out
-            before you pay.
+            Tell us where you are. Everything will be shown in your own currency, with delivery to
+            your door worked out before you pay.
           </p>
 
           {options ? (
             <form className="mt-8 flex flex-col gap-7" onSubmit={save}>
               <div>
-                <label className="caps block text-[0.5625rem] text-ink-soft" htmlFor="locale-country">
+                <label
+                  className="caps block text-[0.5625rem] text-ink-soft"
+                  htmlFor="locale-country"
+                >
                   Your country
                 </label>
                 <select
@@ -108,14 +122,18 @@ export function LocalePicker() {
                 </select>
                 {chosen?.blockedReason ? (
                   <p className="mt-3 text-[0.8125rem] leading-relaxed text-[#8a2424]" role="status">
-                    We cannot deliver to {chosen.name} at present — {chosen.blockedReason.charAt(0).toLowerCase() + chosen.blockedReason.slice(1)}.
+                    We cannot deliver to {chosen.name} at present —{' '}
+                    {chosen.blockedReason.charAt(0).toLowerCase() + chosen.blockedReason.slice(1)}.
                     You can still browse.
                   </p>
                 ) : null}
               </div>
 
               <div>
-                <label className="caps block text-[0.5625rem] text-ink-soft" htmlFor="locale-currency">
+                <label
+                  className="caps block text-[0.5625rem] text-ink-soft"
+                  htmlFor="locale-currency"
+                >
                   Show prices in
                 </label>
                 <select
@@ -141,7 +159,9 @@ export function LocalePicker() {
               <HouseButton className="w-full" disabled={saving}>
                 {saving ? 'One moment…' : 'Continue'}
               </HouseButton>
-              <p className="-mt-3 text-center text-[0.75rem] text-ink-soft">You can change this at any time from the top of the page.</p>
+              <p className="-mt-3 text-center text-[0.75rem] text-ink-soft">
+                You can change this at any time from the top of the page.
+              </p>
             </form>
           ) : (
             <p className="mt-8 text-[0.875rem] text-ink-soft">One moment…</p>
@@ -156,7 +176,13 @@ export function LocalePicker() {
  * The control that opens it: "QAR" in the header, "Qatar · QAR" in the
  * footer. When she has switched currencies off, it is plain text again.
  */
-export function LocaleButton({ className, variant = 'code' }: { className?: string; variant?: 'code' | 'country' }) {
+export function LocaleButton({
+  className,
+  variant = 'code',
+}: {
+  className?: string
+  variant?: 'code' | 'country'
+}) {
   const { country, currency, enabled, openPicker } = useLocale()
   const code = currency?.code ?? BASE_CURRENCY
   const text = variant === 'country' ? `${country?.name ?? 'Qatar'} · ${code}` : code

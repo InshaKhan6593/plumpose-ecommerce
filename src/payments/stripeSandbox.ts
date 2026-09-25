@@ -67,7 +67,12 @@ export const createStripeSandboxAdapter = (): PaymentAdapter => {
     groupOverrides: {
       fields: ({ defaultFields }) => [
         ...defaultFields,
-        { name: 'checkoutSessionID', type: 'text', index: true, label: 'Stripe Checkout Session ID' },
+        {
+          name: 'checkoutSessionID',
+          type: 'text',
+          index: true,
+          label: 'Stripe Checkout Session ID',
+        },
       ],
     },
     publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',

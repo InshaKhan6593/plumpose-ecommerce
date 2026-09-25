@@ -32,8 +32,10 @@ export type EmbroideryRules = {
   returnable: boolean
 }
 
-export const wantsLetters = (style: EmbroideryChoice['style']) => style === 'text' || style === 'both'
-export const wantsSymbol = (style: EmbroideryChoice['style']) => style === 'symbol' || style === 'both'
+export const wantsLetters = (style: EmbroideryChoice['style']) =>
+  style === 'text' || style === 'both'
+export const wantsSymbol = (style: EmbroideryChoice['style']) =>
+  style === 'symbol' || style === 'both'
 
 const nameOf = (options: EmbroideryOption[], type: EmbroideryOption['type'], key: string) =>
   options.find((o) => o.type === type && o.key === key)?.name ?? key
@@ -42,7 +44,9 @@ const nameOf = (options: EmbroideryOption[], type: EmbroideryOption['type'], key
 export const describeChoice = (choice: EmbroideryChoice, options: EmbroideryOption[]): string => {
   const parts = [
     wantsLetters(choice.style) && choice.lettering ? `“${choice.lettering}”` : '',
-    wantsSymbol(choice.style) && choice.symbol ? nameOf(options, 'symbol', choice.symbol).toLowerCase() : '',
+    wantsSymbol(choice.style) && choice.symbol
+      ? nameOf(options, 'symbol', choice.symbol).toLowerCase()
+      : '',
     choice.thread ? `${nameOf(options, 'thread', choice.thread).toLowerCase()} thread` : '',
   ].filter(Boolean)
 

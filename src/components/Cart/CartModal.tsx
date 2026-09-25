@@ -6,7 +6,7 @@ import { X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
@@ -135,7 +135,9 @@ export function CartModal() {
           <header className="flex items-center justify-between border-b border-line px-7 py-6">
             <Dialog.Title className="serif-display text-3xl">
               Your bag
-              {count ? <span className="ml-2 align-middle text-sm text-ink-soft">({count})</span> : null}
+              {count ? (
+                <span className="ml-2 align-middle text-sm text-ink-soft">({count})</span>
+              ) : null}
             </Dialog.Title>
             <Dialog.Close aria-label="Close bag" className="-mr-1 p-1">
               <X className="size-5" strokeWidth={1.25} />
@@ -145,8 +147,13 @@ export function CartModal() {
           {!items.length ? (
             <div className="flex flex-1 flex-col items-center justify-center px-7 text-center">
               <p className="serif-display text-3xl">Your bag is empty.</p>
-              <p className="mt-3 text-sm text-ink-soft">Every piece is hand-finished to order in Doha.</p>
-              <Link className="caps mt-8 bg-ink px-8 py-4 text-[0.6875rem] text-white hover:bg-ink/85" href="/shop">
+              <p className="mt-3 text-sm text-ink-soft">
+                Every piece is hand-finished to order in Doha.
+              </p>
+              <Link
+                className="caps mt-8 bg-ink px-8 py-4 text-[0.6875rem] text-white hover:bg-ink/85"
+                href="/shop"
+              >
                 Visit the shop
               </Link>
             </div>
@@ -154,27 +161,32 @@ export function CartModal() {
             <>
               <ul className="flex-1 overflow-y-auto px-7" data-lenis-prevent>
                 {items.map((item, index) => {
-                  const product = typeof item.product === 'object' ? (item.product as Product) : null
+                  const product =
+                    typeof item.product === 'object' ? (item.product as Product) : null
                   if (!product?.slug) return null
 
-                  const variant = typeof item.variant === 'object' ? (item.variant as Variant) : null
+                  const variant =
+                    typeof item.variant === 'object' ? (item.variant as Variant) : null
                   const size = variant?.options
                     ?.map((o) => (typeof o === 'object' ? (o as VariantOption).label : null))
                     .filter(Boolean)
                     .join(' / ')
                   const image = product.gallery?.find((g) => typeof g.image === 'object')?.image as
-                    | Media
-                    | undefined
+                    Media | undefined
 
                   const line = lineQuotes?.[index]
                   const unit = variant?.priceInQAR ?? product.priceInQAR ?? 0
-                  const lineTotal = line ? line.subtotal + line.personalisationTotal : unit * (item.quantity || 1)
+                  const lineTotal = line
+                    ? line.subtotal + line.personalisationTotal
+                    : unit * (item.quantity || 1)
 
                   // The stock rule (@/lib/pricing/stock): no more than there are, unless made to order.
                   const target = variant ?? product
                   const atStock = (item.quantity || 0) >= purchaseLimit(product, target)
                   const madeToOrderCount =
-                    product.madeToOrder !== false ? Math.max(0, (item.quantity || 0) - readyStock(target)) : 0
+                    product.madeToOrder !== false
+                      ? Math.max(0, (item.quantity || 0) - readyStock(target))
+                      : 0
 
                   return (
                     <li className="flex gap-5 border-b border-line py-6" key={item.id ?? index}>
@@ -183,13 +195,22 @@ export function CartModal() {
                         href={`/products/${product.slug}`}
                       >
                         {image?.url ? (
-                          <Image alt={image.alt || product.title} className="object-cover" fill sizes="80px" src={image.url} />
+                          <Image
+                            alt={image.alt || product.title}
+                            className="object-cover"
+                            fill
+                            sizes="80px"
+                            src={image.url}
+                          />
                         ) : null}
                       </Link>
 
                       <div className="flex min-w-0 flex-1 flex-col">
                         <div className="flex items-baseline justify-between gap-3">
-                          <Link className="serif-display text-lg leading-snug" href={`/products/${product.slug}`}>
+                          <Link
+                            className="serif-display text-lg leading-snug"
+                            href={`/products/${product.slug}`}
+                          >
                             {product.title.split(/\s+[—–]\s+/)[0]}
                           </Link>
                           <span className="shrink-0 text-sm tabular-nums">{money(lineTotal)}</span>
@@ -197,11 +218,16 @@ export function CartModal() {
                         {size ? <p className="mt-1 text-xs text-ink-soft">Size {size}</p> : null}
                         {madeToOrderCount ? (
                           <p className="mt-1 text-xs text-ink-soft">
-                            {madeToOrderCount === (item.quantity || 0) ? 'Made to order' : `${madeToOrderCount} made to order`}
+                            {madeToOrderCount === (item.quantity || 0)
+                              ? 'Made to order'
+                              : `${madeToOrderCount} made to order`}
                           </p>
                         ) : null}
                         {line?.personalisation.map((p) => (
-                          <p className="serif-italic mt-1 text-[0.8125rem] text-ink-soft" key={p.placementName}>
+                          <p
+                            className="serif-italic mt-1 text-[0.8125rem] text-ink-soft"
+                            key={p.placementName}
+                          >
                             Embroidery — {describe(p)}
                           </p>
                         ))}
@@ -217,7 +243,9 @@ export function CartModal() {
                             >
                               −
                             </button>
-                            <span className="w-6 text-center text-xs tabular-nums">{item.quantity}</span>
+                            <span className="w-6 text-center text-xs tabular-nums">
+                              {item.quantity}
+                            </span>
                             <button
                               aria-label="One more"
                               className="flex size-8 items-center justify-center disabled:opacity-40"
@@ -253,7 +281,9 @@ export function CartModal() {
                   <Row label="Delivery" muted value="Calculated at checkout" />
                   <div className="mt-2 flex items-baseline justify-between border-t border-line pt-3">
                     <dt className="caps text-[0.625rem]">Total</dt>
-                    <dd className="text-base tabular-nums">{quote ? money(quote.totals.total) : '—'}</dd>
+                    <dd className="text-base tabular-nums">
+                      {quote ? money(quote.totals.total) : '—'}
+                    </dd>
                   </div>
                 </dl>
                 <p className="mt-3 text-xs text-ink-soft">

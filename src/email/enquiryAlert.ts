@@ -23,7 +23,11 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
  * commit sends nothing. Goes to Site settings → "New-order alerts go to", or
  * the contact email; replying answers the person who wrote.
  */
-export const sendEnquiryAlert: CollectionAfterChangeHook<FormSubmission> = ({ doc, operation, req }) => {
+export const sendEnquiryAlert: CollectionAfterChangeHook<FormSubmission> = ({
+  doc,
+  operation,
+  req,
+}) => {
   if (operation !== 'create' || !isEmailEnabled()) return doc
   const { payload } = req
   runAfterResponse(payload, () => deliver(payload, doc.id))
@@ -85,11 +89,15 @@ export function buildEnquiryAlert({
     body: [
       label('New enquiry'),
       heading(about ? `${name} — ${about}` : name),
-      table(others.map(([field, value]) => row(esc(labels.get(field) ?? field), esc(value))).join('')),
+      table(
+        others.map(([field, value]) => row(esc(labels.get(field) ?? field), esc(value))).join(''),
+      ),
       rule(),
       paragraph(esc(message).replace(/\n/g, '<br>')),
       rule(),
-      replyTo ? muted('Reply to this email to answer them directly.') : muted('They left no email address to reply to.'),
+      replyTo
+        ? muted('Reply to this email to answer them directly.')
+        : muted('They left no email address to reply to.'),
       button(adminUrl, 'Open in the admin'),
     ].join('\n'),
     footer: {},
@@ -103,5 +111,10 @@ export function buildEnquiryAlert({
     message,
   ].join('\n')
 
-  return { html, replyTo, subject: `New enquiry: ${about ? `${about} — ` : ''}${name}`.slice(0, 150), text }
+  return {
+    html,
+    replyTo,
+    subject: `New enquiry: ${about ? `${about} — ` : ''}${name}`.slice(0, 150),
+    text,
+  }
 }

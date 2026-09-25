@@ -55,8 +55,18 @@ export default async function ProjectPage({ params }: Args) {
   return (
     <>
       {cover ? (
-        <RevealImage className="relative mx-4 aspect-[4/5] overflow-hidden bg-paper-3 md:mx-7 md:aspect-[21/9]" start="top bottom">
-          <Media className="absolute inset-0" fill imgClassName="object-cover object-[50%_30%]" priority resource={cover} size="100vw" />
+        <RevealImage
+          className="relative mx-4 aspect-[4/5] overflow-hidden bg-paper-3 md:mx-7 md:aspect-[21/9]"
+          start="top bottom"
+        >
+          <Media
+            className="absolute inset-0"
+            fill
+            imgClassName="object-cover object-[50%_30%]"
+            priority
+            resource={cover}
+            size="100vw"
+          />
         </RevealImage>
       ) : null}
 
@@ -77,8 +87,16 @@ export default async function ProjectPage({ params }: Args) {
 
       {project.description ? (
         <Reveal className="mx-auto mt-14 max-w-4xl px-4 md:mt-20">
-          <div className="text-[0.9375rem] leading-[1.85] text-ink-soft md:columns-2 md:gap-14" data-reveal>
-            <RichText className="[&_p]:mb-5 [&_p]:break-inside-avoid-column" data={project.description} enableGutter={false} enableProse={false} />
+          <div
+            className="text-[0.9375rem] leading-[1.85] text-ink-soft md:columns-2 md:gap-14"
+            data-reveal
+          >
+            <RichText
+              className="[&_p]:mb-5 [&_p]:break-inside-avoid-column"
+              data={project.description}
+              enableGutter={false}
+              enableProse={false}
+            />
           </div>
         </Reveal>
       ) : null}
@@ -90,17 +108,29 @@ export default async function ProjectPage({ params }: Args) {
               className={cn(
                 'relative overflow-hidden bg-paper-3',
                 // One tall photograph, then pairs: the first spans two rows beside the next two.
-                n === 0 && gallery.length > 2 ? 'aspect-[4/5] md:row-span-2 md:aspect-auto' : 'aspect-[4/5] md:aspect-square',
+                n === 0 && gallery.length > 2
+                  ? 'aspect-[4/5] md:row-span-2 md:aspect-auto'
+                  : 'aspect-[4/5] md:aspect-square',
               )}
               key={image.id}
             >
-              <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="(min-width: 768px) 45vw, 100vw" />
+              <Media
+                className="absolute inset-0"
+                fill
+                imgClassName="object-cover"
+                resource={image}
+                size="(min-width: 768px) 45vw, 100vw"
+              />
             </RevealImage>
           ))}
         </div>
       ) : null}
 
-      <ClosingBand body={MADE_FOR_YOU.enquiry.body} className="mt-24 md:mt-36" line={MADE_FOR_YOU.enquiry.heading}>
+      <ClosingBand
+        body={MADE_FOR_YOU.enquiry.body}
+        className="mt-24 md:mt-36"
+        line={MADE_FOR_YOU.enquiry.heading}
+      >
         <div className="flex flex-wrap items-center justify-center gap-8">
           <ButtonLink href="/contact?subject=Made+for+you">{MADE_FOR_YOU.enquiry.cta}</ButtonLink>
           <TextLink href="/made-for-you">All commissions</TextLink>

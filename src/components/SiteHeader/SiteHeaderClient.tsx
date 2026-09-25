@@ -3,7 +3,7 @@
 import { Lock, Search, User, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 
 import { Wordmark } from '@/components/brand/Wordmark'
 import { Cart } from '@/components/Cart'
@@ -94,7 +94,10 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
     return (
       <header className="sticky top-0 z-40 bg-background text-ink">
         <div className="mx-4 grid h-20 grid-cols-[1fr_auto_1fr] items-center border-b border-line md:mx-7 md:h-24">
-          <Link className="caps text-[0.5625rem] text-ink-soft transition-colors hover:text-ink" href="/shop">
+          <Link
+            className="caps text-[0.5625rem] text-ink-soft transition-colors hover:text-ink"
+            href="/shop"
+          >
             <span aria-hidden>← </span>Shop
           </Link>
           <Link aria-label="plumpose — home" href="/">
@@ -116,7 +119,11 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
       <header
         className={cn(
           'sticky top-0 z-40 transition-[background-color,color] duration-500 ease-brand',
-          overlay ? 'bg-transparent text-white' : condensed ? 'bg-background/95 text-ink backdrop-blur-sm' : 'bg-background text-ink',
+          overlay
+            ? 'bg-transparent text-white'
+            : condensed
+              ? 'bg-background/95 text-ink backdrop-blur-sm'
+              : 'bg-background text-ink',
           // Over the film on the homepage: take no space, so the film starts at the top.
           onHome && '-mb-20 md:-mb-24',
         )}

@@ -17,7 +17,8 @@ import { cn } from '@/utilities/cn'
 import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
-  description: 'Bridal sets, bespoke pieces, special embroidery and collaborations, made by hand in Doha.',
+  description:
+    'Bridal sets, bespoke pieces, special embroidery and collaborations, made by hand in Doha.',
   title: 'Made for you',
 }
 
@@ -76,7 +77,9 @@ export default async function MadeForYouPage({ searchParams }: Props) {
 
   const all = projects.docs as Project[]
   const presentCategories = [...new Set(all.map((p) => p.category))]
-  const activeCategory = presentCategories.includes(category as Project['category']) ? (category as Project['category']) : null
+  const activeCategory = presentCategories.includes(category as Project['category'])
+    ? (category as Project['category'])
+    : null
   const shown = activeCategory ? all.filter((p) => p.category === activeCategory) : all
 
   return (
@@ -97,7 +100,13 @@ export default async function MadeForYouPage({ searchParams }: Props) {
                     {film ? (
                       <InViewFilm className="object-[50%_30%]" film={film} label={film.label} />
                     ) : (
-                      <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="(min-width: 1024px) 23vw, (min-width: 640px) 48vw, 100vw" />
+                      <Media
+                        className="absolute inset-0"
+                        fill
+                        imgClassName="object-cover"
+                        resource={image}
+                        size="(min-width: 1024px) 23vw, (min-width: 640px) 48vw, 100vw"
+                      />
                     )}
                   </RevealImage>
                 ) : null}
@@ -125,9 +134,13 @@ export default async function MadeForYouPage({ searchParams }: Props) {
           <ol className="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
             {MADE_FOR_YOU.process.steps.map((step, n) => (
               <li data-reveal key={step.title}>
-                <p className="serif-display text-[2.75rem] leading-none text-ink-faint tabular-nums">{String(n + 1).padStart(2, '0')}</p>
+                <p className="serif-display text-[2.75rem] leading-none text-ink-faint tabular-nums">
+                  {String(n + 1).padStart(2, '0')}
+                </p>
                 <h3 className="serif-display mt-5 text-[1.5rem]">{step.title}</h3>
-                <p className="mt-2 max-w-xs text-[0.9375rem] leading-[1.75] text-ink-soft">{step.body}</p>
+                <p className="mt-2 max-w-xs text-[0.9375rem] leading-[1.75] text-ink-soft">
+                  {step.body}
+                </p>
               </li>
             ))}
           </ol>
@@ -143,12 +156,17 @@ export default async function MadeForYouPage({ searchParams }: Props) {
             </Reveal>
 
             {presentCategories.length > 1 ? (
-              <nav aria-label="Filter by category" className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3">
+              <nav
+                aria-label="Filter by category"
+                className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-3"
+              >
                 {[null, ...presentCategories].map((key) => (
                   <Link
                     className={cn(
                       'caps pb-1 text-[0.625rem] transition-colors',
-                      key === activeCategory ? 'border-b border-ink text-ink' : 'text-ink-soft hover:text-ink',
+                      key === activeCategory
+                        ? 'border-b border-ink text-ink'
+                        : 'text-ink-soft hover:text-ink',
                     )}
                     href={key ? `/made-for-you?category=${key}#projects` : '/made-for-you#projects'}
                     key={key ?? 'all'}
@@ -182,8 +200,14 @@ export default async function MadeForYouPage({ searchParams }: Props) {
                       {CATEGORY_LABELS[project.category]}
                       {project.brandName ? ` · ${project.brandName}` : ''}
                     </p>
-                    <h3 className="serif-display mt-2 text-[1.75rem] leading-tight">{project.title}</h3>
-                    {project.summary ? <p className="mt-2 text-[0.9375rem] leading-[1.7] text-ink-soft">{project.summary}</p> : null}
+                    <h3 className="serif-display mt-2 text-[1.75rem] leading-tight">
+                      {project.title}
+                    </h3>
+                    {project.summary ? (
+                      <p className="mt-2 text-[0.9375rem] leading-[1.7] text-ink-soft">
+                        {project.summary}
+                      </p>
+                    ) : null}
                   </Link>
                 </li>
               ))}
@@ -192,7 +216,11 @@ export default async function MadeForYouPage({ searchParams }: Props) {
         ) : null}
       </PageShell>
 
-      <ClosingBand body={MADE_FOR_YOU.enquiry.body} className="mt-24 md:mt-36" line={MADE_FOR_YOU.enquiry.heading}>
+      <ClosingBand
+        body={MADE_FOR_YOU.enquiry.body}
+        className="mt-24 md:mt-36"
+        line={MADE_FOR_YOU.enquiry.heading}
+      >
         <ButtonLink href="/contact?subject=Made+for+you">{MADE_FOR_YOU.enquiry.cta}</ButtonLink>
       </ClosingBand>
     </>

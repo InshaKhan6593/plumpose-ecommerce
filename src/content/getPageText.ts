@@ -12,11 +12,16 @@ import { mergePageText, type PageCopy } from './pageTextSchema'
 export const getPageText = unstable_cache(
   async (): Promise<PageCopy & { featuredProductId: null | number }> => {
     const payload = await getPayload({ config: configPromise })
-    const stored = (await payload.findGlobal({ depth: 0, slug: 'pageText' }).catch(() => null)) as null | Record<string, unknown>
-    const featured = (stored?.home as { featuredProduct?: null | number | { id: number } } | undefined)?.featuredProduct
+    const stored = (await payload
+      .findGlobal({ depth: 0, slug: 'pageText' })
+      .catch(() => null)) as null | Record<string, unknown>
+    const featured = (
+      stored?.home as { featuredProduct?: null | number | { id: number } } | undefined
+    )?.featuredProduct
     return {
       ...mergePageText(stored),
-      featuredProductId: typeof featured === 'object' && featured ? featured.id : (featured ?? null),
+      featuredProductId:
+        typeof featured === 'object' && featured ? featured.id : (featured ?? null),
     }
   },
   ['pageText'],

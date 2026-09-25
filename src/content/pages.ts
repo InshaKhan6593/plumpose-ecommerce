@@ -131,7 +131,8 @@ export const SHIPPING_PAGE = {
     /** LEGACY. */
     timing:
       'Every piece is hand-finished to order. Delivery times may vary with location and customs; your order confirmation email sets out what happens next, and you can follow it from Track order.',
-    currency: 'Every order is charged in Qatari Riyal. Where we show your own currency, it is a guide.',
+    currency:
+      'Every order is charged in Qatari Riyal. Where we show your own currency, it is a guide.',
   },
   /** LEGACY — "Returns & exchanges policy", verbatim. */
   returns: {
@@ -149,7 +150,8 @@ export const SHIPPING_PAGE = {
     ],
     exceptionLabel: 'Personalised pieces',
     exception: 'Personalised or monogrammed pieces are not eligible for return or exchange.',
-    contact: 'For any return or exchange enquiry, write to us or send a message on Instagram. Our team will attend to you.',
+    contact:
+      'For any return or exchange enquiry, write to us or send a message on Instagram. Our team will attend to you.',
   },
   /** LEGACY — the gift packaging copy and the checkout's gift note. */
   gifting: {
@@ -164,7 +166,8 @@ export const SHIPPING_PAGE = {
 export const MADE_FOR_YOU = {
   heading: 'Made for you',
   /** PLACEHOLDER. */
-  intro: 'Bridal sets, bespoke pieces and embroidery made for one person — or for a few hundred guests.',
+  intro:
+    'Bridal sets, bespoke pieces and embroidery made for one person — or for a few hundred guests.',
   /**
    * PLACEHOLDER — what she offers, one line each. These describe the
    * categories the Projects collection already has; the client should confirm
@@ -197,8 +200,14 @@ export const MADE_FOR_YOU = {
     label: 'How it works',
     steps: [
       { title: 'Tell us', body: 'Write to us with the occasion, the date and how many pieces.' },
-      { title: 'We talk it through', body: 'Fabric, fit, embroidery and timing — agreed together, in writing.' },
-      { title: 'Made by hand', body: 'Cut and finished in Doha. We send a photograph before it leaves.' },
+      {
+        title: 'We talk it through',
+        body: 'Fabric, fit, embroidery and timing — agreed together, in writing.',
+      },
+      {
+        title: 'Made by hand',
+        body: 'Cut and finished in Doha. We send a photograph before it leaves.',
+      },
       { title: 'Delivered', body: 'In our signature packaging, to you or to them.' },
     ],
   },
@@ -258,9 +267,17 @@ export const SPOTTED_PAGE = {
 export const CONTACT_PAGE = {
   heading: 'Contact',
   /** LEGACY — the old site's "Get in touch" modal. */
-  intro: 'How would you like to reach us? Our team usually replies within a day. Choose whichever is easiest.',
+  intro:
+    'How would you like to reach us? Our team usually replies within a day. Choose whichever is easiest.',
   formHeading: 'Write to us',
-  subjects: ['An order', 'Sizing & fit', 'Personalisation', 'Made for you', 'Press', 'Something else'],
+  subjects: [
+    'An order',
+    'Sizing & fit',
+    'Personalisation',
+    'Made for you',
+    'Press',
+    'Something else',
+  ],
   thanks: {
     heading: 'Thank you.',
     body: 'Your message is with us. We usually reply within a day.',
@@ -271,7 +288,8 @@ export const CONTACT_PAGE = {
 
 export const TRACK_PAGE = {
   heading: 'Track your order',
-  intro: 'Enter the email you ordered with and your order number. We will email you a private link to your order and where it is.',
+  intro:
+    'Enter the email you ordered with and your order number. We will email you a private link to your order and where it is.',
   sent: {
     heading: 'Check your email',
     body: 'If an order matches those details, a link to it is on its way. It can take a minute to arrive.',

@@ -7,7 +7,8 @@ import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { validateReview } from '@/hooks/validateReview'
 
 /** Only she may set these — a stranger's value for them is dropped, whatever the request says. */
-const adminField: FieldAccess = ({ req: { user } }) => Boolean(user && checkRole(['admin'], user as never))
+const adminField: FieldAccess = ({ req: { user } }) =>
+  Boolean(user && checkRole(['admin'], user as never))
 
 /**
  * Reviews (REQUIREMENTS S18, A15). Customers send them from the product page;
@@ -25,8 +26,17 @@ export const Reviews: CollectionConfig = {
   trash: true,
   defaultSort: '-createdAt',
   admin: {
-    defaultColumns: ['name', 'rating', 'product', 'status', 'featured', 'verifiedPurchase', 'createdAt'],
-    description: 'New reviews wait here for your approval. Approved ones show on the piece’s page; featured ones on the homepage too.',
+    defaultColumns: [
+      'name',
+      'rating',
+      'product',
+      'status',
+      'featured',
+      'verifiedPurchase',
+      'createdAt',
+    ],
+    description:
+      'New reviews wait here for your approval. Approved ones show on the piece’s page; featured ones on the homepage too.',
     group: 'Content',
     useAsTitle: 'name',
   },
@@ -80,7 +90,10 @@ export const Reviews: CollectionConfig = {
       name: 'featured',
       type: 'checkbox',
       access: { create: adminField, update: adminField },
-      admin: { description: 'Show this review on the homepage (once approved).', position: 'sidebar' },
+      admin: {
+        description: 'Show this review on the homepage (once approved).',
+        position: 'sidebar',
+      },
       defaultValue: false,
       label: 'Feature on the homepage',
     },
@@ -89,7 +102,11 @@ export const Reviews: CollectionConfig = {
       name: 'verifiedPurchase',
       type: 'checkbox',
       access: { update: adminField },
-      admin: { description: 'This email has an order for this piece.', position: 'sidebar', readOnly: true },
+      admin: {
+        description: 'This email has an order for this piece.',
+        position: 'sidebar',
+        readOnly: true,
+      },
       defaultValue: false,
       label: 'Verified purchase',
     },

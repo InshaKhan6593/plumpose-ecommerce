@@ -135,7 +135,9 @@ export function EmbroideryDrawer({
                     type="button"
                   >
                     <span className="block text-sm text-ink">{s.name}</span>
-                    {s.note ? <span className="mt-1 block text-xs text-ink-soft">{s.note}</span> : null}
+                    {s.note ? (
+                      <span className="mt-1 block text-xs text-ink-soft">{s.note}</span>
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -150,7 +152,9 @@ export function EmbroideryDrawer({
                     autoComplete="off"
                     className="serif-display w-full border-0 bg-transparent px-0 pb-2 text-3xl tracking-[0.12em] uppercase placeholder:text-ink-faint focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                     maxLength={rules.maxChars}
-                    onChange={(e) => set('lettering', cleanLettering(e.target.value, rules.maxChars).toUpperCase())}
+                    onChange={(e) =>
+                      set('lettering', cleanLettering(e.target.value, rules.maxChars).toUpperCase())
+                    }
                     placeholder="M.K"
                     value={choice.lettering}
                   />
@@ -158,7 +162,9 @@ export function EmbroideryDrawer({
                     {choice.lettering.length} / {rules.maxChars}
                   </span>
                 </div>
-                <p className="mt-2 text-xs text-ink-soft">Letters, numbers, spaces, full stops, hyphens and &amp;.</p>
+                <p className="mt-2 text-xs text-ink-soft">
+                  Letters, numbers, spaces, full stops, hyphens and &amp;.
+                </p>
               </Step>
             ) : null}
 
@@ -172,14 +178,25 @@ export function EmbroideryDrawer({
                       aria-pressed={choice.symbol === s.key}
                       className={cn(
                         'flex size-14 items-center justify-center border transition-colors duration-300 ease-brand',
-                        choice.symbol === s.key ? 'border-ink bg-ink text-white' : 'border-line hover:border-ink/50',
+                        choice.symbol === s.key
+                          ? 'border-ink bg-ink text-white'
+                          : 'border-line hover:border-ink/50',
                       )}
                       key={s.key}
                       onClick={() => set('symbol', s.key ?? '')}
                       title={s.name}
                       type="button"
                     >
-                      <svg aria-hidden className="size-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} viewBox="0 0 24 24">
+                      <svg
+                        aria-hidden
+                        className="size-6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.2}
+                        viewBox="0 0 24 24"
+                      >
                         <path d={s.svgPath ?? ''} />
                       </svg>
                     </button>
@@ -189,7 +206,12 @@ export function EmbroideryDrawer({
             ) : null}
 
             {/* 05 Thread */}
-            <Step label="Thread" number={String(2 + (wantsLetters(choice.style) ? 1 : 0) + (wantsSymbol(choice.style) ? 1 : 0) + 1).padStart(2, '0')}>
+            <Step
+              label="Thread"
+              number={String(
+                2 + (wantsLetters(choice.style) ? 1 : 0) + (wantsSymbol(choice.style) ? 1 : 0) + 1,
+              ).padStart(2, '0')}
+            >
               <div className="flex flex-wrap items-center gap-3">
                 {byType.thread.map((t) => (
                   /*
@@ -202,7 +224,9 @@ export function EmbroideryDrawer({
                     aria-pressed={choice.thread === t.key}
                     className={cn(
                       'flex size-10 items-center justify-center rounded-full border transition-colors duration-300 ease-brand',
-                      choice.thread === t.key ? 'border-ink' : 'border-transparent hover:border-line',
+                      choice.thread === t.key
+                        ? 'border-ink'
+                        : 'border-transparent hover:border-line',
                     )}
                     key={t.key}
                     onClick={() => set('thread', t.key ?? '')}
@@ -254,7 +278,15 @@ export function EmbroideryDrawer({
   )
 }
 
-function Step({ children, label, number }: { children: React.ReactNode; label: string; number: string }) {
+function Step({
+  children,
+  label,
+  number,
+}: {
+  children: React.ReactNode
+  label: string
+  number: string
+}) {
   return (
     <section className="mb-9">
       <h3 className="caps mb-4 text-[0.625rem] text-ink">

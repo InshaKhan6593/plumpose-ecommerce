@@ -73,7 +73,9 @@ test.describe('payment webhook', () => {
 
   /** A Checkout Session event, as Stripe sends it; the receiver re-reads the real session. */
   const sessionEvent = (args: { cartID: string; id: string; sessionId: string; type: string }) => ({
-    data: { object: { id: args.sessionId, metadata: { cartID: args.cartID }, object: 'checkout.session' } },
+    data: {
+      object: { id: args.sessionId, metadata: { cartID: args.cartID }, object: 'checkout.session' },
+    },
     id: args.id,
     object: 'event',
     type: args.type,
@@ -191,16 +193,21 @@ test.describe('payment webhook', () => {
    */
   test('creates the order when the customer never comes back', async ({ page, request }) => {
     test.setTimeout(120_000)
-    const started = await startCheckout(request, { email: `webhook-only-${Date.now()}@plumpose.local` })
+    const started = await startCheckout(request, {
+      email: `webhook-only-${Date.now()}@plumpose.local`,
+    })
     await payAndVanish(page, stripe, started)
 
     const eventId = `evt_test_${Date.now()}_orphan`
-    const { body, status } = await send(request, sessionEvent({
-      cartID: String(started.cart.id),
-      id: eventId,
-      sessionId: started.sessionId,
-      type: 'checkout.session.completed',
-    }))
+    const { body, status } = await send(
+      request,
+      sessionEvent({
+        cartID: String(started.cart.id),
+        id: eventId,
+        sessionId: started.sessionId,
+        type: 'checkout.session.completed',
+      }),
+    )
 
     expect(status).toBe(200)
     // "confirmed" whether this call made the order or a forwarded real event beat it to it.
@@ -211,7 +218,9 @@ test.describe('payment webhook', () => {
     expect(transaction.order, 'the transaction is linked to an order').toBeTruthy()
 
     const orders = await (
-      await request.get(`${BASE}/api/orders?where[transactions][equals]=${transaction.id}`, { headers: admin() })
+      await request.get(`${BASE}/api/orders?where[transactions][equals]=${transaction.id}`, {
+        headers: admin(),
+      })
     ).json()
     // Exactly one, however many callers raced to create it.
     expect(orders.totalDocs).toBe(1)
@@ -264,7 +273,13 @@ test.describe('payment webhook', () => {
 
     const eventId = `evt_test_${Date.now()}_failed`
     const { status } = await send(request, {
-      data: { object: { id: 'pi_failed_x', metadata: { cartID: String(started.cart.id) }, object: 'payment_intent' } },
+      data: {
+        object: {
+          id: 'pi_failed_x',
+          metadata: { cartID: String(started.cart.id) },
+          object: 'payment_intent',
+        },
+      },
       id: eventId,
       object: 'event',
       type: 'payment_intent.payment_failed',

@@ -41,6 +41,14 @@ export const FAQs: CollectionConfig = {
         { label: 'Product & Care', value: 'care' },
       ],
     },
-    { name: 'published', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
+    {
+      name: 'published',
+      type: 'checkbox',
+      admin: {
+        components: { Cell: '@/components/admin/BooleanCell#BooleanCell' },
+        position: 'sidebar',
+      },
+      defaultValue: true,
+    },
   ],
 }

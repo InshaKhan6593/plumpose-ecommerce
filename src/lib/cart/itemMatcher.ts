@@ -35,7 +35,9 @@ export const embroiderySignature = (personalisation: unknown): string => {
 
   return (personalisation as Embroidery[])
     .map((p) =>
-      [p.placement, p.style, p.lettering, p.symbol, p.thread].map((v) => String(v ?? '').trim()).join('|'),
+      [p.placement, p.style, p.lettering, p.symbol, p.thread]
+        .map((v) => String(v ?? '').trim())
+        .join('|'),
     )
     .sort()
     .join(';')

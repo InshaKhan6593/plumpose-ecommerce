@@ -55,7 +55,17 @@ export default async function OurStoryPage() {
 
   const featured =
     (featuredProductId
-      ? (await payload.find({ collection: 'products', depth: 0, limit: 1, select: { slug: true }, where: { and: [{ id: { equals: featuredProductId } }, { _status: { equals: 'published' } }] } })).docs[0]
+      ? (
+          await payload.find({
+            collection: 'products',
+            depth: 0,
+            limit: 1,
+            select: { slug: true },
+            where: {
+              and: [{ id: { equals: featuredProductId } }, { _status: { equals: 'published' } }],
+            },
+          })
+        ).docs[0]
       : undefined) ?? products.docs[0]
   const productHref = featured?.slug ? `/products/${featured.slug}` : '/shop'
   const pillarImages = [pick('armchair'), pick('piping'), pick('print', 'printWide')]
@@ -63,23 +73,39 @@ export default async function OurStoryPage() {
 
   // The atelier's figures, all from her settings — never typed into the copy.
   const atelierFacts = [
-    settings.personalisationFeeQar ? { label: 'Per placement', value: `QAR ${settings.personalisationFeeQar}` } : null,
+    settings.personalisationFeeQar
+      ? { label: 'Per placement', value: `QAR ${settings.personalisationFeeQar}` }
+      : null,
     threads.totalDocs ? { label: 'Thread colours', value: String(threads.totalDocs) } : null,
-    settings.personalisationLeadTime ? { label: 'To stitch by hand', value: settings.personalisationLeadTime } : null,
+    settings.personalisationLeadTime
+      ? { label: 'To stitch by hand', value: settings.personalisationLeadTime }
+      : null,
   ].filter((f): f is { label: string; value: string } => Boolean(f))
 
   return (
     <>
       <StoryOpener
-        film={{ mp4: '/video/story-pillow.mp4', poster: '/video/story-pillow-poster.jpg', small: '/video/story-pillow-small.mp4' }}
+        film={{
+          mp4: '/video/story-pillow.mp4',
+          poster: '/video/story-pillow-poster.jpg',
+          small: '/video/story-pillow-small.mp4',
+        }}
         heading={OUR_STORY.opener.heading}
         label={OUR_STORY.opener.label}
         lede={OUR_STORY.lede}
       />
 
       {/* The house */}
-      <SplitBand className="pt-24 md:pt-36" image={pick('doorway', 'founder')} imgClassName="object-[50%_20%]">
-        <Prose body={OUR_STORY.founder.body} heading={OUR_STORY.founder.heading} label={OUR_STORY.founder.label} />
+      <SplitBand
+        className="pt-24 md:pt-36"
+        image={pick('doorway', 'founder')}
+        imgClassName="object-[50%_20%]"
+      >
+        <Prose
+          body={OUR_STORY.founder.body}
+          heading={OUR_STORY.founder.heading}
+          label={OUR_STORY.founder.label}
+        />
       </SplitBand>
 
       {/*
@@ -91,7 +117,8 @@ export default async function OurStoryPage() {
       <SplitBand
         className="pt-24 md:pt-36"
         film={{
-          label: 'Walking down a corridor in the Al Shaheen Nights set, then a close-up of the whale-shark print',
+          label:
+            'Walking down a corridor in the Al Shaheen Nights set, then a close-up of the whale-shark print',
           mp4: '/video/story-walk.mp4',
           poster: '/video/story-walk-poster.jpg',
           webm: '/video/story-walk.webm',
@@ -100,7 +127,11 @@ export default async function OurStoryPage() {
         imgClassName="object-[50%_40%]"
         reverse
       >
-        <Prose body={OUR_STORY.print.body} heading={OUR_STORY.print.heading} label={OUR_STORY.print.label} />
+        <Prose
+          body={OUR_STORY.print.body}
+          heading={OUR_STORY.print.heading}
+          label={OUR_STORY.print.label}
+        />
         <p className="serif-italic mt-8 text-2xl" data-reveal>
           {OUR_STORY.print.signoff}
         </p>
@@ -117,14 +148,23 @@ export default async function OurStoryPage() {
       {sea ? (
         <section className="mx-auto max-w-[90rem] px-4 pt-24 md:px-7 md:pt-36">
           <RevealImage className="relative aspect-[4/3] overflow-hidden bg-paper-3 md:aspect-[21/9]">
-            <Media className="absolute inset-0" fill imgClassName="object-cover object-[70%_50%]" resource={sea} size="100vw" />
+            <Media
+              className="absolute inset-0"
+              fill
+              imgClassName="object-cover object-[70%_50%]"
+              resource={sea}
+              size="100vw"
+            />
           </RevealImage>
           <p className="caps mt-4 text-[0.5625rem] text-ink-soft">{OUR_STORY.print.seaCaption}</p>
         </section>
       ) : null}
 
       {/* The silk — three pillars, each with its photograph */}
-      <section className="mx-auto max-w-[90rem] scroll-mt-28 px-4 pt-24 md:px-7 md:pt-36" id={OUR_STORY.silk.id}>
+      <section
+        className="mx-auto max-w-[90rem] scroll-mt-28 px-4 pt-24 md:px-7 md:pt-36"
+        id={OUR_STORY.silk.id}
+      >
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="caps text-[0.625rem] text-ink-soft" data-reveal>
             {OUR_STORY.silk.label}
@@ -141,7 +181,13 @@ export default async function OurStoryPage() {
               <li key={pillar.title}>
                 {image ? (
                   <RevealImage className="relative aspect-[3/4] overflow-hidden bg-paper-3">
-                    <Media className="absolute inset-0" fill imgClassName="object-cover" resource={image} size="(min-width: 768px) 30vw, 100vw" />
+                    <Media
+                      className="absolute inset-0"
+                      fill
+                      imgClassName="object-cover"
+                      resource={image}
+                      size="(min-width: 768px) 30vw, 100vw"
+                    />
                   </RevealImage>
                 ) : null}
                 <Reveal className="mt-6">
@@ -151,7 +197,10 @@ export default async function OurStoryPage() {
                   <h3 className="serif-display mt-3 text-[1.75rem]" data-reveal>
                     {pillar.title}
                   </h3>
-                  <p className="mt-3 max-w-sm text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                  <p
+                    className="mt-3 max-w-sm text-[0.9375rem] leading-[1.8] text-ink-soft"
+                    data-reveal
+                  >
                     {pillar.body}
                   </p>
                 </Reveal>
@@ -163,12 +212,18 @@ export default async function OurStoryPage() {
 
       {/* The atelier */}
       <SplitBand className="pt-24 md:pt-36" id="atelier" image={pick('qatarBook', 'atelier')}>
-        <Prose body={OUR_STORY.atelier.body} heading={OUR_STORY.atelier.heading} label={OUR_STORY.atelier.label} />
+        <Prose
+          body={OUR_STORY.atelier.body}
+          heading={OUR_STORY.atelier.heading}
+          label={OUR_STORY.atelier.label}
+        />
         {atelierFacts.length ? (
           <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-line pt-8" data-reveal>
             {atelierFacts.map((fact) => (
               <div key={fact.label}>
-                <dd className="serif-display text-[clamp(1.5rem,2.4vw,2.25rem)] leading-none">{fact.value}</dd>
+                <dd className="serif-display text-[clamp(1.5rem,2.4vw,2.25rem)] leading-none">
+                  {fact.value}
+                </dd>
                 <dt className="caps mt-3 text-[0.5625rem] text-ink-soft">{fact.label}</dt>
               </div>
             ))}

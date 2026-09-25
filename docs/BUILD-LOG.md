@@ -1766,3 +1766,37 @@ customers would, against a production build. Integration **208** (was 162).
 - On a page with `loading.tsx`, Next keeps a hidden second copy of the streamed page outside `<main>` until it swaps it in (≈2 s on the dev server). Look inside `main`.
 - Reveals below the fold are hidden until scrolled to: scroll first.
 - Admin labels are CSS-uppercased, so compare text case-insensitively.
+
+## 30. Clean-up, and a refresh race it uncovered — 25 Sep 2026
+
+**Code clean-up:**
+
+- **Removed 14 files nothing used.** From the template: `LoadingSpinner`, `ProductItem`, `OrderStatus`, and `ui/` accordion, card, dialog, pagination, sheet and sonner (the toast container the site mounts is `providers/Sonner.tsx`, so add-to-bag errors do show). Also `getDocument`, `useClickableCard`, `useIgnoredEffect`, `populatePublishedAt` and `adminOrCustomerOwner`.
+- **Removed two packages** nothing imported: `next-themes` and `@radix-ui/react-accordion` (276 lockfile lines).
+- **Unused imports and variables cleared** everywhere `tsc --noUnusedLocals` found them: 25 files importing `React` for nothing, leftovers in the form and carousel blocks and the page hook, `currentOptions` in the option picker, `PayloadRequest` in the wheel endpoint, and unread loop counters in the seed. The template's skipped e2e suite is left as it is, due for replacement.
+- **Prettier applied** to all source, scripts and tests (160 files, layout only), except the generated `payload-types.ts` and `importMap.js`. `prettier --list-different` is now empty.
+- The Excel byte-order mark is written as `'﻿'`, not an invisible raw character.
+- `pnpm lint` still fails inside `eslint-config-next`'s own config, as before.
+
+**The refresh race.** The reviews e2e check failed on the production build: an approved, featured review never reached the homepage. It passed in any shorter sequence, and the query found the review when run directly. The cause is in how Next applies `revalidatePath`:
+
+- It does not refresh when called. It stamps the time and queues the refresh, and Next applies the queue when the request finishes.
+- Payload runs `afterChange` **inside the transaction, before the commit**. A homepage rebuild in that window — here, the browser prefetching `/` from the product page — reads the old data, finishes after the stamp, and is kept as current. The edit is lost until the next one.
+- Calling `revalidatePath` again inside `after()` does nothing: that request's queue has already been applied.
+
+**Fix** (`hooks/revalidateStorefront.ts`, `refreshStorefront`): refresh at once as before. Then, after the response (so after the commit), the server POSTs to itself at `/api/storefront/refresh`, signed with an HMAC of PAYLOAD_SECRET (403 without it). It does this twice, at once and two seconds later, so a rebuild already under way is overtaken. Collections, Site settings and Page text all use it.
+
+**Measured:**
+
+| | Runs passed |
+|---|---|
+| Before the fix | 0–1 in 3 |
+| After-commit request once | 2 in 5 |
+| Once and again at +2 s | **6 in 6**, then 3 full runs of the file (10 of 10 each) |
+| `check-admin-reflects` | 39 of 39 at once |
+
+**The promise:** a saved change is on every prerendered page within about two seconds. The e2e checks poll up to ten seconds rather than assuming the same instant.
+
+⚠️ **On Vercel**, the self-request goes to the deployment's own URL. With Deployment Protection on a preview it gets a 401 and logs "Storefront refresh after the save failed". The production domain is unaffected.
+
+Integration **208**. e2e: the new file 10 of 10 (three runs, production), full suite **48 passed**, 21 skipped (dev).

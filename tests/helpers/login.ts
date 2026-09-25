@@ -14,11 +14,7 @@ export interface LoginOptions {
 /**
  * Logs the user into the admin panel via the login page.
  */
-export async function login({
-  page,
-  serverURL = BASE,
-  user,
-}: LoginOptions): Promise<void> {
+export async function login({ page, serverURL = BASE, user }: LoginOptions): Promise<void> {
   await page.goto(`${serverURL}/admin/login`)
 
   await page.fill('#field-email', user.email)

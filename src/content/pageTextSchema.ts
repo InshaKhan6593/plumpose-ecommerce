@@ -2,7 +2,16 @@ import type { Field, Tab } from 'payload'
 
 import { HOME } from '@/components/home/content'
 
-import { CONTACT_PAGE, FAQ_PAGE, MADE_FOR_YOU, OUR_STORY, PRESS_PAGE, SHIPPING_PAGE, SPOTTED_PAGE, TRACK_PAGE } from './pages'
+import {
+  CONTACT_PAGE,
+  FAQ_PAGE,
+  MADE_FOR_YOU,
+  OUR_STORY,
+  PRESS_PAGE,
+  SHIPPING_PAGE,
+  SPOTTED_PAGE,
+  TRACK_PAGE,
+} from './pages'
 
 /**
  * The words on the storefront she can edit herself (REQUIREMENTS S1, A18).
@@ -29,7 +38,13 @@ import { CONTACT_PAGE, FAQ_PAGE, MADE_FOR_YOU, OUR_STORY, PRESS_PAGE, SHIPPING_P
  */
 
 type Kind = 'italics' | 'keyed' | 'lines' | 'list' | 'paras' | 'text' | 'textarea'
-type Entry = { description?: string; kind: Kind; label: string; path: string; sub?: Array<{ kind: 'text' | 'textarea'; label: string; name: string }> }
+type Entry = {
+  description?: string
+  kind: Kind
+  label: string
+  path: string
+  sub?: Array<{ kind: 'text' | 'textarea'; label: string; name: string }>
+}
 type Page = { defaults: Record<string, unknown>; entries: Entry[]; key: string; label: string }
 
 const titleBody = [
@@ -41,11 +56,26 @@ export const PAGES: Page[] = [
   {
     defaults: HOME,
     entries: [
-      { kind: 'lines', label: 'Headline', path: 'hero.tagline', description: 'The big words over the film. Line one upright, line two in italic.' },
+      {
+        kind: 'lines',
+        label: 'Headline',
+        path: 'hero.tagline',
+        description: 'The big words over the film. Line one upright, line two in italic.',
+      },
       { kind: 'text', label: 'Button', path: 'hero.cta' },
-      { kind: 'textarea', label: 'Line beside the headline', path: 'hero.intro', description: 'Desktop only.' },
+      {
+        kind: 'textarea',
+        label: 'Line beside the headline',
+        path: 'hero.intro',
+        description: 'Desktop only.',
+      },
       { kind: 'text', label: 'Small label above', path: 'philosophy.label' },
-      { kind: 'italics', label: 'Opening words', path: 'philosophy.headline', description: 'Put *asterisks* around the words to set in italic.' },
+      {
+        kind: 'italics',
+        label: 'Opening words',
+        path: 'philosophy.headline',
+        description: 'Put *asterisks* around the words to set in italic.',
+      },
       { kind: 'text', label: 'The print — small label', path: 'print.label' },
       { kind: 'lines', label: 'The print — heading', path: 'print.heading' },
       { kind: 'textarea', label: 'The print — words', path: 'print.body' },
@@ -97,7 +127,12 @@ export const PAGES: Page[] = [
       { kind: 'textarea', label: 'About currency', path: 'delivery.currency' },
       { kind: 'text', label: 'Returns — heading', path: 'returns.heading' },
       { kind: 'textarea', label: 'Returns — introduction', path: 'returns.intro' },
-      { kind: 'lines', label: 'Returns — terms', path: 'returns.terms', description: 'One term per line.' },
+      {
+        kind: 'lines',
+        label: 'Returns — terms',
+        path: 'returns.terms',
+        description: 'One term per line.',
+      },
       { kind: 'text', label: 'Personalised pieces — label', path: 'returns.exceptionLabel' },
       { kind: 'textarea', label: 'Personalised pieces — words', path: 'returns.exception' },
       { kind: 'textarea', label: 'Returns — how to reach us', path: 'returns.contact' },
@@ -129,7 +164,12 @@ export const PAGES: Page[] = [
     entries: [
       { kind: 'text', label: 'Heading', path: 'heading' },
       { kind: 'textarea', label: 'Introduction', path: 'intro' },
-      { kind: 'keyed', label: 'Group names', path: 'groups', sub: [{ kind: 'text', label: 'Name', name: 'label' }] },
+      {
+        kind: 'keyed',
+        label: 'Group names',
+        path: 'groups',
+        sub: [{ kind: 'text', label: 'Name', name: 'label' }],
+      },
     ],
     key: 'faq',
     label: 'FAQ',
@@ -167,7 +207,12 @@ export const PAGES: Page[] = [
       { kind: 'text', label: 'Heading', path: 'heading' },
       { kind: 'textarea', label: 'Introduction', path: 'intro' },
       { kind: 'text', label: 'Form heading', path: 'formHeading' },
-      { kind: 'lines', label: 'Subjects to choose from', path: 'subjects', description: 'One per line.' },
+      {
+        kind: 'lines',
+        label: 'Subjects to choose from',
+        path: 'subjects',
+        description: 'One per line.',
+      },
       { kind: 'text', label: 'After sending — heading', path: 'thanks.heading' },
       { kind: 'textarea', label: 'After sending — words', path: 'thanks.body' },
     ],
@@ -192,16 +237,25 @@ export const PAGES: Page[] = [
 type Segment = { italic?: boolean; text: string }
 
 /** Segments → "Inspired by the *tranquil waters* of Qatar". */
-export const italicsToText = (segments: ReadonlyArray<Segment>): string => segments.map((s) => (s.italic ? `*${s.text}*` : s.text)).join('')
+export const italicsToText = (segments: ReadonlyArray<Segment>): string =>
+  segments.map((s) => (s.italic ? `*${s.text}*` : s.text)).join('')
 
 /** "Inspired by the *tranquil waters* of Qatar" → segments. An unclosed * is left as it is. */
 export const textToItalics = (text: string): Segment[] =>
   text
     .split(/(\*[^*]+\*)/)
     .filter(Boolean)
-    .map((part) => (/^\*[^*]+\*$/.test(part) ? { italic: true, text: part.slice(1, -1) } : { text: part }))
+    .map((part) =>
+      /^\*[^*]+\*$/.test(part) ? { italic: true, text: part.slice(1, -1) } : { text: part },
+    )
 
-const get = (obj: unknown, path: string): unknown => path.split('.').reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined), obj)
+const get = (obj: unknown, path: string): unknown =>
+  path
+    .split('.')
+    .reduce<unknown>(
+      (o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined),
+      obj,
+    )
 const set = (obj: Record<string, unknown>, path: string, value: unknown) => {
   const keys = path.split('.')
   let o = obj
@@ -220,9 +274,16 @@ function toStored(entry: Entry, value: unknown): unknown {
     case 'italics':
       return italicsToText(value as Segment[])
     case 'list':
-      return (value as Array<Record<string, string>>).map((row) => Object.fromEntries(entry.sub!.map((s) => [s.name, row[s.name]])))
+      return (value as Array<Record<string, string>>).map((row) =>
+        Object.fromEntries(entry.sub!.map((s) => [s.name, row[s.name]])),
+      )
     case 'keyed':
-      return Object.fromEntries((value as Array<Record<string, string>>).map((row) => [row.key, Object.fromEntries(entry.sub!.map((s) => [s.name, row[s.name]]))]))
+      return Object.fromEntries(
+        (value as Array<Record<string, string>>).map((row) => [
+          row.key,
+          Object.fromEntries(entry.sub!.map((s) => [s.name, row[s.name]])),
+        ]),
+      )
     default:
       return value
   }
@@ -235,27 +296,40 @@ function fromStored(entry: Entry, stored: unknown, fallback: unknown): unknown {
     case 'textarea':
       return clean(stored) || undefined
     case 'lines': {
-      const lines = clean(stored).split('\n').map((l) => l.trim()).filter(Boolean)
+      const lines = clean(stored)
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
       return lines.length ? lines : undefined
     }
     case 'paras': {
-      const paras = clean(stored).split(/\n\s*\n/).map((p) => p.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean)
+      const paras = clean(stored)
+        .split(/\n\s*\n/)
+        .map((p) => p.replace(/\s*\n\s*/g, ' ').trim())
+        .filter(Boolean)
       return paras.length ? paras : undefined
     }
     case 'italics':
       return clean(stored) ? textToItalics(clean(stored)) : undefined
     case 'list': {
       const rows = (Array.isArray(stored) ? stored : [])
-        .map((row: Record<string, unknown>) => Object.fromEntries(entry.sub!.map((s) => [s.name, clean(row?.[s.name])])))
+        .map((row: Record<string, unknown>) =>
+          Object.fromEntries(entry.sub!.map((s) => [s.name, clean(row?.[s.name])])),
+        )
         .filter((row) => Object.values(row).some(Boolean))
       return rows.length ? rows : undefined
     }
     case 'keyed': {
       // The items are fixed (a Made for You category); only their words change.
-      const byKey = (stored && typeof stored === 'object' ? stored : {}) as Record<string, Record<string, unknown>>
+      const byKey = (stored && typeof stored === 'object' ? stored : {}) as Record<
+        string,
+        Record<string, unknown>
+      >
       return (fallback as Array<Record<string, string>>).map((row) => ({
         ...row,
-        ...Object.fromEntries(entry.sub!.map((s) => [s.name, clean(byKey[row.key]?.[s.name]) || row[s.name]])),
+        ...Object.fromEntries(
+          entry.sub!.map((s) => [s.name, clean(byKey[row.key]?.[s.name]) || row[s.name]]),
+        ),
       }))
     }
   }
@@ -275,7 +349,13 @@ function fieldFor(entry: Entry, defaults: Record<string, unknown>): Field {
     case 'textarea':
     case 'lines':
     case 'paras':
-      return { admin: { ...admin, rows: entry.kind === 'textarea' ? 3 : 5 }, defaultValue: initial as string, label: entry.label, name, type: 'textarea' }
+      return {
+        admin: { ...admin, rows: entry.kind === 'textarea' ? 3 : 5 },
+        defaultValue: initial as string,
+        label: entry.label,
+        name,
+        type: 'textarea',
+      }
     case 'list':
       return {
         admin: { ...admin, initCollapsed: false },
@@ -292,7 +372,15 @@ function fieldFor(entry: Entry, defaults: Record<string, unknown>): Field {
       return {
         admin,
         fields: rows.map((row) => ({
-          fields: entry.sub!.map((s) => ({ defaultValue: byKey[row.key]?.[s.name], label: s.label, name: s.name, type: s.kind }) as Field),
+          fields: entry.sub!.map(
+            (s) =>
+              ({
+                defaultValue: byKey[row.key]?.[s.name],
+                label: s.label,
+                name: s.name,
+                type: s.kind,
+              }) as Field,
+          ),
           label: row.title || row.label || row.key,
           name: row.key,
           type: 'group',
@@ -329,7 +417,11 @@ function nest(entries: Entry[], defaults: Record<string, unknown>): Field[] {
 
 /** One named tab per page, for the Page text screen; `extra` adds fields to a page's tab. */
 export const pageTextTabs = (extra: Partial<Record<string, Field[]>> = {}): Tab[] =>
-  PAGES.map((page) => ({ fields: [...(extra[page.key] ?? []), ...nest(page.entries, page.defaults)], label: page.label, name: page.key }))
+  PAGES.map((page) => ({
+    fields: [...(extra[page.key] ?? []), ...nest(page.entries, page.defaults)],
+    label: page.label,
+    name: page.key,
+  }))
 
 /* ------------------------------------------------------------------- merge */
 

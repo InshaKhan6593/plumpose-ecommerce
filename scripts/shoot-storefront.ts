@@ -29,7 +29,11 @@ const SIZES = [
   { name: 'phone', options: { ...devices['iPhone 13'] } },
 ] as const
 
-const slug = (url: string) => url.replace(/^\/$/, 'home').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '')
+const slug = (url: string) =>
+  url
+    .replace(/^\/$/, 'home')
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-|-$/g, '')
 
 const run = async () => {
   const pages = process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT_PAGES
@@ -51,14 +55,21 @@ const run = async () => {
       })
 
       for (const url of pages) {
-        const response = await page.goto(`${BASE}${url}`, { timeout: 120_000, waitUntil: 'networkidle' })
+        const response = await page.goto(`${BASE}${url}`, {
+          timeout: 120_000,
+          waitUntil: 'networkidle',
+        })
         await page.waitForTimeout(reducedMotion === 'reduce' ? 1500 : 2600)
 
         const kind = reducedMotion === 'reduce' ? 'full' : 'fold'
         if (kind === 'full') {
           // A screen at a time, so each lazy photograph enters the viewport and loads.
           await page.evaluate(async () => {
-            for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight * 0.8) {
+            for (
+              let y = 0;
+              y < document.documentElement.scrollHeight;
+              y += window.innerHeight * 0.8
+            ) {
               window.scrollTo(0, y)
               await new Promise((resolve) => setTimeout(resolve, 250))
             }
@@ -69,10 +80,15 @@ const run = async () => {
         }
         const file = path.join(OUT, `${slug(url)}-${size.name}-${kind}.png`)
         await page.screenshot({ fullPage: kind === 'full', path: file })
-        console.log(`  ${response?.status()} ${size.name.padEnd(7)} ${kind}  ${url}  →  ${path.relative(process.cwd(), file)}`)
+        console.log(
+          `  ${response?.status()} ${size.name.padEnd(7)} ${kind}  ${url}  →  ${path.relative(process.cwd(), file)}`,
+        )
       }
 
-      if (errors.length) console.log(`  errors (${size.name}, ${reducedMotion}):\n    ${[...new Set(errors)].join('\n    ')}`)
+      if (errors.length)
+        console.log(
+          `  errors (${size.name}, ${reducedMotion}):\n    ${[...new Set(errors)].join('\n    ')}`,
+        )
       await context.close()
     }
   }

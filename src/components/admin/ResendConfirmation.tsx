@@ -45,7 +45,13 @@ export const ResendConfirmation: React.FC = () => {
 
   return (
     <div style={{ marginBottom: 'var(--base)' }}>
-      <Button buttonStyle="secondary" disabled={sending} margin={false} onClick={send} size="medium">
+      <Button
+        buttonStyle="secondary"
+        disabled={sending}
+        margin={false}
+        onClick={send}
+        size="medium"
+      >
         {sending ? 'Sending…' : 'Resend confirmation'}
       </Button>
     </div>

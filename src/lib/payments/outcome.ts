@@ -12,7 +12,8 @@
 /** The hosted payment page closes after an hour (payments/stripeSandbox.ts). */
 export const CHECKOUT_LIFETIME_MS = 60 * 60 * 1000
 
-export type PaymentStatus = 'cancelled' | 'expired' | 'failed' | 'pending' | 'processing' | 'refunded' | 'succeeded'
+export type PaymentStatus =
+  'cancelled' | 'expired' | 'failed' | 'pending' | 'processing' | 'refunded' | 'succeeded'
 
 export type Outcome = {
   /** Paid, or still able to become paid: nothing to follow up. */
@@ -57,6 +58,7 @@ export function paymentOutcome(args: {
 
 /** The gateway's own reason for a declined card, from a logged `payment_intent.payment_failed`. */
 export function declineReason(event: unknown): string {
-  const error = (event as { data?: { object?: { last_payment_error?: { message?: string } } } })?.data?.object?.last_payment_error
+  const error = (event as { data?: { object?: { last_payment_error?: { message?: string } } } })
+    ?.data?.object?.last_payment_error
   return typeof error?.message === 'string' ? error.message.replace(/\.$/, '') : ''
 }

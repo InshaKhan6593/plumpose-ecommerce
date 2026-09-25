@@ -54,7 +54,9 @@ export default async function AccountAddressesPage() {
       </div>
       <AddressBook
         addresses={addresses.docs as Address[]}
-        cities={cities.docs.filter((c) => c.key).map((c) => ({ key: c.key as string, name: c.name }))}
+        cities={cities.docs
+          .filter((c) => c.key)
+          .map((c) => ({ key: c.key as string, name: c.name }))}
         countries={countries}
       />
     </div>

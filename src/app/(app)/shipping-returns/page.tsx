@@ -4,7 +4,14 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { PageHeading, PageShell, Prose, SectionLabel, SplitBand, TextLink } from '@/components/editorial'
+import {
+  PageHeading,
+  PageShell,
+  Prose,
+  SectionLabel,
+  SplitBand,
+  TextLink,
+} from '@/components/editorial'
 import { getPageText } from '@/content/getPageText'
 import { formatQar } from '@/lib/pricing/money'
 import { rateCard } from '@/lib/pricing/shipping'
@@ -33,7 +40,13 @@ export default async function ShippingReturnsPage() {
   const settings = await getCachedGlobal('siteSettings', 0)()
 
   const [cities, zones, pick] = await Promise.all([
-    payload.find({ collection: 'shippingCities', depth: 0, limit: 100, pagination: false, sort: 'name' }),
+    payload.find({
+      collection: 'shippingCities',
+      depth: 0,
+      limit: 100,
+      pagination: false,
+      sort: 'name',
+    }),
     payload.find({ collection: 'shippingZones', depth: 0, limit: 100, pagination: false }),
     loadPageMedia(payload),
   ])
@@ -42,7 +55,8 @@ export default async function ShippingReturnsPage() {
 
   // Qatar: cities grouped by fee, cheapest first — "Doha, Al Rayyan … QAR 20".
   const byFee = new Map<number, string[]>()
-  for (const city of card.qatarCities) byFee.set(city.feeQar, [...(byFee.get(city.feeQar) ?? []), city.name])
+  for (const city of card.qatarCities)
+    byFee.set(city.feeQar, [...(byFee.get(city.feeQar) ?? []), city.name])
   const qatarRows = [...byFee.entries()].sort(([a], [b]) => a - b)
   const intlRows = [...card.zones].sort((a, b) => a.feeQar - b.feeQar)
 
@@ -60,7 +74,11 @@ export default async function ShippingReturnsPage() {
             ['#returns', 'Returns'],
             ['#gifting', 'Gift wrapping'],
           ].map(([href, label]) => (
-            <a className="caps text-[0.625rem] text-ink-soft transition-colors hover:text-ink" href={href} key={href}>
+            <a
+              className="caps text-[0.625rem] text-ink-soft transition-colors hover:text-ink"
+              href={href}
+              key={href}
+            >
               {label}
             </a>
           ))}
@@ -82,7 +100,9 @@ export default async function ShippingReturnsPage() {
                       <th className="py-4 pr-6 text-[0.9375rem] font-normal" scope="row">
                         {names.join(', ')}
                       </th>
-                      <td className="py-4 text-right text-[0.9375rem] whitespace-nowrap tabular-nums">{formatQar(fee)}</td>
+                      <td className="py-4 text-right text-[0.9375rem] whitespace-nowrap tabular-nums">
+                        {formatQar(fee)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -102,7 +122,9 @@ export default async function ShippingReturnsPage() {
                       <th className="py-3 pr-6 text-[0.9375rem] font-normal" scope="row">
                         {zone.name}
                       </th>
-                      <td className="py-3 text-right text-[0.9375rem] whitespace-nowrap tabular-nums">{formatQar(zone.feeQar)}</td>
+                      <td className="py-3 text-right text-[0.9375rem] whitespace-nowrap tabular-nums">
+                        {formatQar(zone.feeQar)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -114,9 +136,13 @@ export default async function ShippingReturnsPage() {
             <p data-reveal>{SHIPPING_PAGE.delivery.timing}</p>
             <div data-reveal>
               {card.freeShippingThresholdQar ? (
-                <p className="text-ink">Free delivery on orders over {formatQar(card.freeShippingThresholdQar)}.</p>
+                <p className="text-ink">
+                  Free delivery on orders over {formatQar(card.freeShippingThresholdQar)}.
+                </p>
               ) : null}
-              <p className={card.freeShippingThresholdQar ? 'mt-4' : undefined}>{SHIPPING_PAGE.delivery.currency}</p>
+              <p className={card.freeShippingThresholdQar ? 'mt-4' : undefined}>
+                {SHIPPING_PAGE.delivery.currency}
+              </p>
             </div>
           </Reveal>
         </div>
@@ -143,13 +169,23 @@ export default async function ShippingReturnsPage() {
               {!personalisedReturnable ? (
                 <div className="border border-ink px-6 py-6">
                   <p className="caps text-[0.625rem]">{SHIPPING_PAGE.returns.exceptionLabel}</p>
-                  <p className="mt-3 text-[0.9375rem] leading-[1.7] text-ink-soft">{SHIPPING_PAGE.returns.exception}</p>
+                  <p className="mt-3 text-[0.9375rem] leading-[1.7] text-ink-soft">
+                    {SHIPPING_PAGE.returns.exception}
+                  </p>
                 </div>
               ) : null}
-              <p className="mt-6 text-[0.9375rem] leading-[1.7] text-ink-soft">{SHIPPING_PAGE.returns.contact}</p>
+              <p className="mt-6 text-[0.9375rem] leading-[1.7] text-ink-soft">
+                {SHIPPING_PAGE.returns.contact}
+              </p>
               <div className="mt-5 flex flex-wrap gap-6">
-                {settings.contactEmail ? <TextLink href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</TextLink> : null}
-                {settings.instagramUrl ? <TextLink href={settings.instagramUrl}>Instagram</TextLink> : null}
+                {settings.contactEmail ? (
+                  <TextLink href={`mailto:${settings.contactEmail}`}>
+                    {settings.contactEmail}
+                  </TextLink>
+                ) : null}
+                {settings.instagramUrl ? (
+                  <TextLink href={settings.instagramUrl}>Instagram</TextLink>
+                ) : null}
               </div>
             </div>
           </div>
@@ -158,7 +194,11 @@ export default async function ShippingReturnsPage() {
 
       {/* Gift wrapping */}
       <SplitBand className="pt-24 md:pt-32" id="gifting" image={pick('qatarBook', 'packaging')}>
-        <Prose body={[SHIPPING_PAGE.gifting.body, SHIPPING_PAGE.gifting.note]} heading={SHIPPING_PAGE.gifting.heading} label="Gifting" />
+        <Prose
+          body={[SHIPPING_PAGE.gifting.body, SHIPPING_PAGE.gifting.note]}
+          heading={SHIPPING_PAGE.gifting.heading}
+          label="Gifting"
+        />
       </SplitBand>
     </>
   )

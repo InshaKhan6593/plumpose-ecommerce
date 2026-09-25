@@ -55,8 +55,6 @@ export function VariantSelector({ product }: { product: Product }) {
               // if the option was clicked.
               optionSearchParams.set(optionKeyLowerCase, String(optionID))
 
-              const currentOptions = Array.from(optionSearchParams.values())
-
               /*
                * What this choice would select: this option, plus whatever is
                * already chosen for the other kinds (size, colour, pattern).
@@ -69,8 +67,9 @@ export function VariantSelector({ product }: { product: Product }) {
                 .filter((t): t is Exclude<typeof t, number> => typeof t === 'object' && t !== null)
                 .map((t) => optionSearchParams.get(t.name))
                 .filter((id): id is string => Boolean(id))
-              const optionIdsOf = (variant: Exclude<NonNullable<typeof variants>[number], number>) =>
-                (variant.options ?? []).map((o) => String(typeof o === 'object' ? o.id : o))
+              const optionIdsOf = (
+                variant: Exclude<NonNullable<typeof variants>[number], number>,
+              ) => (variant.options ?? []).map((o) => String(typeof o === 'object' ? o.id : o))
               const candidates = (variants ?? [])
                 .filter((v): v is Exclude<typeof v, number> => typeof v === 'object')
                 .filter((v) => chosen.every((id) => optionIdsOf(v).includes(id)))
@@ -80,8 +79,11 @@ export function VariantSelector({ product }: { product: Product }) {
               const allChosen = chosen.length === (variantTypes?.length ?? 0)
               const exact = allChosen && candidates.length === 1 ? candidates[0] : undefined
               if (exact) optionSearchParams.set('variant', String(exact.id))
-              const madeToOrderOnly = Boolean(exact) && isAvailableForSale && readyStock(exact!) === 0
-              const unavailableReason = !candidates.length ? 'not made in this combination' : 'sold out'
+              const madeToOrderOnly =
+                Boolean(exact) && isAvailableForSale && readyStock(exact!) === 0
+              const unavailableReason = !candidates.length
+                ? 'not made in this combination'
+                : 'sold out'
 
               const optionUrl = createUrl(pathname, optionSearchParams)
 
@@ -100,7 +102,8 @@ export function VariantSelector({ product }: { product: Product }) {
                     isActive
                       ? 'border-ink bg-ink text-white'
                       : 'border-line text-ink hover:border-ink',
-                    !isAvailableForSale && 'cursor-not-allowed text-ink-faint line-through hover:border-line',
+                    !isAvailableForSale &&
+                      'cursor-not-allowed text-ink-faint line-through hover:border-line',
                   )}
                   disabled={!isAvailableForSale}
                   key={option.id}

@@ -22,7 +22,11 @@ const FULFILMENT: Record<NonNullable<Order['fulfilment']>, string> = {
   unfulfilled: 'Order placed',
 }
 
-const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+const dateFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+})
 
 type Props = { searchParams: Promise<{ notice?: string }> }
 
@@ -68,7 +72,9 @@ export default async function AccountOrdersPage({ searchParams }: Props) {
                 >
                   <span>
                     <span className="caps block text-[0.625rem]">No. {order.id}</span>
-                    <span className="mt-1 block text-[0.8125rem] text-ink-soft">{dateFormat.format(new Date(order.createdAt))}</span>
+                    <span className="mt-1 block text-[0.8125rem] text-ink-soft">
+                      {dateFormat.format(new Date(order.createdAt))}
+                    </span>
                   </span>
                   <span className="caps text-right text-[0.5625rem] text-ink-soft md:text-left">
                     {FULFILMENT[order.fulfilment ?? 'unfulfilled']}
@@ -79,7 +85,9 @@ export default async function AccountOrdersPage({ searchParams }: Props) {
                       · {pieces} {pieces === 1 ? 'piece' : 'pieces'}
                     </span>
                   </span>
-                  <span className="caps text-right text-[0.5625rem] underline-offset-4 group-hover:underline">View</span>
+                  <span className="caps text-right text-[0.5625rem] underline-offset-4 group-hover:underline">
+                    View
+                  </span>
                 </Link>
               </li>
             )
@@ -89,7 +97,8 @@ export default async function AccountOrdersPage({ searchParams }: Props) {
         <div className="border border-line px-7 py-10">
           <p className="serif-display text-[2rem]">No orders yet</p>
           <p className="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft">
-            When you order while signed in, it will be here — with its progress from the atelier to your door.
+            When you order while signed in, it will be here — with its progress from the atelier to
+            your door.
           </p>
           <ButtonLink className="mt-8" href="/shop">
             Discover the collection
@@ -98,7 +107,10 @@ export default async function AccountOrdersPage({ searchParams }: Props) {
       )}
 
       <p className="text-[0.8125rem] leading-relaxed text-ink-soft">
-        Ordered without signing in? <TextLink className="ml-1" href="/find-order">Find it with Track order</TextLink>
+        Ordered without signing in?{' '}
+        <TextLink className="ml-1" href="/find-order">
+          Find it with Track order
+        </TextLink>
       </p>
     </div>
   )

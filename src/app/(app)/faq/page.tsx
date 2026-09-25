@@ -12,7 +12,8 @@ import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 
 export const metadata: Metadata = {
-  description: 'Orders, delivery, returns, hand embroidery and caring for your silk — the questions we are asked most.',
+  description:
+    'Orders, delivery, returns, hand embroidery and caring for your silk — the questions we are asked most.',
   title: 'FAQ',
 }
 
@@ -38,7 +39,10 @@ export default async function FaqPage() {
   })
 
   const groups = FAQ_PAGE.groups
-    .map((group) => ({ ...group, items: (docs as Faq[]).filter((faq) => (faq.category ?? 'orders') === group.key) }))
+    .map((group) => ({
+      ...group,
+      items: (docs as Faq[]).filter((faq) => (faq.category ?? 'orders') === group.key),
+    }))
     .filter((group) => group.items.length)
 
   const structuredData = {
@@ -62,7 +66,10 @@ export default async function FaqPage() {
                 <ul className="flex flex-col gap-4 border-l border-line pl-5">
                   {groups.map((group) => (
                     <li key={group.key}>
-                      <a className="caps text-[0.625rem] text-ink-soft transition-colors hover:text-ink" href={`#${group.key}`}>
+                      <a
+                        className="caps text-[0.625rem] text-ink-soft transition-colors hover:text-ink"
+                        href={`#${group.key}`}
+                      >
                         {group.label}
                       </a>
                     </li>
@@ -83,14 +90,21 @@ export default async function FaqPage() {
                     <li className="border-b border-line" key={faq.id}>
                       <details className="group">
                         <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-6 [&::-webkit-details-marker]:hidden">
-                          <span className="serif-display text-[1.375rem] leading-snug md:text-[1.625rem]">{faq.question}</span>
+                          <span className="serif-display text-[1.375rem] leading-snug md:text-[1.625rem]">
+                            {faq.question}
+                          </span>
                           <span aria-hidden className="relative mt-3 size-3 shrink-0">
                             <span className="absolute top-1/2 left-0 h-px w-full bg-ink" />
                             <span className="absolute top-0 left-1/2 h-full w-px bg-ink transition-transform duration-300 ease-brand group-open:scale-y-0" />
                           </span>
                         </summary>
                         <div className="max-w-2xl pb-8 text-[0.9375rem] leading-[1.8] text-ink-soft">
-                          <RichText className="[&_p]:mb-4 [&_p:last-child]:mb-0" data={faq.answer} enableGutter={false} enableProse={false} />
+                          <RichText
+                            className="[&_p]:mb-4 [&_p:last-child]:mb-0"
+                            data={faq.answer}
+                            enableGutter={false}
+                            enableProse={false}
+                          />
                         </div>
                       </details>
                     </li>
@@ -107,7 +121,9 @@ export default async function FaqPage() {
       </ClosingBand>
 
       <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
+        }}
         type="application/ld+json"
       />
     </>

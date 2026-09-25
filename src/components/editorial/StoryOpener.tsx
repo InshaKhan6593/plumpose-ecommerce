@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 import { gsap, LINE_HIDDEN, prefersReducedMotion, splitLines } from '@/motion/gsap'
 import { cn } from '@/utilities/cn'
@@ -60,35 +60,80 @@ export function StoryOpener({
         // Intro, once. Both copies of the heading rise together, so they stay registered.
         headings.forEach((h) => {
           const split = splitLines(h)
-          gsap.from(split.lines, { delay: 0.25, duration: 1.4, ease: 'expo.out', stagger: 0.12, yPercent: LINE_HIDDEN })
+          gsap.from(split.lines, {
+            delay: 0.25,
+            duration: 1.4,
+            ease: 'expo.out',
+            stagger: 0.12,
+            yPercent: LINE_HIDDEN,
+          })
         })
-        gsap.fromTo(intro, { opacity: 0, y: 20 }, { delay: 0.9, duration: 1.2, opacity: 1, stagger: 0.1, y: 0 })
+        gsap.fromTo(
+          intro,
+          { opacity: 0, y: 20 },
+          { delay: 0.9, duration: 1.2, opacity: 1, stagger: 0.1, y: 0 },
+        )
 
         const mm = gsap.matchMedia()
         mm.add({ desktop: '(min-width: 1024px)', phone: '(max-width: 1023px)' }, (c) => {
           const { desktop } = c.conditions as { desktop: boolean }
           // Desktop: a card inside the right half. Phone: a card under the words.
-          const card = desktop ? 'inset(12% 22% 20% 22% round 0px)' : 'inset(40% 16% 7% 16% round 0px)'
-          const closed = desktop ? 'inset(80% 22% 20% 22% round 0px)' : 'inset(93% 16% 7% 16% round 0px)'
+          const card = desktop
+            ? 'inset(12% 22% 20% 22% round 0px)'
+            : 'inset(40% 16% 7% 16% round 0px)'
+          const closed = desktop
+            ? 'inset(80% 22% 20% 22% round 0px)'
+            : 'inset(93% 16% 7% 16% round 0px)'
 
           // The card arrives: it opens upward from its own bottom edge.
-          gsap.fromTo(frame, { clipPath: closed }, { clipPath: card, duration: 1.6, ease: 'expo.out' })
+          gsap.fromTo(
+            frame,
+            { clipPath: closed },
+            { clipPath: card, duration: 1.6, ease: 'expo.out' },
+          )
 
           const tl = gsap.timeline({
             defaults: { ease: 'none' },
-            scrollTrigger: { end: '+=120%', pin: true, refreshPriority: 1, scrub: 1, start: 'top top', trigger: el },
+            scrollTrigger: {
+              end: '+=120%',
+              pin: true,
+              refreshPriority: 1,
+              scrub: 1,
+              start: 'top top',
+              trigger: el,
+            },
           })
-          tl.fromTo(frame, { clipPath: card }, { clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 1, ease: 'power1.inOut', immediateRender: false }, 0)
+          tl.fromTo(
+            frame,
+            { clipPath: card },
+            {
+              clipPath: 'inset(0% 0% 0% 0% round 0px)',
+              duration: 1,
+              ease: 'power1.inOut',
+              immediateRender: false,
+            },
+            0,
+          )
             /*
              * On a phone the card sits low, under the words, where the film
              * shows only her chest. The picture starts lowered so her face is
              * in the card, and rises back as the card opens — always behind
              * the frame's top edge, so no gap ever shows.
              */
-            .fromTo(picture, { scale: 1.2, yPercent: desktop ? 0 : 26 }, { duration: 1.2, scale: 1, yPercent: 0 }, 0)
+            .fromTo(
+              picture,
+              { scale: 1.2, yPercent: desktop ? 0 : 26 },
+              { duration: 1.2, scale: 1, yPercent: 0 },
+              0,
+            )
             .to(hint, { duration: 0.15, opacity: 0 }, 0)
           if (!desktop) {
-            tl.fromTo(more, { opacity: 0, y: 20 }, { duration: 0.25, ease: 'power2.out', opacity: 1, stagger: 0.05, y: 0 }, 0.95)
+            tl.fromTo(
+              more,
+              { opacity: 0, y: 20 },
+              { duration: 0.25, ease: 'power2.out', opacity: 1, stagger: 0.05, y: 0 },
+              0.95,
+            )
           }
           tl.to({}, { duration: 0.2 })
         })
@@ -102,14 +147,24 @@ export function StoryOpener({
   }, [])
 
   return (
-    <section aria-label={label} className="relative h-svh min-h-[34rem] overflow-hidden bg-background" ref={root}>
+    <section
+      aria-label={label}
+      className="relative h-svh min-h-[34rem] overflow-hidden bg-background"
+      ref={root}
+    >
       {/* The words in ink. Desktop: the left half, always visible. Phone: above the card, until the film covers them. */}
       <div className="pointer-events-none absolute inset-x-4 top-[13%] md:inset-x-7 lg:top-auto lg:right-auto lg:bottom-[14%] lg:w-[46%]">
         <p className="caps text-[0.625rem] text-ink-soft">{label}</p>
-        <h1 className="serif-display mt-4 text-[clamp(2.75rem,5vw,5.5rem)] leading-[0.95]" data-opener-heading>
+        <h1
+          className="serif-display mt-4 text-[clamp(2.75rem,5vw,5.5rem)] leading-[0.95]"
+          data-opener-heading
+        >
           <Lines heading={heading} />
         </h1>
-        <p className="mt-8 hidden max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft lg:block" data-opener-intro>
+        <p
+          className="mt-8 hidden max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft lg:block"
+          data-opener-intro
+        >
           {lede}
         </p>
       </div>
@@ -119,7 +174,10 @@ export function StoryOpener({
         section pins at the top of the screen the sticky header sits over it,
         and would cover her face. Phone: the whole screen.
       */}
-      <div className="absolute inset-0 overflow-hidden bg-ink lg:top-24 lg:left-1/2" data-opener-frame>
+      <div
+        className="absolute inset-0 overflow-hidden bg-ink lg:top-24 lg:left-1/2"
+        data-opener-frame
+      >
         <div className="absolute inset-0" data-opener-picture>
           <InViewFilm
             className="object-[50%_8%]"
@@ -134,11 +192,17 @@ export function StoryOpener({
           <div className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/10 to-ink/40" />
           <div className="absolute inset-x-4 top-[13%] text-white md:inset-x-7">
             <p className="caps text-[0.625rem] text-white/80">{label}</p>
-            <p className="serif-display mt-4 text-[clamp(2.75rem,5vw,5.5rem)] leading-[0.95]" data-opener-heading>
+            <p
+              className="serif-display mt-4 text-[clamp(2.75rem,5vw,5.5rem)] leading-[0.95]"
+              data-opener-heading
+            >
               <Lines heading={heading} />
             </p>
           </div>
-          <p className="absolute inset-x-4 bottom-[10%] max-w-xs text-[0.9375rem] leading-relaxed text-white/90 md:inset-x-7" data-opener-more>
+          <p
+            className="absolute inset-x-4 bottom-[10%] max-w-xs text-[0.9375rem] leading-relaxed text-white/90 md:inset-x-7"
+            data-opener-more
+          >
             {lede}
           </p>
         </div>

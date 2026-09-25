@@ -2,11 +2,20 @@ import type { CollectionAfterChangeHook } from 'payload'
 
 import type { Order, Product, SiteSetting, Transaction, Variant } from '@/payload-types'
 
-import { scheduleStockAlert, type StockEvent, stockAlertSettings, stockEventFor } from '@/email/stockAlert'
+import {
+  scheduleStockAlert,
+  type StockEvent,
+  stockAlertSettings,
+  stockEventFor,
+} from '@/email/stockAlert'
 import { sizeLabel } from '@/lib/pricing/stock'
 
 const idOf = (value: unknown): null | number =>
-  typeof value === 'number' ? value : value && typeof value === 'object' && 'id' in value ? Number((value as { id: unknown }).id) : null
+  typeof value === 'number'
+    ? value
+    : value && typeof value === 'object' && 'id' in value
+      ? Number((value as { id: unknown }).id)
+      : null
 
 /**
  * Stock after a payment settles — the safety net under `@/lib/pricing/stock`.
@@ -27,13 +36,19 @@ const idOf = (value: unknown): null | number =>
  *   - a stock alert is scheduled for whatever she asked to hear about
  *     (Site settings → Stock alerts; see `@/email/stockAlert`).
  */
-export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({ doc, previousDoc, req }) => {
+export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({
+  doc,
+  previousDoc,
+  req,
+}) => {
   if (doc.status !== 'succeeded' || previousDoc?.status === 'succeeded') return doc
   const orderID = idOf(doc.order)
   if (!orderID) return doc
 
   const settings = stockAlertSettings(
-    (await req.payload.findGlobal({ depth: 0, req, slug: 'siteSettings' }).catch(() => ({}))) as Partial<SiteSetting>,
+    (await req.payload
+      .findGlobal({ depth: 0, req, slug: 'siteSettings' })
+      .catch(() => ({}))) as Partial<SiteSetting>,
   )
   const events: StockEvent[] = []
   const notes: string[] = []
@@ -51,14 +66,24 @@ export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({ d
     if (!record) continue
 
     const product = variantID
-      ? ((await req.payload.findByID({ collection: 'products', depth: 0, id: productID, overrideAccess: true, req }).catch(() => null)) as null | Product)
+      ? ((await req.payload
+          .findByID({ collection: 'products', depth: 0, id: productID, overrideAccess: true, req })
+          .catch(() => null)) as null | Product)
       : (record as Product)
     const madeToOrder = product?.madeToOrder !== false
     // "Al Shaheen Nights, size M" — the storefront's own wording.
-    const what = product ? sizeLabel(product, variantID ? (record as Variant) : null) : ((record as Variant).title ?? `item ${id}`)
+    const what = product
+      ? sizeLabel(product, variantID ? (record as Variant) : null)
+      : ((record as Variant).title ?? `item ${id}`)
     const after = record.inventory ?? 0
 
-    const event = stockEventFor({ after, before: after + (item.quantity ?? 0), label: what, madeToOrder, threshold: settings.threshold })
+    const event = stockEventFor({
+      after,
+      before: after + (item.quantity ?? 0),
+      label: what,
+      madeToOrder,
+      threshold: settings.threshold,
+    })
     if (event) events.push(event)
 
     if (after < 0) {
@@ -72,18 +97,31 @@ export const stockAfterSale: CollectionAfterChangeHook<Transaction> = async ({ d
   }
 
   if (notes.length) {
-    const order = (await req.payload.findByID({ collection: 'orders', depth: 0, id: orderID, overrideAccess: true, req })) as Order
+    const order = (await req.payload.findByID({
+      collection: 'orders',
+      depth: 0,
+      id: orderID,
+      overrideAccess: true,
+      req,
+    })) as Order
     const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ')
     await req.payload.update({
       collection: 'orders',
       // Only the note changes: no order emails, no storefront refresh for it.
       context: { disableRevalidate: true, skipOrderEmails: true },
-      data: { adminNotes: [order.adminNotes, ...notes.map((n) => `[${stamp}] ${n}`)].filter(Boolean).join('\n') },
+      data: {
+        adminNotes: [order.adminNotes, ...notes.map((n) => `[${stamp}] ${n}`)]
+          .filter(Boolean)
+          .join('\n'),
+      },
       id: orderID,
       overrideAccess: true,
       req,
     })
-    req.payload.logger.warn({ notes, order: orderID }, 'Stock went beyond what was ready; clamped to zero and noted on the order.')
+    req.payload.logger.warn(
+      { notes, order: orderID },
+      'Stock went beyond what was ready; clamped to zero and noted on the order.',
+    )
   }
 
   scheduleStockAlert(req.payload, { events, orderId: orderID, settings })

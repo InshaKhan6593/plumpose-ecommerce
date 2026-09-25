@@ -27,7 +27,11 @@ export const metadata: Metadata = {
  * A signed-in customer's most recent saved address is passed in to pre-fill
  * the form (their account's address book, /account/addresses).
  */
-export default async function Checkout({ searchParams }: { searchParams: Promise<{ payment?: string }> }) {
+export default async function Checkout({
+  searchParams,
+}: {
+  searchParams: Promise<{ payment?: string }>
+}) {
   const { payload, user } = await getSessionUser()
   const { payment } = await searchParams
 
@@ -80,7 +84,9 @@ export default async function Checkout({ searchParams }: { searchParams: Promise
         addressLine2: latest.addressLine2 ?? '',
         city: latest.city ?? '',
         cityKey:
-          latest.country === QATAR_COUNTRY_CODE ? (cityList.find((c) => c.name === latest.city)?.key ?? '') : '',
+          latest.country === QATAR_COUNTRY_CODE
+            ? (cityList.find((c) => c.name === latest.city)?.key ?? '')
+            : '',
         country: latest.country,
         firstName: latest.firstName ?? '',
         lastName: latest.lastName ?? '',

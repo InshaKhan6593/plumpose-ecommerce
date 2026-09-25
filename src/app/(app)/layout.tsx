@@ -71,7 +71,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
      * shows everything after 2.5s.
      */
     <html
-      className={[fraunces.variable, jost.variable, GeistMono.variable, 'js-motion'].filter(Boolean).join(' ')}
+      className={[fraunces.variable, jost.variable, GeistMono.variable, 'js-motion']
+        .filter(Boolean)
+        .join(' ')}
       data-theme="light"
       lang="en"
       suppressHydrationWarning

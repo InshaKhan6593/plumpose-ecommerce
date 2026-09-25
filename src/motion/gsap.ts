@@ -34,7 +34,8 @@ export const MOTION = {
  * descenders (the y of "differently", the g of "gathering") are not cut off by
  * a tight line-height.
  */
-export const splitLines = (el: HTMLElement) => SplitText.create(el, { linesClass: 'split-line', mask: 'lines', type: 'lines' })
+export const splitLines = (el: HTMLElement) =>
+  SplitText.create(el, { linesClass: 'split-line', mask: 'lines', type: 'lines' })
 
 /**
  * Where a masked line starts, in % of its own height. It must clear the mask's

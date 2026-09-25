@@ -5,7 +5,8 @@ import { checkRole } from '@/access/utilities'
 import { spottedSubmitEndpoint } from '@/endpoints/spottedSubmit'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 
-const adminField: FieldAccess = ({ req: { user } }) => Boolean(user && checkRole(['admin'], user as never))
+const adminField: FieldAccess = ({ req: { user } }) =>
+  Boolean(user && checkRole(['admin'], user as never))
 
 /**
  * A customer's photograph she rejects is deleted, not kept: they sent it to be
@@ -16,9 +17,14 @@ const deleteRejectedPhoto: CollectionAfterChangeHook = async ({ doc, previousDoc
   if (!doc.submitted || doc.status !== 'rejected' || previousDoc?.status === 'rejected') return doc
   const imageId = typeof doc.image === 'object' ? doc.image?.id : doc.image
   if (!imageId) return doc
-  await req.payload.delete({ collection: 'media', id: imageId, overrideAccess: true, req }).catch((error: unknown) => {
-    req.payload.logger.error({ err: error, spotted: doc.id }, 'Could not delete a rejected Spotted photograph.')
-  })
+  await req.payload
+    .delete({ collection: 'media', id: imageId, overrideAccess: true, req })
+    .catch((error: unknown) => {
+      req.payload.logger.error(
+        { err: error, spotted: doc.id },
+        'Could not delete a rejected Spotted photograph.',
+      )
+    })
   return doc
 }
 
@@ -94,7 +100,11 @@ export const Spotted: CollectionConfig = {
       name: 'submitted',
       type: 'checkbox',
       access: { update: () => false },
-      admin: { description: 'Sent in by the customer through the Spotted page.', position: 'sidebar', readOnly: true },
+      admin: {
+        description: 'Sent in by the customer through the Spotted page.',
+        position: 'sidebar',
+        readOnly: true,
+      },
       defaultValue: false,
       label: 'Sent in from the site',
     },
@@ -102,7 +112,11 @@ export const Spotted: CollectionConfig = {
       name: 'consent',
       type: 'checkbox',
       access: { update: () => false },
-      admin: { description: 'They confirmed the photograph is theirs and that plumpose may share it.', position: 'sidebar', readOnly: true },
+      admin: {
+        description: 'They confirmed the photograph is theirs and that plumpose may share it.',
+        position: 'sidebar',
+        readOnly: true,
+      },
       defaultValue: false,
       label: 'Permission to share',
     },
@@ -110,7 +124,10 @@ export const Spotted: CollectionConfig = {
       name: 'email',
       type: 'email',
       access: { read: adminField },
-      admin: { description: 'Optional — theirs, if they left it. Never shown on the site.', position: 'sidebar' },
+      admin: {
+        description: 'Optional — theirs, if they left it. Never shown on the site.',
+        position: 'sidebar',
+      },
     },
     {
       /** A salted hash of the sender's address, for the per-device limit. Never the address itself. */

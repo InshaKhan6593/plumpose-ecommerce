@@ -117,7 +117,14 @@ export default async function ProductPage({ params }: Args) {
    * the drawer shows are sent — no internal notes, nothing priced.
    */
   const embroideryOptions: EmbroideryOption[] = embroideryDocs
-    ? embroideryDocs.docs.map(({ hex, key, name, note, svgPath, type }) => ({ hex, key, name, note, svgPath, type }))
+    ? embroideryDocs.docs.map(({ hex, key, name, note, svgPath, type }) => ({
+        hex,
+        key,
+        name,
+        note,
+        svgPath,
+        type,
+      }))
     : []
 
   const embroideryRules: EmbroideryRules | null = settings.personalisationFeeQar
@@ -163,7 +170,11 @@ export default async function ProductPage({ params }: Args) {
     // Approved reviews only, so the stars a search result shows are real ones.
     ...(average !== null
       ? {
-          aggregateRating: { '@type': 'AggregateRating', ratingValue: average, reviewCount: reviews.length },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: average,
+            reviewCount: reviews.length,
+          },
           review: reviews.slice(0, 5).map((r) => ({
             '@type': 'Review',
             author: { '@type': 'Person', name: r.name },
@@ -187,7 +198,11 @@ export default async function ProductPage({ params }: Args) {
             .filter((item) => item.image && typeof item.image === 'object')
             .map((item) => ({
               image: item.image as Media,
-              optionId: item.variantOption ? (typeof item.variantOption === 'object' ? item.variantOption.id : item.variantOption) : null,
+              optionId: item.variantOption
+                ? typeof item.variantOption === 'object'
+                  ? item.variantOption.id
+                  : item.variantOption
+                : null,
             }))}
         />
 
@@ -258,7 +273,9 @@ async function productDetails({
       lines.push(`International delivery from ${formatQar(range.intlLow)}, calculated at checkout.`)
     }
     if (settings.freeShippingEnabled && settings.freeShippingThresholdQar) {
-      lines.push(`Free delivery on orders over ${formatQar(toMinor(settings.freeShippingThresholdQar))}.`)
+      lines.push(
+        `Free delivery on orders over ${formatQar(toMinor(settings.freeShippingThresholdQar))}.`,
+      )
     }
     if (product.personalisationEnabled && !settings.personalisationReturnable) {
       lines.push('Personalised pieces cannot be returned.')

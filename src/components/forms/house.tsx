@@ -71,7 +71,13 @@ export function HouseButton({
 }
 
 /** A message above or below a form. `role` makes errors announce themselves. */
-export function HouseAlert({ children, tone = 'error' }: { children: React.ReactNode; tone?: 'error' | 'note' }) {
+export function HouseAlert({
+  children,
+  tone = 'error',
+}: {
+  children: React.ReactNode
+  tone?: 'error' | 'note'
+}) {
   return (
     <p
       className={cn(

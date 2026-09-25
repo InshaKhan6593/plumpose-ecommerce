@@ -62,6 +62,14 @@ export const PersonalisationOptions: CollectionConfig = {
       },
       label: 'Motif drawing',
     },
-    { name: 'active', type: 'checkbox', admin: { components: { Cell: '@/components/admin/BooleanCell#BooleanCell' }, position: 'sidebar' }, defaultValue: true },
+    {
+      name: 'active',
+      type: 'checkbox',
+      admin: {
+        components: { Cell: '@/components/admin/BooleanCell#BooleanCell' },
+        position: 'sidebar',
+      },
+      defaultValue: true,
+    },
   ],
 }

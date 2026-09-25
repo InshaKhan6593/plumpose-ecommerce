@@ -40,8 +40,22 @@ describe('enquiry alert', () => {
   })
 
   it('does not reply to an address that is not one, or to a test domain', () => {
-    const bad = buildEnquiryAlert({ adminUrl: 'x', labels, rows: [['email', 'not-an-email'], ['message', 'hi']] })
-    const test = buildEnquiryAlert({ adminUrl: 'x', labels, rows: [['email', 'a@plumpose.local'], ['message', 'hi']] })
+    const bad = buildEnquiryAlert({
+      adminUrl: 'x',
+      labels,
+      rows: [
+        ['email', 'not-an-email'],
+        ['message', 'hi'],
+      ],
+    })
+    const test = buildEnquiryAlert({
+      adminUrl: 'x',
+      labels,
+      rows: [
+        ['email', 'a@plumpose.local'],
+        ['message', 'hi'],
+      ],
+    })
     expect(bad.replyTo).toBeUndefined()
     expect(test.replyTo).toBeUndefined()
     expect(bad.subject).toBe('New enquiry: Someone')
@@ -58,8 +72,12 @@ describe('password reset link', () => {
   })
 
   it('sends the client and her staff to the admin reset screen', () => {
-    expect(passwordResetHtml({ token, user: { roles: ['admin'] } })).toContain(`/admin/reset/${token}`)
-    expect(passwordResetHtml({ token, user: { roles: ['staff'] } })).toContain(`/admin/reset/${token}`)
+    expect(passwordResetHtml({ token, user: { roles: ['admin'] } })).toContain(
+      `/admin/reset/${token}`,
+    )
+    expect(passwordResetHtml({ token, user: { roles: ['staff'] } })).toContain(
+      `/admin/reset/${token}`,
+    )
   })
 
   it('treats an account with no roles as a customer', () => {

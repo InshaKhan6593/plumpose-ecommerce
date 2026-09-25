@@ -30,13 +30,18 @@ export function PageHeading({
   title: string
 }) {
   return (
-    <Reveal className={cn(align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-2xl', className)}>
+    <Reveal
+      className={cn(align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-2xl', className)}
+    >
       {label ? (
         <p className="caps text-[0.625rem] text-ink-soft" data-reveal>
           {label}
         </p>
       ) : null}
-      <h1 className={cn('serif-display text-[clamp(3rem,6vw,5.5rem)]', label && 'mt-5')} data-reveal-lines>
+      <h1
+        className={cn('serif-display text-[clamp(3rem,6vw,5.5rem)]', label && 'mt-5')}
+        data-reveal-lines
+      >
         {title}
       </h1>
       {intro ? (
@@ -49,12 +54,26 @@ export function PageHeading({
 }
 
 /** Page width and side gutters, as the shop and the homepage use. */
-export function PageShell({ children, className }: { children: React.ReactNode; className?: string }) {
+export function PageShell({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return <div className={cn('mx-auto max-w-[90rem] px-4 md:px-7', className)}>{children}</div>
 }
 
 /** A small caps label with a hairline under it — a section's heading inside a page. */
-export function SectionLabel({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) {
+export function SectionLabel({
+  children,
+  className,
+  id,
+}: {
+  children: React.ReactNode
+  className?: string
+  id?: string
+}) {
   return (
     <h2 className={cn('caps border-b border-line pb-4 text-[0.6875rem]', className)} id={id}>
       {children}
@@ -98,7 +117,11 @@ export function SplitBand({
     >
       {film || image ? (
         <RevealImage
-          className={cn('relative aspect-[4/5] overflow-hidden bg-paper-3', reverse && 'lg:order-2', imageClassName)}
+          className={cn(
+            'relative aspect-[4/5] overflow-hidden bg-paper-3',
+            reverse && 'lg:order-2',
+            imageClassName,
+          )}
         >
           {film ? (
             <InViewFilm className={imgClassName} film={film} label={film.label} />
@@ -113,7 +136,11 @@ export function SplitBand({
           )}
         </RevealImage>
       ) : null}
-      <Reveal className={cn('lg:max-w-xl', reverse ? 'lg:order-1 lg:justify-self-end' : 'lg:pr-10')}>{children}</Reveal>
+      <Reveal
+        className={cn('lg:max-w-xl', reverse ? 'lg:order-1 lg:justify-self-end' : 'lg:pr-10')}
+      >
+        {children}
+      </Reveal>
     </section>
   )
 }
@@ -151,11 +178,26 @@ export function Prose({
 }
 
 /** An underlined small caps link — the house secondary action. */
-export function TextLink({ children, className, href }: { children: React.ReactNode; className?: string; href: string }) {
+export function TextLink({
+  children,
+  className,
+  href,
+}: {
+  children: React.ReactNode
+  className?: string
+  href: string
+}) {
   const external = /^(https?:|mailto:)/.test(href)
-  const cls = cn('caps inline-block border-b border-ink pb-1 text-[0.625rem] transition-opacity hover:opacity-60', className)
+  const cls = cn(
+    'caps inline-block border-b border-ink pb-1 text-[0.625rem] transition-opacity hover:opacity-60',
+    className,
+  )
   return external ? (
-    <a className={cls} href={href} {...(href.startsWith('http') ? { rel: 'noopener noreferrer', target: '_blank' } : {})}>
+    <a
+      className={cls}
+      href={href}
+      {...(href.startsWith('http') ? { rel: 'noopener noreferrer', target: '_blank' } : {})}
+    >
       {children}
     </a>
   ) : (
@@ -166,10 +208,21 @@ export function TextLink({ children, className, href }: { children: React.ReactN
 }
 
 /** The solid ink button. */
-export function ButtonLink({ children, className, href }: { children: React.ReactNode; className?: string; href: string }) {
+export function ButtonLink({
+  children,
+  className,
+  href,
+}: {
+  children: React.ReactNode
+  className?: string
+  href: string
+}) {
   return (
     <Link
-      className={cn('caps inline-flex h-12 items-center bg-ink px-12 text-[0.6875rem] text-white transition-colors hover:bg-ink/85', className)}
+      className={cn(
+        'caps inline-flex h-12 items-center bg-ink px-12 text-[0.6875rem] text-white transition-colors hover:bg-ink/85',
+        className,
+      )}
       href={href}
     >
       {children}
@@ -190,12 +243,21 @@ export function ClosingBand({
   line: string
 }) {
   return (
-    <Reveal as="section" className={cn('mx-4 bg-paper-3 px-6 py-20 text-center md:mx-7 md:py-28', className)}>
-      <p className="serif-italic mx-auto max-w-2xl text-[clamp(1.75rem,3vw,2.5rem)] leading-snug" data-reveal>
+    <Reveal
+      as="section"
+      className={cn('mx-4 bg-paper-3 px-6 py-20 text-center md:mx-7 md:py-28', className)}
+    >
+      <p
+        className="serif-italic mx-auto max-w-2xl text-[clamp(1.75rem,3vw,2.5rem)] leading-snug"
+        data-reveal
+      >
         {line}
       </p>
       {body ? (
-        <p className="mx-auto mt-5 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft" data-reveal>
+        <p
+          className="mx-auto mt-5 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft"
+          data-reveal
+        >
           {body}
         </p>
       ) : null}

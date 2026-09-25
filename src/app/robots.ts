@@ -16,7 +16,21 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         allow: '/',
-        disallow: ['/admin', '/api/', '/checkout', '/account', '/orders', '/order/', '/login', '/create-account', '/forgot-password', '/reset-password', '/logout', '/find-order', '/next/'],
+        disallow: [
+          '/admin',
+          '/api/',
+          '/checkout',
+          '/account',
+          '/orders',
+          '/order/',
+          '/login',
+          '/create-account',
+          '/forgot-password',
+          '/reset-password',
+          '/logout',
+          '/find-order',
+          '/next/',
+        ],
         userAgent: '*',
       },
     ],

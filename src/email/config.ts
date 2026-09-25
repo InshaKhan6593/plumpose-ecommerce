@@ -30,7 +30,10 @@ export const parseFrom = (raw: string | undefined): { address: string; name: str
 
   const match = value.match(/^(.*?)\s*<([^>]+)>$/)
   if (match) {
-    return { address: match[2].trim(), name: match[1].trim().replace(/^"|"$/g, '') || DEFAULT_FROM.name }
+    return {
+      address: match[2].trim(),
+      name: match[1].trim().replace(/^"|"$/g, '') || DEFAULT_FROM.name,
+    }
   }
 
   return { address: value, name: DEFAULT_FROM.name }

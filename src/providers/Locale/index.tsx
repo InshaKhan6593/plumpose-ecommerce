@@ -19,7 +19,12 @@ import { formatQar, type Minor } from '@/lib/pricing/money'
 
 export type LocaleOptions = {
   anchorQar: number
-  countries: Array<{ blockedReason: null | string; code: string; currencyCode: string; name: string }>
+  countries: Array<{
+    blockedReason: null | string
+    code: string
+    currencyCode: string
+    name: string
+  }>
   currencies: DisplayCurrency[]
   enabled: boolean
 }
@@ -55,7 +60,10 @@ const read = <T,>(storage: 'local' | 'session', key: string): null | T => {
 }
 const write = (storage: 'local' | 'session', key: string, value: unknown) => {
   try {
-    ;(storage === 'local' ? window.localStorage : window.sessionStorage).setItem(key, JSON.stringify(value))
+    ;(storage === 'local' ? window.localStorage : window.sessionStorage).setItem(
+      key,
+      JSON.stringify(value),
+    )
   } catch {
     /* storage unavailable: the choice lasts for this page only */
   }
@@ -93,7 +101,11 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const apply = useCallback((next: Stored & { enabled: boolean }) => {
     setState(next)
-    write('local', KEY, { anchorQar: next.anchorQar, country: next.country, currency: next.currency })
+    write('local', KEY, {
+      anchorQar: next.anchorQar,
+      country: next.country,
+      currency: next.currency,
+    })
   }, [])
 
   useEffect(() => {
@@ -106,8 +118,15 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       void fetchOptions().then((options) => {
         write('session', FRESH_KEY, true)
         if (!options) return
-        const currency = stored.currency ? (options.currencies.find((c) => c.code === stored.currency?.code) ?? null) : null
-        apply({ anchorQar: options.anchorQar, country: stored.country, currency: options.enabled ? currency : null, enabled: options.enabled })
+        const currency = stored.currency
+          ? (options.currencies.find((c) => c.code === stored.currency?.code) ?? null)
+          : null
+        apply({
+          anchorQar: options.anchorQar,
+          country: stored.country,
+          currency: options.enabled ? currency : null,
+          enabled: options.enabled,
+        })
       })
       return
     }
@@ -115,15 +134,26 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     // First visit: where are they?
     void fetch('/api/locale')
       .then((res) => res.json())
-      .then(async (found: { anchorQar: number; detected: { country: LocaleCountry | null; currencyCode: string }; enabled: boolean }) => {
-        const country = found.detected.country ? { code: found.detected.country.code, name: found.detected.country.name } : null
-        let currency: DisplayCurrency | null = null
-        if (found.enabled && found.detected.currencyCode !== BASE_CURRENCY) {
-          currency = (await fetchOptions())?.currencies.find((c) => c.code === found.detected.currencyCode) ?? null
-        }
-        write('session', FRESH_KEY, true)
-        apply({ anchorQar: found.anchorQar, country, currency, enabled: found.enabled })
-      })
+      .then(
+        async (found: {
+          anchorQar: number
+          detected: { country: LocaleCountry | null; currencyCode: string }
+          enabled: boolean
+        }) => {
+          const country = found.detected.country
+            ? { code: found.detected.country.code, name: found.detected.country.name }
+            : null
+          let currency: DisplayCurrency | null = null
+          if (found.enabled && found.detected.currencyCode !== BASE_CURRENCY) {
+            currency =
+              (await fetchOptions())?.currencies.find(
+                (c) => c.code === found.detected.currencyCode,
+              ) ?? null
+          }
+          write('session', FRESH_KEY, true)
+          apply({ anchorQar: found.anchorQar, country, currency, enabled: found.enabled })
+        },
+      )
       .catch(() => undefined)
   }, [apply])
 
@@ -131,8 +161,15 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     async ({ country, currencyCode }) => {
       const options = await fetchOptions()
       const currency =
-        currencyCode === BASE_CURRENCY ? null : (options?.currencies.find((c) => c.code === currencyCode) ?? null)
-      apply({ anchorQar: options?.anchorQar ?? state.anchorQar, country, currency, enabled: options?.enabled ?? state.enabled })
+        currencyCode === BASE_CURRENCY
+          ? null
+          : (options?.currencies.find((c) => c.code === currencyCode) ?? null)
+      apply({
+        anchorQar: options?.anchorQar ?? state.anchorQar,
+        country,
+        currency,
+        enabled: options?.enabled ?? state.enabled,
+      })
     },
     [apply, state.anchorQar, state.enabled],
   )
@@ -159,7 +196,10 @@ export const useLocale = () => useContext(Context)
 /** Formats QAR amounts (minor units) for this visitor. */
 export const useMoney = () => {
   const { anchorQar, currency } = useLocale()
-  return useCallback((minor: Minor) => displayMinor(minor, currency, anchorQar), [anchorQar, currency])
+  return useCallback(
+    (minor: Minor) => displayMinor(minor, currency, anchorQar),
+    [anchorQar, currency],
+  )
 }
 
 /**

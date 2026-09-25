@@ -51,7 +51,8 @@ export const stockAlertSettings = (settings: Partial<SiteSetting>): StockAlertSe
   return {
     enabled: settings.stockAlertsEnabled !== false,
     kinds,
-    recipient: settings.stockAlertEmail || settings.orderAlertEmail || settings.contactEmail || null,
+    recipient:
+      settings.stockAlertEmail || settings.orderAlertEmail || settings.contactEmail || null,
     threshold: Math.max(0, settings.lowStockThreshold ?? 2),
   }
 }
@@ -91,7 +92,9 @@ const describe = (event: StockEvent): string => {
       : `OVERSOLD by ${event.beyond}. Contact the customer.`
   }
   if (event.kind === 'soldOut') {
-    return event.madeToOrder ? 'None ready. New orders will be made to order.' : 'None left. It shows as sold out.'
+    return event.madeToOrder
+      ? 'None ready. New orders will be made to order.'
+      : 'None left. It shows as sold out.'
   }
   return `${event.stock} left.`
 }
@@ -115,11 +118,17 @@ export const buildStockAlert = (args: {
     body: [
       label(`Stock · order no. ${args.orderId}`),
       heading(worst === 'Oversold' ? 'An order went beyond stock' : 'Stock has changed'),
-      table(args.events.map((e) => row(`${esc(e.label)} — ${esc(TITLES[e.kind])}`, esc(describe(e)))).join('')),
+      table(
+        args.events
+          .map((e) => row(`${esc(e.label)} — ${esc(TITLES[e.kind])}`, esc(describe(e))))
+          .join(''),
+      ),
       rule(),
       paragraph('Update the figures under Shop → Sizes &amp; stock when new pieces are ready.'),
       button(args.adminUrl, 'Open sizes & stock'),
-      muted('You get this because stock alerts are on in Site settings → Stock alerts, where you can change them or turn them off.'),
+      muted(
+        'You get this because stock alerts are on in Site settings → Stock alerts, where you can change them or turn them off.',
+      ),
     ].join('\n'),
     footer: {},
     preheader: `${worst}: ${names}`,
@@ -141,19 +150,32 @@ export const buildStockAlert = (args: {
  * committed — the rule every shop email follows (./sendOrderEmail.ts). The
  * order is re-read on a fresh connection; if it rolled back, nothing is sent.
  */
-export const scheduleStockAlert = (payload: Payload, args: { events: StockEvent[]; orderId: number; settings: StockAlertSettings }) => {
+export const scheduleStockAlert = (
+  payload: Payload,
+  args: { events: StockEvent[]; orderId: number; settings: StockAlertSettings },
+) => {
   const events = args.events.filter((e) => args.settings.kinds.has(e.kind))
   const to = args.settings.recipient
-  if (!args.settings.enabled || !events.length || !to || isUndeliverable(to) || !isEmailEnabled()) return
+  if (!args.settings.enabled || !events.length || !to || isUndeliverable(to) || !isEmailEnabled())
+    return
 
   runAfterResponse(payload, async () => {
-    const committed = await payload.findByID({ collection: 'orders', depth: 0, id: args.orderId, overrideAccess: true }).catch(() => null)
+    const committed = await payload
+      .findByID({ collection: 'orders', depth: 0, id: args.orderId, overrideAccess: true })
+      .catch(() => null)
     if (!committed) return
 
-    const email = buildStockAlert({ adminUrl: `${siteUrl()}/admin/collections/variants`, events, orderId: args.orderId })
+    const email = buildStockAlert({
+      adminUrl: `${siteUrl()}/admin/collections/variants`,
+      events,
+      orderId: args.orderId,
+    })
     try {
       await payload.sendEmail({ ...email, to })
-      payload.logger.info({ events: events.map((e) => `${e.kind}:${e.label}`), order: args.orderId }, 'Stock alert sent.')
+      payload.logger.info(
+        { events: events.map((e) => `${e.kind}:${e.label}`), order: args.orderId },
+        'Stock alert sent.',
+      )
     } catch (error) {
       payload.logger.error({ err: error, order: args.orderId }, 'Stock alert failed.')
     }

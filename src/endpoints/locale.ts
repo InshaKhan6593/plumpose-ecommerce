@@ -17,7 +17,9 @@ import { BASE_CURRENCY, type DisplayCurrency, isQuotable } from '@/lib/pricing/c
  */
 
 const json = (body: unknown, cache = 'no-store'): Response =>
-  new Response(JSON.stringify(body), { headers: { 'Cache-Control': cache, 'Content-Type': 'application/json' } })
+  new Response(JSON.stringify(body), {
+    headers: { 'Cache-Control': cache, 'Content-Type': 'application/json' },
+  })
 
 export type LocaleSettings = { anchorQar: number; detect: boolean; enabled: boolean }
 
@@ -44,7 +46,9 @@ const toDisplay = (c: Currency): DisplayCurrency => ({
  */
 const countryOf = (req: PayloadRequest): null | string => {
   const header =
-    req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || req.headers.get('cloudfront-viewer-country')
+    req.headers.get('x-vercel-ip-country') ||
+    req.headers.get('cf-ipcountry') ||
+    req.headers.get('cloudfront-viewer-country')
   const trial = process.env.NODE_ENV !== 'production' ? req.searchParams?.get('country') : null
   const code = (trial || header || '').trim().toUpperCase()
   return /^[A-Z]{2}$/.test(code) && code !== 'XX' && code !== 'T1' ? code : null
@@ -52,7 +56,9 @@ const countryOf = (req: PayloadRequest): null | string => {
 
 export const localeEndpoint: Endpoint = {
   handler: async (req) => {
-    const settings = localeSettings((await req.payload.findGlobal({ depth: 0, slug: 'siteSettings' })) as Partial<SiteSetting>)
+    const settings = localeSettings(
+      (await req.payload.findGlobal({ depth: 0, slug: 'siteSettings' })) as Partial<SiteSetting>,
+    )
     const code = settings.enabled && settings.detect ? countryOf(req) : null
 
     let country: null | Pick<Country, 'blockedReason' | 'code' | 'name'> = null
@@ -60,15 +66,26 @@ export const localeEndpoint: Endpoint = {
 
     if (code) {
       const found = (
-        await req.payload.find({ collection: 'countries', depth: 0, limit: 1, where: { code: { equals: code } } })
+        await req.payload.find({
+          collection: 'countries',
+          depth: 0,
+          limit: 1,
+          where: { code: { equals: code } },
+        })
       ).docs[0] as Country | undefined
       if (found) {
         country = { blockedReason: found.blockedReason ?? null, code: found.code, name: found.name }
         const currency = (
-          await req.payload.find({ collection: 'currencies', depth: 0, limit: 1, where: { code: { equals: found.currencyCode } } })
+          await req.payload.find({
+            collection: 'currencies',
+            depth: 0,
+            limit: 1,
+            where: { code: { equals: found.currencyCode } },
+          })
         ).docs[0] as Currency | undefined
         // Only a currency she can quote in; otherwise the visitor starts in QAR.
-        if (currency && isQuotable(toDisplay(currency), settings.anchorQar)) currencyCode = currency.code
+        if (currency && isQuotable(toDisplay(currency), settings.anchorQar))
+          currencyCode = currency.code
       }
     }
 
@@ -80,10 +97,24 @@ export const localeEndpoint: Endpoint = {
 
 export const localeOptionsEndpoint: Endpoint = {
   handler: async (req) => {
-    const settings = localeSettings((await req.payload.findGlobal({ depth: 0, slug: 'siteSettings' })) as Partial<SiteSetting>)
+    const settings = localeSettings(
+      (await req.payload.findGlobal({ depth: 0, slug: 'siteSettings' })) as Partial<SiteSetting>,
+    )
     const [countries, currencies] = await Promise.all([
-      req.payload.find({ collection: 'countries', depth: 0, limit: 500, pagination: false, sort: 'name' }),
-      req.payload.find({ collection: 'currencies', depth: 0, limit: 500, pagination: false, sort: 'code' }),
+      req.payload.find({
+        collection: 'countries',
+        depth: 0,
+        limit: 500,
+        pagination: false,
+        sort: 'name',
+      }),
+      req.payload.find({
+        collection: 'currencies',
+        depth: 0,
+        limit: 500,
+        pagination: false,
+        sort: 'code',
+      }),
     ])
 
     return json(
@@ -95,7 +126,9 @@ export const localeOptionsEndpoint: Endpoint = {
           currencyCode: c.currencyCode,
           name: c.name,
         })),
-        currencies: (currencies.docs as Currency[]).map(toDisplay).filter((c) => isQuotable(c, settings.anchorQar)),
+        currencies: (currencies.docs as Currency[])
+          .map(toDisplay)
+          .filter((c) => isQuotable(c, settings.anchorQar)),
       },
       // Five minutes: a price she changes shows within that, and the list is not fetched on every page.
       'public, max-age=300',

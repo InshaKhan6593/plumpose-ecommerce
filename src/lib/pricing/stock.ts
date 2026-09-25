@@ -24,15 +24,18 @@ import type { Product, Variant } from '@/payload-types'
 export type StockLine = { product: Product; quantity: number; variant?: null | Variant }
 
 /** What is available to sell: stock never counts below zero, whatever the database says. */
-export const readyStock = (record: { inventory?: null | number }): number => Math.max(0, record.inventory ?? 0)
+export const readyStock = (record: { inventory?: null | number }): number =>
+  Math.max(0, record.inventory ?? 0)
 
 /**
  * The most of one size a customer may have in their bag — the storefront's
  * version of the same rule, so the button, the stepper and the server agree.
  * Unlimited when the product is made to order.
  */
-export const purchaseLimit = (product: Pick<Product, 'madeToOrder'>, record: { inventory?: null | number }): number =>
-  product.madeToOrder === false ? readyStock(record) : Number.POSITIVE_INFINITY
+export const purchaseLimit = (
+  product: Pick<Product, 'madeToOrder'>,
+  record: { inventory?: null | number },
+): number => (product.madeToOrder === false ? readyStock(record) : Number.POSITIVE_INFINITY)
 
 /** A size asked for beyond its ready stock. */
 export type StockShortage = {
@@ -76,7 +79,8 @@ export const stockShortages = (lines: StockLine[]): StockShortage[] => {
 export const stockRefusal = (lines: StockLine[]): null | string => {
   const first = stockShortages(lines).find((s) => !s.madeToOrder)
   if (!first) return null
-  if (first.available === 0) return `${first.label} is sold out. Please remove it from your bag or choose another size.`
+  if (first.available === 0)
+    return `${first.label} is sold out. Please remove it from your bag or choose another size.`
   return `Only ${first.available} left in ${first.label}. Please lower the quantity in your bag.`
 }
 
@@ -105,8 +109,12 @@ export const sizeLabel = (product: Product, variant?: null | Variant): string =>
   const name = product.title.split(' — ')[0]
   const title = variant?.title ?? ''
   // The plugin titles a variant "<product> — S — Noir": what follows the product's own title is the choice.
-  const rest = title.startsWith(`${product.title} — `) ? title.slice(product.title.length + 3) : title.split(' — ').pop()
+  const rest = title.startsWith(`${product.title} — `)
+    ? title.slice(product.title.length + 3)
+    : title.split(' — ').pop()
   const choice = rest?.split(' — ').join(' / ')
   if (!choice || choice === product.title) return name
-  return /^(XXS|XS|S|M|L|XL|XXL|\d+)$/i.test(choice.trim()) ? `${name}, size ${choice}` : `${name} (${choice})`
+  return /^(XXS|XS|S|M|L|XL|XXL|\d+)$/i.test(choice.trim())
+    ? `${name}, size ${choice}`
+    : `${name} (${choice})`
 }

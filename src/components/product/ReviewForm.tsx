@@ -42,7 +42,8 @@ export function ReviewForm({ productId }: { productId: number }) {
     const form = new FormData(event.currentTarget)
     const local: Errors = {}
     if (!rating) local.rating = 'Please choose from one to five stars.'
-    if (String(form.get('body') ?? '').trim().length < 10) local.body = 'Please write a few words — at least a sentence.'
+    if (String(form.get('body') ?? '').trim().length < 10)
+      local.body = 'Please write a few words — at least a sentence.'
     setErrors(local)
     setFailure('')
     if (Object.keys(local).length) return
@@ -67,9 +68,15 @@ export function ReviewForm({ productId }: { productId: number }) {
         return
       }
       // Payload's validation errors: [{ data: { errors: [{ path, message }] } }]
-      const json = (await res.json().catch(() => null)) as null | { errors?: Array<{ data?: { errors?: Array<{ message: string; path: string }> }; message?: string }> }
+      const json = (await res.json().catch(() => null)) as null | {
+        errors?: Array<{
+          data?: { errors?: Array<{ message: string; path: string }> }
+          message?: string
+        }>
+      }
       const fieldErrors: Errors = {}
-      for (const e of json?.errors ?? []) for (const f of e.data?.errors ?? []) fieldErrors[f.path as keyof Errors] = f.message
+      for (const e of json?.errors ?? [])
+        for (const f of e.data?.errors ?? []) fieldErrors[f.path as keyof Errors] = f.message
       if (Object.keys(fieldErrors).length) setErrors(fieldErrors)
       else setFailure('That didn’t send. Please try again in a moment.')
     } catch {
@@ -87,7 +94,12 @@ export function ReviewForm({ productId }: { productId: number }) {
         <p className="caps text-[0.5625rem] text-ink-soft" id="review-rating-label">
           Your rating
         </p>
-        <div aria-labelledby="review-rating-label" className="mt-3 flex gap-1" onMouseLeave={() => setHover(0)} role="radiogroup">
+        <div
+          aria-labelledby="review-rating-label"
+          className="mt-3 flex gap-1"
+          onMouseLeave={() => setHover(0)}
+          role="radiogroup"
+        >
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               aria-checked={rating === n}
@@ -99,21 +111,55 @@ export function ReviewForm({ productId }: { productId: number }) {
               role="radio"
               type="button"
             >
-              <svg aria-hidden fill={n <= shown ? 'currentColor' : 'none'} height={24} stroke="currentColor" strokeWidth={1.2} viewBox="0 0 24 24" width={24}>
-                <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" strokeLinejoin="round" />
+              <svg
+                aria-hidden
+                fill={n <= shown ? 'currentColor' : 'none'}
+                height={24}
+                stroke="currentColor"
+                strokeWidth={1.2}
+                viewBox="0 0 24 24"
+                width={24}
+              >
+                <path
+                  d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           ))}
         </div>
-        {errors.rating ? <p className="mt-2 text-[0.8125rem] text-[#8a2424]">{errors.rating}</p> : null}
+        {errors.rating ? (
+          <p className="mt-2 text-[0.8125rem] text-[#8a2424]">{errors.rating}</p>
+        ) : null}
       </div>
 
       <div className="grid gap-7 sm:grid-cols-2">
         <HouseField error={errors.name} id="review-name" label="Your name">
-          <input aria-invalid={Boolean(errors.name)} autoComplete="name" className={houseInput} id="review-name" maxLength={80} name="name" required />
+          <input
+            aria-invalid={Boolean(errors.name)}
+            autoComplete="name"
+            className={houseInput}
+            id="review-name"
+            maxLength={80}
+            name="name"
+            required
+          />
         </HouseField>
-        <HouseField error={errors.email} hint="Never shown. Only so we can reply if needed." id="review-email" label="Email">
-          <input aria-invalid={Boolean(errors.email)} autoComplete="email" className={houseInput} id="review-email" name="email" required type="email" />
+        <HouseField
+          error={errors.email}
+          hint="Never shown. Only so we can reply if needed."
+          id="review-email"
+          label="Email"
+        >
+          <input
+            aria-invalid={Boolean(errors.email)}
+            autoComplete="email"
+            className={houseInput}
+            id="review-email"
+            name="email"
+            required
+            type="email"
+          />
         </HouseField>
       </div>
 
@@ -122,7 +168,14 @@ export function ReviewForm({ productId }: { productId: number }) {
       </HouseField>
 
       <HouseField error={errors.body} id="review-body" label="Your review">
-        <textarea aria-invalid={Boolean(errors.body)} className={cn(houseInput, 'min-h-32 resize-y')} id="review-body" maxLength={2000} name="body" required />
+        <textarea
+          aria-invalid={Boolean(errors.body)}
+          className={cn(houseInput, 'min-h-32 resize-y')}
+          id="review-body"
+          maxLength={2000}
+          name="body"
+          required
+        />
       </HouseField>
 
       {errors.product ? <HouseAlert>{errors.product}</HouseAlert> : null}

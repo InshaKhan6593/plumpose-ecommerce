@@ -44,14 +44,19 @@ export const impliedRate = (currency: DisplayCurrency, anchorQar: number): null 
 export const isQuotable = (currency: DisplayCurrency, anchorQar: number): boolean =>
   currency.code === BASE_CURRENCY || impliedRate(currency, anchorQar) !== null
 
-const roundTo = (value: number, step: number) => (!step || step <= 1 ? Math.round(value) : Math.round(value / step) * step)
+const roundTo = (value: number, step: number) =>
+  !step || step <= 1 ? Math.round(value) : Math.round(value / step) * step
 
 /**
  * A QAR amount (minor units) in the display currency, as a number of that
  * currency's units. Exact multiples of the anchor price use the hand-set price;
  * everything else converts and rounds to the currency's step.
  */
-export const convertMinor = (minor: Minor, currency: DisplayCurrency, anchorQar: number): number => {
+export const convertMinor = (
+  minor: Minor,
+  currency: DisplayCurrency,
+  anchorQar: number,
+): number => {
   const qar = (minor || 0) / MINOR_UNITS_PER_MAJOR
   if (currency.code === BASE_CURRENCY) return qar
 
@@ -65,19 +70,28 @@ export const convertMinor = (minor: Minor, currency: DisplayCurrency, anchorQar:
 }
 
 /** "AED 1,410", "€1,234", "¥20,000" — a letter symbol takes a space, a sign does not. */
-export const formatMoney = (amount: number, currency: Pick<DisplayCurrency, 'decimals' | 'symbol'>): string => {
+export const formatMoney = (
+  amount: number,
+  currency: Pick<DisplayCurrency, 'decimals' | 'symbol'>,
+): string => {
   const shown = amount.toLocaleString('en-GB', {
     maximumFractionDigits: currency.decimals,
     minimumFractionDigits: currency.decimals,
   })
-  return /^[A-Za-z]/.test(currency.symbol) ? `${currency.symbol} ${shown}` : `${currency.symbol}${shown}`
+  return /^[A-Za-z]/.test(currency.symbol)
+    ? `${currency.symbol} ${shown}`
+    : `${currency.symbol}${shown}`
 }
 
 /**
  * A QAR amount as it should read to this visitor. No currency (or QAR, or one
  * that cannot be quoted) gives the house QAR format.
  */
-export const displayMinor = (minor: Minor, currency: DisplayCurrency | null | undefined, anchorQar: number): string =>
+export const displayMinor = (
+  minor: Minor,
+  currency: DisplayCurrency | null | undefined,
+  anchorQar: number,
+): string =>
   !currency || currency.code === BASE_CURRENCY || !isQuotable(currency, anchorQar)
     ? formatQar(minor)
     : formatMoney(convertMinor(minor, currency, anchorQar), currency)

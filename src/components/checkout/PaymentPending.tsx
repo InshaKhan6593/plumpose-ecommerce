@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 /** How long to keep checking before saying so. The webhook usually lands in a second or two. */
 const TRIES = 12
@@ -12,7 +12,13 @@ const EVERY_MS = 2500
  * confirmable. It re-runs the return page every few seconds — which settles the
  * payment again — and the page redirects to the order the moment it exists.
  */
-export function PaymentPending({ contactEmail, error }: { contactEmail: null | string; error: null | string }) {
+export function PaymentPending({
+  contactEmail,
+  error,
+}: {
+  contactEmail: null | string
+  error: null | string
+}) {
   const router = useRouter()
   const [tries, setTries] = useState(0)
 
@@ -28,7 +34,10 @@ export function PaymentPending({ contactEmail, error }: { contactEmail: null | s
   const slow = tries >= TRIES
 
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-6 py-24 text-center" role="status">
+    <div
+      className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-6 py-24 text-center"
+      role="status"
+    >
       {error || slow ? (
         <>
           <h1 className="serif-display text-[clamp(2rem,4vw,3rem)] leading-tight">
@@ -50,8 +59,13 @@ export function PaymentPending({ contactEmail, error }: { contactEmail: null | s
         </>
       ) : (
         <>
-          <span aria-hidden className="block size-8 animate-spin rounded-full border border-line border-t-ink" />
-          <h1 className="serif-display mt-8 text-[clamp(2rem,4vw,3rem)] leading-tight">Confirming your payment…</h1>
+          <span
+            aria-hidden
+            className="block size-8 animate-spin rounded-full border border-line border-t-ink"
+          />
+          <h1 className="serif-display mt-8 text-[clamp(2rem,4vw,3rem)] leading-tight">
+            Confirming your payment…
+          </h1>
           <p className="mt-4 text-ink-soft">One moment — please keep this page open.</p>
         </>
       )}

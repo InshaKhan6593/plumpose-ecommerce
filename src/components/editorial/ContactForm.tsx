@@ -2,7 +2,12 @@
 
 import React, { useState } from 'react'
 
-import { HouseAlert, HouseButton, HouseField as Field, houseInput as inputClass } from '@/components/forms/house'
+import {
+  HouseAlert,
+  HouseButton,
+  HouseField as Field,
+  houseInput as inputClass,
+} from '@/components/forms/house'
 import { cn } from '@/utilities/cn'
 
 type State = 'idle' | 'sending' | 'done' | 'error'
@@ -63,7 +68,9 @@ export function ContactForm({
     return (
       <div aria-live="polite" className="border-t border-line pt-10">
         <p className="serif-display text-[2.5rem]">{thanks.heading}</p>
-        <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft">{thanks.body}</p>
+        <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft">
+          {thanks.body}
+        </p>
       </div>
     )
   }
@@ -73,13 +80,33 @@ export function ContactForm({
   return (
     <form className="grid gap-8 sm:grid-cols-2" onSubmit={submit}>
       <Field id="contact-name" label="Name">
-        <input autoComplete="name" className={inputClass} id="contact-name" maxLength={120} name="name" required />
+        <input
+          autoComplete="name"
+          className={inputClass}
+          id="contact-name"
+          maxLength={120}
+          name="name"
+          required
+        />
       </Field>
       <Field id="contact-email" label="Email">
-        <input autoComplete="email" className={inputClass} id="contact-email" maxLength={200} name="email" required type="email" />
+        <input
+          autoComplete="email"
+          className={inputClass}
+          id="contact-email"
+          maxLength={200}
+          name="email"
+          required
+          type="email"
+        />
       </Field>
       <Field id="contact-subject" label="About">
-        <select className={cn(inputClass, 'cursor-pointer')} defaultValue={matched ?? subjects[0]} id="contact-subject" name="subject">
+        <select
+          className={cn(inputClass, 'cursor-pointer')}
+          defaultValue={matched ?? subjects[0]}
+          id="contact-subject"
+          name="subject"
+        >
           {subjects.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -88,10 +115,22 @@ export function ContactForm({
         </select>
       </Field>
       <Field id="contact-order" label="Order number (if any)">
-        <input className={inputClass} id="contact-order" inputMode="numeric" maxLength={20} name="orderNumber" />
+        <input
+          className={inputClass}
+          id="contact-order"
+          inputMode="numeric"
+          maxLength={20}
+          name="orderNumber"
+        />
       </Field>
       <Field className="sm:col-span-2" id="contact-message" label="Message">
-        <textarea className={cn(inputClass, 'min-h-36 resize-y')} id="contact-message" maxLength={3000} name="message" required />
+        <textarea
+          className={cn(inputClass, 'min-h-36 resize-y')}
+          id="contact-message"
+          maxLength={3000}
+          name="message"
+          required
+        />
       </Field>
 
       {/* Honeypot — see above. */}
@@ -104,7 +143,9 @@ export function ContactForm({
         <HouseButton disabled={state === 'sending'} variant="outline">
           {state === 'sending' ? 'Sending…' : 'Send'}
         </HouseButton>
-        {state === 'error' ? <HouseAlert>That didn’t send. Please try again, or write to us directly.</HouseAlert> : null}
+        {state === 'error' ? (
+          <HouseAlert>That didn’t send. Please try again, or write to us directly.</HouseAlert>
+        ) : null}
       </div>
     </form>
   )

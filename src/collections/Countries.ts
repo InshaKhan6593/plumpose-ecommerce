@@ -20,8 +20,7 @@ export const Countries: CollectionConfig = {
   labels: { singular: 'Country', plural: 'Countries' },
   admin: {
     defaultColumns: ['name', 'code', 'currencyCode', 'zoneKey', 'blockedReason'],
-    description:
-      'Delivery destinations. A country with a blocked reason cannot be ordered to.',
+    description: 'Delivery destinations. A country with a blocked reason cannot be ordered to.',
     group: 'Shop settings',
     listSearchableFields: ['name', 'code'],
     useAsTitle: 'name',
