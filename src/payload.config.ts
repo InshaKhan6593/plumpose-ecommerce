@@ -44,6 +44,8 @@ import { quoteEndpoint } from '@/endpoints/quote'
 import { spinEndpoint, wheelEndpoint } from '@/endpoints/spin'
 import { PageText } from '@/globals/PageText'
 import { SiteSettings } from '@/globals/SiteSettings'
+import { mediaStorage } from '@/storage/r2'
+import { isLocalDatabase } from '@/utilities/database'
 import { plugins } from './plugins'
 
 const filename = fileURLToPath(import.meta.url)
@@ -106,6 +108,13 @@ export default buildConfig({
     Users,
   ],
   db: postgresAdapter({
+    /**
+     * A database on this machine follows the code by push (dev only). The
+     * live one — even with `pnpm dev` pointed at it — changes only through the
+     * migrations in `src/migrations` (`pnpm payload migrate`), never by push.
+     */
+    migrationDir: path.resolve(dirname, 'migrations'),
+    push: isLocalDatabase(),
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
@@ -166,7 +175,8 @@ export default buildConfig({
   globals: [SiteSettings, PageText],
   /** Required for the responsive imageSizes on the Media collection. */
   sharp,
-  plugins,
+  /** Photographs go to Cloudflare R2 when MEDIA_STORAGE=r2 (the host); to disk otherwise. */
+  plugins: [...plugins, ...mediaStorage()],
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

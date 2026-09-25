@@ -9,7 +9,7 @@
  * Pure, so it can be tested; the admin column and the dashboard both use it.
  */
 
-/** The hosted payment page closes after an hour (payments/stripeSandbox.ts). */
+/** SkipCash cancels a payment left unfinished after an hour (dev.skipcash.app, Webhooks). */
 export const CHECKOUT_LIFETIME_MS = 60 * 60 * 1000
 
 export type PaymentStatus =
@@ -56,9 +56,19 @@ export function paymentOutcome(args: {
   }
 }
 
-/** The gateway's own reason for a declined card, from a logged `payment_intent.payment_failed`. */
+/**
+ * The logged webhook events that mean "a card was refused during this
+ * checkout" — SkipCash's failed (4) and rejected (5). See
+ * `payments/skipcash/webhook.ts`, which names them.
+ */
+export const DECLINE_EVENTS = ['skipcash.failed', 'skipcash.rejected']
+
+/**
+ * The gateway's own reason for a declined card, from a logged callback.
+ * SkipCash sends none — only that it failed or was rejected — so a
+ * rejection says so and a plain failure adds nothing.
+ */
 export function declineReason(event: unknown): string {
-  const error = (event as { data?: { object?: { last_payment_error?: { message?: string } } } })
-    ?.data?.object?.last_payment_error
-  return typeof error?.message === 'string' ? error.message.replace(/\.$/, '') : ''
+  const statusId = Number((event as { StatusId?: unknown })?.StatusId)
+  return statusId === 5 ? 'rejected by the bank' : ''
 }

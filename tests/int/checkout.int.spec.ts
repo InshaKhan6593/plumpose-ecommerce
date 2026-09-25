@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { GIFT_NOTE_MAX, itemsForGateway, readCheckoutDetails } from '@/payments/checkoutSession'
+import { GIFT_NOTE_MAX, itemsForGateway, readCheckoutDetails } from '@/payments/checkout'
 import { customerEmailOf } from '@/email/orderEmails'
 import { orderTotalsFromSnapshot, type PricingSnapshot } from '@/payments/finaliseOrder'
 
 /**
- * The pieces of the hosted-checkout flow that run without Stripe: reading what
- * the checkout form sends, flattening the bag the way the plugin's settlement
- * check expects, and carrying the delivery details onto the order.
+ * The pieces of the checkout flow that run without the gateway: reading what
+ * the checkout form sends, flattening the bag the way the transaction records
+ * it, and carrying the delivery details onto the order.
  */
 
 describe('readCheckoutDetails', () => {
@@ -75,7 +75,7 @@ describe('readCheckoutDetails', () => {
 })
 
 describe('itemsForGateway', () => {
-  it('flattens relationships to ids and leaves personalisation out', () => {
+  it('flattens relationships to ids and leaves personalisation and row ids out', () => {
     const items = itemsForGateway([
       {
         id: 'row-1',
@@ -85,9 +85,10 @@ describe('itemsForGateway', () => {
         variant: { id: 2 },
       },
     ])
-    // The plugin compares this key by key with the stored transaction items,
-    // which have no personalisation field — so it must not be here.
-    expect(items).toEqual([{ id: 'row-1', product: 1, quantity: 2, variant: 2 }])
+    // The transaction has no personalisation field (it is read back from the
+    // cart's pricing snapshot), and a row id copied from the bag would collide
+    // when the same bag is paid for a second time.
+    expect(items).toEqual([{ product: 1, quantity: 2, variant: 2 }])
   })
 
   it('omits the variant key entirely when there is none', () => {

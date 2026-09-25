@@ -56,12 +56,10 @@ describe('payments — what happened, in words', () => {
     ).toBe('Payment failed — card declined once')
   })
 
-  it('reads the decline reason out of a logged gateway event', () => {
-    expect(
-      declineReason({
-        data: { object: { last_payment_error: { message: 'Your card was declined.' } } },
-      }),
-    ).toBe('Your card was declined')
+  it('reads the decline reason out of a logged SkipCash callback', () => {
+    // SkipCash says only failed (4) or rejected (5), never why.
+    expect(declineReason({ PaymentId: 'x', StatusId: 5 })).toBe('rejected by the bank')
+    expect(declineReason({ PaymentId: 'x', StatusId: 4 })).toBe('')
     expect(declineReason({})).toBe('')
   })
 })
@@ -90,7 +88,7 @@ describe('payments — in the admin, against the database', () => {
         currency: 'QAR',
         customerEmail: EMAIL,
         items: [],
-        paymentMethod: 'stripe',
+        paymentMethod: 'skipcash',
         status,
       } as never,
       overrideAccess: true,
@@ -120,19 +118,18 @@ describe('payments — in the admin, against the database', () => {
     const second = await payment('pending', cart.id, new Date(Date.now() - 2 * hour))
     const third = await payment('pending', cart.id)
 
-    // The gateway declined a card 100 minutes ago — during the second checkout.
+    // SkipCash rejected a card 100 minutes ago — during the second checkout.
     const log = await payload.create({
       collection: 'webhookLog',
       data: {
         applied: false,
-        event: 'payment_intent.payment_failed',
-        eventId: `evt_e2eonly_${Date.now()}`,
+        event: 'skipcash.rejected',
+        eventId: `e2eonly-${Date.now()}:5`,
         orderRef: String(cart.id),
-        payload: {
-          data: { object: { last_payment_error: { message: 'Your card was declined.' } } },
-        },
-        paymentId: 'pi_e2eonly',
+        payload: { Amount: '1399.00', PaymentId: 'e2eonly', StatusId: 5 },
+        paymentId: 'e2eonly',
         signatureValid: true,
+        statusId: 5,
       } as never,
       overrideAccess: true,
     })
@@ -155,7 +152,7 @@ describe('payments — in the admin, against the database', () => {
 
     expect(await read(first)).toBe('Not paid — left the payment page')
     expect(await read(second)).toBe(
-      'Not paid — left the payment page — card declined once ("Your card was declined")',
+      'Not paid — left the payment page — card declined once ("rejected by the bank")',
     )
     expect(await read(third)).toBe('On the payment page')
   })

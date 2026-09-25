@@ -16,9 +16,9 @@ import { runAfterResponse, sendOrderEmail } from './sendOrderEmail'
  * | Fulfilment changed to **Shipped** | "On its way", with the tracking number if one is set |
  * | "Resend confirmation" in the admin | Confirmation again, to the customer |
  *
- * Hung on the orders collection rather than on the Stripe adapter, so it
- * fires however the order was created — Stripe today, SkipCash later, or the
- * webhook when the customer closed the tab.
+ * Hung on the orders collection rather than on the payment adapter, so it
+ * fires however the order was created — by the customer's return from
+ * SkipCash, or by its webhook when they closed the tab.
  */
 export const sendOrderEmails: CollectionAfterChangeHook<Order> = ({
   context,

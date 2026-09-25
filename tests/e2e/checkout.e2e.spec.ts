@@ -1,14 +1,18 @@
 import type { APIRequestContext } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
-import Stripe from 'stripe'
 
 import { BASE } from '../helpers/base'
-import { payAndReturn, startCheckout } from '../helpers/stripeCheckout'
+import {
+  payAndReturn,
+  skipcashPayment,
+  skipcashReady,
+  startCheckout,
+} from '../helpers/skipcashCheckout'
 
 /**
- * A whole purchase, end to end, against the Stripe sandbox — through Stripe's
- * **hosted** Checkout page, the redirect flow SkipCash will also use.
+ * A whole purchase, end to end, against the SkipCash sandbox — through
+ * SkipCash's own payment page, the redirect flow the store uses.
  *
  * This is the test that proves the pieces actually meet: the pricing engine,
  * the cart, the gateway, the return page, order creation, stock and the
@@ -17,23 +21,19 @@ import { payAndReturn, startCheckout } from '../helpers/stripeCheckout'
  * created but the embroidery instructions are missing" is exactly the class of
  * bug that only appears once the whole path runs.
  *
- * Requires `PAYMENT_PROVIDER=stripe` and the Stripe test keys; skips cleanly
- * without them. Needs network access to checkout.stripe.com.
+ * Requires `PAYMENT_PROVIDER=skipcash` and the SkipCash sandbox keys; skips
+ * cleanly without them. Needs network access to skipcashtest.azurewebsites.net.
  */
 
 const DEV_USER = { email: 'dev@plumpose.local', password: 'devpassword' }
-
-const secretKey = process.env.STRIPE_SECRET_KEY
-const stripeReady = Boolean(secretKey?.startsWith('sk_test_'))
 
 /** A fresh guest per test, so per-customer discount limits never collide. */
 const shopper = (tag: string) => `e2e-${tag}-${Date.now()}@plumpose.local`
 
 test.describe('checkout, end to end', () => {
-  test.skip(!stripeReady, 'needs STRIPE_SECRET_KEY in test mode')
-  test.setTimeout(120_000)
+  test.skip(!skipcashReady, 'needs PAYMENT_PROVIDER=skipcash and the SkipCash sandbox keys')
+  test.setTimeout(150_000)
 
-  let stripe: Stripe
   let token: string
   const madeCodes: number[] = []
 
@@ -51,7 +51,6 @@ test.describe('checkout, end to end', () => {
   }
 
   test.beforeAll(async ({ request }) => {
-    stripe = new Stripe(secretKey as string)
     const login = await request.post(`${BASE}/api/users/login`, { data: DEV_USER })
     expect(login.ok(), `login as ${DEV_USER.email} failed: ${login.status()}`).toBe(true)
     token = (await login.json()).token
@@ -71,12 +70,12 @@ test.describe('checkout, end to end', () => {
   })
 
   test('charges the engine total, not the cart subtotal', async ({ request }) => {
-    const { sessionId } = await startCheckout(request, { email: shopper('total') })
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    const { paymentId } = await startCheckout(request, { email: shopper('total') })
+    const payment = await skipcashPayment(request, paymentId)
 
-    // QAR 1,399 goods + QAR 20 Doha delivery. The plugin alone would charge 139900.
-    expect(session.amount_total).toBe(141900)
-    expect(session.currency).toBe('qar')
+    // QAR 1,399 goods + QAR 20 Doha delivery. The plugin alone would charge 1399.00.
+    expect(payment.amount).toBe('1419.00')
+    expect(payment.statusId).toBe(0)
   })
 
   test('creates an order carrying the money breakdown, address and gift note', async ({
@@ -119,7 +118,7 @@ test.describe('checkout, end to end', () => {
     })
 
     // QAR 1,399 + 160 embroidery + 20 delivery.
-    expect((await stripe.checkout.sessions.retrieve(started.sessionId)).amount_total).toBe(157900)
+    expect((await skipcashPayment(request, started.paymentId)).amount).toBe('1579.00')
 
     const { orderId } = await payAndReturn(page, started.redirectURL)
     const order = await readOrder(request, orderId)
@@ -205,7 +204,7 @@ test.describe('checkout, end to end', () => {
           })
         ).json()
       ).doc
-      const res = await request.post(`${BASE}/api/payments/stripe/initiate`, {
+      const res = await request.post(`${BASE}/api/payments/skipcash/initiate`, {
         data: {
           cartID: cart.id,
           currency: 'QAR',
@@ -251,9 +250,8 @@ test.describe('checkout, end to end', () => {
     const started = await startCheckout(request, { discountCode: code, email })
 
     // 10% off QAR 1,399 goods; delivery untouched.
-    expect((await stripe.checkout.sessions.retrieve(started.sessionId)).amount_total).toBe(
-      139900 - 13990 + 2000,
-    )
+    // QAR 1,399 − 139.90 + 20.
+    expect((await skipcashPayment(request, started.paymentId)).amount).toBe('1279.10')
 
     const usage = async () =>
       (
@@ -281,27 +279,51 @@ test.describe('checkout, end to end', () => {
     expect(uses.docs[0].email).toBe(email)
   })
 
-  test('a cancelled payment leaves the bag and creates nothing', async ({ page, request }) => {
+  /**
+   * Back from SkipCash without paying — its page's own back button, or a
+   * closed card form. The return page asks SkipCash, hears "new", and sends
+   * the customer back to checkout with nothing made.
+   */
+  test('coming back without paying leaves the bag and creates nothing', async ({
+    page,
+    request,
+  }) => {
     const started = await startCheckout(request, { email: shopper('cancel') })
 
-    await page.goto(started.redirectURL)
-    await page.waitForSelector('#cardNumber', { timeout: 30_000 })
-    // Stripe's back link goes to our cancel_url.
-    await page.locator('a[href*="payment=cancelled"]').first().click()
+    await page.goto(`${BASE}/checkout/return?id=${started.paymentId}`)
     await page.waitForURL(/\/checkout\?payment=cancelled/, { timeout: 30_000 })
 
     const transactions = await (
       await request.get(
-        `${BASE}/api/transactions?where[stripe.checkoutSessionID][equals]=${started.sessionId}`,
-        {
-          headers: admin(),
-        },
+        `${BASE}/api/transactions?where[skipcash.paymentId][equals]=${started.paymentId}&depth=0`,
+        { headers: admin() },
       )
     ).json()
     expect(transactions.docs[0].status).toBe('pending')
     expect(transactions.docs[0].order ?? null).toBeNull()
+  })
 
-    await stripe.checkout.sessions.expire(started.sessionId).catch(() => undefined)
+  /**
+   * The return address is public, so anyone can put anything in it. An id
+   * SkipCash never issued, or "paid" typed into the address, must make
+   * nothing — only SkipCash's own answer counts.
+   */
+  test('a made-up return address makes no order', async ({ page, request }) => {
+    const email = shopper('forged')
+    const started = await startCheckout(request, { email })
+
+    await page.goto(`${BASE}/checkout/return?id=00000000-0000-4000-8000-000000000000&statusId=2`)
+    await expect(page.locator('main h1')).toHaveText('We could not find that payment.')
+
+    await page.goto(`${BASE}/checkout/return?id=${started.paymentId}&statusId=2&status=Paid`)
+    await page.waitForURL(/\/checkout\?payment=cancelled/, { timeout: 30_000 })
+
+    const orders = await (
+      await request.get(`${BASE}/api/orders?where[customerEmail][equals]=${email}`, {
+        headers: admin(),
+      })
+    ).json()
+    expect(orders.totalDocs).toBe(0)
   })
 
   /**
@@ -339,7 +361,7 @@ test.describe('checkout, end to end', () => {
     ).docs[0]
     test.skip(!blocked, 'no blocked country seeded')
 
-    const res = await request.post(`${BASE}/api/payments/stripe/initiate`, {
+    const res = await request.post(`${BASE}/api/payments/skipcash/initiate`, {
       data: {
         cartID: cart.id,
         currency: 'QAR',

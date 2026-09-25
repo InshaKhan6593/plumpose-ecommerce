@@ -5,7 +5,7 @@ import type { Cart } from '@/payload-types'
 import { redeemDiscount, validateDiscountCode } from '@/lib/pricing/discounts'
 import type { Minor } from '@/lib/pricing/money'
 
-import type { CheckoutAddress } from './checkoutSession'
+import type { CheckoutAddress } from './checkout'
 
 /**
  * Turning a paid cart into an order.
@@ -17,9 +17,9 @@ import type { CheckoutAddress } from './checkoutSession'
  *   1. **The money breakdown.** The plugin records a single `amount`. The
  *      order needs the parts behind it, or nobody can answer "why was this
  *      QAR 1,719?" and month-end reconciliation has nothing to check against.
- *   2. **Personalisation.** Taken from the priced lines stored on the cart, not
- *      from the gateway's metadata round-trip — Stripe caps a metadata value at
- *      500 characters, which two embroidery placements can exceed.
+ *   2. **Personalisation.** Taken from the priced lines stored on the cart —
+ *      the transaction record has no field for it, and the gateway never needs
+ *      to see it.
  *   3. **Discount redemption.** Only here, on confirmed payment — never at
  *      quote time. See `@/lib/pricing/discounts`.
  */

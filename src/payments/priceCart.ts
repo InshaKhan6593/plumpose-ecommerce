@@ -14,7 +14,7 @@ import {
 /**
  * Prices a stored cart for payment.
  *
- * This exists because of a real trap in the plugin's stock Stripe adapter:
+ * This exists because of a real trap in the plugin's own payment adapters:
  *
  * ```js
  * const amount = cart.subtotal   // adapters/stripe/initiatePayment.js

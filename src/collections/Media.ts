@@ -5,11 +5,13 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
+import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { adminOnly } from '@/access/adminOnly'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
+import { isR2MediaEnabled } from '@/storage/r2'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -69,6 +71,15 @@ export const Media: CollectionConfig = {
       { name: 'og', width: 1200, height: 630, position: 'centre' },
     ],
     mimeTypes: ['image/*'],
-    staticDir: path.resolve(dirname, '../../public/media'),
+    /**
+     * With photos in R2, nothing is written here — but Payload still looks in
+     * this folder to avoid a name clash, and `public/media` holds the local
+     * copies of the same files, so every upload came back as "brand-01-window-1.jpg"
+     * and the storefront, which finds some photos by name, lost them. An empty
+     * folder of its own avoids that.
+     */
+    staticDir: isR2MediaEnabled()
+      ? path.join(os.tmpdir(), 'plumpose-r2-media')
+      : path.resolve(dirname, '../../public/media'),
   },
 }

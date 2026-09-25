@@ -77,7 +77,7 @@ test('payments: an unpaid checkout is listed with what happened, and flagged on 
     currency: 'QAR',
     customerEmail: `${TAG}@plumpose.local`,
     items: [],
-    paymentMethod: 'stripe',
+    paymentMethod: 'skipcash',
     status: 'expired',
   })
   try {

@@ -21,11 +21,10 @@ import { cn } from '@/utilities/cn'
  * **Every figure comes from `/api/quote`** — the engine payment charges
  * through — never from the cart's own subtotal, which is goods only.
  *
- * Payment is taken on Stripe's hosted page: "Pay" asks the server to price the
- * bag again and open a Checkout Session, then the browser goes there. That is
- * SkipCash's shape too (it returns a `payUrl`), so this page survives the
- * gateway change untouched. What was typed is kept in sessionStorage, so
- * coming back from a cancelled payment does not mean typing it all again.
+ * Payment is taken on SkipCash's page: "Pay" asks the server to price the bag
+ * again and register the payment, then the browser goes to the `payUrl`
+ * SkipCash returned. What was typed is kept in sessionStorage, so coming back
+ * from a cancelled or refused payment does not mean typing it all again.
  */
 
 export type CheckoutCountry = { blockedReason: null | string; code: string; name: string }
@@ -142,15 +141,16 @@ const inputClass =
   'w-full border-0 border-b border-line bg-transparent px-0 py-2 text-[0.9375rem] text-ink placeholder:text-ink-faint transition-colors focus:border-ink focus:outline-none focus:ring-0 aria-[invalid=true]:border-[#8a2424]'
 
 export function CheckoutPage({
-  cancelled,
   cities,
   countries,
+  returned,
   saved,
   testMode,
 }: {
-  cancelled: boolean
   cities: CheckoutCity[]
   countries: CheckoutCountry[]
+  /** Back from SkipCash without paying: left the page, or the card was refused. */
+  returned: 'cancelled' | 'failed' | null
   saved?: CheckoutSavedAddress
   testMode: boolean
 }) {
@@ -172,7 +172,7 @@ export function CheckoutPage({
   const formRef = useRef<HTMLFormElement>(null)
 
   const items = useMemo(() => cart?.items ?? [], [cart])
-  const stripeReady = paymentMethods.some((m) => m.name === 'stripe')
+  const paymentsReady = paymentMethods.some((m) => m.name === 'skipcash')
 
   /*
    * A code won on the reward wheel is offered in the code field, not applied:
@@ -339,7 +339,7 @@ export function CheckoutPage({
 
     setSubmitting(true)
     try {
-      const result = (await initiatePayment('stripe', {
+      const result = (await initiatePayment('skipcash', {
         additionalData: {
           ...(user ? {} : { customerEmail: form.email.trim() }),
           billingAddress: address,
@@ -395,21 +395,24 @@ export function CheckoutPage({
           : '—'
 
   const canPay =
-    stripeReady && !submitting && !blocked && destinationReady && quoteState.status === 'ok'
+    paymentsReady && !submitting && !blocked && destinationReady && quoteState.status === 'ok'
 
   return (
     <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-24 md:px-7 md:pt-14">
       <h1 className="serif-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-none">Checkout</h1>
 
-      {cancelled ? (
+      {returned ? (
         <p
           className="mt-6 max-w-2xl border-l border-ink pl-4 text-[0.9375rem] text-ink-soft"
           role="status"
         >
-          Payment cancelled — nothing was charged. Your bag and details are just as you left them.
+          {returned === 'failed'
+            ? 'Your card was not accepted — nothing was charged. You can try again, or use another card.'
+            : 'Payment cancelled — nothing was charged.'}{' '}
+          Your bag and details are just as you left them.
         </p>
       ) : null}
-      {!stripeReady ? (
+      {!paymentsReady ? (
         <p
           className="mt-6 max-w-2xl border-l border-[#8a2424] pl-4 text-[0.9375rem] text-ink-soft"
           role="alert"
@@ -863,11 +866,12 @@ export function CheckoutPage({
             ) : null}
 
             <p className="mt-4 text-center text-xs leading-relaxed text-ink-soft">
-              You will pay on Stripe’s secure page, then come straight back here.
+              You will pay on SkipCash’s secure page, then come straight back here.
             </p>
             {testMode ? (
               <p className="mt-3 border border-line px-3 py-2 text-center text-[0.6875rem] leading-relaxed text-ink-soft">
-                Test mode — use card 4242 4242 4242 4242, any future date, any CVC. No money moves.
+                SkipCash sandbox — use card 4000 0000 0000 2503, expiry 10/28, CVV 442. No money
+                moves.
               </p>
             ) : null}
           </div>

@@ -435,6 +435,8 @@ export interface Media {
     };
     [k: string]: unknown;
   } | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1580,11 +1582,22 @@ export interface Transaction {
         id?: string | null;
       }[]
     | null;
-  paymentMethod?: 'stripe' | null;
-  stripe?: {
-    customerID?: string | null;
-    paymentIntentID?: string | null;
-    checkoutSessionID?: string | null;
+  paymentMethod?: 'skipcash' | null;
+  skipcash?: {
+    /**
+     * Our reference for this payment — the Transaction ID in the SkipCash portal.
+     */
+    reference?: string | null;
+    /**
+     * SkipCash's own id for this payment.
+     */
+    paymentId?: string | null;
+    /**
+     * The card network reference, for reconciliation. Set once paid.
+     */
+    visaId?: string | null;
+    cardType?: string | null;
+    cardNumber?: string | null;
   };
   billingAddress?: {
     title?: string | null;
@@ -2571,6 +2584,8 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -3150,12 +3165,14 @@ export interface TransactionsSelect<T extends boolean = true> {
         id?: T;
       };
   paymentMethod?: T;
-  stripe?:
+  skipcash?:
     | T
     | {
-        customerID?: T;
-        paymentIntentID?: T;
-        checkoutSessionID?: T;
+        reference?: T;
+        paymentId?: T;
+        visaId?: T;
+        cardType?: T;
+        cardNumber?: T;
       };
   billingAddress?:
     | T

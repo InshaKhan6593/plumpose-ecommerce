@@ -4,11 +4,11 @@ import configPromise from '@payload-config'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
-import Stripe from 'stripe'
 
 import { PaymentPending } from '@/components/checkout/PaymentPending'
-import { settleCheckoutSession } from '@/payments/checkoutSession'
-import { isStripeSandboxEnabled } from '@/payments/stripeSandbox'
+import { isSkipcashEnabled } from '@/payments/skipcash/api'
+import { isPaymentId } from '@/payments/skipcash/protocol'
+import { settleSkipcashPayment } from '@/payments/skipcash/settle'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const dynamic = 'force-dynamic'
@@ -19,42 +19,39 @@ export const metadata: Metadata = {
 }
 
 /**
- * Where Stripe's hosted page sends the customer back.
+ * Where SkipCash's payment page sends the customer back, as
+ * `/checkout/return?id=<SkipCash payment id>&…`.
  *
+ * Only the id is read, and only as a question to put to SkipCash: the status
+ * SkipCash also puts in the address is the browser's word, and is ignored.
  * The order is settled here, on the server, before anything renders — the
- * same `settleCheckoutSession` the webhook calls, so whichever arrives first
- * creates it and the other finds it done. A paid session goes straight to its
- * order; an unpaid one back to checkout with the bag intact. The only thing
- * shown here is the rare moment where the payment is taken but not yet
- * confirmable, and that page keeps checking by itself.
+ * same `settleSkipcashPayment` the webhook calls, so whichever arrives first
+ * creates it and the other finds it done. A paid payment goes straight to its
+ * order; an unpaid or refused one back to checkout with the bag intact. The
+ * only thing shown here is the moment where SkipCash is still authorising,
+ * and that page keeps checking by itself.
  */
 export default async function CheckoutReturn({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>
+  searchParams: Promise<{ id?: string }>
 }) {
-  const { session_id: sessionId } = await searchParams
+  const { id: paymentId } = await searchParams
 
-  if (!sessionId || !/^cs_[A-Za-z0-9_]+$/.test(sessionId) || !isStripeSandboxEnabled()) {
+  if (!isPaymentId(paymentId) || !isSkipcashEnabled()) {
     redirect('/checkout')
   }
 
   const payload = await getPayload({ config: configPromise })
-
-  const result = await settleCheckoutSession({
-    payload,
-    sessionId,
-    stripe: new Stripe(process.env.STRIPE_SECRET_KEY || ''),
-  })
+  const result = await settleSkipcashPayment({ payload, paymentId })
 
   if (result.status === 'confirmed') {
     redirect(
       `/order/${result.orderId}?${new URLSearchParams({ placed: '1', token: result.accessToken })}`,
     )
   }
-  if (result.status === 'unpaid') {
-    redirect('/checkout?payment=cancelled')
-  }
+  if (result.status === 'unpaid') redirect('/checkout?payment=cancelled')
+  if (result.status === 'failed') redirect('/checkout?payment=failed')
 
   const settings = await getCachedGlobal('siteSettings', 0)()
 

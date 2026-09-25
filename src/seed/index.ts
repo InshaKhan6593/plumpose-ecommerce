@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { isLocalDatabase } from '../utilities/database'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -102,9 +103,11 @@ export async function seed(payload: Payload): Promise<void> {
   /* -------------------------------------------------------- dev admin user
      A local development login so the admin can be opened without clicking
      through "create first user" after every schema reset. Development only —
-     this is skipped entirely when NODE_ENV is production, and the credentials
-     are deliberately throwaway. The real account is created by the client. */
-  if (process.env.NODE_ENV !== 'production') {
+     skipped when NODE_ENV is production **and whenever the database is not
+     on this machine**: `pnpm seed` from a laptop pointed at Neon is still
+     "development", and this password is in the repository. The real account
+     is made with scripts/create-admin.ts. */
+  if (process.env.NODE_ENV !== 'production' && isLocalDatabase()) {
     const devUser = await payload.find({
       collection: 'users',
       depth: 0,
@@ -670,12 +673,18 @@ export async function seed(payload: Payload): Promise<void> {
   // ------------------------------------------- Made for You — samples, dev only
   /**
    * SAMPLE projects so Made for You can be reviewed with its project grid and
-   * detail pages filled. They are **not real commissions**: seeded only
-   * outside production, like the dev admin above, and listed in BUILD-LOG §17
-   * for the client to replace with her own work before launch.
+   * detail pages filled. They are **not real commissions**: seeded outside
+   * production, or on a live database only when asked with SEED_SAMPLES=yes
+   * (for testing before launch — `pnpm demo:remove` deletes them again), and
+   * listed in BUILD-LOG §17 for the client to replace with her own work.
+   * Unlike the dev admin above, which never reaches a live database.
    */
-  if (process.env.NODE_ENV !== 'production' && brandImages.length >= 7) {
-    log('made for you (samples, dev only)…')
+  if (
+    ((process.env.NODE_ENV !== 'production' && isLocalDatabase()) ||
+      process.env.SEED_SAMPLES === 'yes') &&
+    brandImages.length >= 7
+  ) {
+    log('made for you (SAMPLE projects — pnpm demo:remove deletes them)…')
     const [window, print, piping, corridor, armchair, doorway, qatarBook] = brandImages.map(
       (m) => m.id as number,
     )

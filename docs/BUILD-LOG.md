@@ -1,7 +1,7 @@
 # plumpose — Build Log
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
-**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Content-page copy partly placeholder (§17); SkipCash pending credentials.
+**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
 **Last updated:** 25 Sep 2026
 
 This is the running record of what has actually been built, tested and
@@ -1887,3 +1887,304 @@ with no title, updated today, is in the products list. Both are hers to
 decide.
 
 Integration **208**. E2E: the full suite, **57 passed, none skipped** (dev, one worker, 4 min). `pnpm lint`: 0 errors. `tsc`: 0 errors.
+
+## 32. SkipCash replaces the Stripe stand-in — 25 Sep 2026
+
+The client sent the **sandbox** keys (Client ID, Key ID, Key Secret, Webhook
+Key; merchant "Plumpose (TEST)"). They are in `.env`, which is gitignored.
+Stripe is gone: the adapter, its webhook, the `stripe` package, the
+`stripe-webhooks` script, its env variables and its tests.
+
+Sources: dev.skipcash.app (Authentication, API integration, Webhooks, Get
+Transaction Details, Refunds, Go Live, Test Cards), read 25 Sep, and the old
+site's `netlify/lib/skipcash.mjs`.
+
+### Where it lives — `src/payments/skipcash/`
+
+| File | Does |
+|---|---|
+| `protocol.ts` | Pure. Payment signature (HMAC-SHA256 with the Key Secret over `Uid, KeyId, Amount, FirstName, LastName, Phone, Email, Street, City, State, Country, PostalCode, TransactionId, Custom1`, non-empty only, in that order); webhook signature (Webhook Key over `PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId`), compared in constant time; amount as `"1579.00"`; names without special characters; phone with `+` and the country code; the **50-character total** for the address fields; our reference `PLM-YYMMDD-XXXXXX`; status names |
+| `api.ts` | `POST /api/v1/payments` (signed), `GET /api/v1/payments/{id}` (Client ID). Config from env: anything but exactly `SKIPCASH_ENV=production` is the sandbox |
+| `adapter.ts` | `initiatePayment`: re-prices through `priceCart()`, registers the payment with our reference as `TransactionId` and `ReturnUrl = /checkout/return`, records a pending transaction (`transactions.skipcash.reference / paymentId`), returns `payUrl`. `confirmOrder`: **asks SkipCash's API**, then requires paid (2), amount and currency equal to the transaction's, the same cart, the same customer (account or guest email); adds the breakdown, embroidery, address and gift note; records the card network id (`visaId`), card type and masked number; redeems the discount after the order exists |
+| `settle.ts` | `settleSkipcashPayment()` — the return page and the webhook both call it; confirms in process as the transaction's own customer |
+| `webhook.ts` | `POST /api/payments/skipcash/webhooks` |
+| `records.ts` | Finding a transaction by our reference |
+
+Shared, gateway-free parts moved from `checkoutSession.ts` to
+`src/payments/checkout.ts`. `itemsForGateway()` now also drops the bag's row
+ids, so paying for the same bag twice cannot collide on them.
+
+### Things SkipCash does that shaped it
+
+- **A refused card makes a copy.** SkipCash keeps the original payment link
+  open for another try and reports the failure under a *new* payment id. So a
+  transaction is found by **our reference** (`TransactionId`), not by
+  SkipCash's id, and a failed or rejected callback never fails the
+  transaction — it is logged (`skipcash.failed` / `skipcash.rejected`, matched
+  to the bag) and "What happened" says "card declined once".
+- **Callbacks come out of order and more than once** (retries: at once, +1 h,
+  +1 day; 10 s timeout; anything but 200 is retried). Idempotent on
+  `paymentId:statusId`; a paid transaction is never moved backwards; 500 only
+  when a paid payment could not yet become an order.
+- **The webhook body is only a prompt.** Even correctly signed, it leads to an
+  API read before any order is made.
+- **Unfinished payments are cancelled after an hour** (status 3). A
+  cancellation for our own payment id marks the transaction *expired*.
+- **Return URL:** SkipCash appends `?id=…` (and a status). Only the id is read,
+  and only as a question to the API.
+- **Webhooks cannot reach localhost.** The webhook URL is sent with each
+  payment only from a public https origin; otherwise the portal's setting
+  applies. Locally, the return page settles.
+- **Every payment needs a distinct phone and email** or SkipCash treats it as
+  fraud; checkout already collects both.
+
+### Checkout
+
+"Pay on SkipCash's secure page"; sandbox shows the test card (4000 0000 0000
+2503, 10/28, 442). A refused card returns to `/checkout?payment=failed` with
+"Your card was not accepted — nothing was charged". The client-side payment
+method is a plain object (SkipCash needs nothing in the browser).
+
+### Verified
+
+- `tests/int/skipcash.int.spec.ts` (21): both signatures against values
+  computed by the **old site's own code**; tampered amount / status /
+  reference, wrong key, missing header all refused; amounts both ways and
+  malformed ones never matching; names, phones (QA, UK trunk 0, US, 00 prefix),
+  the 50-character address, references. Three run **against the live
+  sandbox**: a signed payment is accepted and reads back as new, QAR 1.00,
+  our reference; a wrong secret is refused; an unknown id is not found.
+- Type check clean; lint 0 errors.
+
+### Not yet verified — needs the schema change below first
+
+- The database-backed integration specs and the e2e suite. The e2e specs are
+  rewritten for SkipCash (`tests/helpers/skipcashCheckout.ts` pays on the
+  sandbox page with SkipCash's non-3-D-Secure test card; `webhook.e2e` signs
+  callbacks with the sandbox Webhook Key) but have not run.
+- A purchase through the browser on the sandbox page.
+
+### ⚠️ Database: the Stripe columns
+
+Removing Stripe changes `transactions`: the `stripe_*` columns go, and the
+payment method enum changes from `stripe` to `skipcash`. A dev schema push
+stops at a data-loss prompt for that (§26). Done by hand, after a backup
+(`../backups/plumpose-before-skipcash-2026-09-25.dump`):
+
+```sql
+UPDATE transactions SET payment_method = NULL WHERE payment_method = 'stripe';
+ALTER TYPE enum_transactions_payment_method RENAME VALUE 'stripe' TO 'skipcash';
+DROP INDEX IF EXISTS transactions_stripe_stripe_checkout_session_i_d_idx;
+ALTER TABLE transactions DROP COLUMN stripe_customer_i_d,
+  DROP COLUMN stripe_payment_intent_i_d, DROP COLUMN stripe_checkout_session_i_d;
+```
+
+Production has no database yet, so it starts with the SkipCash schema.
+
+### Going live
+
+The client clicks **Enable Production**, generates a production key, and
+sends the four production values through a one-time secure link. Then
+`SKIPCASH_ENV=production` with those keys, and in the portal's Production
+settings the webhook URL `https://plumpose.com/api/payments/skipcash/webhooks`
+and return URL `https://plumpose.com/checkout/return`. Test once with a real
+card for a small amount, then refund it from the portal.
+
+## 33. Storage and the live database — 25 Sep 2026
+
+**Cloudflare R2** (bucket `plumposestoragee`, private) and **Neon** (Postgres
+18.6, AWS Frankfurt `eu-central-1`) are set up. Keys are in `.env` and are to
+be **rotated after testing** — they were shared in chat.
+
+### Photographs — `src/storage/r2.ts`
+
+`@payloadcms/storage-s3` (3.90.1) against R2, **switched on only by
+`MEDIA_STORAGE=r2`** (the host). Locally, and in a local production build,
+photos stay on disk. The plugin is always registered (`enabled` on or off,
+`alwaysInsertFields: true`) so Media's `prefix` column exists in every
+schema. Photos keep their address, `/api/media/file/<name>`, served through
+Payload and resized and cached by Next; the bucket needs no public access —
+which R2 could only give on a custom domain whose DNS is on Cloudflare, and
+plumpose.com's is on Squarespace.
+
+`scripts/check-r2.ts` proves the keys: write, read back, list, delete, and an
+unsigned request refused.
+
+### Films — `scripts/films.ts`
+
+`pnpm films:upload` put the 12 files of `public/video` (27 MB) in the bucket
+under `video/`; `pnpm films:fetch` copies them back before a build, so the
+host's CDN serves them and the public repo never holds them. Checked: a fetch
+into an empty folder matches `public/video` byte for byte; a second run skips
+unchanged files.
+
+### Migrations — `src/migrations/`
+
+`20260925_165629_initial` is generated from the current config (105 tables,
+SkipCash fields, no Stripe, `spotted.image_id` nullable, `media.prefix`) and
+**applied to Neon** (batch 1). Locally the schema still follows the code by
+push. From now on a schema change needs a migration too
+(`pnpm payload migrate:create <name>`), and the host runs
+`pnpm payload migrate` against the direct connection before building.
+
+### Samples on a live database, for testing
+
+`SEED_SAMPLES=yes` lets `pnpm seed` add the three SAMPLE Made-for-You projects
+and `pnpm demo:seed` add the demo catalogue on a production database. The dev
+admin (`dev@plumpose.local`) is still never created there. `pnpm demo:remove`
+now also deletes the `sample-…` projects, so one command takes every sample
+out.
+
+Tested end to end on a throwaway local database migrated the same way:
+seed + samples → her product, 3 sizes, 7 + 7 photos, 204 countries, 163
+currencies, 11 cities, 10 zones, 16 FAQs, 3 sample projects, **0 users**;
+demo → 21 pieces, all published, priced, photographed and in a collection,
+with every stock state (plenty, low, one size out, all out, made to order,
+no sizes, two colours); `demo:remove` → back to exactly her product, its 3
+sizes, her collection, her 14 photos and S / M / L. `MEDIA_DIR` (new, Media)
+kept that test's photos out of `public/media`.
+
+### The first admin — `scripts/create-admin.ts`
+
+Until an admin exists, `/admin` offers "create first user" to whoever gets
+there first, so one is made **before** the site is public. The password is
+typed at a hidden prompt, never on the command line; refuses if an admin
+exists. Tested: creates one user with role `admin`; a second run refuses.
+
+### Not done — left for the owner to run
+
+Seeding Neon, and creating its admin, write to the live database; they were
+not run from here. The commands are in the reply of 25 Sep and below:
+
+```bash
+# from plumpose/, in Git Bash — the live database's direct connection
+export DATABASE_URL="$(grep '^PRODUCTION_DATABASE_URL_DIRECT=' .env | cut -d= -f2-)"
+NODE_ENV=production MEDIA_STORAGE=r2 SEED_SAMPLES=yes pnpm seed
+NODE_ENV=production MEDIA_STORAGE=r2 SEED_SAMPLES=yes pnpm demo:seed
+NODE_ENV=production npx tsx scripts/create-admin.ts you@example.com "Your Name"
+# before launch:
+NODE_ENV=production MEDIA_STORAGE=r2 pnpm demo:remove
+```
+
+## 34. Local development on the live services — 25 Sep 2026
+
+`.env` now runs the app against **Neon** (`DATABASE_URL`, pooled) and
+**R2** (`MEDIA_STORAGE=r2`). Docker Postgres is kept as `LOCAL_DATABASE_URL`.
+The Neon strings use `sslmode=verify-full` (what `pg` already did for
+`require`; it stops the warning). `psql` from the Docker image cannot verify
+Neon's certificate — it has no CA bundle — so use `sslmode=require` there.
+
+Pointing development at the live database makes "development" the wrong
+test for what is safe, so these now follow `isLocalDatabase()`:
+
+| | Local database | Neon |
+|---|---|---|
+| Schema push | yes (dev) | **never** — migrations only |
+| Dev admin `dev@plumpose.local` | seeded (dev) | **never** |
+| Sample Made-for-You projects | seeded (dev) | only with `SEED_SAMPLES=yes` |
+| Integration tests | — | always run on Docker + local disk (`vitest.setup.ts`) |
+| e2e suite | runs | **refuses** unless `E2E_ALLOW_LIVE_DATABASE=yes` |
+
+Checked: the dev server boots against Neon (shop empty, as the database is
+until seeded; no console errors), and Neon's `payload_migrations` holds only
+`20260925_165629_initial` — no dev push. `playwright test --list` refuses with
+the message above.
+
+Seeding Neon (from `plumpose/`, now that `.env` points there):
+
+```bash
+SEED_SAMPLES=yes pnpm seed
+SEED_SAMPLES=yes pnpm demo:seed
+npx tsx scripts/create-admin.ts you@example.com "Your Name"
+pnpm demo:remove        # before launch: samples out, her data stays
+```
+
+## 35. The live database filled; stale code out — 25 Sep 2026
+
+### What went into Neon
+
+`SEED_SAMPLES=yes pnpm seed`, `SEED_SAMPLES=yes pnpm demo:seed` and
+`pnpm test-shots`, from this machine now that `.env` points at Neon and R2:
+her product, 3 sizes, her collection, 14 photographs, 204 countries, 163
+currencies, delivery, embroidery options, 16 FAQs, the wheel, the contact
+form and Site settings; the 3 SAMPLE projects; the 21 demo pieces; the 5
+TEST SHOT photographs. **No users** — the admin is made with
+`scripts/create-admin.ts`, password typed by its owner.
+
+Deliberately **not** copied from the Docker database: 16 test orders and 24
+Stripe-era test payments, the empty draft product, the dev admin and its
+test users. Everything real there is what the seed builds.
+
+### A bug the move found: photos renamed on the way to R2
+
+Every photo came out renamed — `brand-01-window-1.jpg`, and worse,
+`plumpose-01.jpg` → `plumpose-2.jpg`, `demo-pexels-7162023.jpg` →
+`…7162025.jpg` (Payload bumps a trailing number). With photos in R2 nothing
+is written to `staticDir`, but Payload still checks it for a clash, and
+`public/media` holds local copies of the same files. The storefront finds
+some photos by name (`pageMedia`, the homepage), so those would have gone.
+
+**Fix:** with `MEDIA_STORAGE=r2`, Media's `staticDir` is an empty folder of
+its own in the OS temp directory. The 77 photos already stored were
+re-uploaded under their source names (same documents, so every gallery and
+page kept its photo; the plugin deletes the old files once the new ones are
+stored), matched to their source by exact byte size. Four demo photos had
+been uploaded twice while the names were wrong; they keep their own names —
+demo photos are linked by id, and `demo:remove` takes them all.
+
+**Checked:** Neon's photo names match the storefront's; R2 holds exactly the
+521 files the 77 photos name (originals and sizes) — nothing missing, nothing
+orphaned; every page (home, shop, her product, a demo piece, Made for You and
+a sample project, Our Story, FAQ, Shipping, Contact, checkout, admin login)
+200; `/api/quote` prices her piece from Neon.
+
+### Photos: a signed redirect instead of a stream
+
+`/api/media/file/<name>` now answers with a **302 to a signed R2 link**
+(valid an hour; `signedDownloads` in `src/storage/r2.ts`) instead of
+streaming the file through Payload. Next's optimiser gives an upstream photo
+**7 seconds, fixed** (`image-optimizer.js`, `AbortSignal.timeout(7000)`), and
+the shop asks for ~40 at once. The bucket stays private: an unsigned request
+is refused (400).
+
+Measured from this machine (Neon in Frankfurt, the bucket in Asia-Pacific,
+dev server), the shop's 41 photos, never optimised before:
+
+| | OK | Timed out |
+|---|---|---|
+| Streamed through Payload, 41 at once | 32 | 9 |
+| Signed redirect, 6 at a time (a browser's limit on a dev server) | 38 | 3 |
+
+The redirect step itself: 0.49 s on average, 1.5 s at worst. What remains
+is the fetch from the Asia-Pacific bucket to this laptop plus the resize,
+first view only — a success is cached. Deployed next to Neon it shortens;
+recreating the bucket in Europe would shorten it further (optional).
+
+### Stale code removed
+
+Found with knip, each checked by hand before removal:
+
+- **Files:** `app/(app)/next/exit-preview/GET.ts` (a copy of the `route.ts`
+  beside it), `heros/config.ts`, `blocks/Code/config.ts`, and the template's
+  `endpoints/seed/contact-form.ts`, `contact-page.ts`, `image-hero-1.ts`.
+- **Packages:** `@payloadcms/email-nodemailer` (email is Resend),
+  `@payloadcms/translations`, `jsonwebtoken` + `@types/jsonwebtoken`,
+  `qs-esm`, `@eslint/eslintrc` (FlatCompat went in §31),
+  `@next/eslint-plugin-next`, `eslint-plugin-jsx-a11y`, `eslint-plugin-react`,
+  `eslint-plugin-react-hooks` (all brought by `eslint-config-next`),
+  `lint-staged` and `@vercel/git-hooks` (no configuration, no hooks),
+  `@testing-library/react`, `prettier-plugin-tailwindcss` (never enabled).
+  Kept though flagged: `prettier` (a command) and `tw-animate-css` (imported
+  from CSS).
+- **Mine:** the one-off rename script, and the test-only `MEDIA_DIR` switch.
+- `.env`: `PRODUCTION_DATABASE_URL` (a copy of `DATABASE_URL`) gone;
+  `PRODUCTION_DATABASE_URL_DIRECT` is now **`DATABASE_URL_DIRECT`**.
+- Lint ignores `src/migrations/` (generated, with its own `@ts-nocheck`).
+
+`tsc` clean; lint 0 errors (97 warnings, as before); the pure integration
+specs pass (skipcash, checkout, stock, currency: 50).
+
+### Local setup now
+
+The README's "Running locally" starts from Neon and R2. Docker stays for the
+integration tests and for offline work (`LOCAL_DATABASE_URL`).

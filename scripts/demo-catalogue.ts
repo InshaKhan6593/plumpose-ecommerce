@@ -2,10 +2,12 @@
  * A demo catalogue, to see the storefront with more than one piece in it.
  *
  *   pnpm demo:seed     — adds ~20 demo pieces in four collections, with photos from Pexels
- *   pnpm demo:remove   — deletes every one of them, and their photos
+ *   pnpm demo:remove   — deletes every one of them, their photos, and the seed's
+ *                        SAMPLE Made-for-You projects (`sample-…`)
  *
- * **Development only. Never run against the live shop.** The client's own
- * product is never touched. Everything this adds is marked so it can be found
+ * **Development only**, except on a live database *before launch*, for
+ * testing, when asked with SEED_SAMPLES=yes — and removed again before real
+ * customers arrive. The client's own product is never touched. Everything this adds is marked so it can be found
  * again: products and collections have a web address starting `demo-`, photos
  * are `demo-pexels-<id>.jpg` with a caption naming the photographer.
  *
@@ -377,8 +379,13 @@ async function demoMedia(payload: Payload, id: number, fallbackAlt: string): Pro
 // --------------------------------------------------------------------- seed
 
 async function seedDemo(payload: Payload) {
-  if (process.env.NODE_ENV === 'production')
-    throw new Error('The demo catalogue is for development only.')
+  /*
+   * Stand-in photographs, never product photographs. A live database gets the
+   * demo only when asked, for testing before launch; `pnpm demo:remove`
+   * takes it out again.
+   */
+  if (process.env.NODE_ENV === 'production' && process.env.SEED_SAMPLES !== 'yes')
+    throw new Error('The demo catalogue is for development only (SEED_SAMPLES=yes to override).')
 
   const sizeType = (
     await payload.find({
@@ -588,7 +595,7 @@ async function seedTwoColourPiece(
 /** Ids of the records whose `field` starts with `prefix` — exactly, not "contains". */
 async function idsStartingWith(
   payload: Payload,
-  collection: 'categories' | 'media' | 'products',
+  collection: 'categories' | 'media' | 'products' | 'projects',
   field: string,
   prefix: string,
 ) {
@@ -608,6 +615,8 @@ async function removeDemo(payload: Payload) {
   const products = await idsStartingWith(payload, 'products', 'slug', PREFIX)
   const categories = await idsStartingWith(payload, 'categories', 'slug', PREFIX)
   const media = await idsStartingWith(payload, 'media', 'filename', 'demo-pexels-')
+  // The seed's SAMPLE Made-for-You projects (src/seed/index.ts) — never her own.
+  const projects = await idsStartingWith(payload, 'projects', 'slug', 'sample-')
 
   if (products.length) {
     await payload.delete({ collection: 'variants', where: { product: { in: products } } })
@@ -616,6 +625,8 @@ async function removeDemo(payload: Payload) {
   if (categories.length)
     await payload.delete({ collection: 'categories', where: { id: { in: categories } } })
   if (media.length) await payload.delete({ collection: 'media', where: { id: { in: media } } })
+  if (projects.length)
+    await payload.delete({ collection: 'projects', where: { id: { in: projects } } })
   // The demo's own colours (Noir, Blush) — never the real sizes.
   const { docs: colours } = await payload.find({
     collection: 'variantOptions',
@@ -631,7 +642,8 @@ async function removeDemo(payload: Payload) {
     await payload.delete({ collection: 'variantOptions', where: { id: { in: demoColours } } })
 
   console.log(
-    `Removed ${products.length} demo pieces, ${categories.length} collections and ${media.length} photos. ` +
+    `Removed ${products.length} demo pieces, ${categories.length} collections, ${media.length} photos ` +
+      `and ${projects.length} sample Made-for-You projects. ` +
       'The cached downloads in seed-assets/demo/ are kept for next time.',
   )
 }

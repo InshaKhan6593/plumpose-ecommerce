@@ -1,98 +1,71 @@
 import type { APIRequestContext } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
-import Stripe from 'stripe'
+import crypto from 'node:crypto'
 
 import { BASE } from '../helpers/base'
-import { payAndVanish, startCheckout } from '../helpers/stripeCheckout'
+import {
+  callback,
+  payAndVanish,
+  signCallback,
+  skipcashReady,
+  startCheckout,
+} from '../helpers/skipcashCheckout'
 
 /**
- * The payment webhook (P4).
+ * The payment webhook (P4) — `POST /api/payments/skipcash/webhooks`.
  *
- * Signed requests are built here with `generateTestHeaderString` rather than
- * driven through the Stripe CLI, so these run deterministically without a
- * listener open in another terminal.
+ * Callbacks are signed here with the sandbox Webhook Key, exactly as SkipCash
+ * signs them, so these run without SkipCash having to reach this machine
+ * (it cannot reach localhost). The receiver re-reads every payment from
+ * SkipCash's API before acting, so a signed callback still cannot make an
+ * order for a payment SkipCash says is unpaid.
  *
- * The case worth the most: a customer pays on Stripe's hosted page and closes
- * the tab before it sends them back. They have still paid. Without the webhook
- * their order simply never exists — and nobody finds out until they ask where
- * it is. That test pays for real on checkout.stripe.com (test mode).
+ * The case worth the most: a customer pays on SkipCash's page and closes the
+ * tab before it sends them back. They have still paid. Without the webhook
+ * their order simply never exists. That test pays for real on SkipCash's
+ * sandbox page.
  */
 
-const WEBHOOK = `${BASE}/api/payments/stripe/webhooks`
+const WEBHOOK = `${BASE}/api/payments/skipcash/webhooks`
 const DEV_USER = { email: 'dev@plumpose.local', password: 'devpassword' }
 
-const secretKey = process.env.STRIPE_SECRET_KEY
-const webhookSecret = process.env.STRIPE_WEBHOOKS_SIGNING_SECRET
-const ready = Boolean(secretKey?.startsWith('sk_test_') && webhookSecret?.startsWith('whsec_'))
-
 test.describe('payment webhook', () => {
-  test.skip(!ready, 'needs STRIPE_SECRET_KEY and STRIPE_WEBHOOKS_SIGNING_SECRET')
+  test.skip(!skipcashReady, 'needs PAYMENT_PROVIDER=skipcash and the SkipCash sandbox keys')
 
-  let stripe: Stripe
   let token: string
 
   const admin = () => ({ Authorization: `JWT ${token}` })
 
-  /** Signs a payload the way Stripe would, so the receiver accepts it. */
-  const send = async (request: APIRequestContext, event: Record<string, unknown>) => {
-    const body = JSON.stringify(event)
-    const signature = stripe.webhooks.generateTestHeaderString({
-      payload: body,
-      secret: webhookSecret as string,
-    })
-
+  /** Sends a callback signed the way SkipCash signs it. */
+  const send = async (request: APIRequestContext, body: Record<string, unknown>, key?: string) => {
     const response = await request.post(WEBHOOK, {
-      data: body,
-      headers: { 'Content-Type': 'application/json', 'stripe-signature': signature },
+      data: JSON.stringify(body),
+      headers: { Authorization: signCallback(body, key), 'Content-Type': 'application/json' },
     })
-
     return { body: await response.json(), status: response.status() }
   }
 
-  const paidEvent = (args: { cartID?: string; id: string; paymentIntentID: string }) => ({
-    data: {
-      object: {
-        id: args.paymentIntentID,
-        metadata: args.cartID ? { cartID: args.cartID } : {},
-        object: 'payment_intent',
-      },
-    },
-    id: args.id,
-    object: 'event',
-    type: 'payment_intent.succeeded',
-  })
-
   const logsFor = async (request: APIRequestContext, eventId: string) => {
     const res = await request.get(
-      `${BASE}/api/webhookLog?where[eventId][equals]=${eventId}&limit=50`,
+      `${BASE}/api/webhookLog?where[eventId][equals]=${encodeURIComponent(eventId)}&limit=50`,
       { headers: admin() },
     )
     return (await res.json()).docs as Array<Record<string, unknown>>
   }
 
-  /** A Checkout Session event, as Stripe sends it; the receiver re-reads the real session. */
-  const sessionEvent = (args: { cartID: string; id: string; sessionId: string; type: string }) => ({
-    data: {
-      object: { id: args.sessionId, metadata: { cartID: args.cartID }, object: 'checkout.session' },
-    },
-    id: args.id,
-    object: 'event',
-    type: args.type,
-  })
-
-  const transactionFor = async (request: APIRequestContext, sessionId: string) => {
+  /** Our record of a payment, by SkipCash's id for it. */
+  const transactionFor = async (request: APIRequestContext, paymentId: string) => {
     const res = await request.get(
-      `${BASE}/api/transactions?where[stripe.checkoutSessionID][equals]=${sessionId}&depth=0`,
+      `${BASE}/api/transactions?where[skipcash.paymentId][equals]=${paymentId}&depth=0`,
       { headers: admin() },
     )
     const doc = (await res.json()).docs[0]
-    expect(doc, `no transaction for ${sessionId}`).toBeTruthy()
+    expect(doc, `no transaction for ${paymentId}`).toBeTruthy()
     return doc
   }
 
   test.beforeAll(async ({ request }) => {
-    stripe = new Stripe(secretKey as string)
     const login = await request.post(`${BASE}/api/users/login`, { data: DEV_USER })
     // Assert it here. Without this a failed login leaves `token` undefined,
     // every later request goes out as `Authorization: JWT undefined`, and the
@@ -104,23 +77,38 @@ test.describe('payment webhook', () => {
   })
 
   test.describe('refuses what it cannot verify', () => {
-    /**
-     * The defect this replaced: the plugin's receiver wrapped verification in
-     * `if (stripeSignature)`, so an unsigned request skipped the check entirely
-     * and got back `200 {received:true}`.
-     */
-    test('rejects an unsigned request', async ({ request }) => {
-      const response = await request.post(WEBHOOK, {
-        data: { type: 'payment_intent.succeeded' },
+    const forged = () =>
+      callback({
+        amount: '1419.00',
+        paymentId: crypto.randomUUID(),
+        reference: 'PLM-260925-FORGED',
+        statusId: 2,
       })
-      expect(response.status()).toBe(400)
-      expect((await response.json()).error).toContain('Missing signature')
+
+    test('rejects an unsigned callback', async ({ request }) => {
+      const response = await request.post(WEBHOOK, { data: forged() })
+      expect(response.status()).toBe(401)
+      expect((await response.json()).error).toContain('Invalid signature')
     })
 
-    test('rejects a forged signature', async ({ request }) => {
+    test('rejects one signed with the wrong key', async ({ request }) => {
+      const { status } = await send(request, forged(), 'not-the-webhook-key')
+      expect(status).toBe(401)
+    })
+
+    test('rejects one whose amount was changed after signing', async ({ request }) => {
+      const body = forged()
       const response = await request.post(WEBHOOK, {
-        data: { type: 'payment_intent.succeeded' },
-        headers: { 'stripe-signature': 't=1,v1=deadbeef' },
+        data: JSON.stringify({ ...body, Amount: '1.00' }),
+        headers: { Authorization: signCallback(body), 'Content-Type': 'application/json' },
+      })
+      expect(response.status()).toBe(401)
+    })
+
+    test('rejects a body that is not JSON', async ({ request }) => {
+      const response = await request.post(WEBHOOK, {
+        data: 'PaymentId=x&StatusId=2',
+        headers: { 'Content-Type': 'text/plain' },
       })
       expect(response.status()).toBe(400)
     })
@@ -142,11 +130,7 @@ test.describe('payment webhook', () => {
       }
 
       const countBefore = await countRejected()
-
-      const rejected = await request.post(WEBHOOK, {
-        data: { type: 'payment_intent.succeeded' },
-      })
-      expect(rejected.status()).toBe(400)
+      expect((await request.post(WEBHOOK, { data: forged() })).status()).toBe(401)
 
       // A run of these is what a forgery attempt looks like; losing them hides it.
       // The receiver awaits the log write before replying, so this cannot race.
@@ -154,66 +138,79 @@ test.describe('payment webhook', () => {
     })
   })
 
-  test('accepts a properly signed event and logs it as verified', async ({ request }) => {
-    const eventId = `evt_test_${Date.now()}`
+  test('accepts a properly signed callback and logs it as verified', async ({ request }) => {
+    const paymentId = crypto.randomUUID()
     const { body, status } = await send(
       request,
-      paidEvent({ id: eventId, paymentIntentID: 'pi_nonexistent' }),
+      callback({ amount: '1419.00', paymentId, reference: 'PLM-260925-NOSUCH', statusId: 2 }),
     )
 
+    // SkipCash does not know this payment, so nothing is made — and a retry would not help.
     expect(status).toBe(200)
-    // No Checkout Session behind it, so it was not made by this store: logged, not retried.
-    expect(body.reason).toBe('not a checkout payment')
+    expect(body.reason).toBe('error')
 
-    const logs = await logsFor(request, eventId)
+    const logs = await logsFor(request, `${paymentId}:2`)
     expect(logs).toHaveLength(1)
     expect(logs[0].signatureValid).toBe(true)
     expect(logs[0].applied).toBe(false)
-  })
-
-  test('ignores event types it does not act on', async ({ request }) => {
-    const eventId = `evt_test_${Date.now()}_other`
-    const { body } = await send(request, {
-      data: { object: { id: 'pi_x', object: 'payment_intent' } },
-      id: eventId,
-      object: 'event',
-      type: 'payment_intent.created',
-    })
-    expect(body.reason).toBe('ignored')
+    expect(logs[0].event).toBe('skipcash.paid')
   })
 
   /**
-   * The whole point of the webhook: the customer paid on Stripe's page, then
-   * closed the tab before it sent them back. The order must still exist.
+   * A genuine "paid" callback is only a prompt to ask. Here the payment is
+   * real but unpaid: SkipCash's API says so, and no order is made.
+   */
+  test('a "paid" callback for a payment SkipCash says is unpaid makes nothing', async ({
+    request,
+  }) => {
+    const started = await startCheckout(request, { email: `unpaid-${Date.now()}@plumpose.local` })
+    const transaction = await transactionFor(request, started.paymentId)
+
+    const { body, status } = await send(
+      request,
+      callback({
+        amount: '1419.00',
+        paymentId: started.paymentId,
+        reference: transaction.skipcash.reference,
+        statusId: 2,
+      }),
+    )
+    expect(status).toBe(200)
+    expect(body.reason).toBe('unpaid')
+    expect((await transactionFor(request, started.paymentId)).status).toBe('pending')
+  })
+
+  /**
+   * The whole point of the webhook: the customer paid on SkipCash's page,
+   * then closed the tab before it sent them back. The order must still exist.
    *
    * The browser is stopped from ever reaching `/checkout/return`, so only the
    * webhook can create the order. A guest here; the signed-in case follows.
    */
   test('creates the order when the customer never comes back', async ({ page, request }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(180_000)
     const started = await startCheckout(request, {
       email: `webhook-only-${Date.now()}@plumpose.local`,
     })
-    await payAndVanish(page, stripe, started)
+    await payAndVanish(page, request, started)
 
-    const eventId = `evt_test_${Date.now()}_orphan`
-    const { body, status } = await send(
-      request,
-      sessionEvent({
-        cartID: String(started.cart.id),
-        id: eventId,
-        sessionId: started.sessionId,
-        type: 'checkout.session.completed',
-      }),
-    )
+    const { reference } = (await transactionFor(request, started.paymentId)).skipcash
+    const paid = callback({
+      amount: '1419.00',
+      paymentId: started.paymentId,
+      reference,
+      statusId: 2,
+    })
+    const { body, status } = await send(request, paid)
 
     expect(status).toBe(200)
-    // "confirmed" whether this call made the order or a forwarded real event beat it to it.
     expect(body.reason).toBe('confirmed')
 
-    const transaction = await transactionFor(request, started.sessionId)
+    const transaction = await transactionFor(request, started.paymentId)
     expect(transaction.status).toBe('succeeded')
     expect(transaction.order, 'the transaction is linked to an order').toBeTruthy()
+    // What the card network says, kept for reconciliation.
+    expect(transaction.skipcash.visaId).toBeTruthy()
 
     const orders = await (
       await request.get(`${BASE}/api/orders?where[transactions][equals]=${transaction.id}`, {
@@ -228,41 +225,49 @@ test.describe('payment webhook', () => {
     expect(order.amount).toBe(141900)
     expect(order.shippingQar).toBe(2000)
     expect(order.shippingLabel).toBe('Delivery to Doha')
+
+    /**
+     * Callbacks arrive out of order. A failure or cancellation for the same
+     * payment, landing after it was paid, must not move it backwards.
+     */
+    for (const statusId of [4, 3]) {
+      await send(request, { ...paid, StatusId: statusId })
+    }
+    expect((await transactionFor(request, started.paymentId)).status).toBe('succeeded')
   })
 
   /**
    * The same, for a customer who was signed in. The webhook has no one signed
    * in, and the plugin settles an account holder's payment only as that
-   * account — so this order used to be lost. It now settles as the customer
-   * the transaction belongs to (BUILD-LOG §31).
+   * account — so it settles as the customer the transaction belongs to
+   * (BUILD-LOG §31).
    */
   test('creates a signed-in customer’s order when they never come back', async ({
     page,
     request,
   }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(180_000)
     const started = await startCheckout(request, { email: DEV_USER.email, headers: admin() })
-    await payAndVanish(page, stripe, started)
+    await payAndVanish(page, request, started)
 
+    const { reference } = (await transactionFor(request, started.paymentId)).skipcash
     const { body, status } = await send(
       request,
-      sessionEvent({
-        cartID: String(started.cart.id),
-        id: `evt_test_${Date.now()}_orphan_account`,
-        sessionId: started.sessionId,
-        type: 'checkout.session.completed',
-      }),
+      callback({ amount: '1419.00', paymentId: started.paymentId, reference, statusId: 2 }),
     )
     expect(status).toBe(200)
     expect(body.reason).toBe('confirmed')
 
-    const transaction = await transactionFor(request, started.sessionId)
+    const transaction = await transactionFor(request, started.paymentId)
     expect(transaction.status).toBe('succeeded')
 
     const orders = await (
-      await request.get(`${BASE}/api/orders?where[transactions][equals]=${transaction.id}&depth=0`, {
-        headers: admin(),
-      })
+      await request.get(
+        `${BASE}/api/orders?where[transactions][equals]=${transaction.id}&depth=0`,
+        {
+          headers: admin(),
+        },
+      )
     ).json()
     expect(orders.totalDocs).toBe(1)
 
@@ -273,64 +278,58 @@ test.describe('payment webhook', () => {
   })
 
   /**
-   * Gateways retry. Applying the same callback twice would, for a paid one,
-   * decrement stock twice and burn a discount code twice. An expiry is used
-   * here because it applies deterministically without paying.
+   * SkipCash retries, and sends the same event more than once. Applying one
+   * twice would, for a paid one, decrement stock twice and burn a discount
+   * code twice. A cancellation is used here because it applies
+   * deterministically without paying.
    */
   test('applies a repeated callback only once', async ({ request }) => {
     const started = await startCheckout(request, { email: `retry-${Date.now()}@plumpose.local` })
-    const event = sessionEvent({
-      cartID: String(started.cart.id),
-      id: `evt_test_${Date.now()}_retry`,
-      sessionId: started.sessionId,
-      type: 'checkout.session.expired',
+    const { reference } = (await transactionFor(request, started.paymentId)).skipcash
+    const cancelled = callback({
+      amount: '1419.00',
+      paymentId: started.paymentId,
+      reference,
+      statusId: 3,
     })
 
-    const first = await send(request, event)
+    const first = await send(request, cancelled)
     expect(first.status).toBe(200)
 
-    const second = await send(request, event)
+    const second = await send(request, cancelled)
     expect(second.status).toBe(200)
     expect(second.body.reason).toBe('duplicate')
 
-    const logs = await logsFor(request, event.id)
+    const logs = await logsFor(request, `${started.paymentId}:3`)
     // Both callbacks recorded; only one of them applied.
     expect(logs.length).toBeGreaterThanOrEqual(2)
     expect(logs.filter((log) => log.applied === true)).toHaveLength(1)
 
     // An abandoned checkout stays visible, marked expired (P11).
-    expect((await transactionFor(request, started.sessionId)).status).toBe('expired')
-    await stripe.checkout.sessions.expire(started.sessionId).catch(() => undefined)
+    expect((await transactionFor(request, started.paymentId)).status).toBe('expired')
   })
 
   /**
-   * A declined card is logged but must not fail the transaction: on the hosted
-   * page the customer can try another card in the same session, and the plugin
-   * only settles a transaction that is still pending.
+   * A refused card is logged but must not fail the transaction. SkipCash keeps
+   * the payment link open for another card and reports the refusal under a
+   * copy with a new payment id; the original may still be paid.
    */
-  test('records a declined card without failing the transaction', async ({ request }) => {
+  test('records a refused card without failing the transaction', async ({ request }) => {
     const started = await startCheckout(request, { email: `declined-${Date.now()}@plumpose.local` })
+    const { reference } = (await transactionFor(request, started.paymentId)).skipcash
 
-    const eventId = `evt_test_${Date.now()}_failed`
-    const { status } = await send(request, {
-      data: {
-        object: {
-          id: 'pi_failed_x',
-          metadata: { cartID: String(started.cart.id) },
-          object: 'payment_intent',
-        },
-      },
-      id: eventId,
-      object: 'event',
-      type: 'payment_intent.payment_failed',
-    })
+    const copyId = crypto.randomUUID()
+    const { status } = await send(
+      request,
+      callback({ amount: '1419.00', paymentId: copyId, reference, statusId: 4 }),
+    )
 
     expect(status).toBe(200)
-    const logs = await logsFor(request, eventId)
+    const logs = await logsFor(request, `${copyId}:4`)
     expect(logs[0].signatureValid).toBe(true)
-    expect(logs[0].event).toBe('payment_intent.payment_failed')
-    expect((await transactionFor(request, started.sessionId)).status).toBe('pending')
-
-    await stripe.checkout.sessions.expire(started.sessionId).catch(() => undefined)
+    expect(logs[0].event).toBe('skipcash.failed')
+    // Matched to the checkout, so the admin can say "card declined once".
+    expect(logs[0].orderRef).toBe(String(started.cart.id))
+    expect((await transactionFor(request, started.paymentId)).status).toBe('pending')
   })
 })

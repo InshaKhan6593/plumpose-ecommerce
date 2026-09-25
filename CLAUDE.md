@@ -21,12 +21,12 @@ it is more detailed than this file and it is where findings get written down.
 
 ### 1. Money is stored in two different units
 
-| Field | Stored | Means |
-|---|---|---|
-| `products.priceInQAR`, `variants.priceInQAR`, `orders.amount` | `139900` | QAR 1399.00 — **minor** |
-| `shippingCities.feeQar`, `shippingZones.feeQar` | `20` | QAR 20 — **major** |
-| `siteSettings.personalisationFeeQar`, `freeShippingThresholdQar` | `160` | QAR 160 — **major** |
-| `discountCodes.value`, `minSpendQar` | `100` | QAR 100 — **major** |
+| Field                                                            | Stored   | Means                   |
+| ---------------------------------------------------------------- | -------- | ----------------------- |
+| `products.priceInQAR`, `variants.priceInQAR`, `orders.amount`    | `139900` | QAR 1399.00 — **minor** |
+| `shippingCities.feeQar`, `shippingZones.feeQar`                  | `20`     | QAR 20 — **major**      |
+| `siteSettings.personalisationFeeQar`, `freeShippingThresholdQar` | `160`    | QAR 160 — **major**     |
+| `discountCodes.value`, `minSpendQar`                             | `100`    | QAR 100 — **major**     |
 
 The plugin owns the first group and settles against it. The client types the
 second group by hand, and should type `20` to mean twenty riyals.
@@ -39,8 +39,8 @@ for a bag that costs QAR 1,579. See `src/lib/pricing/money.ts`.
 
 The plugin's own payment adapters do (`adapters/stripe/initiatePayment.js`),
 and it omits delivery, embroidery and discounts. **Every amount must come from
-`priceOrder()`.** `src/payments/stripeSandbox.ts` overrides `initiatePayment`
-for exactly this reason, and the SkipCash adapter must do the same.
+`priceOrder()`.** The SkipCash adapter (`src/payments/skipcash/adapter.ts`)
+prices through `priceCart()` for exactly this reason.
 
 ### 3. Any write inside an endpoint must thread `req` through
 
@@ -49,19 +49,18 @@ Payload runs endpoints in a database transaction carried on `req`. A
 uncommitted rows — this failed with
 `violates foreign key constraint discount_uses_order_id_orders_id_fk`.
 
-### 4. The adapter receives a *trimmed* cart
+### 4. The adapter receives a _trimmed_ cart
 
 The plugin loads it with `select: { id, currency, customerEmail, items,
 subtotal }`. `shippingCityKey`, `discountCode` and `pricingSnapshot` are not
 there. Re-read the cart in full before pricing.
 
-### 5. Custom fields on cart items break settlement validation
+### 5. Personalisation never travels through the transaction
 
-Cart items are serialised into gateway metadata with `...customProperties`, but
-the transactions collection has no `personalisation` field and drops it.
-`validateSettlement` then compares the two and throws "Stripe cart items do not
-match the transaction items". Strip custom fields before delegating to the
-provider; read them back from the database.
+The transactions collection has no `personalisation` field and drops it.
+`itemsForGateway()` strips it (and the bag's row ids) before the transaction is
+written; `confirmOrder` reads it back from the cart's pricing snapshot, where
+the engine's resolved names and fees are.
 
 ---
 
@@ -83,26 +82,33 @@ so the displayed price and the charged price cannot drift.
 **`POST /api/quote`** — `src/endpoints/quote.ts`. Prices a bag. Side-effect
 free: never reserves stock, never consumes a code.
 
-**Payment webhook** — `src/payments/webhook.ts`. Fails closed, logs every
-callback to `webhookLog` (verified or not), is idempotent on the gateway's own
-event id, and creates the order when the browser never confirmed it.
-Settlement calls the plugin's confirm endpoint **in process, as the customer
-the transaction belongs to** (`confirmInProcess` in `checkoutSession.ts`), so
-the webhook recovers a signed-in customer's order too (BUILD-LOG §31).
+**Payments** — `src/payments/skipcash/`, **SkipCash**, on by
+`PAYMENT_PROVIDER=skipcash` with the four keys; `SKIPCASH_ENV` picks sandbox
+or production (anything but exactly `production` is the sandbox). A redirect
+flow (BUILD-LOG §32):
 
-**Payments** — `src/payments/`. Stripe **sandbox only**, as a stand-in while
-SkipCash credentials are pending. Enabled by `PAYMENT_PROVIDER=stripe`;
-refuses to load when `NODE_ENV` is production. **A redirect flow, like
-SkipCash:** `initiatePayment` opens a Stripe *hosted* Checkout Session for the
-`priceOrder()` total and returns `redirectURL`; the customer pays on Stripe's
-page and comes back to `/checkout/return`, which calls `settleCheckoutSession()`
-(`checkoutSession.ts`) — the same function the webhook calls. It links the
-session's PaymentIntent (which only exists once paid) to the transaction, then
-confirms through the plugin's own endpoint, whose atomic claim guarantees one
-order however many callers race. The order carries the money breakdown,
-embroidery, address, gift note, a stock decrement and a `discountUses` row.
-When SkipCash arrives, only the adapter and the webhook's signature check
-change.
+- `protocol.ts` — pure: both HMAC signatures (fixed field order — the brittle
+  part), amounts, names, phone (+country code, from `src/data/dialCodes.ts`),
+  the 50-character address rule, our `PLM-YYMMDD-XXXXXX` reference.
+- `adapter.ts` — `initiatePayment` prices through `priceCart()`, registers the
+  payment (our reference as SkipCash's `TransactionId`), records a pending
+  transaction, returns `payUrl` as `redirectURL`. `confirmOrder` **asks
+  SkipCash's API**, never the browser, and checks paid / amount / currency /
+  cart / customer before `finalizeOrder`.
+- `settle.ts` — `settleSkipcashPayment()`, called by `/checkout/return?id=…`
+  and by the webhook. Confirms through the plugin's own endpoint **in process,
+  as the customer the transaction belongs to** (`confirmInProcess` in
+  `../checkout.ts`), whose atomic claim guarantees one order however many
+  callers race.
+- `webhook.ts` — `POST /api/payments/skipcash/webhooks`. Fails closed (401),
+  logs every callback to `webhookLog`, idempotent on payment id + status,
+  re-reads the payment from the API, never moves a paid payment backwards.
+
+The order carries the money breakdown, embroidery, address, gift note, a stock
+decrement and a `discountUses` row. **A refused card is not a failed
+transaction**: SkipCash keeps the link open and reports the refusal under a
+_copy_ with a new payment id, so transactions are matched by our reference,
+not by SkipCash's id.
 
 **Checkout** — `/checkout` (`components/checkout/CheckoutPage.tsx`): contact,
 delivery (blocked countries say why; Qatar city picker), gift note, discount
@@ -145,9 +151,9 @@ client's reference recording (`../brand-assets/reference/`):
 
 - **Email from plumpose.com.** Works, but the domain is not verified in Resend,
   so for now it sends from `onboarding@resend.dev` to the account owner only.
-- **SkipCash.** Blocked on credentials. The checkout is already a redirect
-  flow; the adapter replaces `stripeSandbox.ts` and must price through
-  `priceOrder()`.
+- **SkipCash production.** Built and running on the sandbox keys. Going live
+  is new keys, `SKIPCASH_ENV=production`, and the webhook and return URLs in
+  the portal (BUILD-LOG §32).
 - **Content-page copy is partly placeholder.** Every block in
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
@@ -166,22 +172,37 @@ client's reference recording (`../brand-assets/reference/`):
 ## Working here
 
 ```bash
-docker start plumpose-pg     # Postgres on 5434
 pnpm dev                     # http://localhost:3000, admin at /admin
 pnpm seed                    # idempotent
 ```
 
-| Command | Purpose |
-|---|---|
-| `pnpm test:int` | Integration tests (208) |
-| `pnpm test:e2e` | Playwright (57 pass) — pays for real on Stripe's hosted test page |
-| `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
-| `pnpm shoot:admin` | Screenshot all 16 admin screens |
-| `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
-| `pnpm test-shots` | Import test photographs (see `../docs/TEST-SHOTS.md`) |
-| `npx tsx scripts/perf-probe.ts <url>` | Load, blocking, scroll fps, dropped film frames, click latency — run against a production build (BUILD-LOG §27) |
-| `pnpm demo:seed` / `demo:remove` | 20 demo pieces with Pexels photos, to see a full shop; removes only `demo-` records (BUILD-LOG §24) |
-| `sh scripts/encode-videos.sh` | Rebuild `public/video/` from the camera originals |
+**`.env` points the app at the live services** (BUILD-LOG §34): `DATABASE_URL`
+is Neon, `MEDIA_STORAGE=r2` sends admin uploads to the R2 bucket. Docker
+Postgres (`docker start plumpose-pg`, port 5434) is kept as
+`LOCAL_DATABASE_URL` — swap it into `DATABASE_URL` to work offline. Guards,
+all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
+
+- **No schema push to Neon.** A schema change needs a migration:
+  `pnpm payload migrate:create <name>`, then `pnpm payload migrate` with
+  `DATABASE_URL` set to `DATABASE_URL_DIRECT` (Neon without the pooler).
+- **No dev admin on Neon** (`dev@plumpose.local` is local only); sample
+  projects only with `SEED_SAMPLES=yes`. The real admin comes from
+  `scripts/create-admin.ts`.
+- **Integration tests always use Docker and local disk** (`vitest.setup.ts`).
+- **The e2e suite refuses a non-local database** unless
+  `E2E_ALLOW_LIVE_DATABASE=yes` — it writes orders, stock and users.
+
+| Command                                       | Purpose                                                                                                         |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `pnpm test:int`                               | Integration tests (208)                                                                                         |
+| `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page                                                           |
+| `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
+| `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |
+| `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors                                         |
+| `pnpm test-shots`                             | Import test photographs (see `../docs/TEST-SHOTS.md`)                                                           |
+| `npx tsx scripts/perf-probe.ts <url>`         | Load, blocking, scroll fps, dropped film frames, click latency — run against a production build (BUILD-LOG §27) |
+| `pnpm demo:seed` / `demo:remove`              | 20 demo pieces with Pexels photos, to see a full shop; removes only `demo-` records (BUILD-LOG §24)             |
+| `sh scripts/encode-videos.sh`                 | Rebuild `public/video/` from the camera originals                                                               |
 
 **A production build locally:** `pnpm build`, then `next start` with
 `LOCAL_PRODUCTION_PREVIEW=on` (the `plumpose-prod` launch entry) — without it
@@ -202,12 +223,12 @@ there. `next build` then adds `.next-b` paths to `tsconfig.json` — revert that
 Delete the folder when done: Tailwind scans unignored files, and a stray build
 folder once broke the dev server's CSS.
 
-**Stripe webhooks locally:** `stripe listen --api-key <your sk_test key>
---events checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed
---forward-to localhost:3001/api/payments/stripe/webhooks`. Passing the key
-needs no `stripe login`, and the secret it prints matches `.env`.
-(`pnpm stripe-webhooks` does the same for port 3000.) Point the e2e suite at
-this machine's port with `E2E_BASE_URL=http://localhost:3001`.
+**SkipCash webhooks cannot reach localhost**, and there is no forwarding CLI.
+Locally the return page settles the order; the e2e suite signs callbacks with
+the sandbox Webhook Key itself. To see real ones, deploy a preview and set its
+URL in the portal (Sandbox → Webhook URL), or use the portal's Webhook
+Simulator. Point the e2e suite at this machine's port with
+`E2E_BASE_URL=http://localhost:3001`.
 
 **Files the Payload config loads must import `next/cache.js` / `next/server.js`**
 (with the extension). The e2e suite loads the config as strict ESM to seed
@@ -275,7 +296,7 @@ From Git Bash, prefix commands taking a leading-slash argument with
   and a rebuild in that moment keeps the old data (BUILD-LOG §30). The helper
   also refreshes after the commit, via a signed request to itself.
   Prove it with `npx tsx scripts/check-admin-reflects.ts` against `pnpm build`
-  + `pnpm start` — never against dev, where every page is fresh (BUILD-LOG §25).
+  - `pnpm start` — never against dev, where every page is fresh (BUILD-LOG §25).
 - **A dynamic route needs a `loading.tsx`**, or clicks to it show nothing until
   the whole page has rendered (BUILD-LOG §18).
 - **Scroll animations are made on arrival.** Use `Reveal` / `RevealImage` or
@@ -290,8 +311,8 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Stock is ours, not the plugin's.** Its pre-payment check never runs for a
   product with sizes, and its decrement has no floor. `stockRefusal()`
   (`src/lib/pricing/stock.ts`) runs inside `priceOrder()`, and
-  `stockAfterSale` clamps and notes after payment. The product's *Made to
-  order* switch decides the rule; storefront, quote and payment share it.
+  `stockAfterSale` clamps and notes after payment. The product's _Made to
+  order_ switch decides the rule; storefront, quote and payment share it.
   Stock alert emails are configured in Site settings → Stock alerts
   (`src/email/stockAlert.ts`); empty settings mean the default, never off.
 - **After signing in or out, tell the ecommerce plugin** (`onLogin` /

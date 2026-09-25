@@ -10,6 +10,7 @@ import {
   type CheckoutSavedAddress,
 } from '@/components/checkout/CheckoutPage'
 import { QATAR_COUNTRY_CODE } from '@/lib/pricing/shipping'
+import { isSkipcashEnabled, skipcashConfig } from '@/payments/skipcash/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -98,10 +99,10 @@ export default async function Checkout({
   return (
     <CheckoutPage
       saved={saved}
-      cancelled={payment === 'cancelled'}
+      returned={payment === 'cancelled' || payment === 'failed' ? payment : null}
       cities={cityList}
       countries={countryList}
-      testMode={(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '').startsWith('pk_test_')}
+      testMode={isSkipcashEnabled() && skipcashConfig().isSandbox}
     />
   )
 }

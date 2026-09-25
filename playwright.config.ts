@@ -6,6 +6,22 @@ import { defineConfig, devices } from '@playwright/test'
  */
 import 'dotenv/config'
 
+import { isLocalDatabase } from './src/utilities/database'
+
+/**
+ * The suite places real test orders, moves stock, makes discount codes and
+ * seeds a test admin — in whatever database the dev server uses. When `.env`
+ * points the app at the live one, refuse, unless asked for on purpose
+ * (E2E_ALLOW_LIVE_DATABASE=yes, before launch, knowing it writes there). To
+ * test locally, set DATABASE_URL back to LOCAL_DATABASE_URL.
+ */
+if (!isLocalDatabase() && process.env.E2E_ALLOW_LIVE_DATABASE !== 'yes') {
+  throw new Error(
+    'DATABASE_URL is not a local database. The e2e suite writes orders, stock and users; ' +
+      'point .env at LOCAL_DATABASE_URL, or set E2E_ALLOW_LIVE_DATABASE=yes on purpose.',
+  )
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */

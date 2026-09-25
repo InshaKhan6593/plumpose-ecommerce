@@ -46,6 +46,8 @@ const eslintConfig = [
       'src/payload-types.ts',
       'src/payload-generated-schema.ts',
       'src/app/(payload)/admin/importMap.js',
+      // Written by `payload migrate:create`, with its own @ts-nocheck.
+      'src/migrations/',
     ],
   },
 ]

@@ -3,13 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-/** How long to keep checking before saying so. The webhook usually lands in a second or two. */
+/** How long to keep checking before saying so. SkipCash usually settles in a second or two. */
 const TRIES = 12
 const EVERY_MS = 2500
 
 /**
- * Shown only in the gap between Stripe taking the payment and the order being
- * confirmable. It re-runs the return page every few seconds — which settles the
+ * Shown only while SkipCash is still authorising the payment, or in the gap
+ * between it taking the payment and the order being confirmable. It re-runs the return page every few seconds — which settles the
  * payment again — and the page redirects to the order the moment it exists.
  */
 export function PaymentPending({
@@ -46,7 +46,7 @@ export function PaymentPending({
           <p className="mt-5 leading-relaxed text-ink-soft">
             {error
               ? 'If you were charged, your order is safe and we will be in touch.'
-              : 'Your payment was received. Your order confirmation will arrive by email shortly — there is no need to pay again.'}
+              : 'If your payment went through, your order confirmation will arrive by email shortly — please do not pay again. If nothing arrives within the hour, nothing was charged.'}
           </p>
           {contactEmail ? (
             <p className="mt-6 text-sm text-ink-soft">

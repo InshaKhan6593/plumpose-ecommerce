@@ -2,7 +2,6 @@ import { AuthProvider } from '@/providers/Auth'
 import { LocaleProvider } from '@/providers/Locale'
 import { QAR } from '@/currencies'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
-import { stripeAdapterClient } from '@payloadcms/plugin-ecommerce/payments/stripe'
 import React from 'react'
 
 import { HeaderThemeProvider } from './HeaderTheme'
@@ -48,10 +47,15 @@ export const Providers: React.FC<{
                 },
               },
             }}
+            /**
+             * SkipCash needs nothing in the browser: the server registers the
+             * payment and the customer is sent to SkipCash's own page. This
+             * only tells the plugin's hooks the method exists
+             * (@/payments/skipcash/adapter). Checkout still checks the server
+             * actually offers it before letting anyone pay.
+             */
             paymentMethods={[
-              stripeAdapterClient({
-                publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-              }),
+              { name: 'skipcash', confirmOrder: true, initiatePayment: true, label: 'Card' },
             ]}
           >
             <LocaleProvider>{children}</LocaleProvider>

@@ -7,7 +7,8 @@ import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 
 import { QAR } from '@/currencies'
 import { COUNTRY_OPTIONS } from '@/data/countryOptions'
-import { createStripeSandboxAdapter, isStripeSandboxEnabled } from '@/payments/stripeSandbox'
+import { createSkipcashAdapter } from '@/payments/skipcash/adapter'
+import { isSkipcashEnabled, missingSkipcashConfig } from '@/payments/skipcash/api'
 
 import { Page, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -24,7 +25,7 @@ import { stockAfterSale } from '@/hooks/stockAfterSale'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { validateEnquiry } from '@/hooks/validateEnquiry'
 import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
-import { declineReason, paymentOutcome } from '@/lib/payments/outcome'
+import { DECLINE_EVENTS, declineReason, paymentOutcome } from '@/lib/payments/outcome'
 import { enquirySummary } from '@/lib/enquiries/summary'
 import { orderTotalsFields } from '@/fields/orderTotals'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
@@ -91,7 +92,7 @@ const paymentOutcomeField: FieldHook = async ({ data, req }) => {
         sort: '-createdAt',
         where: {
           and: [
-            { event: { equals: 'payment_intent.payment_failed' } },
+            { event: { in: DECLINE_EVENTS } },
             { orderRef: { equals: String(cartId) } },
             { createdAt: { greater_than_equal: data.createdAt } },
             ...(until ? [{ createdAt: { less_than: until } }] : []),
@@ -103,6 +104,13 @@ const paymentOutcomeField: FieldHook = async ({ data, req }) => {
   }
   const orderId = typeof data.order === 'object' ? data.order?.id : data.order
   return paymentOutcome({ createdAt: data.createdAt, declines, orderId, status: data.status }).label
+}
+
+/** Chosen but not configured is a silent "payments are not switched on" at checkout — say why here. */
+if (process.env.PAYMENT_PROVIDER?.trim().toLowerCase() === 'skipcash' && !isSkipcashEnabled()) {
+  console.warn(
+    `SkipCash is chosen but not configured. Missing: ${missingSkipcashConfig().join(', ')}.`,
+  )
 }
 
 export const plugins: Plugin[] = [
@@ -395,20 +403,13 @@ export const plugins: Plugin[] = [
     inventory: true,
     payments: {
       /**
-       * Stripe sandbox is a **development harness only** — see
-       * @/payments/stripeSandbox for what it does and does not prove. It is
-       * enabled by PAYMENT_PROVIDER=stripe and refuses to load in production.
-       *
-       * TODO(payments): add the SkipCash adapter once sandbox credentials
-       * arrive from the client. It implements `initiatePayment` and
-       * `confirmOrder`, ported from the existing Netlify Functions:
-       *   netlify/functions/skipcash-create-payment.mjs  -> initiatePayment
-       *   netlify/functions/skipcash-confirm.mjs         -> confirmOrder
-       * It must price through `priceOrder()` exactly as the Stripe wrapper
-       * does — the plugin's own adapters charge `cart.subtotal`, which omits
-       * delivery, embroidery and discounts.
+       * SkipCash, the Qatari gateway — see @/payments/skipcash/adapter.
+       * Switched on by PAYMENT_PROVIDER=skipcash with all four keys set;
+       * SKIPCASH_ENV chooses sandbox or production. With neither, the store
+       * has no way to take payment, which is the safe default: checkout says
+       * payments are not switched on.
        */
-      paymentMethods: isStripeSandboxEnabled() ? [createStripeSandboxAdapter()] : [],
+      paymentMethods: isSkipcashEnabled() ? [createSkipcashAdapter()] : [],
     },
     /**
      * The plugin's own collections ship with generic list views. These give
