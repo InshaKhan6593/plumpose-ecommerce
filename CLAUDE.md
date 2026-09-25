@@ -86,9 +86,9 @@ free: never reserves stock, never consumes a code.
 **Payment webhook** — `src/payments/webhook.ts`. Fails closed, logs every
 callback to `webhookLog` (verified or not), is idempotent on the gateway's own
 event id, and creates the order when the browser never confirmed it.
-**Limitation:** the webhook is anonymous, and the plugin refuses to settle a
-signed-in customer's transaction from an anonymous caller, so webhook recovery
-covers **guest checkout only**.
+Settlement calls the plugin's confirm endpoint **in process, as the customer
+the transaction belongs to** (`confirmInProcess` in `checkoutSession.ts`), so
+the webhook recovers a signed-in customer's order too (BUILD-LOG §31).
 
 **Payments** — `src/payments/`. Stripe **sandbox only**, as a stand-in while
 SkipCash credentials are pending. Enabled by `PAYMENT_PROVIDER=stripe`;
@@ -174,7 +174,7 @@ pnpm seed                    # idempotent
 | Command | Purpose |
 |---|---|
 | `pnpm test:int` | Integration tests (208) |
-| `pnpm test:e2e` | Playwright (38 pass, 21 skipped) — pays for real on Stripe's hosted test page |
+| `pnpm test:e2e` | Playwright (57 pass) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
 | `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors |
@@ -190,9 +190,17 @@ Never set that flag on a deployed server. Build and dev use separate folders
 (`.next` / `.next/dev`), so they can run side by side. In PowerShell 5.1 chain
 with `;` — `&&` is a parse error.
 
-**`pnpm lint` is broken** — ESLint dies resolving its own config via
-`eslint-config-next`. It fails on untouched files too, so it predates the
-current work.
+**`pnpm lint` passes** (warnings only). `eslint.config.mjs` uses
+`eslint-config-next`'s flat configs directly; through `FlatCompat` it crashed.
+The React Compiler checks (`set-state-in-effect`, `purity`, `refs`) are
+warnings on purpose — see the comment there.
+
+**A/B two production builds:** `NEXT_DIST_DIR=.next-b` for both `pnpm build`
+and `pnpm start` puts a second build beside the first (BUILD-LOG §31). Photos
+point at the port baked in by `NEXT_PUBLIC_SERVER_URL`, so serve one build
+there. `next build` then adds `.next-b` paths to `tsconfig.json` — revert that.
+Delete the folder when done: Tailwind scans unignored files, and a stray build
+folder once broke the dev server's CSS.
 
 **Stripe webhooks locally:** `stripe listen --api-key <your sk_test key>
 --events checkout.session.completed,checkout.session.expired,payment_intent.succeeded,payment_intent.payment_failed
@@ -206,10 +214,10 @@ this machine's port with `E2E_BASE_URL=http://localhost:3001`.
 users, where the bare subpath does not resolve — that silently broke the admin
 spec for a commit.
 
-**`pnpm test:e2e` passes: 38 tests, plus 21 skipped.** The skipped ones are
-`frontend.e2e.spec.ts`, the upstream template's storefront suite — it asserts a
-page titled "Payload Ecommerce Template" and a "Hoodie" product, neither of
-which plumpose has. Replace it when the storefront is built.
+**`pnpm test:e2e` passes: 57 tests, none skipped.** `storefront.e2e.spec.ts`
+covers the customer's path; it replaced the template's skipped suite. If the
+run lists **0 tests**, a spec failed to load — usually a bare `next/*` import
+reached by the Payload config (above); `npx playwright test --list` shows it.
 
 **When a spec breaks, suspect this project's own hardening first.** Both
 template specs failed for that reason, and neither error named it: the admin
@@ -317,6 +325,13 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Hidden-before-JS elements use the CSS failsafe** in `globals.css`
   (`data-reveal`, `data-reveal-lines`, `data-reveal-image`); `html` renders with
   `js-motion` and `data-theme="light"` — there is no before-paint script.
+- **A reveal's waiting state is CSS, not `gsap.set`.** `Reveal` and
+  `RevealImage` render `data-reveal-wait`; `globals.css` hides / closes them
+  while it is there, and they remove it as GSAP takes over. A `gsap.set` per
+  element at mount forced a whole-page style recalculation (BUILD-LOG §31).
+- **Scripting a scroll: use the wheel** (`page.mouse.wheel`). Lenis owns the
+  scroll position and undoes `window.scrollBy`, so a check that scrolls that
+  way never leaves the top.
 - **The film is a portrait source.** `hero-wide` is cut from the 4K original;
   check a new crop at several points in the loop and at several screen shapes.
 - **Tests must not assume "the first product" is hers** — with the demo

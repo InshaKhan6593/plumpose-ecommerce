@@ -39,6 +39,9 @@ export function whenReached(el: Element, line: number, onReach: () => void): () 
   }
 }
 
+/** A frame before it opens. Mirrored by `[data-reveal-wait]` in globals.css. */
+const CLOSED = 'inset(100% 0% 0% 0%)'
+
 /** "top 85%" → 0.85, for the ScrollTrigger-style `start` strings the components take. */
 const lineOf = (start: string, fallback: number) => {
   const pct = start.match(/top\s+(\d+)%/)
@@ -81,9 +84,12 @@ export function Reveal({
     const lineEls = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal-lines]'))
     const items = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'))
 
-    // Own the starting state before the CSS failsafe is lifted.
-    gsap.set([...lineEls, ...items], { opacity: 0 })
-
+    /*
+     * Until it arrives, `data-reveal-wait` keeps it hidden from CSS (globals.css)
+     * — not a gsap.set here. GSAP's first write reads computed style, and doing
+     * that for every group on the page as it mounted forced a whole-page style
+     * recalculation in the middle of hydration.
+     */
     let ctx: gsap.Context | undefined
     let cancelled = false
 
@@ -110,6 +116,8 @@ export function Reveal({
               lineEls.length ? 0.15 : 0,
             )
           }
+          // GSAP now holds the hidden state inline, so the CSS can let go.
+          root.removeAttribute('data-reveal-wait')
         }, root)
       })
     })
@@ -122,7 +130,7 @@ export function Reveal({
   }, [delay])
 
   return (
-    <Tag className={className} ref={ref}>
+    <Tag className={className} data-reveal-wait="" ref={ref}>
       {children}
     </Tag>
   )
@@ -158,17 +166,20 @@ export function RevealImage({
 
     const inner = el.firstElementChild
     const rest = parallax ? 1.08 : 1
-    const ctx = gsap.context(() => {
-      // The closed starting state is set now, so nothing shows before the unveil.
-      gsap.set(el, { clipPath: 'inset(100% 0% 0% 0%)', opacity: 1 })
-      if (inner) gsap.set(inner, { scale: 1.2 })
-    }, el)
+    // Closed until it arrives: `data-reveal-wait` in globals.css, for the reason given in Reveal.
+    const ctx = gsap.context(() => undefined, el)
 
     // The unveil plays when the frame reaches its line.
     const stopReveal = whenReached(el, lineOf(start, 0.9), () => {
       ctx.add(() => {
-        gsap.to(el, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.out' })
-        if (inner) gsap.to(inner, { duration: 1.8, ease: 'expo.out', scale: rest })
+        gsap.fromTo(
+          el,
+          { clipPath: CLOSED, opacity: 1 },
+          { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.out' },
+        )
+        if (inner)
+          gsap.fromTo(inner, { scale: 1.2 }, { duration: 1.8, ease: 'expo.out', scale: rest })
+        el.removeAttribute('data-reveal-wait')
       })
     })
 
@@ -202,7 +213,7 @@ export function RevealImage({
   }, [parallax, start])
 
   return (
-    <div className={className} data-reveal-image="" ref={ref}>
+    <div className={className} data-reveal-image="" data-reveal-wait="" ref={ref}>
       {children}
     </div>
   )

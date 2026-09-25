@@ -427,6 +427,12 @@ export const plugins: Plugin[] = [
             group: 'Shop',
             listSearchableFields: ['title'],
           },
+          // "Variant options" is the plugin's label; it heads a column on every piece's sizes list.
+          fields: defaultCollection.fields.map((field) =>
+            'name' in field && field.name === 'options'
+              ? ({ ...field, label: 'Size, colour or pattern' } as typeof field)
+              : field,
+          ),
           // A size's price is on the prerendered homepage; see @/hooks/revalidateStorefront.
           hooks: withStorefrontRefresh(defaultCollection.hooks),
           // Her words, not the plugin's: the stock alert emails point her here by this name.

@@ -380,6 +380,9 @@ export interface Product {
     totalDocs?: number;
   };
   priceInQAREnabled?: boolean | null;
+  /**
+   * The price shown in the shop. A size with its own price is charged at that price instead.
+   */
   priceInQAR?: number | null;
   /**
    * Optional — for a sale. The price it was, shown crossed out beside the price. Leave empty when it is not on sale.

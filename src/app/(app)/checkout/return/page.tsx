@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import configPromise from '@payload-config'
-import { headers as getHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React from 'react'
@@ -41,11 +40,8 @@ export default async function CheckoutReturn({
   }
 
   const payload = await getPayload({ config: configPromise })
-  const headers = await getHeaders()
 
   const result = await settleCheckoutSession({
-    /** So a signed-in customer's order settles as theirs. */
-    cookie: headers.get('cookie'),
     payload,
     sessionId,
     stripe: new Stripe(process.env.STRIPE_SECRET_KEY || ''),

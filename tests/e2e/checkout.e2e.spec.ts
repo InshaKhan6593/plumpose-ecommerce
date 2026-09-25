@@ -305,10 +305,9 @@ test.describe('checkout, end to end', () => {
   })
 
   /**
-   * A signed-in customer's order must settle as theirs. The return page runs on
-   * the server, so it forwards the customer's session cookie to the confirm
-   * endpoint — without it the plugin refuses ("Guest transaction belongs to an
-   * authenticated customer").
+   * A signed-in customer's order must settle as theirs — the plugin refuses
+   * otherwise ("Guest transaction belongs to an authenticated customer"). The
+   * return page settles as the customer the transaction belongs to.
    */
   test('a signed-in customer’s order settles as theirs', async ({ context, page, request }) => {
     const started = await startCheckout(request, { email: DEV_USER.email, headers: admin() })

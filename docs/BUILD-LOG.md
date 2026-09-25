@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. A purchase runs end to end through Stripe’s hosted page (sandbox), the redirect shape SkipCash will use. Content-page copy partly placeholder (§17); SkipCash pending credentials.
-**Last updated:** 24 Sep 2026
+**Last updated:** 25 Sep 2026
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -269,10 +269,9 @@ The audit found **12 problems** on first run and now reports none.
 - **The storefront itself** — still largely the upstream template: Payload logo,
   "Designed in Michigan", placeholder homepage
 
-### Known remaining jargon
-`AVAILABLE VARIANTS` and its `VARIANT OPTIONS` column are rendered by the
-plugin's own component, not a field label. Changing them needs a custom
-component or a translation override.
+### ~~Known remaining jargon~~ — fixed 25 Sep 2026 (§31)
+`AVAILABLE VARIANTS` now reads *Sizes & stock*, its `VARIANT OPTIONS` column
+*Size, colour or pattern*, and "Enable QAR price" *Set a price*.
 
 ---
 
@@ -505,19 +504,14 @@ the webhook creates the order itself, through the same public
 identically. It does not call the plugin's handler directly: `confirmOrderHandler`
 is not re-exported, and reaching it would mean a deep import into `dist/`.
 
-#### Known limitation: account holders
+#### ~~Known limitation: account holders~~ — closed 25 Sep 2026 (§31)
 
 The webhook is anonymous, and the plugin refuses to settle a signed-in
 customer's transaction from an anonymous caller — `validateSettlement` throws
 "Guest transaction belongs to an authenticated customer". That guard is
-correct and should not be weakened.
-
-So **webhook recovery covers guest checkout only.** Guest is the default
-(C4/S10), and a signed-in customer confirming in their own browser is the
-normal path, so the exposure is narrow: a logged-in customer who pays and
-closes the tab still gets no order. Closing it properly needs the webhook to
-act with authority, which means either a service user or the plugin exposing
-its confirm handler.
+correct and was not weakened. Settlement now acts as the customer the
+transaction belongs to, so a signed-in customer who pays and closes the tab
+gets their order too. See §31.
 
 #### For the SkipCash adapter
 
@@ -1089,15 +1083,12 @@ FAQ). Ask which is right.
 
 ### Not done / follow-ups
 
-- **No email when an enquiry arrives.** The form plugin writes submitted values
-  into the email HTML unescaped; add a `beforeEmail` hook that escapes them,
-  then add an email to the Contact form.
-- **Form-builder does not enforce required fields server-side** — a
-  submission with only a name is accepted (201). The page validates in the
-  browser; a `beforeValidate` hook on form-submissions would close it.
-- The order-access email sent from Track order is still the template's plain
-  HTML, and finds guest orders only (`customerEmail`); a signed-in customer's
-  order has no `customerEmail` — use `customerEmailOf()` there too.
+- ~~No email when an enquiry arrives~~ — done in §19 (`src/email/enquiryAlert.ts`,
+  every value escaped; the plugin's own emails stay off).
+- ~~Form-builder does not enforce required fields server-side~~ — done in §19
+  (`src/hooks/validateEnquiry.ts`).
+- ~~The order-access email from Track order~~ — done in §19: branded, and it
+  matches a signed-in customer's order by the account's email.
 - Copy lives in code; next is an admin-editable global for these pages (A18).
 
 ### Test-shot slots (`PAGE_TEST_MEDIA`, used only with `TEST_SHOTS=on`)
@@ -1776,7 +1767,7 @@ customers would, against a production build. Integration **208** (was 162).
 - **Unused imports and variables cleared** everywhere `tsc --noUnusedLocals` found them: 25 files importing `React` for nothing, leftovers in the form and carousel blocks and the page hook, `currentOptions` in the option picker, `PayloadRequest` in the wheel endpoint, and unread loop counters in the seed. The template's skipped e2e suite is left as it is, due for replacement.
 - **Prettier applied** to all source, scripts and tests (160 files, layout only), except the generated `payload-types.ts` and `importMap.js`. `prettier --list-different` is now empty.
 - The Excel byte-order mark is written as `'﻿'`, not an invisible raw character.
-- `pnpm lint` still fails inside `eslint-config-next`'s own config, as before.
+- `pnpm lint` still fails inside `eslint-config-next`'s own config, as before. *(Fixed in §31.)*
 
 **The refresh race.** The reviews e2e check failed on the production build: an approved, featured review never reached the homepage. It passed in any shorter sequence, and the query found the review when run directly. The cause is in how Next applies `revalidatePath`:
 
@@ -1800,3 +1791,99 @@ customers would, against a production build. Integration **208** (was 162).
 ⚠️ **On Vercel**, the self-request goes to the deployment's own URL. With Deployment Protection on a preview it gets a 401 and logs "Storefront refresh after the save failed". The production domain is unaffected.
 
 Integration **208**. e2e: the new file 10 of 10 (three runs, production), full suite **48 passed**, 21 skipped (dev).
+
+## 31. Gaps closed: webhook, tests, start-up, lint, admin words — 25 Sep 2026
+
+Eight items were listed as remaining. Three were already done in §19 (enquiry
+alert, server-side enquiry checks, Track order email) — §17's follow-ups had
+not been struck through; they are now. The other five:
+
+**Webhook recovery for account holders** (§13's known limitation). Settlement
+no longer calls the confirm endpoint over HTTP with the shopper's cookie. It
+calls the plugin's own confirm-order handler **in process**
+(`confirmInProcess`, `src/payments/checkoutSession.ts`) on a local request
+made as **the customer the transaction belongs to** — read from the
+transaction, never from the caller. Every check the browser path runs still
+runs (the atomic claim, `validateSettlement`, stock), in its own database
+transaction. The return page and the webhook now take the same path, and
+there is no self-request left to fail on a protected Vercel preview. Tested:
+`webhook.e2e` "creates a signed-in customer's order when they never come
+back" pays on Stripe's page, never returns, and the webhook creates the order
+on the account.
+
+**Storefront e2e suite.** `frontend.e2e.spec.ts` (the template's, skipped) is
+deleted; `tests/e2e/storefront.e2e.spec.ts` replaces it — every page the
+header and footer link to (200, a heading, no uncaught errors), the 404, shop →
+piece, choosing a size, the bag (priced by the quote, +/−, survives a reload,
+leads to checkout, empties), an account (create, sign out, sign in, refused
+the admin), a wrong password, Track order's identical reply and its
+validation. 8 tests. The full suite had stopped loading altogether: the
+admin spec's seed loads the Payload config as strict ESM, and
+`src/utilities/getGlobals.ts` imported bare `next/cache` — the trap this file
+and CLAUDE.md already describe. Now `next/cache.js`.
+
+**Phone start-up.** A CPU profile (Pixel 7, CPU 4×) of the product page put
+105 ms of one long task in `RevealImage` mounting: the first `gsap.set` of a
+style property reads computed style, forcing a whole-page style recalculation
+in the middle of hydration — once per reveal on the page. The waiting state
+now comes from CSS: `Reveal` and `RevealImage` render `data-reveal-wait`,
+`globals.css` hides / closes them while it is there (only once the motion
+script runs, so the failsafe still covers a dead script), and GSAP takes over
+with `fromTo` on arrival and removes the attribute.
+
+Measured as an A/B — the previous code in `.next-a` on :3000, this in `.next-b`
+on :3002, both production, interleaved, **median of five runs**, Pixel 7 at 4×:
+
+| Page | Busy after load | Worst freeze |
+|---|---|---|
+| Home | 1,208 → **1,098 ms** | 396 → **368 ms** |
+| Our Story | 406 → **314 ms** | 225 → **134 ms** |
+| Product | 433 → **304 ms** | 367 → **289 ms** |
+| Shop | 303 → 368 ms | 257 → 243 ms |
+
+The shop's runs overlap (253–388 against 254–399, plus one outlier of 664), so
+no change there. Checked afterwards, scrolling every page to the end with the
+wheel on desktop and iPhone 13, and with reduced motion: every reveal ends
+shown, identically in both builds. The only frames left closed are the five in
+the product page's phone gallery, in both — photographs in the sideways
+gallery, which open when swiped to.
+
+What remains of the start-up is loading GSAP itself (~90 ms at 4×), React's
+hydration, and the per-frame ticker.
+
+**`pnpm lint`.** `eslint.config.mjs` loaded `eslint-config-next` 16 through
+`FlatCompat`, which crashed on the react plugin's circular config before
+reading a file. It now spreads the package's flat configs. Of the 22 errors
+that then appeared, 6 were fixed (the dashboard's five `<a>` links to admin
+pages are `Link`s; `tailwind.config.mjs` imports instead of `require`). The
+other 16 are the React Compiler readiness checks new in react-hooks 7 —
+`set-state-in-effect` for reading storage or the session in an effect,
+`purity` for `Date.now()` in the dashboard, which is a server component — and
+are warnings: the app does not use the compiler, and the flagged code works
+and is tested. Now **0 errors, 97 warnings**.
+
+**Admin words.** The product's list of sizes was headed *Available variants*
+(a plugin translation) with a *Variant options* column (a hard-coded label on
+the variants collection): now *Sizes & stock* and *Size, colour or pattern*.
+The same screen said *Enable QAR price* and, under the price, the plugin's
+note about "variants enabled … sorting and filtering". The relabel map already
+had `priceInQAREnabled`, but the plugin nests the price in an unnamed group
+and row, and the map only looked at top-level fields — so neither it nor
+`PriceCell` had ever applied there. `mapFieldsDeep` walks into those; the
+price now reads *Set a price* / *Price (QAR)* with "The price shown in the
+shop. A size with its own price is charged at that price instead."
+`pnpm audit:admin`: no problems.
+
+**Tooling.** `next.config.ts` takes `NEXT_DIST_DIR`, so a second production
+build can sit beside the first for an A/B; `/.next-*/` is gitignored. Delete
+those folders afterwards — Tailwind scans every unignored file, and before the
+ignore rule the build output broke the dev server's CSS ("Parsing CSS source
+code failed" on class names made from minified code).
+
+**Also seen, not changed:** her size M shows 0 in stock — the checkout specs
+buy it and reset it to a fixed number, and the versions show it at 0 before
+this work began; the docs' "S 4 · M 6 · L 4" is out of date. A draft product
+with no title, updated today, is in the products list. Both are hers to
+decide.
+
+Integration **208**. E2E: the full suite, **57 passed, none skipped** (dev, one worker, 4 min). `pnpm lint`: 0 errors. `tsc`: 0 errors.

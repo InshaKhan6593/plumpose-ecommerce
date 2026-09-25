@@ -13,6 +13,8 @@ playwright-report/index.html
 
 # next.js
 /.next/
+# A second build beside the first, for an A/B (NEXT_DIST_DIR, next.config.ts)
+/.next-*/
 /out/
 
 # production

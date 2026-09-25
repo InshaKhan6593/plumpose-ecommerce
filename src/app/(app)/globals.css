@@ -122,6 +122,24 @@ html.js-motion:not(.motion-ready) [data-reveal-image] {
  * grows the clip to take them (and the tops of italic capitals); the negative
  * margin gives the space back, so the layout does not move.
  */
+/*
+ * Waiting to be revealed (src/motion/Reveal.tsx), once the motion script is
+ * running. The hidden state comes from here rather than from GSAP at mount:
+ * a gsap.set per group made the browser recalculate every style on the page
+ * during hydration. Reveal removes the attribute as GSAP takes over.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html.motion-ready [data-reveal-wait] :is([data-reveal], [data-reveal-lines]) {
+    opacity: 0;
+  }
+  html.motion-ready [data-reveal-image][data-reveal-wait] {
+    clip-path: inset(100% 0% 0% 0%);
+  }
+  html.motion-ready [data-reveal-image][data-reveal-wait] > :first-child {
+    transform: scale(1.2);
+  }
+}
+
 .split-line-mask {
   padding-block: 0.06em 0.22em;
   margin-block: -0.06em -0.22em;

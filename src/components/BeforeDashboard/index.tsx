@@ -1,4 +1,5 @@
 import config from '@payload-config'
+import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
@@ -170,15 +171,15 @@ export const BeforeDashboard: React.FC = async () => {
             <p>
               <strong>{newEnquiries.totalDocs}</strong> new{' '}
               {newEnquiries.totalDocs === 1 ? 'enquiry' : 'enquiries'}.{' '}
-              <a href="/admin/collections/form-submissions?where[status][equals]=new">
+              <Link href="/admin/collections/form-submissions?where[status][equals]=new">
                 Read {newEnquiries.totalDocs === 1 ? 'it' : 'them'}
-              </a>
+              </Link>
             </p>
           )}
           {notPaid > 0 && (
             <p>
               <strong>{notPaid}</strong> {notPaid === 1 ? 'checkout' : 'checkouts'} in the last week{' '}
-              {notPaid === 1 ? 'was' : 'were'} not paid. <a href={paymentsLink}>See payments</a>
+              {notPaid === 1 ? 'was' : 'were'} not paid. <Link href={paymentsLink}>See payments</Link>
             </p>
           )}
           {ratesStale && (
@@ -187,19 +188,19 @@ export const BeforeDashboard: React.FC = async () => {
               {ratesAgeDays === null
                 ? 'have not been fetched yet'
                 : `were last refreshed ${ratesAgeDays} days ago`}
-              . <a href="/admin/collections/currencies">Refresh them</a>
+              . <Link href="/admin/collections/currencies">Refresh them</Link>
             </p>
           )}
           {soldOut > 0 && (
             <p>
               <strong>{soldOut}</strong> {soldOut === 1 ? 'size is' : 'sizes are'} sold out.{' '}
-              <a href={sizesLink}>See sizes &amp; stock</a>
+              <Link href={sizesLink}>See sizes &amp; stock</Link>
             </p>
           )}
           {runningLow > 0 && (
             <p>
               <strong>{runningLow}</strong> {runningLow === 1 ? 'size is' : 'sizes are'} down to{' '}
-              {lowAt} or fewer. <a href={sizesLink}>See sizes &amp; stock</a>
+              {lowAt} or fewer. <Link href={sizesLink}>See sizes &amp; stock</Link>
             </p>
           )}
         </div>

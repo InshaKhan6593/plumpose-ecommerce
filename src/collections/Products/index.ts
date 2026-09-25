@@ -24,6 +24,20 @@ import { DefaultDocumentIDType, Where } from 'payload'
 import { amountField } from '@payloadcms/plugin-ecommerce'
 import { QAR } from '@/currencies'
 
+type Fields = Parameters<CollectionOverride>[0]['defaultCollection']['fields']
+
+/**
+ * Maps every field, walking into unnamed groups and rows — which only lay
+ * fields out, so their children behave as top-level fields. The plugin puts
+ * the price in one, where a top-level map never reached it.
+ */
+const mapFieldsDeep = (fields: Fields, fn: (field: Fields[number]) => Fields[number]): Fields =>
+  fields.map((field) =>
+    !('name' in field) && 'fields' in field && (field.type === 'group' || field.type === 'row')
+      ? ({ ...field, fields: mapFieldsDeep(field.fields, fn) } as Fields[number])
+      : fn(field),
+  )
+
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   /** The homepage and Our Story show the product and its price, and they are prerendered. */
@@ -232,7 +246,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
              * Money is stored in minor units, so a price column renders as
              * "139900" without a Cell. PriceCell formats it as QAR 1,399.00.
              */
-            ...(defaultCollection.fields.map((field) => {
+            ...(mapFieldsDeep(defaultCollection.fields, (field) => {
               if (!('name' in field)) return field
               const name = String(field.name)
 
@@ -241,7 +255,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                * "139900" without a Cell. PriceCell formats it as QAR 1,399.00.
                */
               if (name.startsWith('priceIn') && !name.endsWith('Enabled')) {
-                return {
+                field = {
                   ...field,
                   admin: {
                     ...('admin' in field ? field.admin : {}),
@@ -252,7 +266,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                       Cell: '@/components/admin/PriceCell#PriceCell',
                     },
                   },
-                }
+                } as typeof field
               }
 
               /** The plugin's own labels are written for developers. */
@@ -261,11 +275,19 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   description: 'Tick this if the piece is made in more than one size or colour.',
                   label: 'This piece comes in different sizes',
                 },
+                // The price sits in an unnamed group and row, hence mapFieldsDeep.
+                priceInQAR: {
+                  description:
+                    'The price shown in the shop. A size with its own price is charged at that price instead.',
+                  label: 'Price (QAR)',
+                },
                 priceInQAREnabled: { label: 'Set a price' },
                 variantTypes: {
                   description: 'Which options this piece is offered in — for example Size.',
                   label: 'Options offered',
                 },
+                // Was "Available variants": the plugin's heading over this piece's list of sizes.
+                variants: { label: 'Sizes & stock' },
               }
 
               if (relabel[name]) {
@@ -278,7 +300,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                       : {}),
                   },
                   label: relabel[name].label,
-                }
+                } as typeof field
               }
 
               return field

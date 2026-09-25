@@ -1,5 +1,7 @@
-import type { Payload, PayloadRequest } from 'payload'
+import type { Payload, PayloadRequest, TypedUser } from 'payload'
 import type Stripe from 'stripe'
+
+import { createLocalReq } from 'payload'
 
 import type { Transaction } from '@/payload-types'
 
@@ -161,13 +163,11 @@ const orderForTransaction = async (payload: Payload, transactionId: number) => {
  * Turns a paid Checkout Session into an order. Safe to call any number of
  * times, from anywhere: the return page, the webhook, a retry.
  *
- * `cookie` forwards the shopper's session when called from the return page, so
- * a signed-in customer's order settles as theirs. The webhook has no cookie and
- * settles guest orders only — the plugin rightly refuses to settle a signed-in
- * customer's transaction for an anonymous caller (see docs/BUILD-LOG.md §13).
+ * A signed-in customer's order settles as theirs whoever calls — the return
+ * page or the webhook — because the customer is read from the transaction
+ * (see docs/BUILD-LOG.md §31).
  */
 export const settleCheckoutSession = async (args: {
-  cookie?: null | string
   payload: Payload
   sessionId: string
   stripe: Stripe
@@ -220,21 +220,37 @@ export const settleCheckoutSession = async (args: {
         .catch(() => null)
     : null
 
-  const origin = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
-  const response = await fetch(`${origin}/api/payments/stripe/confirm-order`, {
-    body: JSON.stringify({
+  /**
+   * Whose order it is comes from the transaction, never from whoever is
+   * calling. The plugin settles a signed-in customer's transaction only for
+   * that customer (`validateSettlement`), and the webhook has no one signed
+   * in — so the order was never created for a customer who paid and closed
+   * the tab. Stripe has already said the session is paid; acting as the
+   * transaction's own customer only lets the plugin's checks run against the
+   * right person.
+   */
+  const customerID =
+    typeof transaction.customer === 'object' ? transaction.customer?.id : transaction.customer
+  const customer = customerID
+    ? await payload
+        .findByID({ collection: 'users', depth: 0, id: customerID, overrideAccess: true })
+        .catch(() => null)
+    : null
+  if (customerID && !customer) {
+    return { reason: 'The account this payment belongs to no longer exists.', status: 'error' }
+  }
+
+  const response = await confirmInProcess({
+    data: {
       cartID,
       customerEmail: transaction.customerEmail ?? undefined,
       paymentIntentID,
       /** A guest is authorised by the cart's own secret, the way the browser would be. */
       secret: cart?.secret ?? undefined,
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-      ...(args.cookie ? { cookie: args.cookie } : {}),
     },
-    method: 'POST',
-  }).catch(() => null)
+    payload,
+    user: customer ? { ...customer, collection: 'users' } : null,
+  })
 
   if (response?.ok) {
     const body = (await response.json().catch(() => ({}))) as {
@@ -264,6 +280,42 @@ export const settleCheckoutSession = async (args: {
     'A paid Checkout Session could not be confirmed into an order.',
   )
   return { status: 'pending' }
+}
+
+/**
+ * Calls the plugin's own confirm-order endpoint in this process, as `user`
+ * (or as a guest), on a request of its own.
+ *
+ * It used to be an HTTP call to ourselves, which could only carry the
+ * shopper's cookie: the webhook had none, and on a protected Vercel preview a
+ * self-request is refused outright. In process, the endpoint still runs every
+ * check it runs for the browser — the atomic claim, `validateSettlement`, the
+ * stock decrement — and opens its own database transaction, because this
+ * request carries none. That is also why the PaymentIntent link above is
+ * written without `req`: it must be committed before this runs.
+ */
+const confirmInProcess = async ({
+  data,
+  payload,
+  user,
+}: {
+  data: Record<string, unknown>
+  payload: Payload
+  user: null | (TypedUser & { collection: 'users' })
+}): Promise<null | Response> => {
+  const endpoint = payload.config.endpoints.find(
+    (e) => e.path === '/payments/stripe/confirm-order' && e.method === 'post',
+  )
+  if (!endpoint) {
+    payload.logger.error('The confirm-order endpoint is not registered.')
+    return null
+  }
+  const req = await createLocalReq({ req: { method: 'POST' }, user: user ?? undefined }, payload)
+  req.data = data
+  return Promise.resolve(endpoint.handler(req)).catch((error: unknown) => {
+    payload.logger.error({ err: error }, 'Confirming an order in process threw.')
+    return null
+  })
 }
 
 /** Marks the transaction behind an abandoned session as expired (P11). */

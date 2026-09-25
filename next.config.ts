@@ -11,6 +11,12 @@ const NEXT_PUBLIC_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://loc
 
 const nextConfig: NextConfig = {
   /*
+   * A second production build beside the first, for an A/B on this machine:
+   * NEXT_DIST_DIR=.next-b for both `pnpm build` and `pnpm start`. Unset, Next's
+   * default folders are used, as always.
+   */
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
+  /*
    * The dev-mode "Compiling" badge sat over the page in every screen recording
    * sent for review, and read as a site defect. Build errors still show.
    */

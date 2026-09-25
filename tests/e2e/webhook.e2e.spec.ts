@@ -187,9 +187,7 @@ test.describe('payment webhook', () => {
    * closed the tab before it sent them back. The order must still exist.
    *
    * The browser is stopped from ever reaching `/checkout/return`, so only the
-   * webhook can create the order. Guest deliberately: a webhook is always
-   * anonymous, and the plugin refuses to settle a signed-in customer's
-   * transaction for an anonymous caller (see the build log).
+   * webhook can create the order. A guest here; the signed-in case follows.
    */
   test('creates the order when the customer never comes back', async ({ page, request }) => {
     test.setTimeout(120_000)
@@ -230,6 +228,48 @@ test.describe('payment webhook', () => {
     expect(order.amount).toBe(141900)
     expect(order.shippingQar).toBe(2000)
     expect(order.shippingLabel).toBe('Delivery to Doha')
+  })
+
+  /**
+   * The same, for a customer who was signed in. The webhook has no one signed
+   * in, and the plugin settles an account holder's payment only as that
+   * account — so this order used to be lost. It now settles as the customer
+   * the transaction belongs to (BUILD-LOG §31).
+   */
+  test('creates a signed-in customer’s order when they never come back', async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000)
+    const started = await startCheckout(request, { email: DEV_USER.email, headers: admin() })
+    await payAndVanish(page, stripe, started)
+
+    const { body, status } = await send(
+      request,
+      sessionEvent({
+        cartID: String(started.cart.id),
+        id: `evt_test_${Date.now()}_orphan_account`,
+        sessionId: started.sessionId,
+        type: 'checkout.session.completed',
+      }),
+    )
+    expect(status).toBe(200)
+    expect(body.reason).toBe('confirmed')
+
+    const transaction = await transactionFor(request, started.sessionId)
+    expect(transaction.status).toBe('succeeded')
+
+    const orders = await (
+      await request.get(`${BASE}/api/orders?where[transactions][equals]=${transaction.id}&depth=0`, {
+        headers: admin(),
+      })
+    ).json()
+    expect(orders.totalDocs).toBe(1)
+
+    // The order is the account's, not a guest's.
+    const me = await (await request.get(`${BASE}/api/users/me`, { headers: admin() })).json()
+    expect(orders.docs[0].customer).toBe(me.user.id)
+    expect(orders.docs[0].customerEmail ?? null).toBeNull()
   })
 
   /**
