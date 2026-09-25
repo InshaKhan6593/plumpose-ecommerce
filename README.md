@@ -41,7 +41,12 @@ orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
 **Currencies.** Prices in the visitor's currency, from their location or the
 country picker; always charged in QAR. On/off in Site settings.
 
-SkipCash is pending credentials. 162 integration and 38 end-to-end tests pass.
+**Also:** payments she can follow up (paid or not), spreadsheet downloads of
+orders and subscribers, reviews with approval and replies, customer Spotted
+submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
+colours and patterns, exchange-rate checks — see BUILD-LOG §29.
+
+SkipCash is pending credentials. 208 integration and 48 end-to-end tests pass.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.

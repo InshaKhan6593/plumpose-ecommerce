@@ -8,7 +8,7 @@ import type { Media as MediaType, Press } from '@/payload-types'
 
 import { ClosingBand, PageHeading, PageShell, TextLink } from '@/components/editorial'
 import { Media } from '@/components/Media'
-import { PRESS_PAGE } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
@@ -29,6 +29,7 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'nume
  * herself** — naming a magazine the brand has not appeared in would be false.
  */
 export default async function PressPage() {
+  const { PRESS_PAGE } = await getPageText()
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
 

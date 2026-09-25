@@ -8,7 +8,7 @@ import type { Faq } from '@/payload-types'
 
 import { ClosingBand, PageHeading, PageShell, TextLink } from '@/components/editorial'
 import { RichText } from '@/components/RichText'
-import { FAQ_PAGE } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 
 export const metadata: Metadata = {
@@ -26,6 +26,7 @@ export const metadata: Metadata = {
  * it as expandable. The page also carries FAQPage structured data.
  */
 export default async function FaqPage() {
+  const { FAQ_PAGE } = await getPageText()
   const payload = await getPayload({ config: configPromise })
   const { docs } = await payload.find({
     collection: 'faqs',

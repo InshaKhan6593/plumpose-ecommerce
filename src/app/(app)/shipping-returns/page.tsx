@@ -5,7 +5,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { PageHeading, PageShell, Prose, SectionLabel, SplitBand, TextLink } from '@/components/editorial'
-import { SHIPPING_PAGE } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { formatQar } from '@/lib/pricing/money'
 import { rateCard } from '@/lib/pricing/shipping'
 import { Reveal } from '@/motion/Reveal'
@@ -28,6 +28,7 @@ export const metadata: Metadata = {
  * Anchors the footer links to: #delivery, #returns, #gifting.
  */
 export default async function ShippingReturnsPage() {
+  const { SHIPPING_PAGE } = await getPageText()
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
 

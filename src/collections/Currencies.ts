@@ -1,6 +1,30 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, FieldHook } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
+import { refreshRatesCronEndpoint, refreshRatesEndpoint } from '@/endpoints/refreshRates'
+import { formatDifference, rateCheck } from '@/lib/pricing/rates'
+
+/** The anchor piece's QAR price (Site settings → Currencies), read once per request. */
+const anchorOf = async (req: Parameters<FieldHook>[0]['req']): Promise<number> => {
+  const ctx = req.context as { anchorQar?: number }
+  if (ctx.anchorQar) return ctx.anchorQar
+  const settings = await req.payload.findGlobal({ depth: 0, req, slug: 'siteSettings' }).catch(() => null)
+  ctx.anchorQar = settings?.currencyAnchorQar && settings.currencyAnchorQar > 0 ? settings.currencyAnchorQar : 1399
+  return ctx.anchorQar
+}
+
+const atTodaysRate: FieldHook = async ({ req, siblingData }) => {
+  const check = rateCheck({ anchorQar: await anchorOf(req), price: siblingData?.priceOverride, rate: siblingData?.rate })
+  if (!check) return null
+  const decimals = typeof siblingData?.decimals === 'number' ? siblingData.decimals : 0
+  return check.atRate.toLocaleString('en-GB', { maximumFractionDigits: decimals, minimumFractionDigits: decimals })
+}
+
+const difference: FieldHook = async ({ req, siblingData }) => {
+  if (!siblingData?.priceOverride) return null
+  const check = rateCheck({ anchorQar: await anchorOf(req), price: siblingData.priceOverride, rate: siblingData.rate })
+  return check ? formatDifference(check.difference) : null
+}
 
 /**
  * Display currencies. Ported from netlify/lib/pricing.mjs.
@@ -18,13 +42,16 @@ export const Currencies: CollectionConfig = {
   defaultSort: 'code',
   labels: { singular: 'Currency', plural: 'Currencies' },
   admin: {
-    defaultColumns: ['code', 'name', 'symbol', 'priceOverride', 'rate', 'updatedAt'],
+    components: { beforeListTable: ['@/components/admin/RefreshRatesButton#RefreshRatesButton'] },
+    defaultColumns: ['code', 'name', 'priceOverride', 'atTodaysRate', 'difference', 'rateUpdatedAt'],
     description:
       'Display prices only — every card is charged in QAR. Set a price by hand for the markets that matter.',
     group: 'Shop settings',
     listSearchableFields: ['code', 'name'],
     useAsTitle: 'code',
   },
+  // The button above the list, and the daily scheduled job (REQUIREMENTS A14).
+  endpoints: [refreshRatesEndpoint, refreshRatesCronEndpoint],
   access: {
     create: adminOnly,
     delete: adminOnly,
@@ -75,7 +102,24 @@ export const Currencies: CollectionConfig = {
     {
       name: 'rateUpdatedAt',
       type: 'date',
-      admin: { position: 'sidebar', readOnly: true },
+      admin: { date: { pickerAppearance: 'dayAndTime' }, position: 'sidebar', readOnly: true },
+      label: 'Rate updated',
+    },
+    {
+      name: 'atTodaysRate',
+      type: 'text',
+      admin: { description: 'What the anchor piece costs at the rate above — a check on the price set by hand.', readOnly: true },
+      hooks: { afterRead: [atTodaysRate] },
+      label: 'At today’s rate',
+      virtual: true,
+    },
+    {
+      name: 'difference',
+      type: 'text',
+      admin: { description: 'How far the price set by hand is from today’s rate (+ means above it).', readOnly: true },
+      hooks: { afterRead: [difference] },
+      label: 'Difference',
+      virtual: true,
     },
   ],
 }

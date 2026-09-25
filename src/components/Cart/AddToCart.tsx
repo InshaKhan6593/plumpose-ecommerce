@@ -95,9 +95,15 @@ export function AddToCart({ onAdded, personalisation = [], product }: Props) {
   /** The next one added would be beyond what is ready to send. */
   const madeToOrder = Boolean(record) && product.madeToOrder !== false && readyStock(record!) <= inBag
 
+  /** What is still to choose, by name: "Select a size", "Select a colour", "Select a size and colour". */
+  const missing = (product.variantTypes ?? [])
+    .filter((t): t is Exclude<typeof t, number> => typeof t === 'object' && t !== null)
+    .filter((t) => !searchParams.get(t.name))
+    .map((t) => (t.label || t.name).toLowerCase())
+
   /** Say why the button is off, rather than leaving a dead button. */
   const label = needsSize
-    ? 'Select a size'
+    ? `Select a ${missing.length ? missing.join(' and ') : 'size'}`
     : soldOut
       ? 'Sold out'
       : atLimit
@@ -121,7 +127,7 @@ export function AddToCart({ onAdded, personalisation = [], product }: Props) {
       </button>
       {madeToOrder && !disabled ? (
         <p className="mt-3 text-[0.8125rem] leading-relaxed text-ink-soft">
-          This size is made to order for you, so it takes a little longer to reach you.
+          This one is made to order for you, so it takes a little longer to reach you.
         </p>
       ) : null}
     </>

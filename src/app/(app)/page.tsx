@@ -15,6 +15,7 @@ import { type PrintFact, PrintBand } from '@/components/home/PrintBand'
 import { deliveryRange } from '@/lib/pricing/deliveryRange'
 import { formatQar } from '@/lib/pricing/money'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { getPageText } from '@/content/getPageText'
 
 export const metadata: Metadata = {
   description:
@@ -38,6 +39,7 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
+  const { featuredProductId, HOME: copy } = await getPageText()
 
   const [media, products, reviews, spotted, threads, range] = await Promise.all([
     payload.find({
@@ -47,15 +49,17 @@ export default async function HomePage() {
       pagination: false,
       where: { filename: { in: [...Object.values(HOME_MEDIA), ...Object.values(TEST_MEDIA)] } },
     }),
+    // The piece she features (Page text → Homepage), else the first in the shop.
     payload.find({
       collection: 'products',
       depth: 1,
       limit: 1,
       populate: { variants: { priceInQAR: true } },
       sort: ['_order', 'createdAt'],
-      where: { _status: { equals: 'published' } },
+      where: { and: [{ _status: { equals: 'published' } }, ...(featuredProductId ? [{ id: { equals: featuredProductId } }] : [])] },
     }),
-    payload.find({ collection: 'reviews', depth: 0, limit: 3, sort: '-createdAt', where: { status: { equals: 'approved' } } }),
+    // Featured first (she ticks "Feature on the homepage"), then the newest.
+    payload.find({ collection: 'reviews', depth: 0, limit: 3, overrideAccess: false, sort: ['-featured', '-createdAt'], where: { status: { equals: 'approved' } } }),
     payload.find({ collection: 'spotted', depth: 1, limit: 4, sort: '-createdAt', where: { status: { equals: 'approved' } } }),
     payload.count({ collection: 'personalisationOptions', where: { and: [{ type: { equals: 'thread' } }, { active: { not_equals: false } }] } }),
     deliveryRange(payload, settings),
@@ -67,8 +71,20 @@ export default async function HomePage() {
   const image = (key: HomeMediaKey) =>
     (testing && TEST_MEDIA[key] ? byFile.get(TEST_MEDIA[key]) : undefined) ?? byFile.get(HOME_MEDIA[key])
 
-  // The featured piece: the first published product. There is one today.
-  const product = products.docs[0] as Product | undefined
+  // Her featured piece; if it has since been unpublished, the first in the shop, so the band never disappears.
+  const product = (products.docs[0] ??
+    (featuredProductId
+      ? (
+          await payload.find({
+            collection: 'products',
+            depth: 1,
+            limit: 1,
+            populate: { variants: { priceInQAR: true } },
+            sort: ['_order', 'createdAt'],
+            where: { _status: { equals: 'published' } },
+          })
+        ).docs[0]
+      : undefined)) as Product | undefined
   const productHref = product ? `/products/${product.slug}` : '/shop'
   const variantPrices = (product?.variants?.docs ?? [])
     .map((v) => (typeof v === 'object' ? v.priceInQAR : null))
@@ -125,6 +141,7 @@ export default async function HomePage() {
       <div className="relative">
         <div className="sticky top-0">
           <HomeHero
+            copy={copy.hero}
             ctaHref={productHref}
             detail={image('print')}
             films={{
@@ -134,6 +151,7 @@ export default async function HomePage() {
           />
         </div>
         <Philosophy
+          copy={copy.philosophy}
           images={{
             corridor: image('corridor'),
             piping: image('piping'),
@@ -143,9 +161,9 @@ export default async function HomePage() {
         />
       </div>
 
-      <PrintBand facts={facts} href="/our-story" image={image('print')} />
+      <PrintBand copy={copy.print} facts={facts} href="/our-story" image={image('print')} />
 
-      <MadeSteps steps={steps} />
+      <MadeSteps copy={copy.steps} steps={steps} />
 
       {product ? (
         <ProductBand
@@ -153,6 +171,7 @@ export default async function HomePage() {
           href={productHref}
           image={image('window')}
           priceMinor={priceMinor}
+          wasMinor={product.compareAtPriceInQAR}
           title={product.title}
         />
       ) : null}

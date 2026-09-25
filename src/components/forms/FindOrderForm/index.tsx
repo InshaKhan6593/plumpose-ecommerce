@@ -23,7 +23,7 @@ type Props = {
  * action answers the same whether or not an order matched (see
  * sendOrderAccessEmail), so this form cannot be used to probe who ordered.
  */
-export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
+export const FindOrderForm: React.FC<Props & { sent?: { body: string; heading: string } }> = ({ initialEmail, sent = TRACK_PAGE.sent }) => {
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -65,8 +65,8 @@ export const FindOrderForm: React.FC<Props> = ({ initialEmail }) => {
   if (success) {
     return (
       <div aria-live="polite" className="border border-line px-7 py-8 text-center">
-        <p className="serif-display text-[2rem]">{TRACK_PAGE.sent.heading}</p>
-        <p className="mx-auto mt-3 max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft">{TRACK_PAGE.sent.body}</p>
+        <p className="serif-display text-[2rem]">{sent.heading}</p>
+        <p className="mx-auto mt-3 max-w-sm text-[0.9375rem] leading-relaxed text-ink-soft">{sent.body}</p>
       </div>
     )
   }

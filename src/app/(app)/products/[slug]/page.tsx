@@ -1,4 +1,4 @@
-import type { Category, Media, Product } from '@/payload-types'
+import type { Category, Media, Product, Review } from '@/payload-types'
 
 import configPromise from '@payload-config'
 import { Metadata } from 'next'
@@ -11,6 +11,8 @@ import { RenderBlocks } from '@/blocks/RenderBlocks'
 import type { EmbroideryOption, EmbroideryRules } from '@/components/product/embroidery'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { type ProductDetail, ProductInfo } from '@/components/product/ProductInfo'
+import { ProductReviews } from '@/components/product/ProductReviews'
+import { averageRating } from '@/components/product/Stars'
 import { deliveryRange } from '@/lib/pricing/deliveryRange'
 import { formatQar, toMajor, toMinor } from '@/lib/pricing/money'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -74,7 +76,7 @@ export default async function ProductPage({ params }: Args) {
   const settings = await getCachedGlobal('siteSettings', 0)()
 
   // Independent reads, in parallel rather than one after another.
-  const [details, embroideryDocs] = await Promise.all([
+  const [details, embroideryDocs, reviewDocs] = await Promise.all([
     productDetails({ payload, product, settings }),
     product.personalisationEnabled
       ? payload.find({
@@ -86,7 +88,19 @@ export default async function ProductPage({ params }: Args) {
           where: { active: { not_equals: false } },
         })
       : null,
+    // Approved only: read without admin rights, so the collection's own access decides.
+    payload.find({
+      collection: 'reviews',
+      depth: 0,
+      limit: 100,
+      overrideAccess: false,
+      pagination: false,
+      sort: '-createdAt',
+      where: { and: [{ product: { equals: product.id } }, { status: { equals: 'approved' } }] },
+    }),
   ])
+  const reviews = reviewDocs.docs as Review[]
+  const average = averageRating(reviews.map((r) => r.rating))
 
   const images =
     product.gallery
@@ -146,6 +160,18 @@ export default async function ProductPage({ params }: Args) {
       price: toMajor(price).toFixed(2),
       priceCurrency: 'QAR',
     },
+    // Approved reviews only, so the stars a search result shows are real ones.
+    ...(average !== null
+      ? {
+          aggregateRating: { '@type': 'AggregateRating', ratingValue: average, reviewCount: reviews.length },
+          review: reviews.slice(0, 5).map((r) => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.name },
+            reviewBody: r.body,
+            reviewRating: { '@type': 'Rating', ratingValue: r.rating },
+          })),
+        }
+      : {}),
   }
 
   return (
@@ -156,7 +182,14 @@ export default async function ProductPage({ params }: Args) {
       />
 
       <div className="mx-auto grid max-w-[90rem] gap-10 px-4 pt-8 md:px-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-20 lg:pt-10">
-        <ProductGallery images={images} />
+        <ProductGallery
+          items={(product.gallery ?? [])
+            .filter((item) => item.image && typeof item.image === 'object')
+            .map((item) => ({
+              image: item.image as Media,
+              optionId: item.variantOption ? (typeof item.variantOption === 'object' ? item.variantOption.id : item.variantOption) : null,
+            }))}
+        />
 
         <div className="lg:sticky lg:top-24 lg:self-start lg:pt-6 lg:pr-10 xl:pr-20">
           <ProductInfo
@@ -165,11 +198,14 @@ export default async function ProductPage({ params }: Args) {
             embroideryOptions={embroideryOptions}
             embroideryRules={embroideryRules}
             product={product}
+            rating={average !== null ? { average, count: reviews.length } : null}
           />
         </div>
       </div>
 
       {product.layout?.length ? <RenderBlocks blocks={product.layout} /> : null}
+
+      <ProductReviews productId={product.id} reviews={reviews} />
     </>
   )
 }

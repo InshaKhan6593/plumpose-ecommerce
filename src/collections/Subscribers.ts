@@ -5,12 +5,18 @@ import { publicAccess } from '@/access/publicAccess'
 
 /**
  * "The List" — the newsletter signup on the existing site.
- * Exportable to CSV from the admin via the import/export plugin.
+ * Downloadable as a spreadsheet from the button above the list
+ * (REQUIREMENTS S19 / A17; @/endpoints/exports).
  */
 export const Subscribers: CollectionConfig = {
   slug: 'subscribers',
   defaultSort: '-createdAt',
   admin: {
+    components: {
+      beforeListTable: [
+        { clientProps: { kind: 'subscribers', label: 'Download as a spreadsheet' }, path: '@/components/admin/ExportButton#ExportButton' },
+      ],
+    },
     defaultColumns: ['email', 'source', 'createdAt'],
     group: 'Content',
     listSearchableFields: ['email'],

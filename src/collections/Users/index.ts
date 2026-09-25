@@ -30,6 +30,15 @@ export const Users: CollectionConfig = {
       generateEmailHTML: passwordResetHtml,
       generateEmailSubject: passwordResetSubject,
     },
+    /**
+     * After five wrong passwords in a row the account is locked for fifteen
+     * minutes (REQUIREMENTS A1, N6) — the admin's and every customer's, so a
+     * password cannot be guessed by trying. Payload's own default is 5 / 10
+     * minutes; set here so it is stated, not assumed. The storefront says
+     * "Too many attempts…" (components/account/AuthForms.tsx).
+     */
+    lockTime: 15 * 60 * 1000,
+    maxLoginAttempts: 5,
     tokenExpiration: 1209600,
   },
   fields: [

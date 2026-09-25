@@ -5,6 +5,7 @@ import type { Media as MediaType, Spotted } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { Money } from '@/providers/Locale'
+import { WasPrice } from '@/components/product/WasPrice'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { splitTitle } from '@/utilities/splitTitle'
 
@@ -25,12 +26,15 @@ export function ProductBand({
   image,
   priceMinor,
   title,
+  wasMinor,
 }: {
   categoryTitle: null | string
   href: string
   image?: MediaType
   priceMinor: number
   title: string
+  /** The sale's was-price, if any (REQUIREMENTS A3). */
+  wasMinor?: null | number
 }) {
   const { name, subtitle } = splitTitle(title)
 
@@ -64,6 +68,7 @@ export function ProductBand({
           </p>
         ) : null}
         <p className="mt-7 text-base tracking-[0.12em] tabular-nums" data-reveal>
+          <WasPrice price={priceMinor} was={wasMinor} />
           <Money minor={priceMinor} />
         </p>
         <div data-reveal>

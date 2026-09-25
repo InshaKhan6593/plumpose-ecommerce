@@ -41,10 +41,13 @@ type Film = { mp4: string; poster: string; webm?: string }
 const FOCUS = '50% 28%'
 
 export function HomeHero({
+  copy = HOME.hero,
   ctaHref,
   detail,
   films,
 }: {
+  /** Her words from Page text; the defaults in content.ts otherwise. */
+  copy?: typeof HOME.hero
   ctaHref: string
   detail?: MediaType
   films: { desktop: Film; mobile: Film }
@@ -164,12 +167,12 @@ export function HomeHero({
         <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-[clamp(4.25rem,10vw,10.5rem)] leading-[0.9]" data-hero-tagline data-reveal-lines>
-              <span className="serif-display block">{HOME.hero.tagline[0]}</span>
-              <span className="serif-italic block">{HOME.hero.tagline[1]}</span>
+              <span className="serif-display block">{copy.tagline[0]}</span>
+              <span className="serif-italic block">{copy.tagline[1]}</span>
             </h1>
             <div className="mt-8 flex flex-wrap items-center gap-7" data-hero-word data-reveal>
               <Link className="caps bg-white px-8 py-4 text-[0.625rem] text-ink transition-opacity hover:opacity-85" href={ctaHref}>
-                {HOME.hero.cta}
+                {copy.cta}
               </Link>
               <Link className="caps border-b border-white/70 pb-1 text-[0.625rem]" href="/our-story">
                 Our story ↗
@@ -178,7 +181,7 @@ export function HomeHero({
           </div>
 
           <p className="hidden max-w-[17rem] text-sm leading-relaxed text-white/80 lg:block" data-hero-word data-reveal>
-            {HOME.hero.intro}
+            {copy.intro}
           </p>
         </div>
       </div>

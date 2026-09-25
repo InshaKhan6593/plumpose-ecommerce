@@ -2,6 +2,9 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import React from 'react'
 
+import { paymentOutcome } from '@/lib/payments/outcome'
+import { RATES_STALE_DAYS } from '@/lib/pricing/rates'
+
 import './index.scss'
 
 const baseClass = 'plumpose-dashboard'
@@ -32,7 +35,9 @@ export const BeforeDashboard: React.FC = async () => {
   const lowAt = Math.max(0, settings?.lowStockThreshold ?? 2)
   const today = startOfToday()
 
-  const [ordersToday, awaiting, lowStock, pendingReviews, pendingSpotted, liveProducts] =
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [ordersToday, awaiting, lowStock, pendingReviews, pendingSpotted, liveProducts, recentPayments, newEnquiries, latestRate] =
     await Promise.all([
       payload.find({
         collection: 'orders',
@@ -55,7 +60,18 @@ export const BeforeDashboard: React.FC = async () => {
       payload.count({ collection: 'reviews', where: { status: { equals: 'pending' } } }),
       payload.count({ collection: 'spotted', where: { status: { equals: 'pending' } } }),
       payload.count({ collection: 'products', where: { _status: { equals: 'published' } } }),
-    ]).catch(() => [null, null, null, null, null, null] as any)
+      // Checkouts in the last week that did not end in a payment (REQUIREMENTS P11).
+      payload.find({
+        collection: 'transactions',
+        depth: 0,
+        pagination: false,
+        select: { createdAt: true, status: true },
+        where: { and: [{ createdAt: { greater_than_equal: weekAgo } }, { status: { not_equals: 'succeeded' } }] },
+      }),
+      payload.count({ collection: 'form-submissions', where: { status: { equals: 'new' } } }),
+      // When exchange rates were last refreshed (REQUIREMENTS A14).
+      payload.find({ collection: 'currencies', depth: 0, limit: 1, select: { rateUpdatedAt: true }, sort: '-rateUpdatedAt', where: { rateUpdatedAt: { exists: true } } }),
+    ]).catch(() => [null, null, null, null, null, null, null, null, null] as any)
 
   const revenueToday =
     ordersToday?.docs?.reduce((sum: number, o: any) => sum + (o.amount || 0), 0) ?? 0
@@ -79,6 +95,15 @@ export const BeforeDashboard: React.FC = async () => {
   const runningLow = liveSizes.filter((v) => (v.inventory ?? 0) > 0).length
   const sizesLink = '/admin/collections/variants?sort=inventory'
 
+  const notPaid = ((recentPayments?.docs ?? []) as Array<{ createdAt: string; status?: string }>).filter(
+    (t) => !paymentOutcome({ createdAt: t.createdAt, status: t.status }).fine,
+  ).length
+  const paymentsLink = '/admin/collections/transactions?where[status][not_equals]=succeeded'
+
+  const ratesAt = latestRate?.docs?.[0]?.rateUpdatedAt as string | undefined
+  const ratesAgeDays = ratesAt ? Math.floor((Date.now() - new Date(ratesAt).getTime()) / 86_400_000) : null
+  const ratesStale = latestRate !== null && (ratesAgeDays === null || ratesAgeDays > RATES_STALE_DAYS)
+
   const toReview =
     (pendingReviews?.totalDocs ?? 0) + (pendingSpotted?.totalDocs ?? 0)
 
@@ -99,12 +124,30 @@ export const BeforeDashboard: React.FC = async () => {
         ))}
       </div>
 
-      {(toReview > 0 || soldOut > 0 || runningLow > 0) && (
+      {(toReview > 0 || soldOut > 0 || runningLow > 0 || notPaid > 0 || (newEnquiries?.totalDocs ?? 0) > 0 || ratesStale) && (
         <div className={`${baseClass}__alerts`}>
           {toReview > 0 && (
             <p>
               <strong>{toReview}</strong>{' '}
               {toReview === 1 ? 'submission is' : 'submissions are'} waiting for your approval.
+            </p>
+          )}
+          {(newEnquiries?.totalDocs ?? 0) > 0 && (
+            <p>
+              <strong>{newEnquiries.totalDocs}</strong> new {newEnquiries.totalDocs === 1 ? 'enquiry' : 'enquiries'}.{' '}
+              <a href="/admin/collections/form-submissions?where[status][equals]=new">Read {newEnquiries.totalDocs === 1 ? 'it' : 'them'}</a>
+            </p>
+          )}
+          {notPaid > 0 && (
+            <p>
+              <strong>{notPaid}</strong> {notPaid === 1 ? 'checkout' : 'checkouts'} in the last week{' '}
+              {notPaid === 1 ? 'was' : 'were'} not paid. <a href={paymentsLink}>See payments</a>
+            </p>
+          )}
+          {ratesStale && (
+            <p>
+              Exchange rates {ratesAgeDays === null ? 'have not been fetched yet' : `were last refreshed ${ratesAgeDays} days ago`}.{' '}
+              <a href="/admin/collections/currencies">Refresh them</a>
             </p>
           )}
           {soldOut > 0 && (

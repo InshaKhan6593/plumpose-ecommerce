@@ -1,4 +1,8 @@
+'use client'
+
 import type { Media as MediaType } from '@/payload-types'
+
+import { useSearchParams } from 'next/navigation'
 
 import { Media } from '@/components/Media'
 import { RevealImage } from '@/motion/Reveal'
@@ -16,8 +20,17 @@ import React from 'react'
  *
  * One set of images serves both, so nothing downloads twice. The first is
  * prioritised — it is the page's main image.
+ *
+ * A photograph she ties to an option ("Only show for" Navy) shows once that
+ * option is chosen, alongside the photographs tied to none (REQUIREMENTS A4).
+ * Before anything is chosen, every photograph shows.
  */
-export function ProductGallery({ images }: { images: MediaType[] }) {
+export function ProductGallery({ items }: { items: Array<{ image: MediaType; optionId: null | number }> }) {
+  const searchParams = useSearchParams()
+  const chosen = new Set(Array.from(searchParams.values()))
+  const tagged = items.filter((item) => item.optionId !== null && chosen.has(String(item.optionId)))
+  const images = (tagged.length ? items.filter((item) => item.optionId === null || chosen.has(String(item.optionId))) : items).map((item) => item.image)
+
   if (!images.length) return null
 
   const oddTail = (images.length - 1) % 2 === 1

@@ -183,6 +183,15 @@ export async function seed(payload: Payload): Promise<void> {
     c,
   )
 
+  /*
+   * Colour and Pattern, ready for her to add options to (REQUIREMENTS S4, A4):
+   * "Sizes, colours & patterns" in the admin, then tick them under "Options
+   * offered" on a product. No options are seeded — every piece today is sized only.
+   */
+  for (const label of ['Colour', 'Pattern']) {
+    await upsert(payload, 'variantTypes', { name: { equals: label } }, { label, name: label }, c)
+  }
+
   const sizeOptions: Record<string, any> = {}
   // XS was withdrawn and XL is unavailable — see the comment in skipcash.mjs
   for (const label of ['S', 'M', 'L']) {

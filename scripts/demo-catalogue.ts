@@ -302,7 +302,72 @@ async function seedDemo(payload: Payload) {
     created++
     console.log(`  + ${piece.title}`)
   }
-  console.log(`\n${created} demo pieces added (${PIECES.length} in the demo catalogue).`)
+  created += await seedTwoColourPiece(payload, sizeType.id, sizeOptions, collectionIds.sets)
+  console.log(`\n${created} demo pieces added (${PIECES.length + 1} in the demo catalogue).`)
+}
+
+/**
+ * One piece in two colours, to try size × colour (REQUIREMENTS S4, A4): Noir in
+ * S, M and L; Blush in S and M — M sold out — and not made in L at all. Each
+ * colour has its own photographs, tied to it with "Only show for".
+ */
+async function seedTwoColourPiece(payload: Payload, sizeTypeId: number, sizeOptions: Record<Size, number>, collectionId: number) {
+  const slug = `${PREFIX}two-colour-set`
+  if ((await payload.find({ collection: 'products', limit: 1, where: { slug: { equals: slug } } })).docs[0]) {
+    console.log('  = Classic — Silk Pyjama Set (two colours)')
+    return 0
+  }
+  const colourType = (await payload.find({ collection: 'variantTypes', limit: 1, where: { name: { equals: 'Colour' } } })).docs[0]
+  if (!colourType) throw new Error('Run `pnpm seed` first — the Colour option type does not exist yet.')
+
+  const colour: Record<string, number> = {}
+  for (const label of ['Noir', 'Blush']) {
+    const value = `${PREFIX}${label.toLowerCase()}`
+    const found = (await payload.find({ collection: 'variantOptions', limit: 1, where: { value: { equals: value } } })).docs[0]
+    colour[label] = (found ?? (await payload.create({ collection: 'variantOptions', data: { label, value, variantType: colourType.id } as any }))).id as number
+  }
+
+  const gallery = []
+  for (const id of [6976706, 6976713]) gallery.push({ image: await demoMedia(payload, id, 'Classic set in Noir'), variantOption: colour.Noir })
+  for (const id of [7162014, 7162023]) gallery.push({ image: await demoMedia(payload, id, 'Classic set in Blush'), variantOption: colour.Blush })
+
+  const priceInQAR = 118000
+  const product = await payload.create({
+    collection: 'products',
+    data: {
+      _status: 'published',
+      categories: [collectionId],
+      colour: 'Noir or Blush',
+      composition: '100% mulberry silk',
+      description: para('The classic set in two colours — deep noir, or a soft blush. Choose your colour and size.'),
+      enableVariants: true,
+      fabric: 'in 19-momme silk',
+      gallery,
+      generateSlug: false,
+      madeToOrder: false,
+      personalisationEnabled: true,
+      priceInQAR,
+      priceInQAREnabled: true,
+      slug,
+      title: 'Classic — Silk Pyjama Set',
+      variantTypes: [sizeTypeId, colourType.id],
+    } as any,
+  })
+  const made: Array<[Size, string, number]> = [
+    ['S', 'Noir', 3],
+    ['M', 'Noir', 3],
+    ['L', 'Noir', 3],
+    ['S', 'Blush', 2],
+    ['M', 'Blush', 0],
+  ]
+  for (const [size, name, inventory] of made) {
+    await payload.create({
+      collection: 'variants',
+      data: { _status: 'published', inventory, options: [sizeOptions[size], colour[name]], priceInQAR, priceInQAREnabled: true, product: product.id } as any,
+    })
+  }
+  console.log('  + Classic — Silk Pyjama Set (two colours)')
+  return 1
 }
 
 // ------------------------------------------------------------------- remove
@@ -324,6 +389,10 @@ async function removeDemo(payload: Payload) {
   }
   if (categories.length) await payload.delete({ collection: 'categories', where: { id: { in: categories } } })
   if (media.length) await payload.delete({ collection: 'media', where: { id: { in: media } } })
+  // The demo's own colours (Noir, Blush) — never the real sizes.
+  const { docs: colours } = await payload.find({ collection: 'variantOptions', depth: 0, limit: 100, pagination: false, where: { value: { like: PREFIX } } })
+  const demoColours = colours.filter((o: any) => String(o.value).startsWith(PREFIX)).map((o: any) => o.id)
+  if (demoColours.length) await payload.delete({ collection: 'variantOptions', where: { id: { in: demoColours } } })
 
   console.log(
     `Removed ${products.length} demo pieces, ${categories.length} collections and ${media.length} photos. ` +

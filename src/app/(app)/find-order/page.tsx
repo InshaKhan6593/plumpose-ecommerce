@@ -7,7 +7,7 @@ import React from 'react'
 
 import { PageHeading, TextLink } from '@/components/editorial'
 import { FindOrderForm } from '@/components/forms/FindOrderForm'
-import { TRACK_PAGE } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 
 /**
@@ -18,6 +18,7 @@ import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
  * four-step progress and the tracking number.
  */
 export default async function FindOrderPage() {
+  const { TRACK_PAGE } = await getPageText()
   const headers = await getHeaders()
   const payload = await getPayload({ config: configPromise })
   const { user } = await payload.auth({ headers })
@@ -26,7 +27,7 @@ export default async function FindOrderPage() {
     <div className="mx-auto max-w-xl px-4 pt-14 md:pt-20">
       <PageHeading intro={TRACK_PAGE.intro} title={TRACK_PAGE.heading} />
       <div className="mt-14">
-        <FindOrderForm initialEmail={user?.email} />
+        <FindOrderForm initialEmail={user?.email} sent={TRACK_PAGE.sent} />
       </div>
       <div className="mt-16 flex flex-wrap justify-center gap-8 border-t border-line pt-8">
         {user ? <TextLink href="/orders">Your orders</TextLink> : <TextLink href="/login">Sign in</TextLink>}

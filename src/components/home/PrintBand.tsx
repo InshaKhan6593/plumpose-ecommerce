@@ -33,7 +33,17 @@ import { HOME } from './content'
  */
 export type PrintFact = { label: string; value: string }
 
-export function PrintBand({ facts = [], href, image }: { facts?: PrintFact[]; href: string; image?: MediaType }) {
+export function PrintBand({
+  copy = HOME.print,
+  facts = [],
+  href,
+  image,
+}: {
+  copy?: typeof HOME.print
+  facts?: PrintFact[]
+  href: string
+  image?: MediaType
+}) {
   const root = useRef<HTMLElement>(null)
 
   useLayoutEffect(() => {
@@ -84,9 +94,9 @@ export function PrintBand({ facts = [], href, image }: { facts?: PrintFact[]; hr
   if (!image) return null
 
   return (
-    <section aria-label={HOME.print.label} className="relative h-svh overflow-hidden bg-background" ref={root}>
+    <section aria-label={copy.label} className="relative h-svh overflow-hidden bg-background" ref={root}>
       {/* The words in ink, on the paper around the card. The frame covers them wherever the picture is. */}
-      <Words aria-hidden facts={facts} tone="ink" />
+      <Words aria-hidden copy={copy} facts={facts} tone="ink" />
 
       <div className="absolute inset-0 overflow-hidden" data-print-frame>
         <div className="absolute inset-0" data-print-picture>
@@ -107,7 +117,7 @@ export function PrintBand({ facts = [], href, image }: { facts?: PrintFact[]; hr
         <div aria-hidden className="absolute inset-0 bg-gradient-to-tl from-ink/55 via-transparent to-transparent" />
 
         {/* The same words in white, inside the frame — revealed letter by letter as it grows. */}
-        <Words facts={facts} href={href} tone="white" />
+        <Words copy={copy} facts={facts} href={href} tone="white" />
       </div>
     </section>
   )
@@ -120,11 +130,13 @@ export function PrintBand({ facts = [], href, image }: { facts?: PrintFact[]; hr
  */
 function Words({
   'aria-hidden': ariaHidden,
+  copy,
   facts,
   href,
   tone,
 }: {
   'aria-hidden'?: boolean
+  copy: typeof HOME.print
   facts: PrintFact[]
   href?: string
   tone: 'ink' | 'white'
@@ -134,9 +146,9 @@ function Words({
   return (
     <div aria-hidden={ariaHidden} className={cn('pointer-events-none absolute inset-0', white ? 'text-white' : 'text-ink')}>
       <div className="absolute top-[15%] left-6 max-w-xl md:left-14">
-        <p className={cn('caps text-[0.625rem]', white ? 'text-white/80' : 'text-ink-soft')}>{HOME.print.label}</p>
+        <p className={cn('caps text-[0.625rem]', white ? 'text-white/80' : 'text-ink-soft')}>{copy.label}</p>
         <h2 className="serif-display mt-4 text-[clamp(2.75rem,5.5vw,5rem)] leading-[1]">
-          {HOME.print.heading.map((line) => (
+          {copy.heading.map((line) => (
             <span className="block" key={line}>
               {line}
             </span>
@@ -145,11 +157,11 @@ function Words({
         {white && href ? (
           <div className="pointer-events-auto">
             <p className="mt-6 max-w-md text-[0.9375rem] leading-relaxed text-white/85" data-print-more>
-              {HOME.print.body}
+              {copy.body}
             </p>
             <div data-print-more>
               <Link className="caps mt-7 inline-block border-b border-white pb-1 text-[0.625rem]" href={href}>
-                {HOME.print.cta}
+                {copy.cta}
               </Link>
             </div>
           </div>

@@ -96,9 +96,17 @@ export const stockSummary = (lines: StockLine[]): StockSummary => ({
   refusal: stockRefusal(lines),
 })
 
-/** "Al Shaheen Nights, size M" — the size is the variant title's last part. */
+/**
+ * "Al Shaheen Nights, size M" — the choice is the variant title's last part.
+ * A size reads as "size M"; anything else, or several choices, in brackets:
+ * "Al Shaheen Nights (Navy / M)".
+ */
 export const sizeLabel = (product: Product, variant?: null | Variant): string => {
   const name = product.title.split(' — ')[0]
-  const size = variant?.title?.split(' — ').pop()
-  return size && size !== product.title ? `${name}, size ${size}` : name
+  const title = variant?.title ?? ''
+  // The plugin titles a variant "<product> — S — Noir": what follows the product's own title is the choice.
+  const rest = title.startsWith(`${product.title} — `) ? title.slice(product.title.length + 3) : title.split(' — ').pop()
+  const choice = rest?.split(' — ').join(' / ')
+  if (!choice || choice === product.title) return name
+  return /^(XXS|XS|S|M|L|XL|XXL|\d+)$/i.test(choice.trim()) ? `${name}, size ${choice}` : `${name} (${choice})`
 }

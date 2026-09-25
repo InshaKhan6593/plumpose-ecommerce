@@ -162,9 +162,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     siteSettings: SiteSetting;
+    pageText: PageText;
   };
   globalsSelect: {
     siteSettings: SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    pageText: PageTextSelect<false> | PageTextSelect<true>;
   };
   locale: null;
   widgets: {
@@ -276,7 +278,7 @@ export interface Product {
     | {
         image: number | Media;
         /**
-         * Leave empty to show this photo for every size. Set it to show the photo only when that size is chosen.
+         * Leave empty to show this photo whatever is chosen. Set it (a colour, say) to show the photo only when that is chosen.
          */
         variantOption?: (number | null) | VariantOption;
         id?: string | null;
@@ -379,6 +381,10 @@ export interface Product {
   };
   priceInQAREnabled?: boolean | null;
   priceInQAR?: number | null;
+  /**
+   * Optional — for a sale. The price it was, shown crossed out beside the price. Leave empty when it is not on sale.
+   */
+  compareAtPriceInQAR?: number | null;
   meta?: {
     title?: string | null;
     /**
@@ -497,7 +503,7 @@ export interface Media {
   };
 }
 /**
- * The individual sizes and colours a product can come in.
+ * The sizes, colours and patterns a piece can come in. To offer a colour: add it here with "Colour" as its kind, then tick Colour under "Options offered" on the piece and add a row for each size and colour it is made in. Renaming one renames it on every piece that uses it.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variantOptions".
@@ -1556,6 +1562,8 @@ export interface Address {
   createdAt: string;
 }
 /**
+ * Every checkout, paid or not. "Not paid" rows are customers who reached the payment page and left — their email and bag are here if you would like to follow up.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "transactions".
  */
@@ -1595,6 +1603,10 @@ export interface Transaction {
   cart?: (number | null) | Cart;
   amount?: number | null;
   currency?: 'QAR' | null;
+  /**
+   * Worked out from the payment status and the card declines the gateway reported.
+   */
+  outcome?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1764,7 +1776,7 @@ export interface Press {
   deletedAt?: string | null;
 }
 /**
- * Customer photos. Only approved posts appear on the site.
+ * Customer photos. Only approved posts appear on the site. Rejecting a photo a customer sent in deletes it; drag to change the order.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "spotted".
@@ -1772,7 +1784,7 @@ export interface Press {
 export interface Spotted {
   id: number;
   _order?: string | null;
-  image: number | Media;
+  image?: (number | null) | Media;
   /**
    * Including the @.
    */
@@ -1780,11 +1792,26 @@ export interface Spotted {
   caption?: string | null;
   postUrl?: string | null;
   status: 'pending' | 'approved' | 'rejected';
+  /**
+   * Sent in by the customer through the Spotted page.
+   */
+  submitted?: boolean | null;
+  /**
+   * They confirmed the photograph is theirs and that plumpose may share it.
+   */
+  consent?: boolean | null;
+  /**
+   * Optional — theirs, if they left it. Never shown on the site.
+   */
+  email?: string | null;
+  ipHash?: string | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
 }
 /**
+ * New reviews wait here for your approval. Approved ones show on the piece’s page; featured ones on the homepage too.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews".
  */
@@ -1792,11 +1819,27 @@ export interface Review {
   id: number;
   product: number | Product;
   name: string;
+  /**
+   * Never shown on the site.
+   */
   email: string;
   rating: number;
   title?: string | null;
   body: string;
+  /**
+   * Optional. Shown under the review as a reply from plumpose.
+   */
+  reply?: string | null;
   status: 'pending' | 'approved' | 'rejected';
+  /**
+   * Show this review on the homepage (once approved).
+   */
+  featured?: boolean | null;
+  /**
+   * This email has an order for this piece.
+   */
+  verifiedPurchase?: boolean | null;
+  ipHash?: string | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1931,10 +1974,20 @@ export interface Currency {
    */
   rate?: number | null;
   rateUpdatedAt?: string | null;
+  /**
+   * What the anchor piece costs at the rate above — a check on the price set by hand.
+   */
+  atTodaysRate?: string | null;
+  /**
+   * How far the price set by hand is from today’s rate (+ means above it).
+   */
+  difference?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Messages from the Contact page. Opening a new one marks it read; set Replied or Archived as you go.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions".
  */
@@ -1948,6 +2001,10 @@ export interface FormSubmission {
         id?: string | null;
       }[]
     | null;
+  status?: ('new' | 'read' | 'replied' | 'archived') | null;
+  from?: string | null;
+  about?: string | null;
+  preview?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2282,6 +2339,10 @@ export interface SpottedSelect<T extends boolean = true> {
   caption?: T;
   postUrl?: T;
   status?: T;
+  submitted?: T;
+  consent?: T;
+  email?: T;
+  ipHash?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2297,7 +2358,11 @@ export interface ReviewsSelect<T extends boolean = true> {
   rating?: T;
   title?: T;
   body?: T;
+  reply?: T;
   status?: T;
+  featured?: T;
+  verifiedPurchase?: T;
+  ipHash?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2657,6 +2722,8 @@ export interface CurrenciesSelect<T extends boolean = true> {
   priceOverride?: T;
   rate?: T;
   rateUpdatedAt?: T;
+  atTodaysRate?: T;
+  difference?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2834,6 +2901,10 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
         value?: T;
         id?: T;
       };
+  status?: T;
+  from?: T;
+  about?: T;
+  preview?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2936,6 +3007,7 @@ export interface ProductsSelect<T extends boolean = true> {
   variants?: T;
   priceInQAREnabled?: T;
   priceInQAR?: T;
+  compareAtPriceInQAR?: T;
   meta?:
     | T
     | {
@@ -3104,6 +3176,7 @@ export interface TransactionsSelect<T extends boolean = true> {
   cart?: T;
   amount?: T;
   currency?: T;
+  outcome?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3247,6 +3320,225 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * The words on the homepage and the other pages. Prices, fees and delivery times come from their own settings, not from here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pageText".
+ */
+export interface PageText {
+  id: number;
+  home?: {
+    /**
+     * The piece the homepage shows and links to. Leave empty for the first piece in the shop.
+     */
+    featuredProduct?: (number | null) | Product;
+    hero?: {
+      /**
+       * The big words over the film. Line one upright, line two in italic.
+       */
+      tagline?: string | null;
+      cta?: string | null;
+      /**
+       * Desktop only.
+       */
+      intro?: string | null;
+    };
+    philosophy?: {
+      label?: string | null;
+      /**
+       * Put *asterisks* around the words to set in italic.
+       */
+      headline?: string | null;
+    };
+    print?: {
+      label?: string | null;
+      heading?: string | null;
+      body?: string | null;
+      cta?: string | null;
+    };
+    steps?: {
+      label?: string | null;
+      heading?: string | null;
+    };
+  };
+  ourStory?: {
+    opener?: {
+      label?: string | null;
+      heading?: string | null;
+    };
+    lede?: string | null;
+    founder?: {
+      label?: string | null;
+      heading?: string | null;
+      body?: string | null;
+    };
+    print?: {
+      label?: string | null;
+      heading?: string | null;
+      body?: string | null;
+      signoff?: string | null;
+      signature?: string | null;
+      seaCaption?: string | null;
+    };
+    silk?: {
+      label?: string | null;
+      heading?: string | null;
+      pillars?:
+        | {
+            title?: string | null;
+            body?: string | null;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    atelier?: {
+      label?: string | null;
+      heading?: string | null;
+      body?: string | null;
+      cta?: string | null;
+    };
+    closing?: {
+      line?: string | null;
+      cta?: string | null;
+    };
+  };
+  shipping?: {
+    heading?: string | null;
+    intro?: string | null;
+    delivery?: {
+      qatarHeading?: string | null;
+      qatarNote?: string | null;
+      intlHeading?: string | null;
+      intlNote?: string | null;
+      timing?: string | null;
+      currency?: string | null;
+    };
+    returns?: {
+      heading?: string | null;
+      intro?: string | null;
+      /**
+       * One term per line.
+       */
+      terms?: string | null;
+      exceptionLabel?: string | null;
+      exception?: string | null;
+      contact?: string | null;
+    };
+    gifting?: {
+      heading?: string | null;
+      body?: string | null;
+      note?: string | null;
+    };
+  };
+  madeForYou?: {
+    heading?: string | null;
+    intro?: string | null;
+    offers?: {
+      bridal?: {
+        title?: string | null;
+        body?: string | null;
+      };
+      bespoke?: {
+        title?: string | null;
+        body?: string | null;
+      };
+      embroidery?: {
+        title?: string | null;
+        body?: string | null;
+      };
+      collaboration?: {
+        title?: string | null;
+        body?: string | null;
+      };
+    };
+    process?: {
+      label?: string | null;
+      steps?:
+        | {
+            title?: string | null;
+            body?: string | null;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    enquiry?: {
+      heading?: string | null;
+      body?: string | null;
+      cta?: string | null;
+    };
+    projectsHeading?: string | null;
+  };
+  faq?: {
+    heading?: string | null;
+    intro?: string | null;
+    groups?: {
+      orders?: {
+        label?: string | null;
+      };
+      delivery?: {
+        label?: string | null;
+      };
+      returns?: {
+        label?: string | null;
+      };
+      personalisation?: {
+        label?: string | null;
+      };
+      care?: {
+        label?: string | null;
+      };
+    };
+  };
+  press?: {
+    heading?: string | null;
+    intro?: string | null;
+    empty?: {
+      heading?: string | null;
+      body?: string | null;
+      cta?: string | null;
+    };
+  };
+  spotted?: {
+    heading?: string | null;
+    intro?: string | null;
+    form?: {
+      heading?: string | null;
+      body?: string | null;
+    };
+    invite?: {
+      heading?: string | null;
+      body?: string | null;
+    };
+    empty?: {
+      label?: string | null;
+      body?: string | null;
+    };
+  };
+  contact?: {
+    heading?: string | null;
+    intro?: string | null;
+    formHeading?: string | null;
+    /**
+     * One per line.
+     */
+    subjects?: string | null;
+    thanks?: {
+      heading?: string | null;
+      body?: string | null;
+    };
+  };
+  track?: {
+    heading?: string | null;
+    intro?: string | null;
+    sent?: {
+      heading?: string | null;
+      body?: string | null;
+    };
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "siteSettings_select".
  */
@@ -3281,6 +3573,287 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   personalisationMaxPlacements?: T;
   personalisationLeadTime?: T;
   personalisationReturnable?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pageText_select".
+ */
+export interface PageTextSelect<T extends boolean = true> {
+  home?:
+    | T
+    | {
+        featuredProduct?: T;
+        hero?:
+          | T
+          | {
+              tagline?: T;
+              cta?: T;
+              intro?: T;
+            };
+        philosophy?:
+          | T
+          | {
+              label?: T;
+              headline?: T;
+            };
+        print?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              body?: T;
+              cta?: T;
+            };
+        steps?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+            };
+      };
+  ourStory?:
+    | T
+    | {
+        opener?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+            };
+        lede?: T;
+        founder?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              body?: T;
+            };
+        print?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              body?: T;
+              signoff?: T;
+              signature?: T;
+              seaCaption?: T;
+            };
+        silk?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              pillars?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                    id?: T;
+                  };
+            };
+        atelier?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              body?: T;
+              cta?: T;
+            };
+        closing?:
+          | T
+          | {
+              line?: T;
+              cta?: T;
+            };
+      };
+  shipping?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        delivery?:
+          | T
+          | {
+              qatarHeading?: T;
+              qatarNote?: T;
+              intlHeading?: T;
+              intlNote?: T;
+              timing?: T;
+              currency?: T;
+            };
+        returns?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              terms?: T;
+              exceptionLabel?: T;
+              exception?: T;
+              contact?: T;
+            };
+        gifting?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+              note?: T;
+            };
+      };
+  madeForYou?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        offers?:
+          | T
+          | {
+              bridal?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                  };
+              bespoke?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                  };
+              embroidery?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                  };
+              collaboration?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                  };
+            };
+        process?:
+          | T
+          | {
+              label?: T;
+              steps?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                    id?: T;
+                  };
+            };
+        enquiry?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+              cta?: T;
+            };
+        projectsHeading?: T;
+      };
+  faq?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        groups?:
+          | T
+          | {
+              orders?:
+                | T
+                | {
+                    label?: T;
+                  };
+              delivery?:
+                | T
+                | {
+                    label?: T;
+                  };
+              returns?:
+                | T
+                | {
+                    label?: T;
+                  };
+              personalisation?:
+                | T
+                | {
+                    label?: T;
+                  };
+              care?:
+                | T
+                | {
+                    label?: T;
+                  };
+            };
+      };
+  press?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        empty?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+              cta?: T;
+            };
+      };
+  spotted?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        form?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+            };
+        invite?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+            };
+        empty?:
+          | T
+          | {
+              label?: T;
+              body?: T;
+            };
+      };
+  contact?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        formHeading?: T;
+        subjects?: T;
+        thanks?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+            };
+      };
+  track?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        sent?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

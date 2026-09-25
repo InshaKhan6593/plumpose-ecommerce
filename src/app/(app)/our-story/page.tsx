@@ -7,7 +7,7 @@ import React from 'react'
 import { ButtonLink, ClosingBand, Prose, SplitBand, TextLink } from '@/components/editorial'
 import { StoryOpener } from '@/components/editorial/StoryOpener'
 import { Media } from '@/components/Media'
-import { OUR_STORY } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { loadPageMedia } from '@/utilities/pageMedia'
@@ -32,11 +32,13 @@ export const metadata: Metadata = {
  * page is §4 (#the-silk). Copy provenance is marked in src/content/pages.ts.
  */
 export default async function OurStoryPage() {
+  const { featuredProductId, OUR_STORY } = await getPageText()
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
 
   const [pick, products, threads] = await Promise.all([
     loadPageMedia(payload),
+    // Her featured piece first (Page text → Homepage), then the first in the shop.
     payload.find({
       collection: 'products',
       depth: 0,
@@ -51,7 +53,11 @@ export default async function OurStoryPage() {
     }),
   ])
 
-  const productHref = products.docs[0]?.slug ? `/products/${products.docs[0].slug}` : '/shop'
+  const featured =
+    (featuredProductId
+      ? (await payload.find({ collection: 'products', depth: 0, limit: 1, select: { slug: true }, where: { and: [{ id: { equals: featuredProductId } }, { _status: { equals: 'published' } }] } })).docs[0]
+      : undefined) ?? products.docs[0]
+  const productHref = featured?.slug ? `/products/${featured.slug}` : '/shop'
   const pillarImages = [pick('armchair'), pick('piping'), pick('print', 'printWide')]
   const sea = pick.only('sea')
 

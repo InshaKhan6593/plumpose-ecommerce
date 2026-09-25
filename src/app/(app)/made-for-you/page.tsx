@@ -10,7 +10,8 @@ import type { Media as MediaType, Project } from '@/payload-types'
 import { ButtonLink, ClosingBand, PageHeading, PageShell } from '@/components/editorial'
 import { type Film, InViewFilm } from '@/components/editorial/InViewFilm'
 import { Media } from '@/components/Media'
-import { CATEGORY_LABELS, MADE_FOR_YOU } from '@/content/pages'
+import { CATEGORY_LABELS } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
 import { loadPageMedia } from '@/utilities/pageMedia'
@@ -34,6 +35,7 @@ type Props = { searchParams: Promise<{ category?: string }> }
  *     page. Only shown once there are some — nothing is invented.
  */
 export default async function MadeForYouPage({ searchParams }: Props) {
+  const { MADE_FOR_YOU } = await getPageText()
   const { category } = await searchParams
   const payload = await getPayload({ config: configPromise })
 

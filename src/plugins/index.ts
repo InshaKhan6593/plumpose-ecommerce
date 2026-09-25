@@ -1,6 +1,6 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
-import { Field, Plugin } from 'payload'
+import { Field, FieldHook, Plugin } from 'payload'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
@@ -24,6 +24,8 @@ import { stockAfterSale } from '@/hooks/stockAfterSale'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { validateEnquiry } from '@/hooks/validateEnquiry'
 import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
+import { declineReason, paymentOutcome } from '@/lib/payments/outcome'
+import { enquirySummary } from '@/lib/enquiries/summary'
 import { orderTotalsFields } from '@/fields/orderTotals'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
 
@@ -37,6 +39,63 @@ const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
   const url = getServerSideURL()
 
   return doc?.slug ? `${url}/${doc.slug}` : url
+}
+
+/**
+ * Makes a server-written collection's fields read-only in the admin, keeping
+ * their data and access as they are.
+ */
+const readOnlyFields = (fields: Field[]): Field[] =>
+  fields.map((field) =>
+    !('name' in field) || field.type === 'ui' ? field : ({ ...field, admin: { ...('admin' in field ? field.admin : {}), readOnly: true } } as Field),
+  )
+
+/** "What happened" on a payment: its status, plus any card declines logged during that checkout. */
+const paymentOutcomeField: FieldHook = async ({ data, req }) => {
+  if (!data?.createdAt) return null
+  const cartId = typeof data.cart === 'object' ? data.cart?.id : data.cart
+  let declines: string[] = []
+  if (cartId && data.status !== 'succeeded') {
+    /*
+     * A decline belongs to this checkout if it came after it began and before
+     * the same bag's next checkout — a customer who tries again gets a new
+     * payment record, and the earlier declines stay with the earlier one.
+     */
+    const next = await req.payload
+      .find({
+        collection: 'transactions',
+        depth: 0,
+        limit: 1,
+        overrideAccess: true,
+        req,
+        select: { createdAt: true },
+        sort: 'createdAt',
+        where: { and: [{ cart: { equals: cartId } }, { createdAt: { greater_than: data.createdAt } }] },
+      })
+      .catch(() => null)
+    const until = next?.docs[0]?.createdAt
+    const logged = await req.payload
+      .find({
+        collection: 'webhookLog',
+        depth: 0,
+        limit: 20,
+        overrideAccess: true,
+        req,
+        sort: '-createdAt',
+        where: {
+          and: [
+            { event: { equals: 'payment_intent.payment_failed' } },
+            { orderRef: { equals: String(cartId) } },
+            { createdAt: { greater_than_equal: data.createdAt } },
+            ...(until ? [{ createdAt: { less_than: until } }] : []),
+          ],
+        },
+      })
+      .catch(() => null)
+    declines = (logged?.docs ?? []).map((d) => declineReason(d.payload))
+  }
+  const orderId = typeof data.order === 'object' ? data.order?.id : data.order
+  return paymentOutcome({ createdAt: data.createdAt, declines, orderId, status: data.status }).label
 }
 
 export const plugins: Plugin[] = [
@@ -54,12 +113,47 @@ export const plugins: Plugin[] = [
         read: isAdmin,
         update: isAdmin,
       },
+      /*
+       * An inbox (REQUIREMENTS A16): who, about what, the start of the message,
+       * and a status she moves along — New → Read (on opening) → Replied → Archived.
+       */
       admin: {
-        defaultColumns: ['id', 'form', 'createdAt'],
+        defaultColumns: ['status', 'from', 'about', 'preview', 'createdAt'],
+        description: 'Messages from the Contact page. Opening a new one marks it read; set Replied or Archived as you go.',
         group: 'Content',
+        // Computed fields cannot be the title; the From column carries who it is from.
         useAsTitle: 'id',
       },
       defaultSort: '-createdAt',
+      fields: ({ defaultFields }) => [
+        ...defaultFields,
+        {
+          name: 'status',
+          type: 'select',
+          // A stranger's submission can never arrive "archived": no create access, so the default applies.
+          access: { create: ({ req }) => Boolean(req.user && isAdmin({ req } as never)) },
+          admin: { position: 'sidebar' },
+          defaultValue: 'new',
+          index: true,
+          options: [
+            { label: 'New', value: 'new' },
+            { label: 'Read', value: 'read' },
+            { label: 'Replied', value: 'replied' },
+            { label: 'Archived', value: 'archived' },
+          ],
+        },
+        { name: 'markRead', type: 'ui', admin: { components: { Field: '@/components/admin/MarkEnquiryRead#MarkEnquiryRead' } } },
+        ...(['from', 'about', 'preview'] as const).map(
+          (name): Field => ({
+            name,
+            type: 'text',
+            admin: { readOnly: true },
+            hooks: { afterRead: [({ siblingData }) => enquirySummary(siblingData?.submissionData)[name]] },
+            label: { about: 'About', from: 'From', preview: 'Message' }[name],
+            virtual: true,
+          }),
+        ),
+      ],
       /*
        * The plugin checks nothing about what is submitted and emails values
        * unescaped: validate on the server, and send our own escaped alert.
@@ -128,6 +222,13 @@ export const plugins: Plugin[] = [
         },
         admin: {
           ...defaultCollection?.admin,
+          components: {
+            ...defaultCollection?.admin?.components,
+            // A spreadsheet of the orders the list shows (REQUIREMENTS A6); see @/endpoints/exports.
+            beforeListTable: [
+              { clientProps: { kind: 'orders', label: 'Download as a spreadsheet' }, path: '@/components/admin/ExportButton#ExportButton' },
+            ],
+          },
           defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'fulfilment', 'createdAt'],
           group: 'Shop',
           listSearchableFields: ['customerEmail'],
@@ -324,7 +425,7 @@ export const plugins: Plugin[] = [
             ...defaultCollection?.admin,
             defaultColumns: ['label', 'name', 'updatedAt'],
             group: 'Shop settings',
-            /** Set once (Size, Colour, Pattern). Adding one needs code too. */
+            /** Set once — Size, Colour and Pattern are seeded (src/seed/index.ts). A new kind is rare. */
             hidden: true,
           },
         }),
@@ -333,38 +434,48 @@ export const plugins: Plugin[] = [
           admin: {
             ...defaultCollection?.admin,
             defaultColumns: ['label', 'variantType', 'value'],
-            description: 'The individual sizes and colours a product can come in.',
+            description:
+              'The sizes, colours and patterns a piece can come in. To offer a colour: add it here with "Colour" as its kind, then tick Colour under "Options offered" on the piece and add a row for each size and colour it is made in. Renaming one renames it on every piece that uses it.',
             group: 'Shop settings',
-            /**
-             * Hidden: S, M and L are set once, and renaming one renames that
-             * size on every product. Products still offer them. A hidden
-             * collection has no admin screen at all (Payload 3 answers 404), so
-             * a new size such as XL is added through the API or by un-hiding.
-             */
-            hidden: true,
           },
           hooks: withStorefrontRefresh(defaultCollection.hooks),
-          labels: { singular: 'Size or colour', plural: 'Sizes & colours' },
+          labels: { singular: 'Size, colour or pattern', plural: 'Sizes, colours & patterns' },
         }),
       },
     },
     transactions: {
       transactionsCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        /**
+         * "Payments" (REQUIREMENTS P11): one row per checkout, made before the
+         * customer is sent to the payment page — so a customer who never paid
+         * is here too, with the email, the bag and the amount, and the
+         * "What happened" column says so in words. Written only by the server;
+         * every field is read-only here.
+         */
         admin: {
           ...defaultCollection?.admin,
-          defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'order', 'createdAt'],
+          defaultColumns: ['createdAt', 'customerEmail', 'amount', 'outcome', 'order'],
+          description:
+            'Every checkout, paid or not. "Not paid" rows are customers who reached the payment page and left — their email and bag are here if you would like to follow up.',
           group: 'Shop',
-          /**
-           * Hidden: one row per payment attempt, including failures. The
-           * order record is what she works from. Kept for audit; a hidden
-           * collection has no admin screen (404), so read it through the API
-           * (GET /api/transactions, signed in as admin) or un-hide it.
-           */
-          hidden: true,
           listSearchableFields: ['customerEmail'],
           useAsTitle: 'customerEmail',
         },
+        defaultSort: '-createdAt',
+        fields: [
+          // The plugin's amount field already has its own PriceCell.
+          ...readOnlyFields(defaultCollection.fields),
+          {
+            name: 'outcome',
+            type: 'text',
+            admin: { description: 'Worked out from the payment status and the card declines the gateway reported.', readOnly: true },
+            hooks: { afterRead: [paymentOutcomeField] },
+            label: 'What happened',
+            virtual: true,
+          },
+        ],
+        labels: { plural: 'Payments', singular: 'Payment' },
         hooks: {
           ...defaultCollection.hooks,
           // Stock never stays below zero after a sale; see @/hooks/stockAfterSale.

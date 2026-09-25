@@ -241,6 +241,11 @@ export const SPOTTED_PAGE = {
     heading: 'Share yours',
     body: 'Tag us on Instagram. With your permission, we may share your photograph here.',
   },
+  /** PLACEHOLDER — ours, to confirm. The form on the page (REQUIREMENTS S15). */
+  form: {
+    heading: 'Send us yours',
+    body: 'A photograph of you in plumpose. We look at every one before it appears.',
+  },
   /** Shown while no customer photographs are approved — the brand's own, labelled as such. */
   empty: {
     label: 'From the Resort 2026 campaign',

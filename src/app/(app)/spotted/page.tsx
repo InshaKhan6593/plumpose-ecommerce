@@ -8,7 +8,8 @@ import type { Media as MediaType, Spotted } from '@/payload-types'
 
 import { ClosingBand, PageHeading, PageShell, TextLink } from '@/components/editorial'
 import { Media } from '@/components/Media'
-import { SPOTTED_PAGE } from '@/content/pages'
+import { SpottedForm } from '@/components/spotted/SpottedForm'
+import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -29,6 +30,7 @@ export const metadata: Metadata = {
  * photographs, labelled as the campaign — never passed off as customers'.
  */
 export default async function SpottedPage() {
+  const { SPOTTED_PAGE } = await getPageText()
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
 
@@ -87,6 +89,18 @@ export default async function SpottedPage() {
             </Reveal>
           </section>
         ) : null}
+        {/* Customers send their own (REQUIREMENTS S15); nothing shows until she approves it. */}
+        <section aria-labelledby="spotted-send" className="mt-24 border-t border-line pt-14 md:mt-32">
+          <Reveal className="mb-10 max-w-xl">
+            <h2 className="serif-display text-[clamp(2rem,3.4vw,3rem)] leading-[1.05]" data-reveal id="spotted-send">
+              {SPOTTED_PAGE.form.heading}
+            </h2>
+            <p className="mt-4 text-[0.9375rem] leading-relaxed text-ink-soft" data-reveal>
+              {SPOTTED_PAGE.form.body}
+            </p>
+          </Reveal>
+          <SpottedForm />
+        </section>
       </PageShell>
 
       <ClosingBand body={SPOTTED_PAGE.invite.body} className="mt-24 md:mt-36" line={SPOTTED_PAGE.invite.heading}>

@@ -1,11 +1,11 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
-import { createHmac } from 'node:crypto'
 
 import type { DiscountCode, Media, SiteSetting, SpinSegment } from '@/payload-types'
 
 import { scheduleSpinRewardEmail } from '@/email/spinReward'
 import { describeReward, drawableSegments, newRewardCode, pickSegment, rewardExpiry } from '@/lib/spin/wheel'
+import { deviceOf } from '@/utilities/deviceOf'
 
 /**
  * The reward wheel's two endpoints (REQUIREMENTS C7, A8, N6).
@@ -48,17 +48,6 @@ const settingsFor = (s: Partial<SiteSetting>) => ({
   newCustomersOnly: s.spinWheelNewCustomersOnly === true,
 })
 
-/**
- * A device, as a salted hash of its IP. Behind the host's proxy the address
- * is the first `x-forwarded-for` entry. With none (a local request) there is
- * nothing to count, and the per-device limit does not apply.
- */
-const deviceOf = (req: PayloadRequest): null | string => {
-  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  const ip = forwarded || req.headers.get('x-real-ip')?.trim()
-  if (!ip) return null
-  return createHmac('sha256', process.env.PAYLOAD_SECRET || 'plumpose').update(ip).digest('hex').slice(0, 40)
-}
 
 export const wheelEndpoint: Endpoint = {
   handler: async (req) => {

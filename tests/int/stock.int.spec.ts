@@ -77,3 +77,14 @@ describe('stock — made to order on: never refused, noted instead', () => {
     expect(stockSummary(lines)).toEqual({ madeToOrder: [], refusal: null })
   })
 })
+
+describe('stock — naming a choice', () => {
+  const p = { id: 9, madeToOrder: false, title: 'Classic — Silk Pyjama Set' } as unknown as Product
+  const v = (title: string) => ({ id: 1, inventory: 0, title }) as unknown as Variant
+
+  it('a size reads as "size M"; a size and colour in brackets', () => {
+    expect(stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — M') }])).toMatch(/^Classic, size M is sold out/)
+    expect(stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — M — Blush') }])).toMatch(/^Classic \(M \/ Blush\) is sold out/)
+    expect(stockRefusal([{ product: p, quantity: 1, variant: v('Classic — Silk Pyjama Set — Blush') }])).toMatch(/^Classic \(Blush\) is sold out/)
+  })
+})

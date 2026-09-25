@@ -6,7 +6,7 @@ import React from 'react'
 
 import { PageHeading, PageShell } from '@/components/editorial'
 import { ContactForm } from '@/components/editorial/ContactForm'
-import { CONTACT_PAGE } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
@@ -29,6 +29,7 @@ const CONTACT_FORM_TITLE = 'Contact'
  * "Press enquiries" arrive already labelled.
  */
 export default async function ContactPage({ searchParams }: Props) {
+  const { CONTACT_PAGE } = await getPageText()
   const { subject } = await searchParams
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()

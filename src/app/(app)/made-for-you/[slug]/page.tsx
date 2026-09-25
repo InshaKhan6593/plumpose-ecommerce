@@ -10,7 +10,8 @@ import type { Media as MediaType, Project } from '@/payload-types'
 import { ButtonLink, ClosingBand, TextLink } from '@/components/editorial'
 import { Media } from '@/components/Media'
 import { RichText } from '@/components/RichText'
-import { CATEGORY_LABELS, MADE_FOR_YOU } from '@/content/pages'
+import { CATEGORY_LABELS } from '@/content/pages'
+import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
 
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
  * tall photograph beside two — and the way to begin a commission of one's own.
  */
 export default async function ProjectPage({ params }: Args) {
+  const { MADE_FOR_YOU } = await getPageText()
   const project = await findProject((await params).slug)
   if (!project) notFound()
 

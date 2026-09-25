@@ -152,9 +152,14 @@ client's reference recording (`../brand-assets/reference/`):
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
   outside production only.
-- Reviews aggregate, CSV exports,
-  a Homepage global so she can edit the copy, storage adapter (uploads write
-  to local disk and will not survive a serverless deploy).
+- **Storage adapter.** Uploads write to local disk and will not survive a
+  serverless deploy; needs S3 / Vercel Blob once the host is chosen.
+- **Production migrations.** The dev database follows the code by schema
+  push; production needs migrations — including `spotted.image_id` made
+  nullable (BUILD-LOG §29).
+- Built since and not on this list any more: payments view, CSV exports,
+  reviews, Spotted submissions, enquiries inbox, Page text, sitemap, sale
+  price, colour/pattern, exchange rates, login lockout (BUILD-LOG §29).
 
 ---
 
@@ -168,7 +173,7 @@ pnpm seed                    # idempotent
 
 | Command | Purpose |
 |---|---|
-| `pnpm test:int` | Integration tests (162) |
+| `pnpm test:int` | Integration tests (208) |
 | `pnpm test:e2e` | Playwright (38 pass, 21 skipped) — pays for real on Stripe's hosted test page |
 | `pnpm audit:admin` | Flags admin config gaps — run after adding a collection |
 | `pnpm shoot:admin` | Screenshot all 16 admin screens |
@@ -283,6 +288,12 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Show a price with `<Money>` / `useMoney()`**, never `formatQar` directly
   on the storefront, so it follows the visitor's currency (BUILD-LOG §23).
   Checkout, orders and emails stay in QAR — that is what is charged.
+- **In e2e, look inside `<main>`** on a page under a `loading.tsx`: while it
+  streams in, Next keeps a hidden second copy outside it (≈2 s in dev). Scroll a reveal into
+  view before asserting it is visible; compare admin text case-insensitively
+  (labels are CSS-uppercased).
+- **`robots.ts` must sit at the app root** (`src/app/robots.ts`), not inside
+  a route group — Next ignores it there. Sitemaps may be nested.
 - **A hidden collection has no admin screen** (`admin.hidden` → 404 at
   `/admin/collections/<slug>`). Its data is still there through the API.
 - **Removing a field in dev can hang the server**: the schema push stops at a

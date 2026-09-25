@@ -12,6 +12,9 @@ import { splitTitle } from '@/utilities/splitTitle'
 import { toMinor } from '@/lib/pricing/money'
 import { ChargedInQar, Money } from '@/providers/Locale'
 
+import { Stars } from './Stars'
+import { WasPrice } from './WasPrice'
+
 import { describeChoice, type EmbroideryChoice, type EmbroideryOption, type EmbroideryRules } from './embroidery'
 import { EmbroideryDrawer } from './EmbroideryDrawer'
 import { VariantSelector } from './VariantSelector'
@@ -35,12 +38,15 @@ export function ProductInfo({
   embroideryOptions,
   embroideryRules,
   product,
+  rating,
 }: {
   categoryTitle: null | string
   details: ProductDetail[]
   embroideryOptions: EmbroideryOption[]
   embroideryRules: EmbroideryRules | null
   product: Product
+  /** From approved reviews only; null hides the line. */
+  rating?: null | { average: number; count: number }
 }) {
   const { name, subtitle } = splitTitle(product.title)
 
@@ -94,8 +100,17 @@ export function ProductInfo({
 
       {typeof price === 'number' ? (
         <div className="mt-7" data-reveal>
+          <WasPrice className="text-base tracking-[0.12em] tabular-nums" price={price} was={product.compareAtPriceInQAR} />
           <Money className="text-base tracking-[0.12em] tabular-nums" minor={price} />
           <ChargedInQar className="mt-1.5 block text-[0.75rem] text-ink-soft" minor={price} />
+          {rating ? (
+            <a className="mt-3 inline-flex items-center gap-3 text-[0.8125rem] text-ink-soft transition-colors hover:text-ink" href="#reviews">
+              <Stars value={rating.average} />
+              <span className="tabular-nums">
+                {rating.average.toFixed(1)} · {rating.count} {rating.count === 1 ? 'review' : 'reviews'}
+              </span>
+            </a>
+          ) : null}
         </div>
       ) : null}
 

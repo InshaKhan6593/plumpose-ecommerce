@@ -57,34 +57,31 @@ export function VariantSelector({ product }: { product: Product }) {
 
               const currentOptions = Array.from(optionSearchParams.values())
 
-              let isAvailableForSale = true
-              let madeToOrderOnly = false
+              /*
+               * What this choice would select: this option, plus whatever is
+               * already chosen for the other kinds (size, colour, pattern).
+               * Available if some piece that exists has all of them and can be
+               * ordered — so a colour that is only made in S and M is off once
+               * L is chosen (REQUIREMENTS S4). With every kind chosen there is
+               * exactly one piece, and its id goes in the URL for the bag.
+               */
+              const chosen = (variantTypes ?? [])
+                .filter((t): t is Exclude<typeof t, number> => typeof t === 'object' && t !== null)
+                .map((t) => optionSearchParams.get(t.name))
+                .filter((id): id is string => Boolean(id))
+              const optionIdsOf = (variant: Exclude<NonNullable<typeof variants>[number], number>) =>
+                (variant.options ?? []).map((o) => String(typeof o === 'object' ? o.id : o))
+              const candidates = (variants ?? [])
+                .filter((v): v is Exclude<typeof v, number> => typeof v === 'object')
+                .filter((v) => chosen.every((id) => optionIdsOf(v).includes(id)))
+              const purchasable = candidates.filter((v) => purchaseLimit(product, v) > 0)
 
-              // Find a matching variant
-              if (variants) {
-                const matchingVariant = variants
-                  .filter((variant) => typeof variant === 'object')
-                  .find((variant) => {
-                    if (!variant.options || !Array.isArray(variant.options)) return false
-
-                    // Check if all variant options match the current options in the URL
-                    return variant.options.every((variantOption) => {
-                      if (typeof variantOption !== 'object')
-                        return currentOptions.includes(String(variantOption))
-
-                      return currentOptions.includes(String(variantOption.id))
-                    })
-                  })
-
-                if (matchingVariant) {
-                  // If we found a matching variant, set the variant ID in the search params.
-                  optionSearchParams.set('variant', String(matchingVariant.id))
-
-                  // The shared rule (@/lib/pricing/stock): made to order is never sold out.
-                  isAvailableForSale = purchaseLimit(product, matchingVariant) > 0
-                  madeToOrderOnly = isAvailableForSale && readyStock(matchingVariant) === 0
-                }
-              }
+              const isAvailableForSale = purchasable.length > 0
+              const allChosen = chosen.length === (variantTypes?.length ?? 0)
+              const exact = allChosen && candidates.length === 1 ? candidates[0] : undefined
+              if (exact) optionSearchParams.set('variant', String(exact.id))
+              const madeToOrderOnly = Boolean(exact) && isAvailableForSale && readyStock(exact!) === 0
+              const unavailableReason = !candidates.length ? 'not made in this combination' : 'sold out'
 
               const optionUrl = createUrl(pathname, optionSearchParams)
 
@@ -98,7 +95,8 @@ export function VariantSelector({ product }: { product: Product }) {
                   aria-disabled={!isAvailableForSale}
                   aria-pressed={isActive}
                   className={clsx(
-                    'caps flex size-12 items-center justify-center border text-[0.6875rem] transition-colors duration-300 ease-brand',
+                    // Wide enough for a colour's name, still a square for S, M, L.
+                    'caps flex h-12 min-w-12 items-center justify-center border px-3 text-[0.6875rem] whitespace-nowrap transition-colors duration-300 ease-brand',
                     isActive
                       ? 'border-ink bg-ink text-white'
                       : 'border-line text-ink hover:border-ink',
@@ -111,7 +109,7 @@ export function VariantSelector({ product }: { product: Product }) {
                       scroll: false,
                     })
                   }}
-                  title={`${option.label}${!isAvailableForSale ? ' — sold out' : madeToOrderOnly ? ' — made to order' : ''}`}
+                  title={`${option.label}${!isAvailableForSale ? ` — ${unavailableReason}` : madeToOrderOnly ? ' — made to order' : ''}`}
                   type="button"
                 >
                   {option.label}

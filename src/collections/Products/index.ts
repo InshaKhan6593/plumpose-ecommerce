@@ -21,6 +21,8 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import { DefaultDocumentIDType, Where } from 'payload'
+import { amountField } from '@payloadcms/plugin-ecommerce'
+import { QAR } from '@/currencies'
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
@@ -114,7 +116,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   label: 'Only show for',
                   admin: {
                     description:
-                      'Leave empty to show this photo for every size. Set it to show the photo only when that size is chosen.',
+                      'Leave empty to show this photo whatever is chosen. Set it (a colour, say) to show the photo only when that is chosen.',
                     condition: (data) => {
                       return data?.enableVariants === true && data?.variantTypes?.length > 0
                     },
@@ -287,6 +289,27 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
              * the storefront shows it, so anything she chose there did nothing.
              * Add it back together with the section that renders it.
              */
+            /**
+             * A sale (REQUIREMENTS A3): the price it was, shown struck through
+             * beside today's price in the shop, on the piece's page and on the
+             * homepage. What the customer pays is always the price above.
+             */
+            amountField({
+              currenciesConfig: { defaultCurrency: 'QAR', supportedCurrencies: [QAR] },
+              currency: QAR,
+              overrides: {
+                admin: {
+                  description: 'Optional — for a sale. The price it was, shown crossed out beside the price. Leave empty when it is not on sale.',
+                },
+                label: 'Was price',
+                name: 'compareAtPriceInQAR',
+                validate: (value: null | number | undefined, { siblingData }: { siblingData: Record<string, unknown> }) => {
+                  if (value === null || value === undefined) return true
+                  const price = typeof siblingData?.priceInQAR === 'number' ? siblingData.priceInQAR : null
+                  return price === null || value > price || 'The was-price must be higher than the price, or empty.'
+                },
+              } as never,
+            }),
           ],
           label: 'Price & sizes',
         },

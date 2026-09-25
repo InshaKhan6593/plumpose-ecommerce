@@ -1734,3 +1734,35 @@ Desktop unchanged: 60 fps, no dropped film frames. Integration 162, e2e 38.
 **What is left of the phone start-up** is Next's own module loading (~250 ms
 at 4×) and hydrating the homepage's pinned scenes (hero, Philosophy, the
 Print's pin), which must exist before the layout below them is measured.
+
+## 29. The remaining requirements — 25 Sep 2026
+
+Eleven items from REQUIREMENTS, built and tested end to end.
+`tests/e2e/storefront-extras.e2e.spec.ts` drives each one as she and her
+customers would, against a production build. Integration **208** (was 162).
+
+| | What | Where |
+|---|---|---|
+| **P11** | **Payments** — every checkout, paid or not, with "What happened": *Paid — order #12*, *On the payment page*, *Not paid — left the payment page — card declined once ("…")*. Declines come from the webhook log, matched to the checkout by bag and time. The dashboard shows "N checkouts in the last week were not paid". Read-only. | `lib/payments/outcome.ts`, transactions override |
+| **A6 / S19 / A17** | **Spreadsheet downloads** of orders and subscribers, in her words (items, sizes, embroidery as the email reads, totals in riyals, Doha time). The list's filter is kept. UTF-8 with BOM for Arabic names; formula injection blocked. Admin only. | `lib/exports/`, `endpoints/exports.ts`, `ExportButton` |
+| **S18 / A15** | **Reviews**: a form on the product page; the average, stars and her reply on the page; the rating in Google's data; "Feature on the homepage". Checked on the server: rating 1–5, a real sentence, a live piece, one per email per piece, five a day per device. *Verified purchase* when the email has an order for it. | `hooks/validateReview.ts`, `ProductReviews`, `ReviewForm`, `Stars` |
+| **S15** | **Spotted submissions**: photo, Instagram name, caption, link, permission. The real format is read from the bytes (JPEG/PNG/WebP), 12 MB max, 600 px min; three a day per device. Arrives pending; **rejecting a sent-in photo deletes it**. | `endpoints/spottedSubmit.ts` (POST /api/spotted/submit), `SpottedForm` |
+| **A16** | **Enquiries inbox**: New → Read (on opening) → Replied → Archived; From, About and the start of the message as columns; "N new enquiries" on the dashboard. | form-submissions override, `MarkEnquiryRead` |
+| **S1 / A18** | **Page text** (Settings): the words of the homepage and eight pages, one tab each, filled with today's text. An emptied field falls back to it, so a page is never blank. *asterisks* set italic in the homepage headline. **Featured piece** on the homepage (falls back if unpublished). | `content/pageTextSchema.ts` (one list → admin fields and merge), `globals/PageText.ts`, `content/getPageText.ts` |
+| **N3** | **Sitemap** (fixed pages, published pieces, commissions, pages); **robots.txt** now actually served. It sat inside the `(app)` group, where Next never picks it up, and it pointed at Vercel's preview URL. It keeps crawlers out of admin, API, checkout and accounts. | `app/(app)/sitemap.ts`, `app/robots.ts` |
+| **A3** | **Was price** on a piece: shown crossed out in the shop, on the piece and on the homepage; refused unless higher than the price. | products, `WasPrice` |
+| **S4 / A4** | **Colour and pattern**: seeded as option types. *Sizes, colours & patterns* back in Shop settings. The picker disables combinations that are not made or are sold out, and says why. "Select a size and colour". The gallery shows the chosen colour's photographs ("Only show for" now works). Stock messages read "Classic (M / Blush)". Demo: `demo-two-colour-set`. | `VariantSelector`, `ProductGallery`, `sizeLabel` |
+| **A14** | **Exchange rates**: "Refresh exchange rates" on Currencies; **At today's rate** and **Difference** beside each hand-set price (AED 1,410 vs 1,411: −0.1%). Hand-set prices never change. The dashboard asks for a refresh after 7 days. A daily job can call `GET /api/currencies/refresh-rates` with `Authorization: Bearer $CRON_SECRET` (the admin button uses POST). Rates by Exchange Rate API. | `lib/pricing/rates.ts`, `endpoints/refreshRates.ts` |
+| **A1 / N6** | **Login lockout** stated: 5 wrong passwords lock an account for 15 minutes; tested on a real account. | Users auth |
+
+**Holes closed on the way:**
+
+- A public request could create an **already-approved review**: `status` had no field access. It can no longer, and every signed-in customer could read pending reviews and Spotted posts.
+- **Deleting a rejected photo** failed on the required `image_id` column. It is now validated, not NOT NULL. ⚠️ Production needs the same change as a migration (`alter table spotted alter column image_id drop not null`).
+- The Subscribers comment claimed an export plugin that was never installed.
+
+**Test lessons:**
+
+- On a page with `loading.tsx`, Next keeps a hidden second copy of the streamed page outside `<main>` until it swaps it in (≈2 s on the dev server). Look inside `main`.
+- Reveals below the fold are hidden until scrolled to: scroll first.
+- Admin labels are CSS-uppercased, so compare text case-insensitively.

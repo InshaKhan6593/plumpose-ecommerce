@@ -32,7 +32,7 @@ export type Step = { body: string; image?: MediaType; title: string }
 /** Scroll given to each step, in viewport heights. */
 const PER_STEP = 110
 
-export function MadeSteps({ steps }: { steps: Step[] }) {
+export function MadeSteps({ copy = HOME.steps, steps }: { copy?: typeof HOME.steps; steps: Step[] }) {
   const root = useRef<HTMLElement>(null)
   const [pinned, setPinned] = useState(true)
 
@@ -132,14 +132,14 @@ export function MadeSteps({ steps }: { steps: Step[] }) {
   const count = (n: number) => `${String(n + 1).padStart(2, '0')} / ${String(steps.length).padStart(2, '0')}`
 
   return (
-    <section aria-label={HOME.steps.label} className="relative bg-background" ref={root}>
+    <section aria-label={copy.label} className="relative bg-background" ref={root}>
       <Reveal className="px-6 pt-24 pb-10 text-center md:pt-32">
         <p className="caps text-[0.625rem] text-ink-soft" data-reveal>
-          {HOME.steps.label}
+          {copy.label}
         </p>
         <h2 className="mt-6 text-[clamp(2.6rem,5vw,4.75rem)] leading-[1.05]" data-reveal-lines>
-          <span className="serif-display">{HOME.steps.heading[0]} </span>
-          <em className="serif-italic">{HOME.steps.heading[1]}</em>
+          <span className="serif-display">{copy.heading[0]} </span>
+          <em className="serif-italic">{copy.heading[1]}</em>
         </h2>
       </Reveal>
 

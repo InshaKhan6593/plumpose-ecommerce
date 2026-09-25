@@ -45,8 +45,11 @@ type Float = {
 }
 
 export function Philosophy({
+  copy = HOME.philosophy,
   images,
 }: {
+  /** Her words from Page text; the defaults in content.ts otherwise. */
+  copy?: { headline: ReadonlyArray<{ italic?: boolean; text: string }>; label: string }
   images: { corridor?: MediaType; piping?: MediaType; print?: MediaType; qatarBook?: MediaType }
 }) {
   const root = useRef<HTMLElement>(null)
@@ -138,15 +141,15 @@ export function Philosophy({
   }, [])
 
   return (
-    <section aria-label={HOME.philosophy.label} className="relative z-10 bg-background md:h-[220svh]" ref={root}>
+    <section aria-label={copy.label} className="relative z-10 bg-background md:h-[220svh]" ref={root}>
       {/* The words hold the centre while the photographs pass. */}
       <div className="relative z-10 flex items-center justify-center px-6 pt-28 pb-14 md:sticky md:top-0 md:h-svh md:py-0">
         <div className="max-w-[62rem] text-center md:max-w-[54vw]">
           <p className="caps text-[0.625rem] text-ink-soft" data-philosophy-label data-reveal>
-            {HOME.philosophy.label}
+            {copy.label}
           </p>
           <h2 className="mt-7 text-[clamp(2.4rem,4.4vw,4.6rem)] leading-[1.08] text-balance text-ink" data-philosophy-headline data-reveal-lines>
-            {HOME.philosophy.headline.map((part, i) =>
+            {copy.headline.map((part, i) =>
               part.italic ? (
                 <em className="serif-italic" key={i}>
                   {part.text}
