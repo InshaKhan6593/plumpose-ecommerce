@@ -1992,7 +1992,7 @@ card for a small amount, then refund it from the portal.
 
 ## 33. Storage and the live database — 25 Sep 2026
 
-**Cloudflare R2** (bucket `plumposestoragee`, private) and **Neon** (Postgres
+**Cloudflare R2** (bucket `plumposestoragee`, private — moved to `plumpose-objects` in the EU, §36) and **Neon** (Postgres
 18.6, AWS Frankfurt `eu-central-1`) are set up. Keys are in `.env` and are to
 be **rotated after testing** — they were shared in chat.
 
@@ -2188,3 +2188,28 @@ specs pass (skipcash, checkout, stock, currency: 50).
 
 The README's "Running locally" starts from Neon and R2. Docker stays for the
 integration tests and for offline work (`LOCAL_DATABASE_URL`).
+
+## 36. The bucket moves to the EU — 25 Sep 2026
+
+Photos and films now live in **`plumpose-objects`**, an R2 bucket under the
+**EU jurisdiction**, next to Neon (Frankfurt) and the host. Such a bucket
+has its own endpoint, `<account>.eu.r2.cloudflarestorage.com`: set
+`R2_JURISDICTION=eu` (`src/storage/r2.ts`; `scripts/check-r2.ts` now uses the
+same settings as the site).
+
+All 533 objects (521 photo files, 12 films) were copied from
+`plumposestoragee` (Asia-Pacific) with their content type and cache headers;
+sizes checked one by one, none differ. Nothing in the database names a
+bucket — photos are `/api/media/file/<name>` — so only `.env` changed.
+
+**Checked:** `check-r2` passes on the new bucket (write, read, list, delete;
+unsigned request refused); signed redirects now point at the EU endpoint;
+`films:fetch` from it matches `public/video` byte for byte. First view of the
+shop's 41 photos, 6 at a time, from this machine: **41 of 41**, 1.5 s on
+average, 3.9 s at worst (before: 38 of 41, 2.5 s, timeouts). The homepage's 6
+photos at 1920 px: all, 2.8 s at worst. Timeouts still appear while the dev
+server is compiling a page for the first time — development only.
+
+**Left for the owner:** the old bucket `plumposestoragee` still holds a full
+copy; delete it in Cloudflare once satisfied. The current key reaches both
+buckets — when it is rotated, scope the new one to `plumpose-objects` only.

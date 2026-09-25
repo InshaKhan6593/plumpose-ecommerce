@@ -27,6 +27,11 @@ export type R2Config = {
   accessKeyId: string
   accountId: string
   bucket: string
+  /**
+   * A bucket created under a data jurisdiction (`eu`) has its own endpoint,
+   * `<account>.eu.r2.cloudflarestorage.com`. Empty for an ordinary bucket.
+   */
+  jurisdiction: string
   secretAccessKey: string
 }
 
@@ -35,15 +40,19 @@ export const r2Config = (): null | R2Config => {
   const bucket = process.env.R2_BUCKET?.trim() ?? ''
   const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim() ?? ''
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim() ?? ''
+  const jurisdiction = (process.env.R2_JURISDICTION?.trim().toLowerCase() ?? '').replace(
+    /[^a-z]/g,
+    '',
+  )
   return accountId && bucket && accessKeyId && secretAccessKey
-    ? { accessKeyId, accountId, bucket, secretAccessKey }
+    ? { accessKeyId, accountId, bucket, jurisdiction, secretAccessKey }
     : null
 }
 
 /** The S3 client settings R2 needs: its own endpoint, and region `auto`. */
 export const r2ClientConfig = (config: R2Config) => ({
   credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey },
-  endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
+  endpoint: `https://${config.accountId}.${config.jurisdiction ? `${config.jurisdiction}.` : ''}r2.cloudflarestorage.com`,
   region: 'auto',
 })
 

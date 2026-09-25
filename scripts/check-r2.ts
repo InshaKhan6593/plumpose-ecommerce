@@ -14,19 +14,19 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3'
 
-const { R2_ACCESS_KEY_ID, R2_ACCOUNT_ID, R2_BUCKET, R2_SECRET_ACCESS_KEY } = process.env
-if (!R2_ACCOUNT_ID || !R2_BUCKET || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+import { r2ClientConfig, r2Config } from '../src/storage/r2'
+
+const config = r2Config()
+if (!config) {
   console.error(
     'Missing R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID or R2_SECRET_ACCESS_KEY in .env',
   )
   process.exit(1)
 }
 
-const s3 = new S3Client({
-  credentials: { accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY },
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  region: 'auto',
-})
+const s3 = new S3Client(r2ClientConfig(config))
+const R2_BUCKET = config.bucket
+const endpoint = r2ClientConfig(config).endpoint
 
 const key = `_check/${Date.now()}.txt`
 const body = `plumpose R2 check ${new Date().toISOString()}`
@@ -61,7 +61,7 @@ await step('list', async () => {
 })
 await step('delete', () => s3.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key })))
 await step('public access is off', async () => {
-  const res = await fetch(`https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}/${key}`)
+  const res = await fetch(`${endpoint}/${R2_BUCKET}/${key}`)
   if (res.ok) throw new Error('the bucket answered an unsigned request')
   return `unsigned request refused (HTTP ${res.status})`
 })
