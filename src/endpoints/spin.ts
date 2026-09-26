@@ -82,8 +82,8 @@ export const wheelEndpoint: Endpoint = {
 
     return json({
       body: settings.body,
-      // White whale shark on the navy, drawn for the wheel (public/brand); the
-      // print photograph it replaced read as a dark blur at this size.
+      // A mother-of-pearl button on navy silk (public/brand), as on the garment;
+      // the print photograph before it read as a dark blur at this size.
       centreImage: '/brand/wheel-centre.webp',
       enabled: docs.length > 0,
       heading: settings.heading,

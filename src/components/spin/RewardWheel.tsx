@@ -38,6 +38,8 @@ type Phase = 'again' | 'ask' | 'spinning' | 'won'
 const SEEN_KEY = 'plumpose:wheel'
 /** The garment's navy in shadow, sampled from the product photographs. */
 const SILK_NAVY = '#2e3653'
+/** The cream of the piping — the winning segment, with navy words. */
+const PIPING_CREAM = '#efe6d6'
 export const WHEEL_CODE_KEY = 'plumpose:wheel-code'
 const DELAY_MS = 6000
 const SPIN_MS = 5200
@@ -428,9 +430,9 @@ function Wheel({
               >
                 <path
                   d={`M0 0 L${x1} ${y1} A${R} ${R} 0 ${slice > Math.PI ? 1 : 0} 1 ${x2} ${y2} Z`}
-                  // Silk navy, as measured from the garment (brand-assets/README), not ink:
-                  // the ink-black win sat badly beside the navy print at the centre.
-                  fill={isWinner ? SILK_NAVY : segment.colour}
+                  // The piping's cream with navy words, not ink: an ink-black win sat
+                  // badly beside the navy and the mother-of-pearl button at the centre.
+                  fill={isWinner ? PIPING_CREAM : segment.colour}
                   stroke="var(--color-ink)"
                   strokeWidth="0.8"
                 />
@@ -449,7 +451,7 @@ function Wheel({
                   }}
                 >
                   <text
-                    fill={isWinner ? '#fff' : 'var(--color-ink)'}
+                    fill={isWinner ? SILK_NAVY : 'var(--color-ink)'}
                     fontFamily="var(--font-jost), sans-serif"
                     fontSize="11.5"
                     letterSpacing="3.2"
@@ -468,8 +470,8 @@ function Wheel({
             )
           })}
 
-          {/* The print, at the heart of it. */}
-          <circle fill="#283354" r="52" />
+          {/* A mother-of-pearl button on navy silk, as on the garment. */}
+          <circle fill="#242c48" r="52" />
           {data.centreImage ? (
             <image
               clipPath="url(#wheel-centre)"
