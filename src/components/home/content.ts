@@ -13,21 +13,22 @@ export const HOME = {
     cta: 'Discover the collection',
     /** The opening of her own product description — her words, not a placeholder. */
     intro: 'Inspired by the tranquil waters of Qatar and the seasonal gathering of whale sharks.',
-    tagline: ['Rest', 'differently.'],
+    /** Hers, from her corrections of 27 Sep 2026 (it was "Rest differently."). */
+    tagline: ['Wear', 'your world'],
   },
   /**
-   * Her own words — the opening of the product description — set in mixed
-   * upright and italic, as the reference sets its philosophy line.
+   * Her own words (corrections, 27 Sep 2026), set in mixed upright and italic,
+   * as the reference sets its philosophy line.
    */
   philosophy: {
     headline: [
-      { text: 'Inspired by the ' },
-      { italic: true, text: 'tranquil waters' },
-      { text: ' of Qatar and the ' },
-      { italic: true, text: 'seasonal gathering' },
-      { text: ' of whale sharks.' },
+      { text: 'A world of ' },
+      { italic: true, text: 'silk' },
+      { text: ', inspired by nature, surroundings, and moments ' },
+      { italic: true, text: 'in between' },
+      { text: '.' },
     ] as ReadonlyArray<{ italic?: boolean; text: string }>,
-    label: 'Resort 2026',
+    label: 'plumpose',
   },
   /** The pinned "how it is made" sequence. The facts in each step come from the database. */
   steps: {
@@ -35,7 +36,7 @@ export const HOME = {
     label: 'From our atelier to you',
   },
   print: {
-    body: 'The whale shark returns to our coast every summer. We drew it by hand, star by star.',
+    body: 'The whale shark returns to our coast every summer.',
     cta: 'Read the story',
     heading: ['Drawn from the', 'waters of Qatar'],
     label: 'The print',

@@ -131,7 +131,7 @@ ${args.body}
 </td></tr>
 <tr><td align="center" style="padding:28px 16px 0;font-family:${bodyFont};font-size:12px;line-height:1.8;color:${palette.inkSoft};">
 ${footerHtml(args.footer)}
-<div style="margin-top:10px;color:${palette.inkFaint};letter-spacing:0.12em;text-transform:uppercase;font-size:10px;">Hand-finished in Doha</div>
+<div style="margin-top:10px;color:${palette.inkFaint};letter-spacing:0.12em;text-transform:uppercase;font-size:10px;">Carefully hand-finished</div>
 </td></tr>
 </table>
 </td></tr>

@@ -375,7 +375,7 @@ export function CheckoutPage({
         <h1 className="serif-display text-[clamp(2.25rem,4vw,3.25rem)] leading-tight">
           Your bag is empty.
         </h1>
-        <p className="mt-4 text-ink-soft">Every piece is hand-finished to order in Doha.</p>
+        <p className="mt-4 text-ink-soft">Every piece is hand-finished to order.</p>
         <Link
           className="caps mt-10 bg-ink px-10 py-4 text-[0.6875rem] text-white hover:bg-ink/85"
           href="/shop"

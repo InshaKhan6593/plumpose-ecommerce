@@ -6,20 +6,17 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import type { Category, Media as MediaType, Product } from '@/payload-types'
+import type { Category, Product } from '@/payload-types'
 
-import { Media } from '@/components/Media'
 import { ProductCard } from '@/components/shop/ProductCard'
-import { toMinor } from '@/lib/pricing/money'
-import { Reveal, RevealImage } from '@/motion/Reveal'
-import { Money } from '@/providers/Locale'
+import { Reveal } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
-import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
-  description: 'Silk sleepwear, hand-finished to order in Doha.',
-  title: 'Silk pyjamas & sleepwear, hand-finished in Doha',
+  description:
+    'Silk pyjama sets with a hand-drawn whale-shark print, designed in Doha and hand-finished to order.',
+  title: 'Silk pyjamas & sleepwear, designed in Doha',
 }
 
 /**
@@ -39,15 +36,14 @@ type Props = { searchParams: Promise<{ collection?: string; q?: string; sort?: s
 /**
  * The shop (docs/SCREEN-PROMPTS 05): a heading, a filter row of the real
  * collections, and the grid — each piece on warm paper, the second photograph
- * on hover. While the catalogue is small, an editorial tile for the hand
- * embroidery sits beside it, so one piece reads as curated rather than sparse.
+ * on hover. No embroidery tile: she wants embroidery shown only on the piece
+ * itself (her corrections, 27 Sep 2026).
  */
 export default async function ShopPage({ searchParams }: Props) {
   const params = await searchParams
   const q = (params.q ?? '').trim().slice(0, 80)
   const sortKey = (params.sort && params.sort in SORTS ? params.sort : null) as null | SortKey
   const payload = await getPayload({ config: configPromise })
-  const settings = await getCachedGlobal('siteSettings', 0)()
 
   const categories = (
     await payload.find({
@@ -84,29 +80,18 @@ export default async function ShopPage({ searchParams }: Props) {
     ],
   }
 
-  const [products, tileImage] = await Promise.all([
-    payload.find({
-      collection: 'products',
-      depth: 1,
-      draft: false,
-      limit: 48,
-      overrideAccess: false,
-      populate: { variants: { inventory: true, priceInQAR: true } },
-      sort: sortKey ? SORTS[sortKey].sort : ['_order', 'createdAt'],
-      where,
-    }),
-    payload.find({
-      collection: 'media',
-      depth: 0,
-      limit: 1,
-      where: { filename: { equals: 'brand-05-armchair.jpg' } },
-    }),
-  ])
+  const products = await payload.find({
+    collection: 'products',
+    depth: 1,
+    draft: false,
+    limit: 48,
+    overrideAccess: false,
+    populate: { variants: { inventory: true, priceInQAR: true } },
+    sort: sortKey ? SORTS[sortKey].sort : ['_order', 'createdAt'],
+    where,
+  })
 
   const docs = products.docs as Product[]
-  const embroideryHost = docs.find((p) => p.personalisationEnabled)
-  const showTile = !q && Boolean(embroideryHost) && Boolean(settings.personalisationFeeQar)
-  const tile = tileImage.docs[0] as MediaType | undefined
 
   /** Builds a shop URL that keeps the other filters. */
   const href = (next: { collection?: null | string; sort?: null | string }) => {
@@ -129,7 +114,7 @@ export default async function ShopPage({ searchParams }: Props) {
         <p className="serif-italic mt-4 text-lg text-ink-soft md:text-xl" data-reveal>
           {q
             ? `${docs.length} ${docs.length === 1 ? 'piece' : 'pieces'} found`
-            : 'Silk, hand-finished to order in Doha'}
+            : 'Silk, designed in Doha and hand-finished to order'}
         </p>
       </Reveal>
 
@@ -210,8 +195,6 @@ export default async function ShopPage({ searchParams }: Props) {
          * long catalogue a very long scroll. Each card reveals as it arrives
          * (one Reveal each, staggered only across a row): as one group, card 21
          * waited two seconds behind card 1, so a quick scroll met blank cards.
-         * `grid-flow-dense` lets the second piece fill the row beside the
-         * first while the embroidery tile takes a full row below them.
          */
         <div className="mt-10 grid grid-flow-dense grid-cols-2 gap-x-3 gap-y-10 sm:mt-12 sm:grid-flow-row sm:gap-x-6 sm:gap-y-14 lg:grid-cols-3 lg:gap-x-8">
           {docs.map((product, index) => (
@@ -221,45 +204,6 @@ export default async function ShopPage({ searchParams }: Props) {
                   <ProductCard priority={index < 4} product={product} />
                 </div>
               </Reveal>
-
-              {/* After the first piece: the embroidery, as an editorial tile. */}
-              {index === 0 && showTile && embroideryHost ? (
-                <Reveal className="col-span-2 sm:col-span-1">
-                  <Link
-                    className="group relative block scroll-mt-28"
-                    data-reveal
-                    href={`/products/${embroideryHost.slug}#personalisation`}
-                    // The footer's "Personalisation" link (/shop#personalisation) lands here.
-                    id="personalisation"
-                  >
-                    <RevealImage className="relative aspect-[5/4] overflow-hidden bg-paper-3 sm:aspect-[4/5]">
-                      {tile ? (
-                        <Media
-                          className="absolute inset-0 transition-transform duration-[900ms] ease-brand [@media(hover:hover)]:group-hover:scale-[1.03]"
-                          fill
-                          imgClassName="object-cover"
-                          resource={tile}
-                          size="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 95vw"
-                        />
-                      ) : null}
-                      <div
-                        aria-hidden
-                        className="absolute inset-0 bg-gradient-to-t from-ink/55 via-ink/5 to-transparent"
-                      />
-                      <div className="absolute inset-x-6 bottom-7 text-white">
-                        <p className="caps text-[0.625rem]">Hand embroidery</p>
-                        <p className="serif-display mt-3 text-[2rem] leading-[1.05]">
-                          Your initials, stitched by hand
-                        </p>
-                        <p className="mt-3 text-sm text-white/85">
-                          From <Money minor={toMinor(settings.personalisationFeeQar)} /> · on any
-                          piece
-                        </p>
-                      </div>
-                    </RevealImage>
-                  </Link>
-                </Reveal>
-              ) : null}
             </React.Fragment>
           ))}
         </div>

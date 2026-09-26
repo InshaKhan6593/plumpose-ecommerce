@@ -384,7 +384,7 @@ function optionLabels(variant: Variant): string {
 /**
  * Her own search description when she has written one. Otherwise one built
  * from the piece's own facts — what it is, the fabric, the colour, where it is
- * made — because the opening of her description ran past 160 characters and
+ * designed — because the opening of her description ran past 160 characters and
  * a clipped version ended mid-phrase ("…an exclusive…").
  */
 function metaDescription(product: Product): string {
@@ -392,7 +392,7 @@ function metaDescription(product: Product): string {
   const fabric = product.fabric ? ` ${product.fabric}` : ''
   const colour = product.colour ? `, ${product.colour}` : ''
   const embroidery = product.personalisationEnabled ? ', with optional hand embroidery' : ''
-  const built = `${product.title}${fabric}${colour}. Hand-finished to order in Doha${embroidery}.`
+  const built = `${product.title}${fabric}${colour}. Designed in Doha, hand-finished to order${embroidery}.`
   return clip(built)
 }
 

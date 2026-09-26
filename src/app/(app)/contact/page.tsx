@@ -12,9 +12,8 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
-  description:
-    'Write to the plumpose atelier in Doha by email or Instagram. We usually reply within a day.',
-  title: 'Contact the atelier in Doha',
+  description: 'Write to plumpose by email or Instagram. We usually reply within a day.',
+  title: 'Contact us',
 }
 
 type Props = { searchParams: Promise<{ subject?: string }> }

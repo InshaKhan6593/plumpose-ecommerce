@@ -15,16 +15,16 @@ import { loadPageMedia } from '@/utilities/pageMedia'
 export const metadata: Metadata = {
   alternates: { canonical: '/our-story' },
   description:
-    'The story behind plumpose and the Al Shaheen Nights print: silk nightwear inspired by the whale sharks of Qatar, hand-finished to order in Doha.',
-  title: 'Our story: silk nightwear made in Doha',
+    'The story behind plumpose and the Al Shaheen Nights print: silk inspired by the whale sharks of Qatar, designed in Doha.',
+  title: 'Our story: silk designed in Doha',
 }
 
 /**
  * Our Story (docs/SCREEN-PROMPTS 11), built as an editorial page:
  *
  *   1. opener — the café film opens from a card to the full screen (StoryOpener)
- *   2. the house — who makes it, beside her portrait
- *   3. behind the print — her own text from the old site, beside the corridor film
+ *   2. the house — who makes it, beside the print being drawn (her film)
+ *   3. behind the print — her own text from the old site, beside the painting film
  *   4. the silk — her three "why it lasts" pillars, each with a photograph
  *   5. the atelier — hand embroidery, with live figures from Site settings
  *   6. closing line and the way to the piece
@@ -96,11 +96,18 @@ export default async function OurStoryPage() {
         lede={OUR_STORY.lede}
       />
 
-      {/* The house */}
+      {/*
+        The house — beside the print being drawn: her own film, sent in place
+        of an AI-generated picture (her corrections, 27 Sep 2026).
+      */}
       <SplitBand
         className="pt-24 md:pt-36"
-        image={pick('doorway', 'founder')}
-        imgClassName="object-[50%_20%]"
+        film={{
+          label: 'The Al Shaheen Nights whale shark being drawn by hand',
+          mp4: '/video/story-draw.mp4',
+          poster: '/video/story-draw-poster.jpg',
+        }}
+        imgClassName="object-[50%_50%]"
       >
         <Prose
           body={OUR_STORY.founder.body}
@@ -109,20 +116,13 @@ export default async function OurStoryPage() {
         />
       </SplitBand>
 
-      {/*
-        Behind the print — her own words, beside the corridor film, which ends
-        on a close-up of the print. It is the phone hero on the homepage, so
-        desktop visitors see it only here; and the print macro still is
-        already the homepage's Print band.
-      */}
+      {/* Behind the print — her own words, beside the whale shark being painted by hand. */}
       <SplitBand
         className="pt-24 md:pt-36"
         film={{
-          label:
-            'Walking down a corridor in the Al Shaheen Nights set, then a close-up of the whale-shark print',
-          mp4: '/video/story-walk.mp4',
-          poster: '/video/story-walk-poster.jpg',
-          webm: '/video/story-walk.webm',
+          label: 'A whale shark being painted by hand with a fine brush',
+          mp4: '/video/story-paint.mp4',
+          poster: '/video/story-paint-poster.jpg',
         }}
         id="the-print"
         imgClassName="object-[50%_40%]"

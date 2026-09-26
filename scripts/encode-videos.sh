@@ -44,9 +44,11 @@ enc_mp4() {
 }
 TV="in_range=pc:out_range=tv"
 
-# Desktop hero: the café table clip, filmed sideways at 4K 60fps. Rotated upright,
-# a 16:9 band cut from hair to mid-chest so the shirt shows, half speed. ~7 MB.
-enc_mp4 hero-wide EK3A2406.mp4 "transpose=2,crop=2160:1215:0:250,setpts=2*PTS,scale=1920:1080:flags=lanczos:$TV,fps=30000/1001" 22 4500
+# Desktop hero: the coffee clip (EK3A2455, sent 27 Sep 2026 to replace EK3A2406
+# — "don't focus on her face"). 4K 60fps portrait with a rotation flag, which
+# ffmpeg applies itself, so no transpose here. A 16:9 band from the cup to the
+# hips, so the print leads rather than her face; half speed, ~13 s.
+enc_mp4 hero-wide EK3A2455.mp4 "crop=2160:1215:0:1300,setpts=2*PTS,scale=1920:1080:flags=lanczos:$TV,fps=30000/1001" 22 4500
 
 # Phone hero: the same café table clip as the desktop hero, in its full
 # portrait frame, half speed — 16.7 s. (It used to be IMG_5839, which is only
@@ -55,7 +57,9 @@ enc_mp4 hero-wide EK3A2406.mp4 "transpose=2,crop=2160:1215:0:250,setpts=2*PTS,sc
 # than the CRF 23 desktop portrait (story-cafe) for an SSIM 0.002 lower —
 # invisible on a phone screen. Also the phone version of story-cafe, so the two
 # pages share one download.
-enc_mp4 hero-mobile EK3A2406.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500
+# (Since 27 Sep 2026 the coffee clip, EK3A2455, like the desktop hero: full
+# portrait frame, half speed, no transpose — it carries its own rotation.)
+enc_mp4 hero-mobile EK3A2455.mp4 "setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500
 
 # The walking clip (IMG_5839): already vertical, 24fps, standard range. The
 # in-view film beside "Behind the print" on Our Story.
@@ -70,3 +74,19 @@ enc_mp4 story-cafe EK3A2406.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=
 enc_mp4 story-pillow EK3A2414.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 22 4000
 # …and its phone version: 36% smaller (3.8 MB against 5.9 MB), SSIM 0.002 lower.
 enc_mp4 story-pillow-small EK3A2414.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500
+
+# Our Story, "The house": the print being drawn (illustration-ipad.mov, sent
+# 27 Sep 2026 in place of an AI-generated picture). 60 s, 1080x1920, 25 fps,
+# standard range: 40 s from the 10 s mark at double speed, a 20 s loop.
+enc_trim_mp4() {
+  name=$1; src=$2; start=$3; dur=$4; vf=$5; crf=$6; rate=$7
+  ffmpeg -hide_banner -loglevel error -y -ss "$start" -t "$dur" -i "$SRC/$src" -an -vf "$vf,format=yuv420p"     -c:v libx264 -preset slow -tune film -profile:v high -crf "$crf" -maxrate "${rate}k" -bufsize "$((rate * 2))k"     -color_range tv -colorspace bt709 -color_primaries bt709 -color_trc bt709 -movflags +faststart     "$OUT/$name.mp4"
+  ffmpeg -hide_banner -loglevel error -y -i "$OUT/$name.mp4" -frames:v 1 -q:v 2 "$OUT/$name-poster.jpg"
+  echo "  $name"
+}
+enc_trim_mp4 story-draw illustration-ipad.mov 10 40 "setpts=0.5*PTS,fps=25" 24 2500
+
+# Our Story, "Behind the print": the whale shark hand-painted with a brush
+# (illustration-paint.mov, a 15 s screen recording, 1090x1364, 60 fps, full
+# range). Native size, 30 fps.
+enc_mp4 story-paint illustration-paint.mov "scale=1090:1364:flags=lanczos:$TV,fps=30" 23 2500

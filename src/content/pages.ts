@@ -30,19 +30,18 @@ export const OUR_STORY = {
     heading: ['For the hours', 'that belong to you'],
   },
 
-  /** LEGACY — her footer line, word for word. */
-  lede: 'Silk nightwear, hand-finished to order.',
+  /** Removed at her request (27 Sep 2026); empty shows no line. */
+  lede: '',
 
   /**
-   * PLACEHOLDER — the founder paragraph. The client has been asked for "a
-   * short paragraph about you and plumpose" (CLIENT-REQUEST §4). Kept
-   * deliberately general: nothing here states a fact about her we do not know.
+   * Hers — the founder paragraph from her corrections of 27 Sep 2026. The
+   * pieces are designed in Doha, not made there ("Made in Doha" was wrong).
    */
   founder: {
     label: 'The house',
-    heading: 'Made in Doha, for slow evenings',
+    heading: 'Designed in Doha, for slow moments',
     body: [
-      'plumpose began with a simple wish: to make something close to home. A set of silk nightwear you reach for at the end of the day, cut to drape rather than cling, and finished by hand in Doha.',
+      'plumpose began with a simple wish: to create something that felt close to home. Something beautiful to reach for at the end of the day. Something soft against the skin, effortless to wear, and made for moments that belong entirely to you.',
       'Each piece is made to order in small numbers, so nothing is made that will not be worn. It is a slower way of working — and, we think, a better one.',
     ],
   },
@@ -74,11 +73,11 @@ export const OUR_STORY = {
     pillars: [
       {
         title: '22-momme silk',
-        body: 'Heavier than most sleepwear silk. It drapes like water and wears like an heirloom.',
+        body: 'Heavier than most silkwear. It drapes like water and wears like an heirloom.',
       },
       {
         title: 'Hand-finished seams',
-        body: 'French seams throughout, finished by hand — no raw edge ever meets the skin.',
+        body: 'No raw edge ever meets the skin.',
       },
       {
         title: 'A print with a place',
@@ -164,10 +163,10 @@ export const SHIPPING_PAGE = {
 /* -------------------------------------------------------------- Made for You */
 
 export const MADE_FOR_YOU = {
-  heading: 'Made for you',
-  /** PLACEHOLDER. */
+  /** Hers — the page's opening, from her corrections of 27 Sep 2026. */
+  heading: 'Made for your moment',
   intro:
-    'Bridal sets, bespoke pieces and embroidery made for one person — or for a few hundred guests.',
+    'Some moments call for something a little more personal. From bridal mornings and bespoke embroidery to private commissions and creative collaborations, plumpose creates silk pieces designed around the occasion.',
   /**
    * PLACEHOLDER — what she offers, one line each. These describe the
    * categories the Projects collection already has; the client should confirm
@@ -206,7 +205,7 @@ export const MADE_FOR_YOU = {
       },
       {
         title: 'Made by hand',
-        body: 'Cut and finished in Doha. We send a photograph before it leaves.',
+        body: 'Finished by hand. We send a photograph before it leaves.',
       },
       { title: 'Delivered', body: 'In our signature packaging, to you or to them.' },
     ],

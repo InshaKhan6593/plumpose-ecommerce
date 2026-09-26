@@ -5,22 +5,20 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import type { Media as MediaType, Project } from '@/payload-types'
+import type { Project } from '@/payload-types'
 
 import { ButtonLink, ClosingBand, PageHeading, PageShell } from '@/components/editorial'
-import { type Film, InViewFilm } from '@/components/editorial/InViewFilm'
 import { Media } from '@/components/Media'
 import { CATEGORY_LABELS } from '@/content/pages'
 import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
-import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/made-for-you' },
   description:
-    'Bridal sets, bespoke pieces, special embroidery and collaborations, made by hand in Doha.',
-  title: 'Bridal & personalised silk pyjamas, made in Doha',
+    'Bridal sets, bespoke pieces, special embroidery and collaborations — silk pieces designed around the occasion.',
+  title: 'Bridal & personalised silk pyjamas',
 }
 
 type Props = { searchParams: Promise<{ category?: string }> }
@@ -41,40 +39,14 @@ export default async function MadeForYouPage({ searchParams }: Props) {
   const { category } = await searchParams
   const payload = await getPayload({ config: configPromise })
 
-  const [pick, projects] = await Promise.all([
-    loadPageMedia(payload),
-    payload.find({
-      collection: 'projects',
-      depth: 1,
-      limit: 60,
-      overrideAccess: false,
-      pagination: false,
-      sort: '_order',
-    }),
-  ])
-
-  const offerImages: Record<string, MediaType | undefined> = {
-    bespoke: pick('armchair'),
-    bridal: pick('window'),
-    collaboration: pick('qatarBook', 'packaging'),
-    // Until an embroidery close-up exists, the atelier shot's gold initial shows the stitching.
-    embroidery: pick('piping', 'embroidery', 'atelier'),
-  }
-
-  /*
-   * Bridal gets the portrait cut of the café breakfast film — "the morning of
-   * the wedding". It spares the window photograph, which is already the shop
-   * card, the product page and a homepage step.
-   */
-  const offerFilms: Record<string, (Film & { label: string }) | undefined> = {
-    bridal: {
-      label: 'A slow breakfast in a café, in the Al Shaheen Nights silk set',
-      mp4: '/video/story-cafe.mp4',
-      poster: '/video/story-cafe-poster.jpg',
-      // The same clip and frame as the phone hero, so a phone downloads it once.
-      small: '/video/hero-mobile.mp4',
-    },
-  }
+  const projects = await payload.find({
+    collection: 'projects',
+    depth: 1,
+    limit: 60,
+    overrideAccess: false,
+    pagination: false,
+    sort: '_order',
+  })
 
   const all = projects.docs as Project[]
   const presentCategories = [...new Set(all.map((p) => p.category))]
@@ -91,27 +63,10 @@ export default async function MadeForYouPage({ searchParams }: Props) {
         {/* What she makes */}
         <ul className="mt-16 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-24 lg:grid-cols-4">
           {MADE_FOR_YOU.offers.map((offer, n) => {
-            const image = offerImages[offer.key]
-            const film = offerFilms[offer.key]
             return (
-              // Staggered heights, as in the mockup, so four tiles do not read as a product grid.
-              <li className={cn(n % 2 === 1 && 'lg:mt-16')} key={offer.key}>
-                {film || image ? (
-                  <RevealImage className="relative aspect-[3/4] overflow-hidden bg-paper-3">
-                    {film ? (
-                      <InViewFilm className="object-[50%_30%]" film={film} label={film.label} />
-                    ) : (
-                      <Media
-                        className="absolute inset-0"
-                        fill
-                        imgClassName="object-cover"
-                        resource={image}
-                        size="(min-width: 1024px) 23vw, (min-width: 640px) 48vw, 100vw"
-                      />
-                    )}
-                  </RevealImage>
-                ) : null}
-                <Reveal className="mt-6">
+              // Words only, at her request (27 Sep 2026): the photographs are shown elsewhere.
+              <li key={offer.key}>
+                <Reveal className="border-t border-line pt-6">
                   <p className="caps text-[0.5625rem] text-ink-soft tabular-nums" data-reveal>
                     {String(n + 1).padStart(2, '0')}
                   </p>

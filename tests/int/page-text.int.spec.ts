@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import { getPayload } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import config from '@/payload.config'
@@ -70,7 +71,7 @@ describe('page text — the merge', () => {
   it('writes and reads italics the same way', () => {
     const text = italicsToText(HOME.philosophy.headline)
     expect(text).toBe(
-      'Inspired by the *tranquil waters* of Qatar and the *seasonal gathering* of whale sharks.',
+      'A world of *silk*, inspired by nature, surroundings, and moments *in between*.',
     )
     expect(textToItalics(text)).toEqual(HOME.philosophy.headline)
     // An unclosed asterisk is just an asterisk.
@@ -81,6 +82,14 @@ describe('page text — the merge', () => {
 describe('page text — saved in the admin', () => {
   let payload: Payload
   let before: Record<string, unknown>
+  /** Whether Page text had ever been saved. Usually not: the pages then follow the code's defaults. */
+  let wasSaved = false
+  const drizzle = () =>
+    (
+      payload.db as unknown as {
+        drizzle: { execute: (q: unknown) => Promise<{ rows: Array<{ n: number }> }> }
+      }
+    ).drizzle
 
   beforeAll(async () => {
     payload = await getPayload({ config: await config })
@@ -88,9 +97,20 @@ describe('page text — saved in the admin', () => {
       string,
       unknown
     >
+    wasSaved =
+      (await drizzle().execute(sql`select count(*)::int as n from page_text`)).rows[0]!.n > 0
   }, 120_000)
 
   afterAll(async () => {
+    /*
+     * Put it back as it was. Saving `before` when nothing had been saved would
+     * store today's defaults as if she had typed them, so a later change to
+     * the defaults would never reach the pages (and this spec would fail).
+     */
+    if (!wasSaved) {
+      await drizzle().execute(sql`delete from page_text`)
+      return
+    }
     const {
       createdAt: _c,
       globalType: _g,

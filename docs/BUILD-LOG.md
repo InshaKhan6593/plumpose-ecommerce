@@ -2447,3 +2447,59 @@ things, fixed here:
   nothing; the shop's embroidery tile carries that id now.
 - **The homepage figure read "4–10 working days to hand-finish"**, as if every
   order took that long. It is the embroidery lead time, and now says so.
+
+## 40. The client's corrections and her new films — 27 Sep 2026
+
+Her annotated PDF (`Insha notes (1).pdf`, read with LlamaParse's agentic tier
+and checked page by page against the images) and three videos.
+
+**The one that reaches furthest: the pieces are designed in Doha, not made or
+finished there.** She struck "in Doha" after "hand-finished" three times
+("wrong info") and changed "Made in Doha" to "Designed in Doha". Every such
+claim is gone — titles and descriptions (§39's included), the bag, checkout,
+the email footer, the Made for You process step, Our Story. "Hand-finished"
+itself stays; the footer now reads "Carefully hand-finished".
+
+- **Homepage.** Hero "Rest differently." → "Wear your world"; the framed print
+  detail removed; the philosophy words are hers ("A world of silk, inspired
+  by nature, surroundings, and moments in between.", label plumpose) with no
+  drifting photographs; the print body loses "We drew it by hand, star by
+  star."; its figure is "100% hand finished" (the lead time was "not
+  correct"); step 02 no longer quotes a price; step 03 is "Hand finished for
+  every kind of moment" with no body.
+- **Shop.** The embroidery tile is gone — embroidery belongs on the piece. The
+  footer's Personalisation link opens the first piece that offers it, at its
+  drawer.
+- **Made for You.** Her opening ("Made for your moment" and her paragraph)
+  replaces the heading and intro; the four kinds of work are words only.
+- **Our Story.** No line under the opening; "Designed in Doha, for slow
+  moments" with her founder paragraph; "Heavier than most silkwear"; the seams
+  line is "No raw edge ever meets the skin." (she struck the rest and wrote
+  nothing in its place — to confirm).
+- **Product.** The QATAR magazine photo is out of the gallery (it is the
+  homepage's "Delivered to you"). WhatsApp +974 51445633 is in Site settings.
+
+**Films** (`scripts/encode-videos.sh`, originals in `../brand-assets/video/`):
+the homepage hero is now EK3A2455 (the coffee clip). Unlike EK3A2406 it
+carries a rotation flag, which ffmpeg applies itself — the old `transpose=2`
+would have turned it sideways. The desktop band is cut from the cup to the
+hips, so the print leads rather than her face. `story-draw` (the print drawn
+on an iPad, 40 s at double speed) replaces the AI-generated picture beside
+"The house"; `story-paint` (a whale shark painted by brush) is beside "Behind
+the print", in place of the corridor film.
+
+**Page text had never been saved on Neon**, so the pages follow the code's
+defaults, and her words went into `content.ts` / `pages.ts`. Writing them to the
+global instead would have frozen them there. But Next's data cache kept the
+old copy after a rebuild — locally and on Vercel — so after the deploy the
+storefront was refreshed through `/api/storefront/refresh` (signed with the
+HMAC of PAYLOAD_SECRET), tags `global_pageText` and `global_siteSettings`.
+
+**`page-text.int.spec.ts` froze the defaults into the test database**: its
+`afterAll` saved what it had read, turning "never saved" into "saved as
+today's defaults", so the spec failed as soon as a default changed. It now
+deletes the row again when there was none before.
+
+Checked on a production build: 32 text checks over /, /shop, /our-story,
+/made-for-you and the product page; screenshots at 1440 and 390 px.
+`tsc` 0 errors, lint no new warnings, `pnpm test:int` 229 passed.

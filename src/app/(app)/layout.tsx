@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   title: {
-    default: 'plumpose — silk pyjamas & nightwear, hand-finished in Doha',
+    default: 'plumpose — silk pyjamas & nightwear, designed in Doha',
     template: '%s — plumpose',
   },
 }

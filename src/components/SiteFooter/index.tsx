@@ -1,4 +1,6 @@
+import configPromise from '@payload-config'
 import Link from 'next/link'
+import { getPayload } from 'payload'
 
 import { Wordmark } from '@/components/brand/Wordmark'
 import { LocaleButton } from '@/components/locale/LocalePicker'
@@ -14,6 +16,26 @@ import { NewsletterForm } from './NewsletterForm'
 export async function SiteFooter() {
   const settings = await getCachedGlobal('siteSettings', 0)()
 
+  // Embroidery lives on the piece itself (her corrections, 27 Sep 2026), so
+  // "Personalisation" opens the first piece that offers it, at its drawer.
+  const payload = await getPayload({ config: configPromise })
+  const embroidered = (
+    await payload.find({
+      collection: 'products',
+      depth: 0,
+      limit: 1,
+      overrideAccess: false,
+      select: { slug: true },
+      sort: ['_order', 'createdAt'],
+      where: {
+        and: [{ _status: { equals: 'published' } }, { personalisationEnabled: { equals: true } }],
+      },
+    })
+  ).docs[0]
+  const personalisationHref = embroidered?.slug
+    ? `/products/${embroidered.slug}#personalisation`
+    : '/shop'
+
   const whatsappHref = settings.whatsappNumber
     ? `https://wa.me/${settings.whatsappNumber.replace(/[^\d]/g, '')}`
     : null
@@ -28,7 +50,7 @@ export async function SiteFooter() {
       heading: 'Shop',
       links: [
         { href: '/shop', label: 'Pyjamas' },
-        { href: '/shop#personalisation', label: 'Personalisation' },
+        { href: personalisationHref, label: 'Personalisation' },
         { href: '/shipping-returns#gifting', label: 'Gift wrapping' },
       ],
     },
@@ -79,7 +101,7 @@ export async function SiteFooter() {
             <Link aria-label="plumpose — home" className="inline-block text-ink" href="/">
               <Wordmark className="h-9 w-auto md:h-11" />
             </Link>
-            <p className="serif-italic mt-3 text-lg text-ink">Hand-finished in Doha</p>
+            <p className="serif-italic mt-3 text-lg text-ink">Carefully hand-finished</p>
             <NewsletterForm />
           </div>
 

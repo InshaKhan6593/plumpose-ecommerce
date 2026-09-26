@@ -19,12 +19,12 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { getPageText } from '@/content/getPageText'
 
 const SITE_DESCRIPTION =
-  'Silk sleepwear with a hand-drawn whale-shark print, hand-finished to order in Doha. Personalised with hand embroidery.'
+  'Silk sleepwear with a hand-drawn whale-shark print, designed in Doha and hand-finished to order. Personalised with hand embroidery.'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
   description: SITE_DESCRIPTION,
-  title: 'plumpose — silk pyjamas & nightwear, hand-finished in Doha',
+  title: 'plumpose — silk pyjamas & nightwear, designed in Doha',
 }
 
 /**
@@ -121,19 +121,15 @@ export default async function HomePage() {
   )
 
   // ---- facts, all from her settings and tables ----
-  const leadTime = settings.personalisationLeadTime ?? null // e.g. "4–10 working days"
-  const leadMatch = leadTime?.match(/^\s*([\d–-]+)\s*(.*)$/)
+  // Her corrections, 27 Sep 2026: a lead time here read as the make time for
+  // every order ("not correct"); she asked for "100% hand finished" instead.
   const facts: PrintFact[] = [
-    ...(leadMatch
-      ? // Her lead time is for embroidered pieces; "to hand-finish" read as every order.
-        [{ label: `${leadMatch[2] || 'days'} for hand embroidery`, value: leadMatch[1] }]
-      : []),
+    { label: 'Hand finished', value: '100%' },
     ...(threads.totalDocs
       ? [{ label: 'Embroidery thread colours', value: String(threads.totalDocs) }]
       : []),
   ]
 
-  const fee = settings.personalisationFeeQar
   const steps: Step[] = [
     {
       body: 'S, M or L — cut in the signature plumpose silhouette, with long trousers designed for a graceful drape.',
@@ -144,15 +140,17 @@ export default async function HomePage() {
       body: [
         'Initials or a symbol, stitched by hand',
         threads.totalDocs ? ` in one of ${threads.totalDocs} thread colours` : '',
-        fee ? `. From QAR ${fee}.` : '.',
+        // No price here, at her request — the product page shows it.
+        '.',
       ].join(''),
       image: image('piping'),
       title: 'Add hand embroidery',
     },
     {
-      body: `Each piece is hand-finished to order in Doha${leadTime ? ` — embroidered pieces in ${leadTime}` : ''}.`,
+      // Not "in Doha": the pieces are designed there, not finished there (her corrections).
+      body: '',
       image: image('armchair'),
-      title: 'Hand-finished in Doha',
+      title: 'Hand finished for every kind of moment',
     },
     {
       body: [
@@ -209,22 +207,14 @@ export default async function HomePage() {
           <HomeHero
             copy={copy.hero}
             ctaHref={productHref}
-            detail={image('print')}
             films={{
               desktop: { mp4: '/video/hero-wide.mp4', poster: '/video/hero-wide-poster.jpg' },
               mobile: { mp4: '/video/hero-mobile.mp4', poster: '/video/hero-mobile-poster.jpg' },
             }}
           />
         </div>
-        <Philosophy
-          copy={copy.philosophy}
-          images={{
-            corridor: image('corridor'),
-            piping: image('piping'),
-            print: image('print'),
-            qatarBook: image('qatarBook'),
-          }}
-        />
+        {/* No drifting photographs, at her request: the words stand alone. */}
+        <Philosophy copy={copy.philosophy} images={{}} />
       </div>
 
       <PrintBand copy={copy.print} facts={facts} href="/our-story" image={image('print')} />
