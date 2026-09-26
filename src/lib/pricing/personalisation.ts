@@ -184,17 +184,3 @@ export const normalisePersonalisationList = (
  */
 export const personalisationFeeForLine = (lines: PersonalisationLine[], quantity: number): Minor =>
   lines.reduce((total, line) => total + line.feeQar, 0) * Math.max(1, quantity)
-
-/** One placement in words — for the receipt, the order email and the atelier. */
-export const describePersonalisation = (line: PersonalisationLine): string => {
-  const parts: string[] = []
-  if (line.lettering) parts.push(`"${line.lettering}"`)
-  if (line.symbolName) parts.push(line.symbolName)
-  if (!parts.length) return ''
-
-  const thread = line.threadName ? ` in ${line.threadName}` : ''
-  return `${line.placementName}: ${parts.join(' + ')}${thread}`
-}
-
-export const describePersonalisationList = (lines: PersonalisationLine[]): string =>
-  lines.map(describePersonalisation).filter(Boolean).join('; ')

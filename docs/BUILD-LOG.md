@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **208 passing** |
+| Integration tests | **229 passing** (26 Sep) |
 | End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sending from plumpose.com waits on domain verification |
@@ -2293,3 +2293,26 @@ the top on phones. SkipCash's payment page shows a broken merchant logo —
 uploaded in the SkipCash portal, not by us; PNGs made from the wordmark are
 in `../brand-assets/logo/skipcash/`.
 
+
+### Clean-up and health check — 27 Sep 2026
+
+- **Dead code removed:** `describePersonalisation` / `describePersonalisationList`
+  (never called; emails format embroidery themselves), the template's
+  `themeIsValid`, and `WORDMARK_ASPECT`. knip's other findings were checked:
+  its 17 "unused files" are the hand-run `scripts/` and the Playwright specs
+  (knip cannot load `playwright.config.ts` while `.env` points at Neon — the
+  e2e guard refuses), and the unused exports are shadcn/ui surface, admin
+  components' named + default exports, and constants kept for reading.
+  The template's Theme / HeaderTheme providers are still wired (Sonner, the
+  unused HighImpact hero) — a larger removal, left for now.
+- **Checks:** `tsc` 0 errors; `pnpm lint` 0 errors (97 warnings, unchanged);
+  `pnpm test:int` **229 passed** (23 files, Docker). The e2e suite was not
+  re-run: its selectors do not touch the checkout changes (payment is
+  initiated through the API; checkout is asserted by text and the Email
+  label).
+- **Dependencies (`pnpm outdated`), not upgraded:** Payload 3.90.1 → 3.90.2
+  and Next 16.3.3 → 16.3.6 are patch releases — worth taking together, all
+  `@payloadcms/*` at once (they must match), with a full test run. React
+  19.3, Tailwind 4.3, Playwright 1.63 are minors. Majors (TypeScript 7,
+  ESLint 10, Vitest 5, lucide-react 1, sonner 2, graphql 17, dotenv 18,
+  cross-env 10) are not worth the risk before launch.

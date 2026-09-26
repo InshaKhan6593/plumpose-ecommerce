@@ -16,8 +16,6 @@
 
  */
 
-export const WORDMARK_ASPECT = 4.9827
-
 export function Wordmark({
   className,
   title = 'plumpose',
