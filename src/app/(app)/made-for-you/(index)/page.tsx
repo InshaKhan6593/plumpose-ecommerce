@@ -17,9 +17,10 @@ import { cn } from '@/utilities/cn'
 import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/made-for-you' },
   description:
     'Bridal sets, bespoke pieces, special embroidery and collaborations, made by hand in Doha.',
-  title: 'Made for you',
+  title: 'Bridal & personalised silk pyjamas, made in Doha',
 }
 
 type Props = { searchParams: Promise<{ category?: string }> }

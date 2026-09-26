@@ -15,12 +15,16 @@ import { type PrintFact, PrintBand } from '@/components/home/PrintBand'
 import { deliveryRange } from '@/lib/pricing/deliveryRange'
 import { formatQar } from '@/lib/pricing/money'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { getServerSideURL } from '@/utilities/getURL'
 import { getPageText } from '@/content/getPageText'
 
+const SITE_DESCRIPTION =
+  'Silk sleepwear with a hand-drawn whale-shark print, hand-finished to order in Doha. Personalised with hand embroidery.'
+
 export const metadata: Metadata = {
-  description:
-    'Silk sleepwear with a hand-drawn whale-shark print, hand-finished to order in Doha. Personalised with hand embroidery.',
-  title: 'plumpose — silk nightwear, hand-finished to order',
+  alternates: { canonical: '/' },
+  description: SITE_DESCRIPTION,
+  title: 'plumpose — silk pyjamas & nightwear, hand-finished in Doha',
 }
 
 /**
@@ -159,8 +163,41 @@ export default async function HomePage() {
     },
   ]
 
+  /**
+   * Who plumpose is, for search engines: the brand's name, logo and Instagram
+   * (from Site settings), so a search for the name can show the brand itself.
+   */
+  const site = getServerSideURL()
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@id': `${site}/#organization`,
+        '@type': 'Organization',
+        description: SITE_DESCRIPTION,
+        logo: `${site}/brand/plumpose-logo.png`,
+        name: 'plumpose',
+        ...(settings.instagramUrl ? { sameAs: [settings.instagramUrl] } : {}),
+        url: `${site}/`,
+      },
+      {
+        '@id': `${site}/#website`,
+        '@type': 'WebSite',
+        name: 'plumpose',
+        publisher: { '@id': `${site}/#organization` },
+        url: `${site}/`,
+      },
+    ],
+  }
+
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(organizationJsonLd).replace(/</g, '\\u003c'),
+        }}
+        type="application/ld+json"
+      />
       {/*
         The curtain: the hero is pinned beneath, and the philosophy section
         slides up over it. The wrapper ends with that section, so the hero

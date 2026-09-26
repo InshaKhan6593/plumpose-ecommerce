@@ -11,8 +11,10 @@ import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
-  description: 'Write to plumpose by email, Instagram or WhatsApp. We usually reply within a day.',
-  title: 'Contact',
+  alternates: { canonical: '/contact' },
+  description:
+    'Write to the plumpose atelier in Doha by email or Instagram. We usually reply within a day.',
+  title: 'Contact the atelier in Doha',
 }
 
 type Props = { searchParams: Promise<{ subject?: string }> }

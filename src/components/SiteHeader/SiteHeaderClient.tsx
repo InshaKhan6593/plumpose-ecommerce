@@ -147,7 +147,8 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
             <button
               aria-expanded={menuOpen}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="-ml-1 p-1 lg:hidden"
+              // A 44px target (the touch minimum); the margin keeps the icon where it was.
+              className="-ml-3 grid size-11 place-items-center lg:hidden"
               onClick={() => setMenuOpen((open) => !open)}
               type="button"
             >

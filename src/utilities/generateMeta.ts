@@ -13,7 +13,12 @@ export const generateMeta = async (args: { doc: Page | Product }): Promise<Metad
     'url' in doc.meta.image &&
     `${process.env.NEXT_PUBLIC_SERVER_URL}${doc.meta.image.url}`
 
+  const path = doc?.slug && doc.slug !== 'home' ? `/${doc.slug}` : '/'
+  // No title of its own: the layout's default ("plumpose — …") applies.
+  const title = doc?.meta?.title || doc?.title || undefined
+
   return {
+    alternates: { canonical: path },
     description: doc?.meta?.description,
     openGraph: mergeOpenGraph({
       ...(doc?.meta?.description
@@ -28,9 +33,9 @@ export const generateMeta = async (args: { doc: Page | Product }): Promise<Metad
             },
           ]
         : undefined,
-      title: doc?.meta?.title || doc?.title || 'Payload Ecommerce Template',
-      url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
+      ...(title ? { title } : {}),
+      url: path,
     }),
-    title: doc?.meta?.title || doc?.title || 'Payload Ecommerce Template',
+    title,
   }
 }

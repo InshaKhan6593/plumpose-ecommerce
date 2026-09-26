@@ -16,6 +16,7 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/spotted' },
   description: 'plumpose, as you wear it. Tag @plumpose to be featured.',
   title: 'Spotted',
 }

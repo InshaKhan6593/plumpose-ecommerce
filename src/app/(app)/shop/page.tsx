@@ -17,8 +17,9 @@ import { cn } from '@/utilities/cn'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/shop' },
   description: 'Silk sleepwear, hand-finished to order in Doha.',
-  title: 'Shop',
+  title: 'Silk pyjamas & sleepwear, hand-finished in Doha',
 }
 
 /**

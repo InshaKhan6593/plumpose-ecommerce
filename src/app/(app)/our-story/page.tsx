@@ -13,9 +13,10 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/our-story' },
   description:
     'The story behind plumpose and the Al Shaheen Nights print: silk nightwear inspired by the whale sharks of Qatar, hand-finished to order in Doha.',
-  title: 'Our story',
+  title: 'Our story: silk nightwear made in Doha',
 }
 
 /**

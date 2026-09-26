@@ -14,16 +14,19 @@ export function OpenCartButton({
   return (
     <button
       aria-label={quantity ? `Bag, ${quantity} ${quantity === 1 ? 'item' : 'items'}` : 'Bag'}
-      className="relative flex items-center hover:cursor-pointer"
+      // A 44px target (the touch minimum); the margin keeps the icon where it was.
+      className="-m-3 flex size-11 items-center justify-center hover:cursor-pointer"
       type="button"
       {...rest}
     >
-      <ShoppingBag className="size-[1.15rem]" strokeWidth={1.25} />
-      {quantity ? (
-        <span className="absolute -top-1.5 -right-2.5 text-[0.625rem] leading-none tabular-nums">
-          {quantity}
-        </span>
-      ) : null}
+      <span className="relative">
+        <ShoppingBag className="size-[1.15rem]" strokeWidth={1.25} />
+        {quantity ? (
+          <span className="absolute -top-1.5 -right-2.5 text-[0.625rem] leading-none tabular-nums">
+            {quantity}
+          </span>
+        ) : null}
+      </span>
     </button>
   )
 }

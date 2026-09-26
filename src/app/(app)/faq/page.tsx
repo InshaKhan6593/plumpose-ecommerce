@@ -10,11 +10,13 @@ import { ClosingBand, PageHeading, PageShell, TextLink } from '@/components/edit
 import { RichText } from '@/components/RichText'
 import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
+import { plainText } from '@/utilities/plainText'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/faq' },
   description:
     'Orders, delivery, returns, hand embroidery and caring for your silk — the questions we are asked most.',
-  title: 'FAQ',
+  title: 'FAQ: sizing, embroidery, delivery & care',
 }
 
 /**
@@ -128,19 +130,4 @@ export default async function FaqPage() {
       />
     </>
   )
-}
-
-/** The words of a rich-text answer, for structured data. */
-function plainText(value: unknown): string {
-  const out: string[] = []
-  const walk = (node: unknown) => {
-    if (!node || typeof node !== 'object') return
-    const n = node as { children?: unknown[]; root?: unknown; text?: string; type?: string }
-    if (typeof n.text === 'string') out.push(n.text)
-    if (n.root) walk(n.root)
-    n.children?.forEach(walk)
-    if (n.type === 'paragraph') out.push(' ')
-  }
-  walk(value)
-  return out.join('').replace(/\s+/g, ' ').trim()
 }

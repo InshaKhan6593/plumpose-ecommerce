@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
@@ -6,7 +7,7 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { LocalePicker } from '@/components/locale/LocalePicker'
 import { RewardWheel } from '@/components/spin/RewardWheel'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
-import { ensureStartsWith } from '@/utilities/ensureStartsWith'
+import { getServerSideURL } from '@/utilities/getURL'
 import { MotionProvider } from '@/motion/MotionProvider'
 import { Providers } from '@/providers'
 import { GeistMono } from 'geist/font/mono'
@@ -33,32 +34,26 @@ const jost = Jost({
   weight: ['300', '400', '500'],
 })
 
-/* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  : 'http://localhost:3000'
-const twitterCreator = TWITTER_CREATOR ? ensureStartsWith(TWITTER_CREATOR, '@') : undefined
-const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : undefined
+/*
+ * `metadataBase` makes every relative URL in page metadata — canonicals and
+ * share images — absolute on the site's own address, so it follows
+ * NEXT_PUBLIC_SERVER_URL to plumpose.com at launch. The template brands every
+ * page title; it does not apply to the homepage's own title, which is in this
+ * same segment (node_modules/next/dist/docs, generate-metadata, `template`).
  */
-/* export const metadata = {
-  metadataBase: new URL(baseUrl),
-  robots: {
-    follow: true,
-    index: true,
+export const metadata: Metadata = {
+  metadataBase: new URL(getServerSideURL()),
+  // For a page with no share image of its own; a product page sets its photo.
+  openGraph: {
+    images: [{ alt: 'plumpose', height: 1024, url: '/brand/plumpose-logo.png', width: 1024 }],
+    siteName: 'plumpose',
+    type: 'website',
   },
   title: {
-    default: SITE_NAME,
-    template: `%s | ${SITE_NAME}`,
+    default: 'plumpose — silk pyjamas & nightwear, hand-finished in Doha',
+    template: '%s — plumpose',
   },
-  ...(twitterCreator &&
-    twitterSite && {
-      twitter: {
-        card: 'summary_large_image',
-        creator: twitterCreator,
-        site: twitterSite,
-      },
-    }),
-} */
+}
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (

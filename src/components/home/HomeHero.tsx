@@ -195,19 +195,26 @@ export function HomeHero({
       {/* The film — the outer layer carries the curtain's depth, the inner the intro. */}
       <div className="absolute inset-0 will-change-transform" data-hero-depth>
         <div className="absolute inset-0" data-hero-film>
-          <div className="absolute inset-0 hidden lg:block">
-            <FilmOrPoster
-              active={film === 'desktop'}
-              film={films.desktop}
-              label="The Al Shaheen Nights set, worn in a café"
+          {/*
+            One poster for both screen sizes, so a phone downloads only its own:
+            as two <img>s, each hidden by CSS, both were preloaded and the
+            unused one competed with the largest paint.
+          */}
+          <picture>
+            <source media="(min-width: 1024px)" srcSet={films.desktop.poster} />
+            <img
+              alt="The Al Shaheen Nights set, worn in a café"
+              className="absolute inset-0 h-full w-full object-cover"
+              fetchPriority="high"
+              src={films.mobile.poster}
+              style={{ objectPosition: FOCUS }}
             />
+          </picture>
+          <div className="absolute inset-0 hidden lg:block">
+            <HeroFilm active={film === 'desktop'} film={films.desktop} />
           </div>
           <div className="absolute inset-0 lg:hidden">
-            <FilmOrPoster
-              active={film === 'mobile'}
-              film={films.mobile}
-              label="The Al Shaheen Nights set, worn in a café"
-            />
+            <HeroFilm active={film === 'mobile'} film={films.mobile} />
           </div>
         </div>
       </div>
@@ -277,11 +284,17 @@ export function HomeHero({
             data-reveal-image
           >
             <div className="absolute inset-0" data-hero-detail-picture>
+              {/*
+                Desktop only and small: eager (it sits behind a mask until its
+                reveal) but low priority, so a phone does not fetch it ahead of
+                the poster.
+              */}
               <Media
                 className="absolute inset-0"
+                fetchPriority="low"
                 fill
                 imgClassName="object-cover"
-                priority
+                loading="eager"
                 resource={detail}
                 size="176px"
               />
@@ -302,11 +315,11 @@ export function HomeHero({
 }
 
 /**
- * The poster, always; the film on top once the screen size is known. Muted,
- * inline and looping — the only way a film may autoplay on iOS — and paused
- * whenever it is off screen.
+ * The film, over the poster, once the screen size is known. Muted, inline and
+ * looping — the only way a film may autoplay on iOS — and paused whenever it
+ * is off screen.
  */
-function FilmOrPoster({ active, film, label }: { active: boolean; film: Film; label: string }) {
+function HeroFilm({ active, film }: { active: boolean; film: Film }) {
   const ref = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -322,13 +335,6 @@ function FilmOrPoster({ active, film, label }: { active: boolean; film: Film; la
 
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        alt={label}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={film.poster}
-        style={{ objectPosition: FOCUS }}
-      />
       {active ? (
         <video
           aria-hidden

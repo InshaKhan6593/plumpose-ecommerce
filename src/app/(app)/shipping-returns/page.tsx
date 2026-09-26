@@ -20,8 +20,9 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/shipping-returns' },
   description: 'Delivery across Qatar and worldwide, our 14-day returns policy, and gift wrapping.',
-  title: 'Shipping & returns',
+  title: 'Shipping & returns: Qatar and worldwide',
 }
 
 /**

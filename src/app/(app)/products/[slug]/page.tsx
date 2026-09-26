@@ -1,4 +1,4 @@
-import type { Category, Media, Product, Review } from '@/payload-types'
+import type { Category, Media, Product, Review, Variant } from '@/payload-types'
 
 import configPromise from '@payload-config'
 import { Metadata } from 'next'
@@ -16,6 +16,9 @@ import { averageRating } from '@/components/product/Stars'
 import { deliveryRange } from '@/lib/pricing/deliveryRange'
 import { formatQar, toMajor, toMinor } from '@/lib/pricing/money'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { getServerSideURL } from '@/utilities/getURL'
+import { isPlaceholderSlug } from '@/utilities/placeholders'
+import { clip, plainText } from '@/utilities/plainText'
 
 type Args = {
   params: Promise<{
@@ -32,12 +35,14 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const gallery = product.gallery?.filter((item) => typeof item.image === 'object') || []
 
   const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
-  const canIndex = product._status === 'published'
+  // The demo catalogue is never indexed, even while it is loaded (BUILD-LOG §24).
+  const canIndex = product._status === 'published' && !isPlaceholderSlug(slug)
 
   const seoImage = metaImage || (gallery.length ? (gallery[0]?.image as Media) : undefined)
 
   return {
-    description: product.meta?.description || '',
+    alternates: { canonical: `/products/${slug}` },
+    description: productDescription(product) || undefined,
     openGraph: seoImage?.url
       ? {
           images: [
@@ -152,21 +157,34 @@ export default async function ProductPage({ params }: Args) {
    * Structured data for search engines. Money is stored in minor units, so it
    * is converted here — the template sent `139900` in `usd`, which Google would
    * read as a hundred and forty thousand dollars.
+   *
+   * A piece in sizes is a ProductGroup with one Product per size, each with its
+   * own stock, so a search result can say which sizes are available. Delivery
+   * fees vary by Qatari city, which Offer markup cannot express, so they are
+   * left to Merchant Center's shipping settings rather than stated wrongly here.
    */
-  const productJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    image: images[0]?.url,
-    name: product.title,
-    offers: {
-      '@type': 'Offer',
-      availability:
-        hasStock || product.madeToOrder
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-      price: toMajor(price).toFixed(2),
-      priceCurrency: 'QAR',
-    },
+  const pageUrl = `${getServerSideURL()}/products/${product.slug}`
+  const description = productDescription(product)
+  const availability = (inStock: boolean) =>
+    inStock || product.madeToOrder ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+  const offer = (priceMinor: number, inStock: boolean) => ({
+    '@type': 'Offer',
+    availability: availability(inStock),
+    hasMerchantReturnPolicy: RETURN_POLICY,
+    price: toMajor(priceMinor).toFixed(2),
+    priceCurrency: 'QAR',
+    url: pageUrl,
+  })
+  const shared = {
+    brand: { '@type': 'Brand', name: 'plumpose' },
+    ...(description ? { description } : {}),
+    // Absolute: Google refuses a relative image in structured data.
+    image: images
+      .map((image) => image.url)
+      .filter((url): url is string => Boolean(url))
+      .map((url) => new URL(url, getServerSideURL()).href),
+    ...(product.colour ? { color: product.colour } : {}),
+    ...(product.composition ? { material: product.composition } : {}),
     // Approved reviews only, so the stars a search result shows are real ones.
     ...(average !== null
       ? {
@@ -184,13 +202,55 @@ export default async function ProductPage({ params }: Args) {
         }
       : {}),
   }
+  const sized = product.enableVariants
+    ? variants.filter((variant): variant is Variant => typeof variant === 'object')
+    : []
+  const productJsonLd = sized.length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ProductGroup',
+        ...shared,
+        hasVariant: sized.map((variant) => {
+          const size = optionLabels(variant)
+          return {
+            '@type': 'Product',
+            name: size ? `${product.title} — ${size}` : product.title,
+            ...(size ? { size } : {}),
+            offers: offer(variant.priceInQAR ?? price, (variant.inventory ?? 0) > 0),
+          }
+        }),
+        name: product.title,
+        productGroupID: product.slug,
+        url: pageUrl,
+        variesBy: 'https://schema.org/size',
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        ...shared,
+        name: product.title,
+        offers: offer(price, hasStock),
+        url: pageUrl,
+      }
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', item: `${getServerSideURL()}/`, name: 'Home', position: 1 },
+      { '@type': 'ListItem', item: `${getServerSideURL()}/shop`, name: 'Shop', position: 2 },
+      { '@type': 'ListItem', item: pageUrl, name: product.title, position: 3 },
+    ],
+  }
 
   return (
     <>
-      <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-        type="application/ld+json"
-      />
+      {[productJsonLd, breadcrumbJsonLd].map((data, i) => (
+        <script
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}
+          key={i}
+          type="application/ld+json"
+        />
+      ))}
 
       <div className="mx-auto grid max-w-[90rem] gap-10 px-4 pt-8 md:px-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-20 lg:pt-10">
         <ProductGallery
@@ -242,18 +302,25 @@ async function productDetails({
 }): Promise<ProductDetail[]> {
   const details: ProductDetail[] = []
 
-  // Material & care
-  if (product.materialCare) {
-    details.push({ rich: product.materialCare, title: 'Material & care' })
-  } else {
+  // Material & care — the fabric facts always, then her care copy. Her copy
+  // used to replace the facts, so the page never said what it is made of.
+  {
     const lines = [
-      product.fabric && `Fabric: ${product.fabric}`,
+      product.colour && `Colour: ${product.colour}`,
+      // The descriptor is written to follow the name ("in 22-momme silk").
+      product.fabric && `Fabric: ${product.fabric.replace(/^in\s+/i, '')}`,
       product.composition && `Composition: ${product.composition}`,
       product.fabricWeight && `Weight: ${product.fabricWeight}`,
       product.trims && `Trims: ${product.trims}`,
       product.fitNote && `Fit: ${product.fitNote}`,
     ].filter((line): line is string => Boolean(line))
-    if (lines.length) details.push({ lines, title: 'Material & care' })
+    if (lines.length || product.materialCare) {
+      details.push({
+        lines: lines.length ? lines : undefined,
+        rich: product.materialCare ?? undefined,
+        title: 'Material & care',
+      })
+    }
   }
 
   // Delivery & returns
@@ -288,6 +355,37 @@ async function productDetails({
   }
 
   return details
+}
+
+/**
+ * The returns rule the Shipping & returns page states: 14 days from delivery,
+ * return postage paid by the customer (src/seed/index.ts, her old policy).
+ * Personalised pieces are final sale, but the piece itself is returnable, so
+ * this describes the offer as sold. Change it here if her policy changes.
+ */
+const RETURN_POLICY = {
+  '@type': 'MerchantReturnPolicy',
+  applicableCountry: 'QA',
+  merchantReturnDays: 14,
+  returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+  returnMethod: 'https://schema.org/ReturnByMail',
+  returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+}
+
+/** A size's option names, e.g. "M" — the options are populated on the product query. */
+function optionLabels(variant: Variant): string {
+  return (variant.options ?? [])
+    .map((option) => (typeof option === 'object' && option ? option.label : null))
+    .filter((label): label is string => Boolean(label))
+    .join(' / ')
+}
+
+/**
+ * Her own search description when she has written one; otherwise the opening
+ * of the product's description, so no product goes to Google with none.
+ */
+function productDescription(product: Product): string {
+  return product.meta?.description || clip(plainText(product.description))
 }
 
 /**

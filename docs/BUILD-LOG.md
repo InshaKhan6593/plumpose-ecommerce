@@ -2333,3 +2333,80 @@ Upgraded as asked: every `@payloadcms/*` package and `payload` 3.90.1 →
   admin login and `/api/spin` all 200, no server or console errors.
 - **Restart the dev server after an install.** Installing under a running dev
   server broke it ("Could not find the Next.js package") until restarted.
+
+## 39. SEO: canonicals, titles, real 404s, the demo catalogue out — 27 Sep 2026
+
+An SEO audit of plumpose.vercel.app (claude-seo, 10 checks; report and action
+plan kept outside this repo, in `../plumpose.vercel.app-audit/`) scored the
+site 54/100, mostly on launch preparation. Fixed:
+
+- **Canonicals and titles.** `metadataBase` (from `getServerSideURL()`, so it
+  follows `NEXT_PUBLIC_SERVER_URL` to plumpose.com) and a `'%s — plumpose'`
+  title template are set in `(app)/layout.tsx`; the template's commented-out
+  block is gone. Every public page, product, project and CMS page has
+  `alternates.canonical`; /shop's filter URLs canonicalise to `/shop`. Titles
+  now carry what people search for ("Silk pyjamas & sleepwear, hand-finished
+  in Doha — plumpose"). The template does not reach the homepage's own title,
+  which is in the same segment — that one is written out in full.
+- **Unknown products and projects answered 200.** Both pages stream under a
+  `loading.tsx`, so their `notFound()` came after the status was sent — to
+  Googlebot too (metadata streaming does not help: the page itself is inside
+  the boundary). A `layout.tsx` in `products/[slug]` and
+  `made-for-you/[slug]`, above the boundary, does a light lookup and returns a
+  real 404 first. Made for You's `loading.tsx` wrapped its project pages from
+  the folder above, so the list page and its skeleton moved into a
+  `made-for-you/(index)` route group, and `[slug]` has its own copy below its
+  layout.
+- **Product structured data**: absolute image URLs (Google refuses relative
+  ones), description, brand, `url` and `offers.url`; `<` escaped as on the FAQ.
+  Still missing: sku, `shippingDetails`, `hasMerchantReturnPolicy`, variants.
+- **Product meta description** falls back to the opening of the product's own
+  description (`src/utilities/plainText.ts`, shared with the FAQ).
+- **The demo catalogue can no longer be indexed.** `isPlaceholderSlug()`
+  (`src/utilities/placeholders.ts`) keeps any `demo-`/`sample-` record out of
+  the sitemap and marks its page noindex. `pnpm demo:remove` was also run on
+  Neon: 21 demo pieces, 4 collections, 58 photos and 3 sample projects gone.
+- **Share previews of CMS pages** said "Payload Website Template" with
+  Payload's image (`mergeOpenGraph.ts`); now plumpose. robots.txt loses the
+  non-standard `Host:` line. The contact description no longer promises
+  WhatsApp, which the page does not offer yet.
+
+Checked on a local production build: made-up product and project addresses
+404, real ones 200, sitemap 10 URLs, canonicals and titles on every page, no
+console errors. `tsc` 0 errors, lint no new warnings, `pnpm test:int` 229
+passed.
+
+### Second round, same day
+
+- **Product structured data is a ProductGroup** with one Product per size
+  (each its own stock and Offer), a `MerchantReturnPolicy` (14 days, Qatar,
+  return postage paid by the customer — `RETURN_POLICY` in the product page;
+  change it there if her policy changes), colour, material, and a
+  BreadcrumbList. `shippingDetails` is left out on purpose: fees differ by
+  Qatari city, which Offer markup cannot say — set shipping in Merchant Center.
+- **Organization + WebSite** JSON-LD on the homepage, with her square logo
+  (`public/brand/plumpose-logo.png`, from `../brand-assets/logo/skipcash/`) and
+  Instagram from Site settings. The same logo is the default share image.
+- **Material & care always states the fabric** — colour, fabric, composition,
+  weight, trims, fit — then her care copy. Her copy used to replace the facts,
+  so the product page never said what the set is made of.
+- **Crawlers see QAR.** `/api/locale` returns no country for a crawler user
+  agent. robots.txt already kept Googlebot off `/api/`, but AdsBot and
+  Merchant Center's checks ignore `*` rules.
+- **The homepage preloads no images.** The two hero posters were two `<img>`s
+  hidden by CSS, and React preloaded both; one `<picture>` now lets a phone
+  fetch only its own, at `fetchPriority="high"`. The desktop-only print detail
+  and the four step photographs stay `eager` (they sit behind masks) but are
+  `fetchPriority="low"`, which also keeps React from preloading them — `Media`
+  takes `fetchPriority`. The GSAP/Lenis start-up is not deferred yet.
+- **Security headers** in `next.config.ts` (nosniff, Referrer-Policy,
+  X-Frame-Options SAMEORIGIN for the admin's live preview, Permissions-Policy).
+  No CSP yet.
+- **44 px tap targets** for the menu and bag buttons, with negative margins so
+  the icons have not moved.
+- Slow /shop, /contact, /made-for-you: nothing to change. They are dynamic by
+  design; without the demo catalogue they answer in 0.35–0.45 s warm.
+
+Checked on a production build at 375 px and 1024 px: one poster fetched per
+screen size, 44×44 buttons, fabric facts on the page, no console errors.
+`tsc` 0 errors, lint no new warnings, `pnpm test:int` 229 passed.

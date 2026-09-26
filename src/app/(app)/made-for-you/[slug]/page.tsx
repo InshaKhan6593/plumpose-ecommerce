@@ -14,6 +14,7 @@ import { CATEGORY_LABELS } from '@/content/pages'
 import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
+import { isPlaceholderSlug } from '@/utilities/placeholders'
 
 type Args = { params: Promise<{ slug: string }> }
 
@@ -32,9 +33,16 @@ const findProject = cache(async (slug: string) => {
 })
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
-  const project = await findProject((await params).slug)
+  const { slug } = await params
+  const project = await findProject(slug)
   if (!project) return {}
-  return { description: project.summary ?? undefined, title: `${project.title} — Made for you` }
+  return {
+    alternates: { canonical: `/made-for-you/${slug}` },
+    description: project.summary ?? undefined,
+    // A sample project is never shown to search engines as her work.
+    ...(isPlaceholderSlug(slug) ? { robots: { follow: false, index: false } } : {}),
+    title: `${project.title} — Made for you`,
+  }
 }
 
 /**

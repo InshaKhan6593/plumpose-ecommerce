@@ -5,12 +5,14 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
 import { getServerSideURL } from '@/utilities/getURL'
+import { isPlaceholderSlug } from '@/utilities/placeholders'
 
 /**
  * /sitemap.xml (REQUIREMENTS N3): every page a search engine should find —
  * the fixed pages, and every *published* product, Made for You commission and
  * extra page, with when it last changed. Drafts, orders, accounts and checkout
- * are never listed (robots.ts keeps crawlers out of those too).
+ * are never listed (robots.ts keeps crawlers out of those too), nor is the
+ * demo catalogue or a sample project (`isPlaceholderSlug`).
  *
  * Rebuilt at most hourly, and whenever the storefront refreshes after an edit.
  */
@@ -76,10 +78,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...FIXED.map((path) => entry(path, undefined, path === '' ? 1 : path === '/shop' ? 0.9 : 0.6)),
     ...products.docs
-      .filter((p) => p.slug)
+      .filter((p) => p.slug && !isPlaceholderSlug(p.slug))
       .map((p) => entry(`/products/${p.slug}`, p.updatedAt, 0.8)),
     ...projects.docs
-      .filter((p) => p.slug)
+      .filter((p) => p.slug && !isPlaceholderSlug(p.slug))
       .map((p) => entry(`/made-for-you/${p.slug}`, p.updatedAt, 0.5)),
     // The homepage is the "home" page in the template's Pages; it is already listed.
     ...pages.docs

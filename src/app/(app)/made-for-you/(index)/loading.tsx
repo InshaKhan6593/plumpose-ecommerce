@@ -7,6 +7,10 @@ import React from 'react'
  * loading boundary a page streams, and `redirect()` can then only redirect in
  * the browser (a meta refresh after a 200) — which would break the real 307s
  * of the account pages and the payment return.
+ *
+ * It lives in the `(index)` group, not beside `[slug]`, so it wraps only the
+ * list page: a project page has its own copy below its layout, which is where
+ * an unknown project gets a real 404 before anything streams.
  */
 export default function Loading() {
   const block = 'animate-pulse bg-paper-3 [animation-duration:1.6s]'

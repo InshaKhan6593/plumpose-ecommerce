@@ -241,20 +241,21 @@ export function ProductInfo({
                 </span>
               </summary>
               <div className="pb-6 text-sm leading-relaxed text-ink-soft">
+                {detail.lines?.length ? (
+                  <ul className="flex flex-col gap-2">
+                    {detail.lines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                ) : null}
                 {detail.rich ? (
                   <RichText
-                    className="[&_p]:m-0 [&_p+p]:mt-3"
+                    className={`[&_p]:m-0 [&_p+p]:mt-3 ${detail.lines?.length ? 'mt-4' : ''}`}
                     data={detail.rich}
                     enableGutter={false}
                     enableProse={false}
                   />
-                ) : (
-                  <ul className="flex flex-col gap-2">
-                    {detail.lines?.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                )}
+                ) : null}
               </div>
             </details>
           ))}

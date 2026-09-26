@@ -241,6 +241,7 @@ export function MadeSteps({
                             <Media
                               className="absolute inset-0"
                               fill
+                              fetchPriority="low"
                               imgClassName="object-cover"
                               loading="eager"
                               resource={step.image}

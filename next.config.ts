@@ -58,6 +58,23 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   redirects,
+  /*
+   * Baseline security headers on every response. Framing is same-origin only:
+   * the admin's live preview shows the storefront in a frame on this domain.
+   * No Content-Security-Policy yet — the films, R2 photos, Payload admin and
+   * SkipCash redirect would each need allowing, and a wrong policy breaks pages.
+   */
+  headers: async () => [
+    {
+      headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ],
+      source: '/:path*',
+    },
+  ],
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       '.cjs': ['.cts', '.cjs'],

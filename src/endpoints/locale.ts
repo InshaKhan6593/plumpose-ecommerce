@@ -39,12 +39,20 @@ const toDisplay = (c: Currency): DisplayCurrency => ({
   symbol: c.symbol,
 })
 
+const CRAWLER =
+  /bot|crawl|spider|slurp|google-inspectiontool|googleother|mediapartners|lighthouse|headlesschrome/i
+
 /**
  * The visitor's country, as the host reports it: Vercel, Cloudflare and
  * CloudFront each set one. Outside production `?country=GB` stands in, so the
  * behaviour can be tried locally, where there is no such header.
  */
 const countryOf = (req: PayloadRequest): null | string => {
+  // Crawlers always see QAR, the price the structured data states and the one
+  // charged. robots.txt keeps Googlebot off /api/, but AdsBot and Merchant
+  // Center's checks ignore `*` rules, and a US crawler shown dollars against
+  // a QAR offer reads as a price mismatch.
+  if (CRAWLER.test(req.headers.get('user-agent') ?? '')) return null
   const header =
     req.headers.get('x-vercel-ip-country') ||
     req.headers.get('cf-ipcountry') ||

@@ -13,6 +13,7 @@ import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/press' },
   description: 'plumpose in print and online, and press enquiries.',
   title: 'Press',
 }
