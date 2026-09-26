@@ -125,7 +125,8 @@ export default async function HomePage() {
   const leadMatch = leadTime?.match(/^\s*([\d–-]+)\s*(.*)$/)
   const facts: PrintFact[] = [
     ...(leadMatch
-      ? [{ label: `${leadMatch[2] || 'days'} to hand-finish`, value: leadMatch[1] }]
+      ? // Her lead time is for embroidered pieces; "to hand-finish" read as every order.
+        [{ label: `${leadMatch[2] || 'days'} for hand embroidery`, value: leadMatch[1] }]
       : []),
     ...(threads.totalDocs
       ? [{ label: 'Embroidery thread colours', value: String(threads.totalDocs) }]

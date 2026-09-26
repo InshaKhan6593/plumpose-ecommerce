@@ -226,9 +226,11 @@ export default async function ShopPage({ searchParams }: Props) {
               {index === 0 && showTile && embroideryHost ? (
                 <Reveal className="col-span-2 sm:col-span-1">
                   <Link
-                    className="group relative block"
+                    className="group relative block scroll-mt-28"
                     data-reveal
                     href={`/products/${embroideryHost.slug}#personalisation`}
+                    // The footer's "Personalisation" link (/shop#personalisation) lands here.
+                    id="personalisation"
                   >
                     <RevealImage className="relative aspect-[5/4] overflow-hidden bg-paper-3 sm:aspect-[4/5]">
                       {tile ? (

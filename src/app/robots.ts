@@ -15,7 +15,9 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        allow: '/',
+        // Photos are served from /api/media/ (the share image and the product
+        // structured data point there), so they are allowed past the /api/ rule.
+        allow: ['/', '/api/media/'],
         disallow: [
           '/admin',
           '/api/',

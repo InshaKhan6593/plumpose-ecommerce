@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
 
   return {
     alternates: { canonical: `/products/${slug}` },
-    description: productDescription(product) || undefined,
+    description: metaDescription(product),
     openGraph: seoImage?.url
       ? {
           images: [
@@ -164,7 +164,8 @@ export default async function ProductPage({ params }: Args) {
    * left to Merchant Center's shipping settings rather than stated wrongly here.
    */
   const pageUrl = `${getServerSideURL()}/products/${product.slug}`
-  const description = productDescription(product)
+  // The full text for structured data; only the meta description is kept short.
+  const description = product.meta?.description || plainText(product.description)
   const availability = (inStock: boolean) =>
     inStock || product.madeToOrder ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
   const offer = (priceMinor: number, inStock: boolean) => ({
@@ -381,11 +382,18 @@ function optionLabels(variant: Variant): string {
 }
 
 /**
- * Her own search description when she has written one; otherwise the opening
- * of the product's description, so no product goes to Google with none.
+ * Her own search description when she has written one. Otherwise one built
+ * from the piece's own facts — what it is, the fabric, the colour, where it is
+ * made — because the opening of her description ran past 160 characters and
+ * a clipped version ended mid-phrase ("…an exclusive…").
  */
-function productDescription(product: Product): string {
-  return product.meta?.description || clip(plainText(product.description))
+function metaDescription(product: Product): string {
+  if (product.meta?.description) return product.meta.description
+  const fabric = product.fabric ? ` ${product.fabric}` : ''
+  const colour = product.colour ? `, ${product.colour}` : ''
+  const embroidery = product.personalisationEnabled ? ', with optional hand embroidery' : ''
+  const built = `${product.title}${fabric}${colour}. Hand-finished to order in Doha${embroidery}.`
+  return clip(built)
 }
 
 /**

@@ -2428,3 +2428,22 @@ eager from the start and shared the connection with the poster —
 Mono (70 KB, preloaded everywhere) was unused: `font-mono` maps to Jost.
 Still heavy on a phone: the two Fraunces files (264 KB, preloaded), the
 248 KB phone poster, and the GSAP/Lenis start-up.
+
+### Re-audit: 54 → 70, and what it found
+
+Re-run of the same audit on the live site scored 70/100 (technical 92,
+on-page 67, schema 78, content 60, AI search 62; e-commerce 83). It found four
+things, fixed here:
+
+- **Product photos were blocked for Google.** The share image and the product
+  structured data point at `/api/media/file/…`, which `Disallow: /api/` shut
+  out. robots.txt now allows `/api/media/`.
+- **The product meta description ended mid-phrase** ("…an exclusive…"): the
+  first sentence of her description is 170 characters, so any clip cut it.
+  Without her own search description it is now built from the piece's facts
+  (name, fabric, colour, Doha, embroidery); the structured data carries the
+  full description.
+- **`/shop#personalisation`** (the footer's "Personalisation") pointed at
+  nothing; the shop's embroidery tile carries that id now.
+- **The homepage figure read "4–10 working days to hand-finish"**, as if every
+  order took that long. It is the embroidery lead time, and now says so.
