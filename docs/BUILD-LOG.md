@@ -2410,3 +2410,21 @@ passed.
 Checked on a production build at 375 px and 1024 px: one poster fetched per
 screen size, 44×44 buttons, fabric facts on the page, no console errors.
 `tsc` 0 errors, lint no new warnings, `pnpm test:int` 229 passed.
+
+### Deployed, and phones measured live
+
+Both commits are on plumpose.vercel.app. The second `vercel deploy --prod`
+ended with "Not authorized" at "Deploying outputs", but `vercel inspect`
+showed the deployment Ready in production and the live HTML had the change —
+check `inspect` before redeploying.
+
+Measured live with Playwright under a throttled phone (1.6 Mbps, 150 ms,
+4× CPU), time until the main content shows: homepage 10.1 s → 6.7–7.1 s,
+/shop 10.0 s → 5.9–6.8 s, product 10.5 s → 8.0–9.6 s; desktop 1–2.5 s. What
+fixed the homepage: the four step photographs and the print detail had been
+eager from the start and shared the connection with the poster —
+`fetchPriority="low"` did not stop that — so they are now lazy until
+`afterPageLoad`, then eager, which still lands them before their wipe. Geist
+Mono (70 KB, preloaded everywhere) was unused: `font-mono` maps to Jost.
+Still heavy on a phone: the two Fraunces files (264 KB, preloaded), the
+248 KB phone poster, and the GSAP/Lenis start-up.
