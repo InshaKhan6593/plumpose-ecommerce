@@ -112,9 +112,13 @@ export function RewardWheel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Released in the cleanup, so it also runs if this unmounts while open
+  // (a link inside it that leaves for a page without it) — or scrolling stays off.
   useEffect(() => {
-    if (open) lenis.current?.stop()
-    else lenis.current?.start()
+    if (!open) return
+    const current = lenis.current
+    current?.stop()
+    return () => current?.start()
   }, [open, lenis])
 
   const close = (next: boolean) => {

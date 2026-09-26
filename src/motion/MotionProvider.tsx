@@ -59,6 +59,8 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
       firstPage.current = false
       return
     }
+    // Drawers close on navigation; a lock one left behind must not freeze the new page.
+    lenisRef.current?.start()
     lenisRef.current?.scrollTo(0, { immediate: true })
     const id = window.setTimeout(() => ScrollTrigger.refresh(), 50)
     return () => window.clearTimeout(id)

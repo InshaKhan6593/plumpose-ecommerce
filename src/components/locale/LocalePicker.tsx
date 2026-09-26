@@ -32,12 +32,16 @@ export function LocalePicker() {
   const [currencyCode, setCurrencyCode] = useState(BASE_CURRENCY)
   const [saving, setSaving] = useState(false)
 
+  // Scroll lock, released in the cleanup so an unmount while open cannot leave it on.
   useEffect(() => {
-    if (!pickerOpen) {
-      lenis.current?.start()
-      return
-    }
-    lenis.current?.stop()
+    if (!pickerOpen) return
+    const current = lenis.current
+    current?.stop()
+    return () => current?.start()
+  }, [lenis, pickerOpen])
+
+  useEffect(() => {
+    if (!pickerOpen) return
     setCountryCode(country?.code ?? 'QA')
     setCurrencyCode(currency?.code ?? BASE_CURRENCY)
     void loadOptions().then(setOptions)

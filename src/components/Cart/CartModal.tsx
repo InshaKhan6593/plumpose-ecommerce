@@ -76,9 +76,13 @@ export function CartModal() {
     return () => window.removeEventListener(OPEN_BAG_EVENT, open)
   }, [])
 
+  // Released in the cleanup, so it also runs if this unmounts while open
+  // (a link inside it that leaves for a page without it) — or scrolling stays off.
   useEffect(() => {
-    if (isOpen) lenis.current?.stop()
-    else lenis.current?.start()
+    if (!isOpen) return
+    const current = lenis.current
+    current?.stop()
+    return () => current?.start()
   }, [isOpen, lenis])
 
   /** Re-price whenever the lines change — ids, sizes, quantities, embroidery. */

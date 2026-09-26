@@ -93,19 +93,24 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
   if (pathname.startsWith('/checkout')) {
     return (
       <header className="sticky top-0 z-40 bg-background text-ink">
-        <div className="mx-4 grid h-20 grid-cols-[1fr_auto_1fr] items-center border-b border-line md:mx-7 md:h-24">
+        {/*
+          On a phone the side columns are ~110px each: "Secure checkout" wrapped
+          onto two lines and its lock sat against the wordmark. There it is the
+          lock alone (named for screen readers); the words return from sm.
+        */}
+        <div className="mx-4 grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-line md:mx-7 md:h-24">
           <Link
-            className="caps text-[0.5625rem] text-ink-soft transition-colors hover:text-ink"
+            className="caps text-[0.5625rem] whitespace-nowrap text-ink-soft transition-colors hover:text-ink"
             href="/shop"
           >
             <span aria-hidden>← </span>Shop
           </Link>
           <Link aria-label="plumpose — home" href="/">
-            <Wordmark className="h-7 w-auto md:h-9" />
+            <Wordmark className="h-6 w-auto md:h-9" />
           </Link>
-          <span className="caps flex items-center justify-end gap-2 text-[0.5625rem] text-ink-soft">
-            <Lock aria-hidden className="size-3" strokeWidth={1.5} />
-            Secure checkout
+          <span className="caps flex items-center justify-end gap-2 text-[0.5625rem] whitespace-nowrap text-ink-soft">
+            <Lock aria-hidden className="size-3.5 sm:size-3" strokeWidth={1.5} />
+            <span className="sr-only sm:not-sr-only">Secure checkout</span>
           </span>
         </div>
       </header>

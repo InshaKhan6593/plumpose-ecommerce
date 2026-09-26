@@ -321,7 +321,11 @@ export function CheckoutPage({
       formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus()
       return
     }
-    if (blocked || quoteState.status !== 'ok' || !destinationReady) return
+    if (blocked || !destinationReady) return
+    if (quoteState.status !== 'ok') {
+      if (quoteState.status !== 'refused') setPayError('Still pricing your bag — one moment.')
+      return
+    }
 
     const cityName = inQatar
       ? (cities.find((c) => c.key === form.cityKey)?.name ?? '')
@@ -394,12 +398,38 @@ export function CheckoutPage({
             : formatQar(quote.totals.shipping)
           : '—'
 
-  const canPay =
-    paymentsReady && !submitting && !blocked && destinationReady && quoteState.status === 'ok'
+  /*
+   * Missing details do not disable Pay: pressing it names the first field
+   * still needed and moves to it. A greyed-out button said nothing, and on a
+   * phone it looked like there was no button at all.
+   */
+  const canPay = paymentsReady && !submitting && !blocked
+  const total = quote && !quote.deliveryPending ? formatQar(quote.totals.total) : null
+
+  /** `withTotal: false` where the total already stands beside the button. */
+  const payButton = (className?: string, withTotal = true) => (
+    <button
+      className={cn(
+        'caps flex h-13 w-full items-center justify-center gap-2 bg-ink px-6 py-4 text-[0.6875rem] text-white transition-colors hover:bg-ink/85',
+        !canPay && 'cursor-not-allowed bg-ink/40 hover:bg-ink/40',
+        className,
+      )}
+      disabled={!canPay}
+      form="checkout-form"
+      type="submit"
+    >
+      <Lock aria-hidden className="size-3.5" strokeWidth={1.5} />
+      {submitting
+        ? 'Opening secure payment…'
+        : total && withTotal
+          ? `Pay ${total}`
+          : 'Pay securely'}
+    </button>
+  )
 
   return (
-    <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-24 md:px-7 md:pt-14">
-      <h1 className="serif-display text-[clamp(2.5rem,4.5vw,3.75rem)] leading-none">Checkout</h1>
+    <div className="mx-auto max-w-[90rem] px-4 pt-8 md:px-7 md:pt-14 lg:pb-24">
+      <h1 className="serif-display text-[clamp(2.25rem,4.5vw,3.75rem)] leading-none">Checkout</h1>
 
       {returned ? (
         <p
@@ -421,9 +451,9 @@ export function CheckoutPage({
         </p>
       ) : null}
 
-      <div className="mt-10 grid gap-14 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-20 xl:gap-28">
+      <div className="mt-8 grid gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-20 xl:gap-28">
         <form
-          className="flex flex-col gap-14"
+          className="flex flex-col gap-10 md:gap-14"
           id="checkout-form"
           noValidate
           onSubmit={pay}
@@ -466,8 +496,9 @@ export function CheckoutPage({
 
           {/* 02 — Delivery */}
           <Section n="02" title="Delivery">
-            <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2">
-              <Field className="sm:col-span-2" error={errors.country} id="country" label="Country">
+            {/* Two columns even on a phone: first and last name share a row. */}
+            <div className="grid grid-cols-2 gap-x-5 gap-y-6 sm:gap-x-8 sm:gap-y-7">
+              <Field className="col-span-2" error={errors.country} id="country" label="Country">
                 <SelectBox>
                   <select
                     aria-describedby={blocked ? 'country-blocked' : undefined}
@@ -525,7 +556,7 @@ export function CheckoutPage({
               </Field>
 
               {inQatar ? (
-                <Field className="sm:col-span-2" error={errors.cityKey} id="cityKey" label="City">
+                <Field className="col-span-2" error={errors.cityKey} id="cityKey" label="City">
                   <SelectBox>
                     <select
                       aria-invalid={Boolean(errors.cityKey)}
@@ -553,7 +584,7 @@ export function CheckoutPage({
               ) : null}
 
               <Field
-                className="sm:col-span-2"
+                className="col-span-2"
                 error={errors.addressLine1}
                 id="addressLine1"
                 label="Street and building"
@@ -570,7 +601,7 @@ export function CheckoutPage({
                 />
               </Field>
               <Field
-                className="sm:col-span-2"
+                className="col-span-2"
                 id="addressLine2"
                 label={inQatar ? 'Zone, apartment (optional)' : 'Apartment, area (optional)'}
               >
@@ -610,7 +641,7 @@ export function CheckoutPage({
                 </>
               ) : null}
 
-              <Field className="sm:col-span-2" error={errors.phone} id="phone" label="Phone">
+              <Field className="col-span-2" error={errors.phone} id="phone" label="Phone">
                 <input
                   aria-invalid={Boolean(errors.phone)}
                   autoComplete="tel"
@@ -842,25 +873,11 @@ export function CheckoutPage({
                 : ''}
             </p>
 
-            <button
-              className={cn(
-                'caps mt-7 flex h-13 w-full items-center justify-center gap-2 bg-ink px-6 py-4 text-[0.6875rem] text-white transition-colors hover:bg-ink/85',
-                !canPay && 'cursor-not-allowed bg-ink/40 hover:bg-ink/40',
-              )}
-              disabled={!canPay}
-              form="checkout-form"
-              type="submit"
-            >
-              <Lock aria-hidden className="size-3.5" strokeWidth={1.5} />
-              {submitting
-                ? 'Opening secure payment…'
-                : quote && !quote.deliveryPending
-                  ? `Pay ${formatQar(quote.totals.total)}`
-                  : 'Pay securely'}
-            </button>
+            {/* On a phone Pay lives in the bar at the foot of the screen, below. */}
+            {payButton('mt-7 hidden lg:flex')}
 
             {payError ? (
-              <p className="mt-4 text-[0.8125rem] text-[#8a2424]" role="alert">
+              <p className="mt-4 hidden text-[0.8125rem] text-[#8a2424] lg:block" role="alert">
                 {payError}
               </p>
             ) : null}
@@ -876,6 +893,26 @@ export function CheckoutPage({
             ) : null}
           </div>
         </aside>
+      </div>
+
+      {/*
+        Phones: the order summary comes after the whole form, so Pay was
+        ~1,900px down. This bar keeps the total and Pay in reach from the
+        first field; being sticky, not fixed, it stops above the footer.
+      */}
+      <div className="sticky bottom-0 z-30 -mx-4 mt-10 border-t border-line bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm lg:hidden">
+        {payError ? (
+          <p className="mb-2 text-[0.8125rem] leading-snug text-[#8a2424]" role="alert">
+            {payError}
+          </p>
+        ) : null}
+        <div className="flex items-center gap-4">
+          <div className="shrink-0">
+            <p className="caps text-[0.5625rem] text-ink-soft">Total</p>
+            <p className="text-[0.9375rem] tabular-nums">{total ?? '—'}</p>
+          </div>
+          {payButton('h-12 flex-1 px-4 py-3', false)}
+        </div>
       </div>
     </div>
   )

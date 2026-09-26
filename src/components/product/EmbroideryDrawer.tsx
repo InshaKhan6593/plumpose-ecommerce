@@ -73,9 +73,13 @@ export function EmbroideryDrawer({
   }, [open])
 
   // The page behind must not scroll while the drawer is open.
+  // Released in the cleanup, so it also runs if this unmounts while open
+  // (a link inside it that leaves for a page without it) — or scrolling stays off.
   useEffect(() => {
-    if (open) lenis.current?.stop()
-    else lenis.current?.start()
+    if (!open) return
+    const current = lenis.current
+    current?.stop()
+    return () => current?.start()
   }, [open, lenis])
 
   const set = <K extends keyof EmbroideryChoice>(key: K, value: EmbroideryChoice[K]) =>
