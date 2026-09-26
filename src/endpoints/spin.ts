@@ -1,6 +1,6 @@
 import type { Endpoint } from 'payload'
 
-import type { DiscountCode, Media, SiteSetting, SpinSegment } from '@/payload-types'
+import type { DiscountCode, SiteSetting, SpinSegment } from '@/payload-types'
 
 import { scheduleSpinRewardEmail } from '@/email/spinReward'
 import {
@@ -75,15 +75,6 @@ export const wheelEndpoint: Endpoint = {
       where: { active: { not_equals: false } },
     })
 
-    // The print, for the wheel's centre — the square crop of the seeded macro photograph.
-    const print = (
-      await req.payload.find({
-        collection: 'media',
-        depth: 0,
-        limit: 1,
-        where: { filename: { equals: 'brand-02-print-macro.jpg' } },
-      })
-    ).docs[0] as Media | undefined
     // For the fine print: how long a code lasts (the shortest, if prizes differ).
     const days = (docs as SpinSegment[])
       .filter((s) => s.rewardType !== 'rollAgain')
@@ -91,7 +82,9 @@ export const wheelEndpoint: Endpoint = {
 
     return json({
       body: settings.body,
-      centreImage: print?.sizes?.square?.url ?? print?.url ?? null,
+      // White whale shark on the navy, drawn for the wheel (public/brand); the
+      // print photograph it replaced read as a dark blur at this size.
+      centreImage: '/brand/wheel-centre.webp',
       enabled: docs.length > 0,
       heading: settings.heading,
       // Label and colour only — `weight` is admin-only at field level, and is not asked for here anyway.

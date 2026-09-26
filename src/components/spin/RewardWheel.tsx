@@ -36,6 +36,8 @@ type Phase = 'again' | 'ask' | 'spinning' | 'won'
 
 /** Remembered on this browser: the wheel is done with. The code itself, for checkout to offer. */
 const SEEN_KEY = 'plumpose:wheel'
+/** The garment's navy in shadow, sampled from the product photographs. */
+const SILK_NAVY = '#2e3653'
 export const WHEEL_CODE_KEY = 'plumpose:wheel-code'
 const DELAY_MS = 6000
 const SPIN_MS = 5200
@@ -426,7 +428,9 @@ function Wheel({
               >
                 <path
                   d={`M0 0 L${x1} ${y1} A${R} ${R} 0 ${slice > Math.PI ? 1 : 0} 1 ${x2} ${y2} Z`}
-                  fill={isWinner ? 'var(--color-ink)' : segment.colour}
+                  // Silk navy, as measured from the garment (brand-assets/README), not ink:
+                  // the ink-black win sat badly beside the navy print at the centre.
+                  fill={isWinner ? SILK_NAVY : segment.colour}
                   stroke="var(--color-ink)"
                   strokeWidth="0.8"
                 />
@@ -465,7 +469,7 @@ function Wheel({
           })}
 
           {/* The print, at the heart of it. */}
-          <circle fill="#1c1b29" r="52" />
+          <circle fill="#283354" r="52" />
           {data.centreImage ? (
             <image
               clipPath="url(#wheel-centre)"
