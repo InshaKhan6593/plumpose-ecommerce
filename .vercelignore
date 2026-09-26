@@ -6,7 +6,6 @@
 .env
 .env*
 !.env.example
-test.env
 *.pem
 
 # The client's media — unreleased, and fetched from R2 at build

@@ -2,7 +2,7 @@
  * Makes the site its own first visitor, so real visitors never wait for a
  * photo to be resized. Run after each deploy:
  *
- *   npx tsx scripts/warm-images.ts https://plumpose.netlify.app
+ *   npx tsx scripts/warm-images.ts https://plumpose.vercel.app
  *   npx tsx scripts/warm-images.ts https://… --widths=640,828,1080,1920
  *
  * Every photo is resized the first time a given width is asked for — fetched
@@ -61,7 +61,7 @@ await pool([...pages], 3, async (page) => {
     return
   }
   const html = await res.text()
-  for (const [match] of html.matchAll(/\/(?:_next\/image|\.netlify\/images)\?[^"'\s,]+/g)) {
+  for (const [match] of html.matchAll(/\/_next\/image\?[^"'\s,]+/g)) {
     const url = new URL(unescape(match), origin)
     const w = Number(url.searchParams.get('w'))
     if (!widths || widths.has(w)) images.add(url.href)

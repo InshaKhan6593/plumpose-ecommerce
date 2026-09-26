@@ -2203,3 +2203,29 @@ server is compiling a page for the first time — development only.
 **Left for the owner:** the old bucket `plumposestoragee` still holds a full
 copy; delete it in Cloudflare once satisfied. The current key reaches both
 buckets — when it is rotated, scope the new one to `plumpose-objects` only.
+
+## 37. A test deploy on Vercel — 26 Sep 2026
+
+**https://plumpose.vercel.app** — project `plumpose` on the owner's Vercel
+account, linked to the GitHub repo. Deployed from this folder with
+`npx vercel deploy --prod`; `.vercelignore` keeps `.env` and the client's
+media out of the upload. The settings were imported from `.env` in the
+dashboard (minus `LOCAL_DATABASE_URL` and `PEXELS_API_KEY`; the two server
+URLs set to the Vercel address; `TEST_SHOTS=on`). `CRON_SECRET` is not set,
+so the daily rate check stays closed until launch.
+
+The build runs `pnpm build:deploy`: films from R2, migrations (Vercel
+production builds only — nothing new to apply), then `next build` (2 min).
+
+**Checked:** every page 200; photos through `/_next/image` from R2 via the
+signed redirect; films; `/api/quote` reads Neon; the webhook refuses an
+unsigned call (401); country detection (`x-vercel-ip-country`) picked PKR;
+checkout shows the SkipCash sandbox card. A full sandbox payment is still to
+be made by hand.
+
+**Vercel only now.** The Netlify config and its function, `test.env` (unused,
+from the template) and the `R2_SIGNED_DOWNLOADS` switch (for Netlify's image
+service) were removed; all are in the history at `19aa839`.
+
+⚠️ Vercel's free plan does not allow commercial use: fine for testing, the
+live shop needs Pro ($20/month).
