@@ -2515,3 +2515,8 @@ Checked on a production build: 32 text checks over /, /shop, /our-story,
 - **The desktop hero's band started just under her chin** (y=1300), so in most
   shots its top edge cut through her mouth and the cup. It now starts at the
   collar (y=1500): collar to waist, hands and cup, never half a face.
+- **A screen and a half of nothing after the philosophy words.** The section
+  is 220svh tall so its photographs have room to drift past the words; with
+  them removed at her request it was empty scrolling (1,521 px between the
+  words and "The print" at 1440 px wide). Without photographs it is now one
+  screen (441 px); the empty phone photo row is not rendered either.

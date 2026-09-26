@@ -92,6 +92,14 @@ export function Philosophy({
     },
   ]
 
+  /*
+   * The extra height (220svh) is scroll room for the photographs to drift
+   * past the words. Without them it was only empty scrolling — a gap of more
+   * than a screen before The Print — so the words get one screen.
+   */
+  const drifting = floats.some((float) => float.image)
+  const phonePhotos = [images.corridor, images.qatarBook].filter(Boolean)
+
   useLayoutEffect(() => {
     const el = root.current
     if (!el || prefersReducedMotion()) return
@@ -180,7 +188,7 @@ export function Philosophy({
   return (
     <section
       aria-label={copy.label}
-      className="relative z-10 bg-background md:h-[220svh]"
+      className={cn('relative z-10 bg-background', drifting ? 'md:h-[220svh]' : 'md:h-svh')}
       ref={root}
     >
       {/* The words hold the centre while the photographs pass. */}
@@ -236,26 +244,31 @@ export function Philosophy({
       )}
 
       {/* Phone: no margins to drift in — two photographs beneath the words. */}
-      <div className="grid grid-cols-2 gap-3 px-6 pb-24 md:hidden">
-        {[images.corridor, images.qatarBook].map((image, i) =>
-          image ? (
-            <RevealImage
-              className={cn('relative aspect-[4/5] overflow-hidden bg-paper-3', i === 1 && 'mt-12')}
-              key={image.id}
-            >
-              <div className="absolute inset-0">
-                <Media
-                  className="absolute inset-0"
-                  fill
-                  imgClassName="object-cover"
-                  resource={image}
-                  size="45vw"
-                />
-              </div>
-            </RevealImage>
-          ) : null,
-        )}
-      </div>
+      {phonePhotos.length ? (
+        <div className="grid grid-cols-2 gap-3 px-6 pb-24 md:hidden">
+          {[images.corridor, images.qatarBook].map((image, i) =>
+            image ? (
+              <RevealImage
+                className={cn(
+                  'relative aspect-[4/5] overflow-hidden bg-paper-3',
+                  i === 1 && 'mt-12',
+                )}
+                key={image.id}
+              >
+                <div className="absolute inset-0">
+                  <Media
+                    className="absolute inset-0"
+                    fill
+                    imgClassName="object-cover"
+                    resource={image}
+                    size="45vw"
+                  />
+                </div>
+              </RevealImage>
+            ) : null,
+          )}
+        </div>
+      ) : null}
     </section>
   )
 }
