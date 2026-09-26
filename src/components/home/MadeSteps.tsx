@@ -53,17 +53,18 @@ export function MadeSteps({
     if (!track) return
 
     const frames = Array.from(el.querySelectorAll<HTMLElement>('[data-step-frame]'))
-    const pictures = frames.map((f) => f.firstElementChild as HTMLElement)
+    // frame > counter > picture: see "Why transforms" below.
+    const counters = frames.map((f) => f.firstElementChild as HTMLElement)
+    const pictures = counters.map((c) => c.firstElementChild as HTMLElement)
     const titles = Array.from(el.querySelectorAll<HTMLElement>('[data-step-title]'))
     const bodies = Array.from(el.querySelectorAll<HTMLElement>('[data-step-body]'))
     const bar = el.querySelector<HTMLElement>('[data-step-bar]')
     const n = frames.length
 
     const ctx = gsap.context(() => {
-      // Starting state, set at once (it measures nothing): step one showing, the rest clipped from the right.
-      frames.forEach((f, i) =>
-        gsap.set(f, { clipPath: i === 0 ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }),
-      )
+      // Starting state, set at once (it measures nothing): step one showing, the rest waiting off to the left.
+      frames.forEach((f, i) => gsap.set(f, { xPercent: i === 0 ? 0 : -100 }))
+      counters.forEach((c, i) => gsap.set(c, { xPercent: i === 0 ? 0 : 100 }))
       gsap.set(pictures, { scale: 1.1 })
       titles.forEach((t, i) => gsap.set(t, { opacity: i === 0 ? 1 : 0, x: i === 0 ? 0 : -28 }))
       bodies.forEach((b, i) => gsap.set(b, { opacity: i === 0 ? 1 : 0, x: i === 0 ? 0 : -20 }))
@@ -121,13 +122,17 @@ export function MadeSteps({
            * at 118% scale and is nearly home before the clip reaches the right
            * edge; the outgoing one moves at most 8% right at 104%, and its
            * uncovered left strip is always inside the part already wiped over.
+           *
+           * Why transforms: the wipe was a clip-path, which the browser repaints
+           * on every frame — on a phone that made the swipe feel stepped against
+           * the scroll. Now the frame slides in from the left (the stage's
+           * overflow hides what is outside) while the counter layer slides the
+           * other way by the same amount, so the picture stays put and only its
+           * uncovered edge moves: the same wipe, done on the compositor.
            */
-          tl.fromTo(
-            frames[i],
-            { clipPath: 'inset(0% 100% 0% 0%)' },
-            { clipPath: 'inset(0% 0% 0% 0%)', duration: CHANGE, ease: 'power2.inOut' },
-            at,
-          )
+          const wipe = { duration: CHANGE, ease: 'power2.inOut' }
+          tl.fromTo(frames[i], { xPercent: -100 }, { ...wipe, xPercent: 0 }, at)
+          tl.fromTo(counters[i], { xPercent: 100 }, { ...wipe, xPercent: 0 }, at)
           tl.fromTo(
             pictures[i],
             { scale: 1.18, xPercent: -10 },
@@ -221,25 +226,27 @@ export function MadeSteps({
                   {steps.map((step, i) =>
                     step.image ? (
                       <div
-                        className="absolute inset-0"
+                        className="absolute inset-0 overflow-hidden will-change-transform"
                         data-step-frame
                         key={step.title}
                         style={{ zIndex: i }}
                       >
                         <div className="absolute inset-0 will-change-transform">
-                          {/*
+                          <div className="absolute inset-0 will-change-transform">
+                            {/*
                             Eager: photographs 2–4 sit fully clipped until their wipe,
                             and a lazy image the browser cannot see only started
                             loading as the wipe uncovered it — an empty frame, then a pop.
                           */}
-                          <Media
-                            className="absolute inset-0"
-                            fill
-                            imgClassName="object-cover"
-                            loading="eager"
-                            resource={step.image}
-                            size="(min-width: 1024px) 26rem, 70vw"
-                          />
+                            <Media
+                              className="absolute inset-0"
+                              fill
+                              imgClassName="object-cover"
+                              loading="eager"
+                              resource={step.image}
+                              size="(min-width: 1024px) 26rem, 70vw"
+                            />
+                          </div>
                         </div>
                       </div>
                     ) : null,
