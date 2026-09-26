@@ -20,6 +20,18 @@ export const metadata: Metadata = {
 }
 
 /**
+ * Her two illustration films, each in its own vertical shape and uncropped —
+ * in the photographs' 4:5 frame, filling half the page, the portrait iPad
+ * film was cut top and bottom and blown up. On desktop they stand no taller
+ * than the screen, centred in their column; on a phone, a narrow column.
+ */
+const FILM_FRAME = {
+  draw: 'aspect-[9/16] w-full max-w-[20rem] justify-self-center lg:h-[min(80svh,46rem)] lg:w-auto lg:max-w-none',
+  paint:
+    'aspect-[1090/1364] w-full max-w-[24rem] justify-self-center lg:h-[min(80svh,46rem)] lg:w-auto lg:max-w-none',
+}
+
+/**
  * Our Story (docs/SCREEN-PROMPTS 11), built as an editorial page:
  *
  *   1. opener — the café film opens from a card to the full screen (StoryOpener)
@@ -107,7 +119,7 @@ export default async function OurStoryPage() {
           mp4: '/video/story-draw.mp4',
           poster: '/video/story-draw-poster.jpg',
         }}
-        imgClassName="object-[50%_50%]"
+        imageClassName={FILM_FRAME.draw}
       >
         <Prose
           body={OUR_STORY.founder.body}
@@ -125,7 +137,7 @@ export default async function OurStoryPage() {
           poster: '/video/story-paint-poster.jpg',
         }}
         id="the-print"
-        imgClassName="object-[50%_40%]"
+        imageClassName={FILM_FRAME.paint}
         reverse
       >
         <Prose

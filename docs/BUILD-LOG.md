@@ -2503,3 +2503,15 @@ deletes the row again when there was none before.
 Checked on a production build: 32 text checks over /, /shop, /our-story,
 /made-for-you and the product page; screenshots at 1440 and 390 px.
 `tsc` 0 errors, lint no new warnings, `pnpm test:int` 229 passed.
+
+### Follow-up: the films' frames, and the hero cut
+
+- **Our Story's two illustration films looked blown up.** They sat in the
+  photographs' 4:5 frame, half the page wide (≈644×805 at 1440 px), so the
+  portrait iPad film was cut top and bottom and enlarged. Each now keeps its
+  own vertical shape, uncropped — 9:16 for `story-draw`, 1090:1364 for
+  `story-paint` — no taller than the screen on desktop (405×720 and 575×720
+  at 1440×900), a narrow centred column on a phone (`FILM_FRAME` in the page).
+- **The desktop hero's band started just under her chin** (y=1300), so in most
+  shots its top edge cut through her mouth and the cup. It now starts at the
+  collar (y=1500): collar to waist, hands and cup, never half a face.

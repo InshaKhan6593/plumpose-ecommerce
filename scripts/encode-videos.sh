@@ -46,9 +46,10 @@ TV="in_range=pc:out_range=tv"
 
 # Desktop hero: the coffee clip (EK3A2455, sent 27 Sep 2026 to replace EK3A2406
 # — "don't focus on her face"). 4K 60fps portrait with a rotation flag, which
-# ffmpeg applies itself, so no transpose here. A 16:9 band from the cup to the
-# hips, so the print leads rather than her face; half speed, ~13 s.
-enc_mp4 hero-wide EK3A2455.mp4 "crop=2160:1215:0:1300,setpts=2*PTS,scale=1920:1080:flags=lanczos:$TV,fps=30000/1001" 22 4500
+# ffmpeg applies itself, so no transpose here. A 16:9 band from the collar to
+# the waist, so the print leads rather than her face; half speed, ~13 s. (The
+# first cut, from y=1300, sliced through her mouth and the cup in most shots.)
+enc_mp4 hero-wide EK3A2455.mp4 "crop=2160:1215:0:1500,setpts=2*PTS,scale=1920:1080:flags=lanczos:$TV,fps=30000/1001" 22 4500
 
 # Phone hero: the same café table clip as the desktop hero, in its full
 # portrait frame, half speed — 16.7 s. (It used to be IMG_5839, which is only
