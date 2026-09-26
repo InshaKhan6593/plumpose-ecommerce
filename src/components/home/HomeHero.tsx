@@ -285,16 +285,15 @@ export function HomeHero({
           >
             <div className="absolute inset-0" data-hero-detail-picture>
               {/*
-                Desktop only and small: eager (it sits behind a mask until its
-                reveal) but low priority, so a phone does not fetch it ahead of
-                the poster.
+                Desktop only. Lazy until the page has loaded — a phone, where
+                it is hidden, never fetches it — then eager, because it sits
+                behind a mask until its reveal. `film` is set at that moment.
               */}
               <Media
                 className="absolute inset-0"
-                fetchPriority="low"
                 fill
                 imgClassName="object-cover"
-                loading="eager"
+                loading={film ? 'eager' : 'lazy'}
                 resource={detail}
                 size="176px"
               />

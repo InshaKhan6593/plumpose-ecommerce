@@ -1,12 +1,13 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { gsap, prefersReducedMotion } from '@/motion/gsap'
 import { Reveal, whenReached } from '@/motion/Reveal'
+import { afterPageLoad } from '@/utilities/afterPageLoad'
 
 import { HOME } from './content'
 
@@ -41,6 +42,14 @@ export function MadeSteps({
 }) {
   const root = useRef<HTMLElement>(null)
   const [pinned, setPinned] = useState(true)
+  /*
+   * The photographs wait for the page to finish loading, then load eagerly.
+   * Eager from the start, all four shared a phone's connection with the hero
+   * poster and fonts and held back the first paint (BUILD-LOG §39); lazy
+   * throughout, the clipped ones only began loading as their wipe began.
+   */
+  const [photosReady, setPhotosReady] = useState(false)
+  useEffect(() => afterPageLoad(() => setPhotosReady(true)), [])
 
   useLayoutEffect(() => {
     const el = root.current
@@ -241,9 +250,8 @@ export function MadeSteps({
                             <Media
                               className="absolute inset-0"
                               fill
-                              fetchPriority="low"
                               imgClassName="object-cover"
-                              loading="eager"
+                              loading={photosReady ? 'eager' : 'lazy'}
                               resource={step.image}
                               size="(min-width: 1024px) 26rem, 70vw"
                             />

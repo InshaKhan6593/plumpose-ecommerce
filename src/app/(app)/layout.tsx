@@ -10,7 +10,6 @@ import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { getServerSideURL } from '@/utilities/getURL'
 import { MotionProvider } from '@/motion/MotionProvider'
 import { Providers } from '@/providers'
-import { GeistMono } from 'geist/font/mono'
 import { Fraunces, Jost } from 'next/font/google'
 import React from 'react'
 import './globals.css'
@@ -66,9 +65,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
      * shows everything after 2.5s.
      */
     <html
-      className={[fraunces.variable, jost.variable, GeistMono.variable, 'js-motion']
-        .filter(Boolean)
-        .join(' ')}
+      className={[fraunces.variable, jost.variable, 'js-motion'].filter(Boolean).join(' ')}
       data-theme="light"
       lang="en"
       suppressHydrationWarning

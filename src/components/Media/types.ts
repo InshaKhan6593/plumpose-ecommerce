@@ -17,11 +17,6 @@ export interface Props {
    * as the reveal begins and pops in part-way through it.
    */
   loading?: 'eager' | 'lazy'
-  /**
-   * 'low' for an eager image that is not the first thing seen: it still loads
-   * early, but is not preloaded and does not compete with the largest paint.
-   */
-  fetchPriority?: 'auto' | 'high' | 'low'
   onClick?: () => void
   onLoad?: () => void
   priority?: boolean // for NextImage only

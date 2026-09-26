@@ -15,7 +15,6 @@ const { breakpoints } = cssVariables
 export const Image: React.FC<MediaProps> = (props) => {
   const {
     alt: altFromProps,
-    fetchPriority,
     fill,
     height: heightFromProps,
     imgClassName,
@@ -55,7 +54,6 @@ export const Image: React.FC<MediaProps> = (props) => {
     <NextImage
       alt={alt || ''}
       className={cn(imgClassName)}
-      fetchPriority={fetchPriority}
       fill={fill}
       height={!fill ? height || heightFromProps : undefined}
       // `priority` already loads eagerly, and Next warns if both are given.
