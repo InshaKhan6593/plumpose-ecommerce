@@ -98,20 +98,23 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
           onto two lines and its lock sat against the wordmark. There it is the
           lock alone (named for screen readers); the words return from sm.
         */}
-        <div className="mx-4 grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-line md:mx-7 md:h-24">
-          <Link
-            className="caps text-[0.5625rem] whitespace-nowrap text-ink-soft transition-colors hover:text-ink"
-            href="/shop"
-          >
-            <span aria-hidden>← </span>Shop
-          </Link>
-          <Link aria-label="plumpose — home" href="/">
-            <Wordmark className="h-6 w-auto md:h-9" />
-          </Link>
-          <span className="caps flex items-center justify-end gap-2 text-[0.5625rem] whitespace-nowrap text-ink-soft">
-            <Lock aria-hidden className="size-3.5 sm:size-3" strokeWidth={1.5} />
-            <span className="sr-only sm:not-sr-only">Secure checkout</span>
-          </span>
+        {/* The width of the checkout column below: max-w-6xl, the same padding. */}
+        <div className="mx-auto max-w-6xl px-4 md:px-7">
+          <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-line md:h-24">
+            <Link
+              className="caps text-[0.5625rem] whitespace-nowrap text-ink-soft transition-colors hover:text-ink md:text-[0.625rem]"
+              href="/shop"
+            >
+              <span aria-hidden>← </span>Shop
+            </Link>
+            <Link aria-label="plumpose — home" href="/">
+              <Wordmark className="h-6 w-auto md:h-9" />
+            </Link>
+            <span className="caps flex items-center justify-end gap-2 text-[0.5625rem] whitespace-nowrap text-ink-soft md:text-[0.625rem]">
+              <Lock aria-hidden className="size-3.5 sm:size-3" strokeWidth={1.5} />
+              <span className="sr-only sm:not-sr-only">Secure checkout</span>
+            </span>
+          </div>
         </div>
       </header>
     )

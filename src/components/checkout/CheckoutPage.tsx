@@ -138,7 +138,7 @@ const loadDraft = (): Partial<Form> => {
 }
 
 const inputClass =
-  'w-full border-0 border-b border-line bg-transparent px-0 py-2 text-[0.9375rem] text-ink placeholder:text-ink-faint transition-colors focus:border-ink focus:outline-none focus:ring-0 aria-[invalid=true]:border-[#8a2424]'
+  'w-full border-0 border-b border-line bg-transparent px-0 py-2.5 text-[0.9375rem] text-ink placeholder:text-ink-faint md:text-base transition-colors focus:border-ink focus:outline-none focus:ring-0 aria-[invalid=true]:border-[#8a2424]'
 
 export function CheckoutPage({
   cities,
@@ -428,7 +428,11 @@ export function CheckoutPage({
   )
 
   return (
-    <div className="mx-auto max-w-[90rem] px-4 pt-8 md:px-7 md:pt-14 lg:pb-24">
+    /*
+     * One centred column, the header's width (SiteHeaderClient): at 90rem the
+     * form lines ran ~860px on a laptop and the summary sat at the far edge.
+     */
+    <div className="mx-auto max-w-6xl px-4 pt-8 md:px-7 md:pt-14 lg:pb-24">
       <h1 className="serif-display text-[clamp(2.25rem,4.5vw,3.75rem)] leading-none">Checkout</h1>
 
       {returned ? (
@@ -451,7 +455,7 @@ export function CheckoutPage({
         </p>
       ) : null}
 
-      <div className="mt-8 grid gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-20 xl:gap-28">
+      <div className="mt-8 grid gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:gap-16 xl:gap-24">
         <form
           className="flex flex-col gap-10 md:gap-14"
           id="checkout-form"
@@ -472,6 +476,7 @@ export function CheckoutPage({
                     aria-describedby={errors.email ? 'email-error' : 'email-hint'}
                     aria-invalid={Boolean(errors.email)}
                     autoComplete="email"
+                    placeholder="name@example.com"
                     className={inputClass}
                     id="email"
                     inputMode="email"
@@ -650,7 +655,7 @@ export function CheckoutPage({
                   inputMode="tel"
                   name="phone"
                   onChange={(e) => set('phone', e.target.value)}
-                  placeholder={inQatar ? '+974' : undefined}
+                  placeholder={inQatar ? '+974 5555 1234' : 'With country code'}
                   type="tel"
                   value={form.phone}
                 />
@@ -926,7 +931,9 @@ function Section({ children, n, title }: { children: React.ReactNode; n: string;
     <section aria-labelledby={id} className="border-t border-line pt-8">
       <h2 className="flex items-baseline gap-4" id={id}>
         <span className="caps text-[0.625rem] text-ink-soft tabular-nums">{n}</span>
-        <span className="serif-display text-[1.625rem] leading-none">{title}</span>
+        <span className="serif-display text-[1.625rem] leading-none md:text-[1.875rem]">
+          {title}
+        </span>
       </h2>
       <div className="mt-7">{children}</div>
     </section>
@@ -948,7 +955,7 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <label className="caps block text-[0.5625rem] text-ink-soft" htmlFor={id}>
+      <label className="caps block text-[0.5625rem] text-ink-soft md:text-[0.625rem]" htmlFor={id}>
         {label}
       </label>
       {children}
