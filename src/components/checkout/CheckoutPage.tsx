@@ -887,7 +887,9 @@ export function CheckoutPage({
             </p>
             {testMode ? (
               <p className="mt-3 border border-line px-3 py-2 text-center text-[0.6875rem] leading-relaxed text-ink-soft">
-                SkipCash sandbox — use card 4000 0000 0000 2503, expiry 10/28, CVV 442. No money
+                {/* SkipCash's non-3-D-Secure card: its sandbox 3-D Secure card (4000 0000 0000
+                    2503) fails there with "Empty TermURL for the CRes POST". */}
+                SkipCash sandbox — use card 5200 0000 0000 0007, expiry 04/27, CVV 256. No money
                 moves.
               </p>
             ) : null}

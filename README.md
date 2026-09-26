@@ -172,8 +172,10 @@ Without all four, checkout says payments are not switched on.
 - **Webhooks cannot reach localhost.** Locally the return page settles the
   order. On a public https address the store sends its webhook URL with every
   payment.
-- **Sandbox test card:** 4000 0000 0000 2503, 10/28, CVV 442 (checkout shows it
-  in sandbox). More at dev.skipcash.app → Test Cards.
+- **Sandbox test card:** 5200 0000 0000 0007, 04/27, CVV 256 — no 3-D Secure
+  (checkout shows it in sandbox). The 3-D Secure card, 4000 0000 0000 2503,
+  fails on SkipCash's sandbox with "Empty TermURL for the CRes POST" before it
+  returns to us. More at dev.skipcash.app → Test Cards.
 
 **Going live:** the client clicks _Enable Production_ in the portal and
 generates a production key; the four production values reach us through a
