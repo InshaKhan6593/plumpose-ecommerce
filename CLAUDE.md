@@ -9,7 +9,7 @@
 
 Luxury silk sleepwear store for [plumpose.com](https://plumpose.com), Qatar.
 Rebuilding a static one-product site as a database-backed store the owner can
-run herself. Next.js 16 + Payload 3.90.1 + Postgres, base currency **QAR**.
+run herself. Next.js 16.3.6 + Payload 3.90.2 + Postgres, base currency **QAR**.
 
 The requirements live outside this repo. `docs/BUILD-LOG.md` is the running
 record of what is actually built and tested — **read it before starting work**;

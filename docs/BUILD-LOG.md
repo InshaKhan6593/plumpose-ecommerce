@@ -2316,3 +2316,20 @@ in `../brand-assets/logo/skipcash/`.
   19.3, Tailwind 4.3, Playwright 1.63 are minors. Majors (TypeScript 7,
   ESLint 10, Vitest 5, lucide-react 1, sonner 2, graphql 17, dotenv 18,
   cross-env 10) are not worth the risk before launch.
+
+### Payload 3.90.2 and Next.js 16.3.6 — 27 Sep 2026
+
+Upgraded as asked: every `@payloadcms/*` package and `payload` 3.90.1 →
+**3.90.2** together (they must match), `next` and `eslint-config-next`
+16.3.3 → **16.3.6**. The lockfile holds only the new versions.
+
+- **No migration needed:** `payload migrate:create` (run against the Docker
+  database) reported *No schema changes detected*; nothing was written.
+- Generated files: types unchanged; the import map only reordered two lines
+  (reverted).
+- `tsc` 0 errors; `pnpm lint` 0 errors (97 warnings, unchanged);
+  `pnpm test:int` **229 passed**; `pnpm build` succeeds.
+- Dev server restarted on 16.3.6: home, shop, product, checkout, Our Story,
+  admin login and `/api/spin` all 200, no server or console errors.
+- **Restart the dev server after an install.** Installing under a running dev
+  server broke it ("Could not find the Next.js package") until restarted.

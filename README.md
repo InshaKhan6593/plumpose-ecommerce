@@ -62,7 +62,7 @@ See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 | Layer         | Choice                                      |
 | ------------- | ------------------------------------------- |
 | Framework     | Next.js 16 (App Router), React 19           |
-| CMS / backend | Payload 3.90.1, in the same app             |
+| CMS / backend | Payload 3.90.2, in the same app             |
 | Database      | PostgreSQL                                  |
 | Commerce      | `@payloadcms/plugin-ecommerce`              |
 | Styling       | TailwindCSS 4 + shadcn/ui                   |
@@ -198,7 +198,7 @@ See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §32.
 
 **Build from the release tag, not `main`.** The upstream Payload ecommerce
 template on `main` imports APIs that are not in the published packages and will
-not compile. This project is pinned to `3.90.1` throughout.
+not compile. This project pins every `@payloadcms/*` package to one exact version (now `3.90.2`); upgrade them together.
 
 **Money is stored in minor units.** Anything rendering a price needs a
 formatter — see `src/components/admin/PriceCell.tsx`.
