@@ -1,0 +1,29 @@
+# What `vercel deploy` from this folder must never upload. Without this file
+# the CLI sends everything, .env and the client's media included. Mirrors
+# .gitignore; a Git-connected deploy only ever sees what is committed anyway.
+
+# Secrets
+.env
+.env*
+!.env.example
+test.env
+*.pem
+
+# The client's media — unreleased, and fetched from R2 at build
+seed-assets/
+public/media/
+public/video/
+
+# Build, test and tool output
+node_modules/
+.next/
+.next-*/
+out/
+build/
+coverage/
+playwright-report/
+test-results/
+.playwright/
+.screenshots/
+*.tsbuildinfo
+.vercel/

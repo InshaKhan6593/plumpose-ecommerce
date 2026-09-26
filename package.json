@@ -27,7 +27,10 @@
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
     "films:upload": "tsx scripts/films.ts upload",
-    "films:fetch": "tsx scripts/films.ts fetch"
+    "films:fetch": "tsx scripts/films.ts fetch",
+    "migrate:deploy": "tsx scripts/migrate-deploy.ts",
+    "build:deploy": "pnpm films:fetch && pnpm migrate:deploy && pnpm build",
+    "warm": "tsx scripts/warm-images.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1140.0",

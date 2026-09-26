@@ -92,8 +92,13 @@ export const mediaStorage = (): Plugin[] => {
            * streamed through Payload, a page asking for ~40 at once (the shop)
            * ran past that, fetched directly they arrive in about half a second.
            * The bucket stays private: each link is signed, and expires.
+           * R2_SIGNED_DOWNLOADS=off streams through Payload instead — for a
+           * host whose image service will not follow a redirect.
            */
-          signedDownloads: { expiresIn: 3600 },
+          signedDownloads:
+            process.env.R2_SIGNED_DOWNLOADS?.trim().toLowerCase() === 'off'
+              ? false
+              : { expiresIn: 3600 },
         },
       },
       config: config ? r2ClientConfig(config) : {},

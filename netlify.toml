@@ -1,0 +1,15 @@
+# Netlify — see docs/DEPLOY.md for the environment variables and first-deploy steps.
+#
+# Next.js is detected and built with Netlify's own adapter. The build:
+#   1. copies the films from R2 into public/video (they are not in the repo)
+#   2. runs database migrations — on the production build only; previews share
+#      the live database and must not change its schema
+#   3. builds the site
+
+[build]
+  command = "pnpm build:deploy"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The daily exchange-rate check: netlify/functions/refresh-rates.mts.

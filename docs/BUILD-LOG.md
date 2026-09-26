@@ -2051,20 +2051,11 @@ there first, so one is made **before** the site is public. The password is
 typed at a hidden prompt, never on the command line; refuses if an admin
 exists. Tested: creates one user with role `admin`; a second run refuses.
 
-### Not done — left for the owner to run
+### Since done
 
-Seeding Neon, and creating its admin, write to the live database; they were
-not run from here. The commands are in the reply of 25 Sep and below:
-
-```bash
-# from plumpose/, in Git Bash — the live database's direct connection
-export DATABASE_URL="$(grep '^PRODUCTION_DATABASE_URL_DIRECT=' .env | cut -d= -f2-)"
-NODE_ENV=production MEDIA_STORAGE=r2 SEED_SAMPLES=yes pnpm seed
-NODE_ENV=production MEDIA_STORAGE=r2 SEED_SAMPLES=yes pnpm demo:seed
-NODE_ENV=production npx tsx scripts/create-admin.ts you@example.com "Your Name"
-# before launch:
-NODE_ENV=production MEDIA_STORAGE=r2 pnpm demo:remove
-```
+Neon was seeded in §35. The admin was created by its owner with
+`scripts/create-admin.ts` on 25 Sep: one user, role `admin`. Still to run
+before launch: `pnpm demo:remove`.
 
 ## 34. Local development on the live services — 25 Sep 2026
 
@@ -2095,7 +2086,6 @@ Seeding Neon (from `plumpose/`, now that `.env` points there):
 ```bash
 SEED_SAMPLES=yes pnpm seed
 SEED_SAMPLES=yes pnpm demo:seed
-npx tsx scripts/create-admin.ts you@example.com "Your Name"
 pnpm demo:remove        # before launch: samples out, her data stays
 ```
 
@@ -2108,8 +2098,8 @@ pnpm demo:remove        # before launch: samples out, her data stays
 her product, 3 sizes, her collection, 14 photographs, 204 countries, 163
 currencies, delivery, embroidery options, 16 FAQs, the wheel, the contact
 form and Site settings; the 3 SAMPLE projects; the 21 demo pieces; the 5
-TEST SHOT photographs. **No users** — the admin is made with
-`scripts/create-admin.ts`, password typed by its owner.
+TEST SHOT photographs. **No users** from the seed. The admin was made
+afterwards with `scripts/create-admin.ts`, and its owner typed the password.
 
 Deliberately **not** copied from the Docker database: 16 test orders and 24
 Stripe-era test payments, the empty draft product, the dev admin and its
