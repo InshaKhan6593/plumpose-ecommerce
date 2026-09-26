@@ -48,6 +48,10 @@ colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
 Payments run on SkipCash's sandbox; production keys come at launch. 208 integration and 57 end-to-end tests pass.
 
+**Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). A test deploy runs
+at https://plumpose.vercel.app on the free plan; the live shop needs **Vercel
+Pro, $20/month**, because the free plan does not allow commercial use.
+
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.
 
@@ -64,6 +68,8 @@ See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 | Styling       | TailwindCSS 4 + shadcn/ui                   |
 | Language      | TypeScript                                  |
 | Payments      | SkipCash (sandbox until launch) — see below |
+| Hosting       | Vercel — Pro ($20/month) for the live shop  |
+| Media         | Cloudflare R2 (EU)                          |
 
 Base currency is **QAR**, stored in minor units — `139900` is QAR 1,399.00.
 

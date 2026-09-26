@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 25 Sep 2026
+**Last updated:** 26 Sep 2026 — hosting is Vercel Pro (§38)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,11 +16,12 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **121 passing** |
-| End-to-end tests | **36 passing** (21 skipped — the template storefront spec) |
+| Integration tests | **208 passing** |
+| End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sending from plumpose.com waits on domain verification |
-| Payments | Stripe sandbox, hosted Checkout (redirect flow), working end to end; SkipCash blocked on credentials |
+| Payments | SkipCash sandbox (§32); a full browser payment on the deployed site succeeded 26 Sep (§38) |
+| Hosting | Vercel — test deploy at plumpose.vercel.app; **Pro ($20/month)** for launch (§38) |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
 
@@ -2229,3 +2230,66 @@ service) were removed; all are in the history at `19aa839`.
 
 ⚠️ Vercel's free plan does not allow commercial use: fine for testing, the
 live shop needs Pro ($20/month).
+
+## 38. Checkout on phones and laptops; hosting decided — 26 Sep 2026
+
+### Hosting: Vercel Pro
+
+**Decided by the owner: Vercel, no Netlify, on the Pro plan ($20/month).**
+The free Hobby plan does not allow commercial use, so the project moves to Pro
+before launch. The Netlify config was already removed (§37). Every deploy gets
+its own permanent address and keeps running as it was; test on
+https://plumpose.vercel.app, which always points to the newest.
+
+### Checkout froze after the bag (`3b6a555`)
+
+Opening the bag stops Lenis; its effect restarted it in an `else` branch.
+The bag's **Checkout** link goes to `/checkout`, whose header has no bag, so
+the drawer unmounted while open, the `else` never ran, and `<html>` kept
+`lenis-stopped` (`overflow: clip`) — the page could not scroll. Reproduced
+locally, then fixed in all four drawers (bag, embroidery, reward wheel,
+country picker): the lock is released in the effect's cleanup, which also
+runs on unmount. `MotionProvider` restarts Lenis on every navigation as a
+backstop. Checked on the deployed site, phone size: bag → Checkout → scrolls
+(1,532 px).
+
+### Checkout on phones (`3b6a555`)
+
+- **Pay was ~1,900 px down**, after the whole form and the order summary, and
+  greyed out until a city was chosen — it read as "no button". Phones now have
+  a sticky bar (total + Pay); it is `sticky`, not `fixed`, so it stops above
+  the footer.
+- **Missing details no longer disable Pay.** Pressing it names each missing
+  field and focuses the first; only no payments / paying / blocked country
+  disable it.
+- **Header**: "Secure checkout" wrapped onto two lines and its lock sat
+  against the wordmark; below `sm` it is the lock alone (named for screen
+  readers), with a smaller wordmark.
+- First and last name share a row; tighter spacing.
+
+### Checkout on laptops (`3aa0d3f`)
+
+At 1440 px the page ran ~90rem wide: 860 px form lines, the summary at the far
+edge, 9 px labels. Now `max-w-6xl` for the page **and** the checkout header
+(the header is wrapped, not given `mx-auto` beside `md:mx-7`, which won),
+a 25rem summary, labels and inputs a step larger from `md`, and example text
+in the email and phone fields. Checked at 1440, 1024 and 375.
+
+### SkipCash's 3-D Secure test card fails in the sandbox (`97c678a`)
+
+With 4000 0000 0000 2503 SkipCash's sandbox stops at *"There was an error
+processing the transaction [Empty TermURL for the CRes POST]"* — its own 3-D
+Secure step, before anything returns to us. The non-3-D-Secure card
+**5200 0000 0000 0007, 04/27, CVV 256** (the one the e2e suite uses) pays and
+returns to the confirmation page. Checkout's sandbox hint and the README now
+show it.
+
+### Still open on checkout
+
+Not built: a delivery timeframe beside the fee, card marks / a payment
+section, a Terms and Privacy line by Pay (legal pages wait on the client), a
+WhatsApp help link, editing the bag in checkout, a collapsed order summary at
+the top on phones. SkipCash's payment page shows a broken merchant logo —
+uploaded in the SkipCash portal, not by us; PNGs made from the wordmark are
+in `../brand-assets/logo/skipcash/`.
+

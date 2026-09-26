@@ -158,11 +158,12 @@ client's reference recording (`../brand-assets/reference/`):
   `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
   to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
   outside production only.
-- **Storage adapter.** Uploads write to local disk and will not survive a
-  serverless deploy; needs S3 / Vercel Blob once the host is chosen.
-- **Production migrations.** The dev database follows the code by schema
-  push; production needs migrations — including `spotted.image_id` made
-  nullable (BUILD-LOG §29).
+- **Vercel Pro.** Hosting is **Vercel, decided 26 Sep 2026** — no Netlify.
+  The test deploy (https://plumpose.vercel.app) is on the free Hobby plan,
+  which does not allow commercial use; the live shop goes on **Pro,
+  $20/month**, before launch (BUILD-LOG §37–38).
+- Storage (Cloudflare R2, §33/§36) and production migrations (§33) are built
+  and no longer on this list.
 - Built since and not on this list any more: payments view, CSV exports,
   reviews, Spotted submissions, enquiries inbox, Page text, sitemap, sale
   price, colour/pattern, exchange rates, login lockout (BUILD-LOG §29).
@@ -362,6 +363,15 @@ From Git Bash, prefix commands taking a leading-slash argument with
   show while `TEST_SHOTS=on`.
 - **Python on Windows writes cp1252 by default.** Pass `encoding="utf-8"` when a
   script writes source, or Turbopack fails on the first non-ASCII character.
+- **A drawer's scroll lock is released in its effect cleanup**, never in an
+  `else` branch: `if (!open) return; lenis.stop(); return () => lenis.start()`.
+  A drawer can unmount while open — the bag's Checkout link goes to
+  `/checkout`, whose header has no bag — and the `else` never ran, so checkout
+  could not scroll (BUILD-LOG §38). `MotionProvider` also restarts Lenis on
+  every navigation as a backstop.
+- **Each Vercel deploy has its own permanent address** and keeps running as
+  it was. Test on https://plumpose.vercel.app (always the newest); a
+  `plumpose-<hash>-….vercel.app` link is a snapshot.
 - **"Hydration mismatch" on `fdprocessedid`** is a browser extension (password
   manager / autofill), not the site. Check in a private window.
 
