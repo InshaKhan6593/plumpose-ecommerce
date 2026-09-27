@@ -63,20 +63,20 @@ export function PrintBand({
       mm.add({ desktop: '(min-width: 1024px)', phone: '(max-width: 1023px)' }, (c) => {
         const { desktop } = c.conditions as { desktop: boolean }
         /*
-         * The card's starting size: a small portrait card, as in the reference.
-         * On a phone the heading spans the full width, so the card starts below
-         * it — measured, since the heading's height depends on the screen. A
-         * fixed 26% cut through its second line on shorter phones. It then
-         * grows up behind the words, which turn white as it reaches them.
+         * The card's starting size: a small portrait card below the heading,
+         * on every screen — the words above, the print beneath (her review,
+         * 27 Sep 2026; on desktop it used to sit beside the heading). Measured,
+         * since the heading's height depends on the screen. It then grows up
+         * behind the words, which turn white as it reaches them.
          */
-        const start = desktop
-          ? 'inset(24% 41% 22% 41% round 0px)'
-          : () => {
-              const box = el.getBoundingClientRect()
-              const below = heading ? heading.getBoundingClientRect().bottom - box.top + 24 : 0
-              const top = Math.min(45, Math.max(26, (below / box.height) * 100))
-              return `inset(${top.toFixed(1)}% 22% 14% 22% round 0px)`
-            }
+        const start = () => {
+          const box = el.getBoundingClientRect()
+          const below = heading ? heading.getBoundingClientRect().bottom - box.top + 32 : 0
+          const top = Math.min(desktop ? 60 : 45, Math.max(26, (below / box.height) * 100))
+          return desktop
+            ? `inset(${top.toFixed(1)}% 38% 6% 38% round 0px)`
+            : `inset(${top.toFixed(1)}% 22% 14% 22% round 0px)`
+        }
 
         /*
          * Desktop: the section holds still for 1.7 screens while the card opens.
@@ -91,6 +91,7 @@ export function PrintBand({
           scrollTrigger: desktop
             ? {
                 end: '+=170%',
+                // Re-measure the card's start when the screen changes size.
                 invalidateOnRefresh: true,
                 pin: true,
                 /*

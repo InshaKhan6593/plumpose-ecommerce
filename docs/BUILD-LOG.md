@@ -2534,3 +2534,8 @@ Checked on a production build: 32 text checks over /, /shop, /our-story,
 Not run this time: the database half of `page-text.int.spec.ts`. Another
 project's container (`serenity-hue-db`) holds port 5434, so `plumpose-pg`
 cannot start; its four database-free tests passed.
+- **The Print on desktop: the words above, the card below.** The card used
+  to start in the middle of the screen, beside the heading. Like the phone
+  version, it now starts just under the heading (measured, 32 px below it),
+  centred and 24% wide, and grows from there. Checked at 1440×900 and a
+  short, wide 1900×668 window.
