@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 26 Sep 2026 — hosting is Vercel Pro (§38)
+**Last updated:** 27 Sep 2026 — email sends from plumpose.com (§39)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -19,7 +19,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Integration tests | **229 passing** (26 Sep) |
 | End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
-| Email | Built (§14); sending from plumpose.com waits on domain verification |
+| Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§39) |
 | Payments | SkipCash sandbox (§32); a full browser payment on the deployed site succeeded 26 Sep (§38) |
 | Hosting | Vercel — test deploy at plumpose.vercel.app; **Pro ($20/month)** for launch (§38) |
 
@@ -2333,3 +2333,55 @@ Upgraded as asked: every `@payloadcms/*` package and `payload` 3.90.1 →
   admin login and `/api/spin` all 200, no server or console errors.
 - **Restart the dev server after an install.** Installing under a running dev
   server broke it ("Could not find the Next.js package") until restarted.
+
+## 39. Email from plumpose.com; the domain's DNS — 27 Sep 2026
+
+**Email now sends from `plumpose <orders@plumpose.com>`.** The domain is
+verified in Resend (region EU, Ireland — beside the R2 bucket), sending on,
+receiving **off**. On Vercel, `EMAIL_FROM` is set to that address and
+`EMAIL_TEST_RECIPIENT` is not set; redeployed.
+
+**Verified:** a guest order on plumpose.vercel.app (SkipCash sandbox card)
+delivered the customer's confirmation from `orders@plumpose.com` to an address
+that is not the Resend account's, and the owner's new-order alert (to
+Site settings → *New-order alerts go to*, else the contact email).
+
+### The domain
+
+Registered at **Squarespace** (moved there from Google Domains; billed through
+Google Workspace). DNS is Squarespace's own — the nameservers are unchanged
+and should stay so. Records as found, and what they are:
+
+| Record | Points to | What it is |
+|---|---|---|
+| A `@` | `75.2.60.5` | **Her current site, on Netlify** |
+| CNAME `www` | `lovely-druid-bdb24c.netlify.app` | Same site |
+| MX `@` (1) | `smtp.google.com` | **Her Google Workspace email — never touch** |
+| CNAME `_domainconnect` | Squarespace | Squarespace's own |
+
+Added for Resend (names only; values from Resend's domain page):
+
+| Record | Name |
+|---|---|
+| TXT (DKIM) | `resend._domainkey` |
+| CNAME | `rsend` → `rsend-euw1.forge.rmta.net` |
+| CNAME | `send` → `send.forge.rmta.net` |
+| TXT | `_dmarc` → `v=DMARC1; p=none;` |
+
+None of these share a name with the existing records, so the site and her
+Google email were unaffected. Do not turn on Resend's *Receiving*: it needs an
+MX on plumpose.com itself, which would take her mail away from Google.
+
+### Launch day
+
+1. Vercel → project → Settings → Domains: add `plumpose.com` and
+   `www.plumpose.com` (one redirecting to the other).
+2. Squarespace → DNS Settings → Custom records: **edit** the `@` A record and
+   the `www` CNAME to the values Vercel shows. Nothing else changes.
+3. Vercel: `NEXT_PUBLIC_SERVER_URL` and `PAYLOAD_PUBLIC_SERVER_URL` to
+   `https://plumpose.com`, set `CRON_SECRET`, remove `TEST_SHOTS`; redeploy
+   (the `NEXT_PUBLIC_` value is baked in at build).
+4. SkipCash production settings (§32).
+
+Her old site goes down the moment step 2 resolves, so this is the last step,
+after Pro and the production SkipCash keys.
