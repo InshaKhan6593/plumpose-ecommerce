@@ -81,9 +81,16 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', {
   year: 'numeric',
 })
 
-/** "10% off" → "10% off your first order"; "Free delivery" → "Free delivery on your first order". */
+/**
+ * "5% off" → "5% off your first order"; "Free delivery" → "Free delivery on
+ * your first order"; "Free embroidery on one placement" → "…, for your first order".
+ */
 const prizeHeading = (reward: string) =>
-  /^free/i.test(reward) ? `${reward} on your first order` : `${reward} your first order`
+  / on /i.test(reward)
+    ? `${reward}, for your first order`
+    : /^free/i.test(reward)
+      ? `${reward} on your first order`
+      : `${reward} your first order`
 
 export function RewardWheel() {
   const pathname = usePathname()

@@ -66,8 +66,12 @@ export type ValidatedDiscount = {
    */
   appliesToProductIds?: number[]
   code: string
-  type: 'fixed' | 'freeShipping' | 'percent'
-  /** Major units for `fixed`, a percentage for `percent`, unused for `freeShipping`. */
+  type: 'fixed' | 'freeEmbroidery' | 'freeShipping' | 'percent'
+  /**
+   * Major units for `fixed`, a percentage for `percent`, unused for
+   * `freeShipping`. For `freeEmbroidery`, how many placements are free —
+   * 0 means every placement in the bag.
+   */
   value: number
 }
 
@@ -164,6 +168,21 @@ const applyDiscount = (
   const eligible = discount.appliesToProductIds
     ? lines.filter((line) => discount.appliesToProductIds?.includes(line.productId))
     : lines
+
+  /**
+   * Free embroidery waives placement fees, the dearest first, up to the
+   * number of placements the code gives (all of them when it gives none).
+   * A placement counts once per garment: two embroidered sets are two.
+   */
+  if (discount.type === 'freeEmbroidery') {
+    const fees = eligible
+      .flatMap((line) =>
+        line.personalisation.flatMap((p) => Array<Minor>(line.quantity).fill(p.feeQar)),
+      )
+      .sort((a, b) => b - a)
+    const free = discount.value > 0 ? fees.slice(0, Math.floor(discount.value)) : fees
+    return { discountTotal: free.reduce((total, fee) => total + fee, 0), waivesShipping: false }
+  }
 
   const eligibleTotal = eligible.reduce(
     (total, line) => total + line.subtotal + line.personalisationTotal,

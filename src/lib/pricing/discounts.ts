@@ -46,6 +46,12 @@ export type DiscountResult =
 export type DiscountContext = {
   /** Who is checking out. Required for per-customer limits and wheel codes. */
   email?: null | string
+  /**
+   * Embroidery across the whole basket, minor units. When given, a
+   * free-embroidery code is refused for a bag with none, rather than applied
+   * for nothing. Omitted after payment, where the code is only being recorded.
+   */
+  embroideryTotal?: Minor
   /** Goods + embroidery for the whole basket, minor units. */
   goodsTotal: Minor
   now?: Date
@@ -130,6 +136,13 @@ export const evaluateDiscount = (code: DiscountCode, context: DiscountContext): 
         `That code needs a minimum spend of QAR ${code.minSpendQar.toLocaleString('en-GB')}.`,
       )
     }
+  }
+
+  if (code.type === 'freeEmbroidery' && context.embroideryTotal === 0) {
+    return refuse(
+      'notEligible',
+      'That code is for hand embroidery — add embroidery to a piece to use it.',
+    )
   }
 
   const restriction = restrictedToProductIds(code)

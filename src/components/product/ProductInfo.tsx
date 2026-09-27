@@ -158,7 +158,7 @@ export function ProductInfo({
             <p className="caps text-[0.625rem] text-ink">Hand embroidery</p>
             {embroidery.length ? (
               <p className="text-sm text-ink tabular-nums">
-                + QAR {embroideryRules.feeQar * embroidery.length}
+                + <Money minor={toMinor(embroideryRules.feeQar * embroidery.length)} />
               </p>
             ) : null}
           </div>

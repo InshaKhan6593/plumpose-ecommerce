@@ -17,7 +17,6 @@ import { formatQar } from '@/lib/pricing/money'
 import { rateCard } from '@/lib/pricing/shipping'
 import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/shipping-returns' },
@@ -40,7 +39,7 @@ export default async function ShippingReturnsPage() {
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
 
-  const [cities, zones, pick] = await Promise.all([
+  const [cities, zones] = await Promise.all([
     payload.find({
       collection: 'shippingCities',
       depth: 0,
@@ -49,7 +48,6 @@ export default async function ShippingReturnsPage() {
       sort: 'name',
     }),
     payload.find({ collection: 'shippingZones', depth: 0, limit: 100, pagination: false }),
-    loadPageMedia(payload),
   ])
 
   const card = rateCard({ cities: cities.docs, countries: [], zones: zones.docs }, settings)
@@ -193,8 +191,8 @@ export default async function ShippingReturnsPage() {
         </Reveal>
       </PageShell>
 
-      {/* Gift wrapping */}
-      <SplitBand className="pt-24 md:pt-32" id="gifting" image={pick('qatarBook', 'packaging')}>
+      {/* Gift wrapping — words only; she asked for the photograph to go (28 Sep 2026). */}
+      <SplitBand className="pt-24 md:pt-32" id="gifting">
         <Prose
           body={[SHIPPING_PAGE.gifting.body, SHIPPING_PAGE.gifting.note]}
           heading={SHIPPING_PAGE.gifting.heading}

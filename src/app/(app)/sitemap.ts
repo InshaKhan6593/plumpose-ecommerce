@@ -25,6 +25,7 @@ const FIXED = [
   '/made-for-you',
   '/faq',
   '/shipping-returns',
+  '/fabric-care',
   '/press',
   '/spotted',
   '/contact',

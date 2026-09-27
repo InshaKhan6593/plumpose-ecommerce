@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 
 import type { Address } from '@/payload-types'
 
+import { CountryCombobox } from '@/components/forms/CountryCombobox'
 import { HouseAlert, HouseButton, HouseField, houseInput } from '@/components/forms/house'
 import { cn } from '@/utilities/cn'
 
@@ -158,6 +159,7 @@ function AddressForm({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
+    setValue,
     watch,
   } = useForm<Fields>({
     defaultValues: {
@@ -225,17 +227,13 @@ function AddressForm({
         />
       </HouseField>
       <HouseField className="sm:col-span-2" id="a-country" label="Country">
-        <select
-          className={cn(houseInput, 'cursor-pointer')}
+        <CountryCombobox
+          className={houseInput}
+          countries={countries}
           id="a-country"
-          {...register('country')}
-        >
-          {countries.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          onChange={(code) => setValue('country', code, { shouldDirty: true })}
+          value={watch('country')}
+        />
       </HouseField>
       {inQatar ? (
         <HouseField className="sm:col-span-2" error={errors.city?.message} id="a-city" label="City">

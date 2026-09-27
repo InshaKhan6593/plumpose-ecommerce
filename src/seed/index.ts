@@ -309,9 +309,8 @@ export async function seed(payload: Payload): Promise<void> {
     giftPackaging: para(
       'Every plumpose order is presented in our signature packaging and finished with a complimentary thank-you card — ideal for gifting, or for keeping as a personal indulgence.',
     ),
-    materialCare: para(
-      "To preserve the beauty of this piece, we recommend dry cleaning or gentle hand washing at 30°C with a specialist silk detergent. Iron on a cool setting to restore the silk's natural lustre. Please do not leave the garment to soak or tumble dry. Store folded away from direct sunlight to protect the fabric and print.",
-    ),
+    // No materialCare: she struck out the old dry-clean / 30°C text (28 Sep
+    // 2026); her care line now comes from FABRIC in src/content/pages.ts.
     trims: 'Contrast piping',
   }
   const missing = Object.fromEntries(
@@ -510,8 +509,9 @@ export async function seed(payload: Payload): Promise<void> {
   // ---------------------------------------------------------- reward wheel
   log('reward wheel…')
   const segments: Array<[string, string, number | undefined, number, string]> = [
-    ['10% off', 'percent', 10, 40, '#f6f4f0'],
-    ['QAR 100 off', 'fixed', 100, 15, '#eae5db'],
+    // Her prizes of 28 Sep 2026: roll again, 5% off, free delivery, free embroidery.
+    ['5% off', 'percent', 5, 40, '#f6f4f0'],
+    ['Free embroidery', 'freeEmbroidery', 1, 15, '#eae5db'],
     ['Free delivery', 'freeShipping', undefined, 25, '#f6f4f0'],
     ['Roll again', 'rollAgain', undefined, 20, '#eae5db'],
   ]

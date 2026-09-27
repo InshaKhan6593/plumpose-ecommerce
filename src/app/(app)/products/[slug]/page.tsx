@@ -8,15 +8,18 @@ import { getPayload } from 'payload'
 import React, { cache } from 'react'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
+import { FabricBlock } from '@/components/editorial/FabricBlock'
 import type { EmbroideryOption, EmbroideryRules } from '@/components/product/embroidery'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { type ProductDetail, ProductInfo } from '@/components/product/ProductInfo'
 import { ProductReviews } from '@/components/product/ProductReviews'
 import { averageRating } from '@/components/product/Stars'
+import { FABRIC } from '@/content/pages'
 import { deliveryRange } from '@/lib/pricing/deliveryRange'
 import { formatQar, toMajor, toMinor } from '@/lib/pricing/money'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getServerSideURL } from '@/utilities/getURL'
+import { loadPageMedia } from '@/utilities/pageMedia'
 import { isPlaceholderSlug } from '@/utilities/placeholders'
 import { clip, plainText } from '@/utilities/plainText'
 
@@ -81,7 +84,7 @@ export default async function ProductPage({ params }: Args) {
   const settings = await getCachedGlobal('siteSettings', 0)()
 
   // Independent reads, in parallel rather than one after another.
-  const [details, embroideryDocs, reviewDocs] = await Promise.all([
+  const [details, embroideryDocs, reviewDocs, pick] = await Promise.all([
     productDetails({ payload, product, settings }),
     product.personalisationEnabled
       ? payload.find({
@@ -103,6 +106,7 @@ export default async function ProductPage({ params }: Args) {
       sort: '-createdAt',
       where: { and: [{ product: { equals: product.id } }, { status: { equals: 'approved' } }] },
     }),
+    loadPageMedia(payload),
   ])
   const reviews = reviewDocs.docs as Review[]
   const average = averageRating(reviews.map((r) => r.rating))
@@ -279,6 +283,9 @@ export default async function ProductPage({ params }: Args) {
         </div>
       </div>
 
+      {/* The fabric, in her words, beside the print close-up (her notes, 28 Sep 2026). */}
+      <FabricBlock className="pt-24 md:pt-36" image={pick('print')} />
+
       {product.layout?.length ? <RenderBlocks blocks={product.layout} /> : null}
 
       <ProductReviews productId={product.id} reviews={reviews} />
@@ -303,8 +310,11 @@ async function productDetails({
 }): Promise<ProductDetail[]> {
   const details: ProductDetail[] = []
 
-  // Material & care — the fabric facts always, then her care copy. Her copy
-  // used to replace the facts, so the page never said what it is made of.
+  // Material & care — the fabric facts always, her care line (the same words
+  // as the fabric section below the piece), then any care copy of her own for
+  // this piece. Her copy used to replace the facts, so the page never said
+  // what it is made of. The old dry-clean / 30°C text she struck out on
+  // 28 Sep 2026 is cleared from the data by migration 20260927_205800.
   {
     const lines = [
       product.colour && `Colour: ${product.colour}`,
@@ -314,6 +324,7 @@ async function productDetails({
       product.fabricWeight && `Weight: ${product.fabricWeight}`,
       product.trims && `Trims: ${product.trims}`,
       product.fitNote && `Fit: ${product.fitNote}`,
+      `Care: ${FABRIC.care.line}`,
     ].filter((line): line is string => Boolean(line))
     if (lines.length || product.materialCare) {
       details.push({

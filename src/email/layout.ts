@@ -11,6 +11,18 @@
  * through `esc()`. A gift note of `<a href=…>` must arrive as text.
  */
 
+import { getServerSideURL } from '@/utilities/getURL'
+
+/**
+ * Her wordmark as a picture (she asked for the logo, 28 Sep 2026) — a PNG,
+ * because Gmail and Outlook do not show SVG. Rendered from
+ * brand-assets/logo/svg/plumpose-wordmark.svg at 600 px wide, shown at 200.
+ * Its alt text is styled as the old text wordmark, so an inbox that blocks
+ * pictures still reads "plumpose".
+ */
+const wordmarkUrl = () =>
+  `${getServerSideURL().replace(/\/$/, '')}/brand/plumpose-wordmark-email.png`
+
 export const palette = {
   ink: '#1b1815',
   inkFaint: '#a9a299',
@@ -124,7 +136,7 @@ export const layout = (args: {
 <tr><td align="center" style="padding:40px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 <tr><td align="center" style="padding:0 0 28px;">
-<div style="font-family:${displayFont};font-weight:300;font-size:28px;letter-spacing:0.08em;color:${palette.ink};">plumpose</div>
+<img src="${esc(wordmarkUrl())}" width="200" height="40" alt="plumpose" style="display:block;width:200px;height:auto;border:0;outline:none;font-family:${displayFont};font-weight:300;font-size:28px;letter-spacing:0.08em;color:${palette.ink};">
 </td></tr>
 <tr><td style="background:${palette.paper};padding:44px 40px;border:1px solid ${palette.line};">
 ${args.body}

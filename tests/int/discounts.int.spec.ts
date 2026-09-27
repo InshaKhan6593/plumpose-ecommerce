@@ -49,6 +49,19 @@ describe('evaluateDiscount', () => {
     expect(result.discount).toMatchObject({ code: 'WELCOME10', type: 'percent', value: 10 })
   })
 
+  it('refuses a free-embroidery code for a bag with no embroidery, and says why', () => {
+    const stitch = code({ type: 'freeEmbroidery', value: 1 })
+    const refused = evaluateDiscount(stitch, { ...basket, embroideryTotal: 0 })
+    expect(refused.ok).toBe(false)
+    if (refused.ok) return
+    expect(refused.refusal.reason).toBe('notEligible')
+    expect(refused.refusal.message).toContain('embroidery')
+
+    expect(evaluateDiscount(stitch, { ...basket, embroideryTotal: 16000 }).ok).toBe(true)
+    // After payment the code is only being recorded: no embroidery figure, no refusal.
+    expect(evaluateDiscount(stitch, basket).ok).toBe(true)
+  })
+
   it('refuses an inactive code without saying it exists', () => {
     const result = evaluateDiscount(code({ active: false }), basket)
     expect(result.ok).toBe(false)

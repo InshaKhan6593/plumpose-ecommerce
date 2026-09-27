@@ -28,7 +28,7 @@ export const drawableSegments = <T extends Drawable & Pick<SpinSegment, 'active'
     if (s.rewardType === 'rollAgain') return args.rerollsLeft > 0
     if (s.rewardType === 'percent') return (s.rewardValue ?? 0) > 0 && (s.rewardValue ?? 0) <= 100
     if (s.rewardType === 'fixed') return (s.rewardValue ?? 0) > 0
-    return s.rewardType === 'freeShipping'
+    return s.rewardType === 'freeShipping' || s.rewardType === 'freeEmbroidery'
   })
 
 /**
@@ -75,10 +75,15 @@ export const rewardExpiry = (days: number, now = new Date()): Date => {
   return new Date(doha.getTime() - 3 * 3600_000)
 }
 
-/** The prize in words, for the result screen and the email: "10% off", "QAR 100 off", "Free delivery". */
+/** The prize in words, for the result screen and the email: "5% off", "QAR 100 off", "Free delivery", "Free embroidery". */
 export const describeReward = (s: Pick<Drawable, 'rewardType' | 'rewardValue'>): string => {
   if (s.rewardType === 'percent') return `${s.rewardValue}% off`
   if (s.rewardType === 'fixed') return `QAR ${s.rewardValue} off`
   if (s.rewardType === 'freeShipping') return 'Free delivery'
+  if (s.rewardType === 'freeEmbroidery') {
+    const n = Math.floor(s.rewardValue ?? 0)
+    if (n === 1) return 'Free embroidery on one placement'
+    return n > 1 ? `Free embroidery on ${n} placements` : 'Free embroidery'
+  }
   return 'Another spin'
 }

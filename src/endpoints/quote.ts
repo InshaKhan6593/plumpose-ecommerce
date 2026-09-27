@@ -189,6 +189,7 @@ export const quoteEndpoint: Endpoint = {
     if (requestedCode) {
       const result = await validateDiscountCode(payload, requestedCode, {
         email: asText(body.email, 255).toLowerCase(),
+        embroideryTotal: base.ok ? base.order.personalisationTotal : undefined,
         goodsTotal,
         productIds: lines.map((line) => line.product.id),
       })

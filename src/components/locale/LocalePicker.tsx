@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
+import { CountryCombobox } from '@/components/forms/CountryCombobox'
 import { HouseButton, houseInput } from '@/components/forms/house'
 import { BASE_CURRENCY } from '@/lib/pricing/currency'
 import { useLenis } from '@/motion/MotionProvider'
@@ -112,18 +113,17 @@ export function LocalePicker() {
                 >
                   Your country
                 </label>
-                <select
-                  className={cn(houseInput, 'cursor-pointer')}
+                <CountryCombobox
+                  className={houseInput}
+                  countries={countries.map((c) => ({
+                    code: c.code,
+                    name: c.name,
+                    prefix: flag(c.code),
+                  }))}
                   id="locale-country"
-                  onChange={(e) => pickCountry(e.target.value)}
+                  onChange={pickCountry}
                   value={countryCode}
-                >
-                  {countries.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {flag(c.code)} {c.name}
-                    </option>
-                  ))}
-                </select>
+                />
                 {chosen?.blockedReason ? (
                   <p className="mt-3 text-[0.8125rem] leading-relaxed text-[#8a2424]" role="status">
                     We cannot deliver to {chosen.name} at present —{' '}

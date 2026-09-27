@@ -41,6 +41,7 @@ export const SpinSegments: CollectionConfig = {
         { label: 'Percentage off', value: 'percent' },
         { label: 'Fixed amount off (QAR)', value: 'fixed' },
         { label: 'Free delivery', value: 'freeShipping' },
+        { label: 'Free hand embroidery', value: 'freeEmbroidery' },
         { label: 'Roll again', value: 'rollAgain' },
       ],
       required: true,
@@ -48,7 +49,11 @@ export const SpinSegments: CollectionConfig = {
     {
       name: 'rewardValue',
       type: 'number',
-      admin: { condition: (data) => ['fixed', 'percent'].includes(data?.rewardType) },
+      admin: {
+        condition: (data) => ['fixed', 'freeEmbroidery', 'percent'].includes(data?.rewardType),
+        description:
+          'The percentage, or the amount in QAR. For free hand embroidery: how many placements are free (e.g. 1) — leave empty to make all of them free.',
+      },
       min: 0,
     },
     {

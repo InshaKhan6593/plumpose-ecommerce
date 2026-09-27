@@ -332,6 +332,57 @@ describe('priceOrder', () => {
     expect(result.order.total).toBe(2000)
   })
 
+  describe('free embroidery (her wheel prize, 28 Sep 2026)', () => {
+    // Two placements on each of two garments: four placements, QAR 640.
+    const embroidered = {
+      personalisation: [
+        { lettering: 'AK', placement: 'pocket', style: 'text' },
+        { placement: 'cuff', style: 'symbol', symbol: 'star' },
+      ],
+      product,
+      quantity: 2,
+      variant: variantM,
+    }
+    const priced = (value: number) => {
+      const discount: ValidatedDiscount = { code: 'STITCH', type: 'freeEmbroidery', value }
+      const result = priceOrder({ destination: doha, discount, lines: [embroidered] }, context)
+      if (!result.ok) throw new Error('expected a priced order')
+      return result.order
+    }
+
+    it('waives one placement when the code gives one', () => {
+      const order = priced(1)
+      expect(order.personalisationTotal).toBe(64000)
+      expect(order.discountTotal).toBe(16000)
+      expect(order.total).toBe(279800 + 64000 - 16000 + 2000)
+    })
+
+    it('waives as many placements as the code gives, never more than there are', () => {
+      expect(priced(2).discountTotal).toBe(32000)
+      expect(priced(9).discountTotal).toBe(64000)
+    })
+
+    it('waives every placement when the code gives no number', () => {
+      expect(priced(0).discountTotal).toBe(64000)
+    })
+
+    it('never touches the pieces or delivery', () => {
+      const order = priced(0)
+      expect(order.subtotal).toBe(279800)
+      expect(order.shipping).toBe(2000)
+    })
+
+    it('is worth nothing on a bag without embroidery', () => {
+      const discount: ValidatedDiscount = { code: 'STITCH', type: 'freeEmbroidery', value: 1 }
+      const result = priceOrder(
+        { destination: doha, discount, lines: [{ product, quantity: 1 }] },
+        context,
+      )
+      if (!result.ok) throw new Error('expected a priced order')
+      expect(result.order.discountTotal).toBe(0)
+    })
+  })
+
   it('waives delivery on a free-shipping code', () => {
     const discount: ValidatedDiscount = { code: 'FREEDEL', type: 'freeShipping', value: 0 }
     const result = priceOrder(

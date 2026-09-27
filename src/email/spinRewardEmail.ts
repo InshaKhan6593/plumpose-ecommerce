@@ -15,12 +15,16 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', {
 })
 
 /** The prize in words, from the issued code itself (what the discount engine will honour). */
-const rewardOf = (code: Pick<DiscountCode, 'type' | 'value'>) =>
-  code.type === 'percent'
-    ? `${code.value}% off`
-    : code.type === 'fixed'
-      ? `QAR ${code.value} off`
-      : 'Free delivery'
+const rewardOf = (code: Pick<DiscountCode, 'type' | 'value'>) => {
+  if (code.type === 'percent') return `${code.value}% off`
+  if (code.type === 'fixed') return `QAR ${code.value} off`
+  if (code.type === 'freeEmbroidery') {
+    const n = Math.floor(code.value ?? 0)
+    if (n === 1) return 'Free embroidery on one placement'
+    return n > 1 ? `Free embroidery on ${n} placements` : 'Free embroidery'
+  }
+  return 'Free delivery'
+}
 
 /** The email that carries a won code. */
 export const buildSpinRewardEmail = (args: {

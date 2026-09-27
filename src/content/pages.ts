@@ -295,6 +295,58 @@ export const TRACK_PAGE = {
   },
 } as const
 
+/* ------------------------------------------------------------ Fabric & care */
+
+/**
+ * Hers, verbatim — typed in her notes of 28 Sep 2026 ("Note 27 Sep 2026.pdf",
+ * page 1), to replace the old dry-clean / 30°C care text. Laid out after the
+ * fabric block she pointed at on brahmaki.com: name, spec line, an italic
+ * line, a paragraph, the points, then care in one line and a link to the full
+ * guidance. Shown on every product page and at the top of /fabric-care.
+ */
+export const FABRIC = {
+  label: 'plumpose — silk, made to be felt',
+  heading: '22 momme silk',
+  lede: 'There are fabrics you wear — and fabrics you feel.',
+  body: 'A smooth, fluid silk selected for the way it moves against the skin. With a soft lustre and naturally breathable feel, it brings an effortless sense of luxury to slow mornings, evenings at home, and everywhere in between.',
+  points: [
+    '22 momme for a substantial, luxurious hand feel',
+    'Smooth, soft & naturally lustrous',
+    'Breathable and lightweight against the skin',
+    'Fluid drape designed to move with the body',
+    'Made with silk for a naturally elevated feel',
+    'Finished with subtle stretch for ease and comfort',
+  ],
+  care: {
+    label: 'Care',
+    intro: 'Gentle care for beautiful silk.',
+    line: 'Cold wash only · mild detergent · wash inside out · do not bleach · dry flat in shade · iron on low heat · do not tumble dry',
+    link: 'Full fabric & care guidance',
+  },
+} as const
+
+/**
+ * /fabric-care — the full guidance the product page links to.
+ *
+ * PLACEHOLDER in its arrangement only: she said she will send the full text.
+ * Every instruction below is one of hers from FABRIC.care.line, grouped into
+ * steps as on the page she pointed at; the step titles are ours. Nothing is
+ * added — no washing bag, no temperatures, no returns wording — until she
+ * writes it.
+ */
+export const CARE_PAGE = {
+  label: 'Fabric & care',
+  heading: 'Caring for your silk',
+  steps: [
+    {
+      title: 'Wash cold',
+      body: 'Cold wash only, with a mild detergent. Wash your piece inside out, and do not bleach.',
+    },
+    { title: 'Dry flat', body: 'Dry flat, in the shade. Do not tumble dry.' },
+    { title: 'Iron low', body: 'Iron on low heat.' },
+  ],
+} as const
+
 /* ---------------------------------------------------------------------- Media */
 
 /**

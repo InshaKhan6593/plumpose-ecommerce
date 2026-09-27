@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 27 Sep 2026 — SEO fixes (§39), the client's corrections and films (§40), email sends from plumpose.com (§41)
+**Last updated:** 28 Sep 2026 — her notes of 28 Sep: fabric and care, wheel prizes, country search, email logo (§45)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -2733,3 +2733,88 @@ projects and the dev admin and creates one admin (login in
 second before each take. Checked with a test take (announcement changed and
 shown on the website side; a photo uploaded, described and saved through the
 admin), then reset. `pnpm test:int` 246 passed.
+
+## 45. Her notes of 28 Sep: fabric, care, wheel, country search — 28 Sep 2026
+
+Her annotated PDF (`Note 27 Sep 2026.pdf`, four pages of phone screenshots),
+read with LlamaParse's agentic tier and checked page by page against the
+images, plus the page she pointed at (brahmaki.com, a product page and its
+Wash & Care page).
+
+**Removed at her request:** the drawing film beside "The house" and the
+embroidery photograph beside "The atelier" on Our Story; the gift-wrapping
+photograph on Shipping & Returns (both photographs were AI test shots, shown
+because `TEST_SHOTS=on` on Vercel); the fees in checkout's city list ("Doha",
+not "Doha — QAR 20" — delivery still shows in the summary); the old
+dry-clean / 30°C Material & care text. `SplitBand` with no picture now sets its
+words in one centred column instead of beside an empty half-page. The
+`story-draw` encode is gone from `scripts/encode-videos.sh` (its files stay in
+R2, harmless).
+
+**Fabric section** (`FabricBlock`, copy `FABRIC` in `src/content/pages.ts`,
+hers verbatim): below every product, beside the print close-up — name, spec,
+italic line, paragraph, six points, care in one line, and "Full fabric & care
+guidance →". The Material & care row now reads the fabric facts plus her care
+line. **`/fabric-care`**: her fabric text, then her seven care instructions as
+three numbered steps (`CARE_PAGE`, PLACEHOLDER in arrangement only — she will
+send the full text; nothing is added that she has not written: no washing bag,
+no temperatures, no "shrinkage is not covered" line). Linked from the footer
+(Help) and in the sitemap. Not in Page text yet: adding it there is a
+migration, worth doing once her full text arrives.
+
+**Reward wheel: free embroidery.** A new prize and code type,
+`freeEmbroidery`, on wheel segments and discount codes. Its number is how many
+placements are free, dearest first, once per garment; empty means all of them
+— so "one placement or both?" is a setting she can change, not a code change.
+It never touches the pieces or delivery. A bag without embroidery is refused
+with "That code is for hand embroidery — add embroidery to a piece to use it."
+(only when the quote or the payment passes `embroideryTotal`; after payment the
+code is only being recorded). Prize wording on the wheel and in the email:
+"Free embroidery on one placement".
+
+**Migrations**, tested on a throwaway database seeded like Neon (up, down,
+up):
+
+- `20260927_205742_free_embroidery_prize` — the enum values. Its down switches
+  off any segment or code using them first; an enum value cannot go while rows
+  use it.
+- `20260927_205800_her_prizes_and_care_text` — data, separate because Postgres
+  will not use an enum value in the transaction that adds it. "10% off" →
+  "5% off"; "QAR 100 off" → "Free embroidery" (1 placement); each keeps its
+  weight, colour and place; matched on label + type + value, so a segment she
+  has edited is left alone. Clears the struck-out care text from the product
+  and its latest version (so a save from the admin cannot bring it back).
+  Checked on Neon first, read-only: the four seeded segments unedited; one
+  product with the old text.
+
+**Country search** (`CountryCombobox`): the welcome pop-up, checkout and the
+address book. Typing shortens the list — names that start with the letters,
+then a word that does ("arab"), then any match; accents and case ignored; the
+two-letter code works. Arrows, Enter, Escape; leaving without a choice keeps
+the country; an autofilled exact name is picked.
+
+**Email logo.** The header is her wordmark as a PNG
+(`public/brand/plumpose-wordmark-email.png`, rendered from the vector at 600 px,
+shown at 200 — Gmail and Outlook do not show SVG), from `NEXT_PUBLIC_SERVER_URL`.
+Its alt text is styled as the old text wordmark.
+
+**Also:** the product page's embroidery box said "+ QAR 160" to every visitor;
+it now follows the visitor's currency (`<Money>`).
+
+**Not changed, and why** — her Saudi scenario:
+
+- *"Embroidery not reflecting"* is rounding, not a missing conversion. SAR's
+  hand-set price (SAR 1,440 for QAR 1,399) implies 1.029; QAR 160 × 1.029 =
+  SAR 164.7, and SAR rounds to 10 (`step`), so SAR 160. Her calculator used the
+  market rate (165.02). A step of 5 would show SAR 165; asked.
+- *Checkout in SAR:* SkipCash charges only QAR — its docs define the payment
+  `currency` as "always QAR", and payment creation has no currency field
+  (dev.skipcash.app, API integration / Get Transaction Details). Checkout can
+  show SAR prominently beside the QAR charge; asked.
+
+Checked: `tsc` 0 errors; lint 0 errors (no new warnings); the database-free
+specs 92 passed (new: free embroidery in the engine, its refusal, its wording,
+country search). Desktop and 375 px: the fabric section, /fabric-care, Our
+Story's two text-only bands, gift wrapping, the country search. Not run: the
+database half of `pnpm test:int` — another project's container
+(`serenity-hue-db`) holds port 5434.

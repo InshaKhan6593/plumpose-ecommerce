@@ -85,7 +85,8 @@ export function SectionLabel({
  * A photograph beside a block of words, the photograph unveiling as it scrolls
  * in. `reverse` puts the photograph on the right. On a phone the photograph
  * comes first. Pass `film` instead of `image` for a short in-view film in the
- * same frame (InViewFilm).
+ * same frame (InViewFilm). With neither, the words stand alone in one centred
+ * column rather than beside an empty half of the page.
  */
 export function SplitBand({
   children,
@@ -107,15 +108,17 @@ export function SplitBand({
   imgClassName?: string
   reverse?: boolean
 }) {
+  const hasMedia = Boolean(film || image)
   return (
     <section
       className={cn(
-        'mx-auto grid max-w-[90rem] scroll-mt-28 items-center gap-10 px-4 md:px-7 lg:grid-cols-2 lg:gap-24',
+        'mx-auto grid max-w-[90rem] scroll-mt-28 items-center gap-10 px-4 md:px-7',
+        hasMedia && 'lg:grid-cols-2 lg:gap-24',
         className,
       )}
       id={id}
     >
-      {film || image ? (
+      {hasMedia ? (
         <RevealImage
           className={cn(
             'relative aspect-[4/5] overflow-hidden bg-paper-3',
@@ -137,7 +140,11 @@ export function SplitBand({
         </RevealImage>
       ) : null}
       <Reveal
-        className={cn('lg:max-w-xl', reverse ? 'lg:order-1 lg:justify-self-end' : 'lg:pr-10')}
+        className={cn(
+          !hasMedia
+            ? 'mx-auto w-full max-w-2xl'
+            : cn('lg:max-w-xl', reverse ? 'lg:order-1 lg:justify-self-end' : 'lg:pr-10'),
+        )}
       >
         {children}
       </Reveal>

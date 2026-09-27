@@ -162,6 +162,7 @@ export const priceCart = async (args: {
 
     const result = await validateDiscountCode(args.req.payload, args.cart.discountCode, {
       email: args.customerEmail,
+      embroideryTotal: withoutDiscount.ok ? withoutDiscount.order.personalisationTotal : undefined,
       goodsTotal,
       productIds: lines.map((line) => line.product.id),
     })

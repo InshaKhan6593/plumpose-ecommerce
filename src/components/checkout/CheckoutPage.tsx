@@ -10,6 +10,7 @@ import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
 import { formatQar } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
+import { CountryCombobox } from '@/components/forms/CountryCombobox'
 import { WHEEL_CODE_KEY } from '@/components/spin/RewardWheel'
 import { useLocale, useMoney } from '@/providers/Locale'
 import { cn } from '@/utilities/cn'
@@ -504,28 +505,22 @@ export function CheckoutPage({
             {/* Two columns even on a phone: first and last name share a row. */}
             <div className="grid grid-cols-2 gap-x-5 gap-y-6 sm:gap-x-8 sm:gap-y-7">
               <Field className="col-span-2" error={errors.country} id="country" label="Country">
-                <SelectBox>
-                  <select
-                    aria-describedby={blocked ? 'country-blocked' : undefined}
-                    aria-invalid={Boolean(errors.country || blocked)}
-                    autoComplete="country"
-                    className={cn(inputClass, 'appearance-none pr-8')}
-                    id="country"
-                    name="country"
-                    onChange={(e) => {
-                      set('country', e.target.value)
-                      set('cityKey', '')
-                    }}
-                    value={form.country}
-                  >
-                    {countries.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.name}
-                        {c.blockedReason ? ' — unavailable' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </SelectBox>
+                <CountryCombobox
+                  aria-describedby={blocked ? 'country-blocked' : undefined}
+                  aria-invalid={Boolean(errors.country || blocked)}
+                  className={inputClass}
+                  countries={countries.map((c) => ({
+                    code: c.code,
+                    name: c.name,
+                    note: c.blockedReason ? '— unavailable' : undefined,
+                  }))}
+                  id="country"
+                  onChange={(code) => {
+                    set('country', code)
+                    set('cityKey', '')
+                  }}
+                  value={form.country}
+                />
                 {blocked ? (
                   <p
                     className="mt-3 text-[0.8125rem] leading-relaxed text-[#8a2424]"
@@ -580,7 +575,7 @@ export function CheckoutPage({
                       </option>
                       {cities.map((c) => (
                         <option className="text-ink" key={c.key} value={c.key}>
-                          {c.name} — QAR {c.feeQar}
+                          {c.name}
                         </option>
                       ))}
                     </select>

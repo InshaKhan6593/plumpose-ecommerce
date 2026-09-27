@@ -20,13 +20,12 @@ export const metadata: Metadata = {
 }
 
 /**
- * Her two illustration films, each in its own vertical shape and uncropped —
- * in the photographs' 4:5 frame, filling half the page, the portrait iPad
- * film was cut top and bottom and blown up. On desktop they stand no taller
- * than the screen, centred in their column; on a phone, a narrow column.
+ * Her illustration film in its own vertical shape, uncropped — in the
+ * photographs' 4:5 frame, filling half the page, it was cut top and bottom and
+ * blown up. On desktop it stands no taller than the screen, centred in its
+ * column; on a phone, a narrow column.
  */
 const FILM_FRAME = {
-  draw: 'aspect-[9/16] w-full max-w-[20rem] justify-self-center lg:h-[min(80svh,46rem)] lg:w-auto lg:max-w-none',
   paint:
     'aspect-[1090/1364] w-full max-w-[24rem] justify-self-center lg:h-[min(80svh,46rem)] lg:w-auto lg:max-w-none',
 }
@@ -35,10 +34,11 @@ const FILM_FRAME = {
  * Our Story (docs/SCREEN-PROMPTS 11), built as an editorial page:
  *
  *   1. opener — the café film opens from a card to the full screen (StoryOpener)
- *   2. the house — who makes it, beside the print being drawn (her film)
+ *   2. the house — who makes it (words only: she took the drawing film out, 28 Sep)
  *   3. behind the print — her own text from the old site, beside the painting film
  *   4. the silk — her three "why it lasts" pillars, each with a photograph
  *   5. the atelier — hand embroidery, with live figures from Site settings
+ *      (words only: she took the embroidery photograph out, 28 Sep)
  *   6. closing line and the way to the piece
  *
  * The homepage's "Read the story" link lands on §3; the old site's "The Silk"
@@ -108,19 +108,8 @@ export default async function OurStoryPage() {
         lede={OUR_STORY.lede}
       />
 
-      {/*
-        The house — beside the print being drawn: her own film, sent in place
-        of an AI-generated picture (her corrections, 27 Sep 2026).
-      */}
-      <SplitBand
-        className="pt-24 md:pt-36"
-        film={{
-          label: 'The Al Shaheen Nights whale shark being drawn by hand',
-          mp4: '/video/story-draw.mp4',
-          poster: '/video/story-draw-poster.jpg',
-        }}
-        imageClassName={FILM_FRAME.draw}
-      >
+      {/* The house — words only; she asked for the drawing film to go (28 Sep 2026). */}
+      <SplitBand className="pt-24 md:pt-36">
         <Prose
           body={OUR_STORY.founder.body}
           heading={OUR_STORY.founder.heading}
@@ -223,8 +212,8 @@ export default async function OurStoryPage() {
         </ol>
       </section>
 
-      {/* The atelier */}
-      <SplitBand className="pt-24 md:pt-36" id="atelier" image={pick('qatarBook', 'atelier')}>
+      {/* The atelier — words only; she asked for the embroidery photograph to go (28 Sep 2026). */}
+      <SplitBand className="pt-24 md:pt-36" id="atelier">
         <Prose
           body={OUR_STORY.atelier.body}
           heading={OUR_STORY.atelier.heading}

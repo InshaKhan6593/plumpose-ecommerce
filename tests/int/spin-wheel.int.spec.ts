@@ -106,6 +106,11 @@ describe('reward wheel — the code', () => {
       'Free delivery',
       'Another spin',
     ])
+    const stitch = (rewardValue?: number) =>
+      describeReward({ rewardType: 'freeEmbroidery', rewardValue })
+    expect(stitch(1)).toBe('Free embroidery on one placement')
+    expect(stitch(2)).toBe('Free embroidery on 2 placements')
+    expect(stitch()).toBe('Free embroidery')
   })
 })
 
@@ -132,5 +137,15 @@ describe('reward wheel — the code email', () => {
         .subject
     expect(at('fixed', 100)).toBe('Your plumpose code: QAR 100 off')
     expect(at('freeShipping')).toBe('Your plumpose code: Free delivery')
+  })
+
+  it('names free embroidery with its number of placements', () => {
+    const at = (value?: number) =>
+      buildSpinRewardEmail({
+        code: { code: 'X', expiresAt: null, type: 'freeEmbroidery', value },
+        shopUrl: 'x',
+      }).subject
+    expect(at(1)).toBe('Your plumpose code: Free embroidery on one placement')
+    expect(at()).toBe('Your plumpose code: Free embroidery')
   })
 })

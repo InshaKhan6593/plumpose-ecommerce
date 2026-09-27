@@ -59,6 +59,7 @@ export async function SiteFooter() {
       links: [
         { href: '/shipping-returns', label: 'Delivery' },
         { href: '/shipping-returns#returns', label: 'Returns' },
+        { href: '/fabric-care', label: 'Fabric & care' },
         { href: '/faq', label: 'FAQ' },
         { href: '/find-order', label: 'Track order' },
         { href: '/contact', label: 'Contact us' },

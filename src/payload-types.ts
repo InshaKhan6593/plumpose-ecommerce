@@ -219,9 +219,9 @@ export interface UserAuthOperations {
 export interface DiscountCode {
   id: number;
   code: string;
-  type: 'percent' | 'fixed' | 'freeShipping';
+  type: 'percent' | 'fixed' | 'freeShipping' | 'freeEmbroidery';
   /**
-   * Percentage (e.g. 10) or amount in QAR (e.g. 100).
+   * Percentage (e.g. 10) or amount in QAR (e.g. 100). For free hand embroidery: how many placements are free (e.g. 1) — leave empty to make all of them free.
    */
   value?: number | null;
   minSpendQar?: number | null;
@@ -1064,7 +1064,10 @@ export interface SpinSegment {
    * Shown on the wheel, e.g. "10% off".
    */
   label: string;
-  rewardType: 'percent' | 'fixed' | 'freeShipping' | 'rollAgain';
+  rewardType: 'percent' | 'fixed' | 'freeShipping' | 'freeEmbroidery' | 'rollAgain';
+  /**
+   * The percentage, or the amount in QAR. For free hand embroidery: how many placements are free (e.g. 1) — leave empty to make all of them free.
+   */
   rewardValue?: number | null;
   /**
    * Relative chance of winning. Higher wins more often.

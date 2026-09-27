@@ -55,6 +55,7 @@ export const DiscountCodes: CollectionConfig = {
         { label: 'Percentage off', value: 'percent' },
         { label: 'Fixed amount off (QAR)', value: 'fixed' },
         { label: 'Free delivery', value: 'freeShipping' },
+        { label: 'Free hand embroidery', value: 'freeEmbroidery' },
       ],
       required: true,
     },
@@ -63,7 +64,8 @@ export const DiscountCodes: CollectionConfig = {
       type: 'number',
       admin: {
         condition: (data) => data?.type !== 'freeShipping',
-        description: 'Percentage (e.g. 10) or amount in QAR (e.g. 100).',
+        description:
+          'Percentage (e.g. 10) or amount in QAR (e.g. 100). For free hand embroidery: how many placements are free (e.g. 1) — leave empty to make all of them free.',
       },
       min: 0,
     },
