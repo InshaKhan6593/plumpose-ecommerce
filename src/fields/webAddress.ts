@@ -1,6 +1,7 @@
-import type { RowField } from 'payload'
+import type { RowField, TextField } from 'payload'
 
 import { slugField } from 'payload'
+import { slugify } from 'payload/shared'
 
 /**
  * "Slug" is developer vocabulary. To the client this is simply the web
@@ -22,6 +23,21 @@ export const webAddress = (useAsSlug = 'title'): RowField =>
             ...sub.admin,
             description:
               'Made from the title. Only change it before publishing — editing it later breaks existing links.',
+          }
+          /*
+           * Payload makes the address in a beforeChange hook, which runs after
+           * validation. A piece published straight from "Create new" (products
+           * no longer autosave a draft first) failed "Web address is required"
+           * before it could be made. Fill it from the title before validating.
+           */
+          const slug = sub as TextField
+          slug.hooks = {
+            ...slug.hooks,
+            beforeValidate: [
+              ...(slug.hooks?.beforeValidate ?? []),
+              ({ data, value }) =>
+                value || (typeof data?.[useAsSlug] === 'string' ? slugify(data[useAsSlug]) : value),
+            ],
           }
         }
       }

@@ -343,7 +343,6 @@ export async function seed(payload: Payload): Promise<void> {
         inventory: stockBySize[size],
         priceInQAREnabled: true,
         priceInQAR: PRICE_QAR,
-        _status: 'published',
       },
       c,
     )

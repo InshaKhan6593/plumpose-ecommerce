@@ -61,7 +61,7 @@ export const Users: CollectionConfig = {
       },
       options: [
         {
-          label: 'admin',
+          label: 'Admin',
           value: 'admin',
         },
         {
@@ -71,11 +71,11 @@ export const Users: CollectionConfig = {
            * settings. Defined now so roles do not have to be retrofitted
            * after the first hire.
            */
-          label: 'staff',
+          label: 'Staff',
           value: 'staff',
         },
         {
-          label: 'customer',
+          label: 'Customer',
           value: 'customer',
         },
       ],
@@ -87,28 +87,29 @@ export const Users: CollectionConfig = {
       on: 'customer',
       admin: {
         allowCreate: false,
-        defaultColumns: ['id', 'createdAt', 'total', 'currency', 'items'],
+        // Orders have no `total`; the amount charged is `amount`.
+        defaultColumns: ['id', 'createdAt', 'amount', 'fulfilment'],
       },
     },
+    /*
+     * The bag and the address book stay on the user for the storefront — the
+     * ecommerce plugin finds a signed-in customer's bag through `cart` — but
+     * are not shown in the admin: a half-filled bag and a list of address ids
+     * told her nothing. Unpaid checkouts are under Payments.
+     */
     {
       name: 'cart',
       type: 'join',
       collection: 'carts',
       on: 'customer',
-      admin: {
-        allowCreate: false,
-        defaultColumns: ['id', 'createdAt', 'total', 'currency', 'items'],
-      },
+      admin: { disabled: true },
     },
     {
       name: 'addresses',
       type: 'join',
       collection: 'addresses',
       on: 'customer',
-      admin: {
-        allowCreate: false,
-        defaultColumns: ['id'],
-      },
+      admin: { disabled: true },
     },
   ],
 }

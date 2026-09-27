@@ -1022,6 +1022,8 @@ export interface Form {
   createdAt: string;
 }
 /**
+ * Each size of a piece, with its own stock. Changes are live as soon as you save.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variants".
  */
@@ -1034,12 +1036,14 @@ export interface Variant {
   product: number | Product;
   options: (number | VariantOption)[];
   inventory?: number | null;
+  /**
+   * Only if this size costs more or less than the piece. Left unticked, it is charged at the piece’s price.
+   */
   priceInQAREnabled?: boolean | null;
   priceInQAR?: number | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * Prizes on the first-visit wheel. Weight controls how often each is won.
@@ -2960,7 +2964,6 @@ export interface VariantsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

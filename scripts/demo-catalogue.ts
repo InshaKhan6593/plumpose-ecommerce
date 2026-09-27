@@ -465,7 +465,6 @@ async function seedDemo(payload: Payload) {
         await payload.create({
           collection: 'variants',
           data: {
-            _status: 'published',
             inventory: (piece.stock as Record<Size, number>)[size],
             options: [sizeOptions[size]],
             priceInQAR,
@@ -577,7 +576,6 @@ async function seedTwoColourPiece(
     await payload.create({
       collection: 'variants',
       data: {
-        _status: 'published',
         inventory,
         options: [sizeOptions[size], colour[name]],
         priceInQAR,

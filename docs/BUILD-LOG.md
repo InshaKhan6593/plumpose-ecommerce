@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **238 passing** (27 Sep) |
+| Integration tests | **245 passing** (28 Sep) |
 | End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -2636,9 +2636,9 @@ Delivered; deleting an order is refused (403).
   decides) but nothing moves it: there is no Cancel or Refund action, and
   SkipCash's refund states are not written back to the order. REQUIREMENTS P5
   asks for the full lifecycle.
-- **A new product's price section is blank on first load.** "Create new"
-  autosaves a draft and redirects; on that first render the price group is
-  empty — no "Set a price" box — until the page is reloaded.
+- ~~A new product's price section is blank on first load.~~ **Not a bug**
+  (§43): Payload draws a group's fields only once it is on screen, and the
+  checking browser was hidden. A real screen shows it.
 - **Abandoned "Create new" leaves an untitled draft** in the product list
   (product 45 locally, from 24 Sep).
 - **A product can be published with no photo.**
@@ -2646,3 +2646,56 @@ Delivered; deleting an order is refused (403).
 - **The size drawer shows the plugin's developer text** ("Product variants
   allow you to offer…", with its typo "refrence") and "Enable QAR price";
   sizes list as L, M, S.
+
+## 43. The admin trimmed to what she uses — 28 Sep 2026
+
+Asked: remove what is of no use to her, make the rest easier. Checked on the
+local Docker database, on a real (headless) screen with screenshots.
+
+**Customers.** The customer page showed a *Cart* panel (a half-filled bag,
+Total always empty) and *Addresses* (ids only). Both are hidden with
+`admin.disabled` — not removed: the ecommerce plugin finds a signed-in
+customer's bag through `user.cart`. *Orders* shows amount and fulfilment (it
+pointed at a `total` that orders do not have). Roles read Admin / Staff /
+Customer.
+
+**Sizes.** No drafts: saving a size makes it live, and there is one Save
+button. Before, every stock change needed its own Publish and a size left in
+draft quietly did not count. A size is readable by the public only while its
+piece is published (`product._status`), which replaces the plugin's rule on
+the size's own status. The auto-filled Title is hidden from the form (still
+the list title); "Enable QAR price" is "This size has its own price", with
+when to use it; the plugin's developer description is hers.
+
+**Products.** No autosave — "Create new" no longer saves an empty draft on
+opening (product 45 locally was one). Save draft / Publish as before.
+Publishing needs a photo ("Add at least one photo before publishing."; `minRows`
+alone let an empty gallery through); drafts do not. The web address is made
+from the title before validation — without autosave's first save, a piece
+published straight from Create new failed "Web address is required".
+"Options offered" lists only kinds that have options (Size; Colour appears
+once she adds a colour). "Extra page sections" (template blocks, unused) shows
+only on a piece that already has some.
+
+**Orders.** Marking an order Shipped needs a tracking number — only on the
+change to Shipped, so an order shipped before the rule can still be edited.
+
+**Migration** `20260927_184819_simplify_sizes_and_product_drafts`: drops the
+size version tables and `variants._status`, drops `_products_v.autosave`,
+makes a size's product required. Checked on Neon first (read-only): three
+sizes, all published, no newer unpublished drafts, all with a product. Tested
+on a throwaway database as Neon will run it (initial as batch 1, this as batch
+2) with a size row: up keeps it, down brings it back **published** (the
+generated down re-added the column as `draft`, which would have hidden every
+size — changed), up again. Unrelated page-text default drift the generator
+picked up was taken out. On the production build the migration runs before the
+new code is live, so for the build's ~2 minutes the old code meets the new
+schema; product pages may not list sizes in that window.
+
+**Not changed:** the size picker lists L, M, S — the plugin's
+`VariantOptionsSelector` sorts by value; the stored order is S, M, L and the
+"Sizes, colours & patterns" list now follows it.
+
+`admin-simplified.int.spec.ts` (7) covers the photo rule, drafts, the web
+address, sizes live-and-hidden, Shipped, and the customer page. `tsc` 0, lint
+0 errors, `pnpm test:int` 245 passed, `pnpm build` succeeds.

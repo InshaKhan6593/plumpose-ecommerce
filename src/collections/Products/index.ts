@@ -4,6 +4,7 @@ import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 
+import { mapFieldsDeep } from '@/fields/mapFieldsDeep'
 import { webAddress } from '@/fields/webAddress'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import {
@@ -20,28 +21,22 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
-import { DefaultDocumentIDType, Where } from 'payload'
+import { DefaultDocumentIDType, PayloadRequest, Where } from 'payload'
 import { amountField } from '@payloadcms/plugin-ecommerce'
 import { QAR } from '@/currencies'
+import type { Product, VariantOption } from '@/payload-types'
 
-type Fields = Parameters<CollectionOverride>[0]['defaultCollection']['fields']
-
-/**
- * Maps every field, walking into unnamed groups and rows — which only lay
- * fields out, so their children behave as top-level fields. The plugin puts
- * the price in one, where a top-level map never reached it.
- */
-const mapFieldsDeep = (fields: Fields, fn: (field: Fields[number]) => Fields[number]): Fields =>
-  fields.map((field) =>
-    !('name' in field) && 'fields' in field && (field.type === 'group' || field.type === 'row')
-      ? ({ ...field, fields: mapFieldsDeep(field.fields, fn) } as Fields[number])
-      : fn(field),
-  )
 
 export const ProductsCollection: CollectionOverride = ({ defaultCollection }) => ({
   ...defaultCollection,
   /** The homepage and Our Story show the product and its price, and they are prerendered. */
   hooks: withStorefrontRefresh(defaultCollection.hooks),
+  /**
+   * Drafts, but no autosave. With autosave, "Create new" saved an empty draft
+   * the moment it opened, so each abandoned click left an untitled piece in
+   * the list. She saves a draft or publishes by hand.
+   */
+  versions: { drafts: true },
   admin: {
     ...defaultCollection?.admin,
     /** What she needs to see at a glance: what it is, what it costs, is it live. */
@@ -115,7 +110,15 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               },
               label: 'Photos',
               labels: { singular: 'Photo', plural: 'Photos' },
-              minRows: 1,
+              /**
+               * `minRows` alone lets an empty gallery through (Payload checks it
+               * only once there is a row), and a piece went live with no photo.
+               * Drafts are not validated, so she can still save one without.
+               */
+              validate: (value: unknown, { data }: { data: Partial<Product> }) =>
+                data?._status !== 'published' ||
+                (Array.isArray(value) && value.length > 0) ||
+                'Add at least one photo before publishing.',
               fields: [
                 {
                   name: 'image',
@@ -174,6 +177,13 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               name: 'layout',
               type: 'blocks',
               admin: {
+                /*
+                 * Template page-builder blocks. No piece uses them and they
+                 * were one more thing to wonder about, so the field shows
+                 * only on a piece that already has sections (the product page
+                 * still renders them).
+                 */
+                condition: (data) => Boolean(data?.layout?.length),
                 description:
                   'Optional extra sections shown further down the product page, such as a story about the print. Most products do not need any.',
               },
@@ -288,6 +298,32 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                 },
                 // Was "Available variants": the plugin's heading over this piece's list of sizes.
                 variants: { label: 'Sizes & stock' },
+              }
+
+              /*
+               * Only the kinds that have at least one option. Colour and Pattern
+               * are seeded with none, so ticking them did nothing; they appear
+               * here once she adds a colour or pattern.
+               */
+              if (name === 'variantTypes') {
+                field = {
+                  ...field,
+                  filterOptions: async ({ req }: { req: PayloadRequest }) => {
+                    const { docs } = await req.payload.find({
+                      collection: 'variantOptions',
+                      depth: 0,
+                      pagination: false,
+                      req,
+                      select: { variantType: true },
+                    })
+                    const ids = docs.map((option: Pick<VariantOption, 'variantType'>) =>
+                      typeof option.variantType === 'object'
+                        ? option.variantType.id
+                        : option.variantType,
+                    )
+                    return { id: { in: [...new Set(ids)] } }
+                  },
+                } as typeof field
               }
 
               if (relabel[name]) {

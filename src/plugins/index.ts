@@ -19,6 +19,7 @@ import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
 import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
+import { checkRole } from '@/access/utilities'
 import { sendEnquiryAlert } from '@/email/enquiryAlert'
 import { resendConfirmationEndpoint, sendOrderEmails } from '@/email/orderHooks'
 import { stockAfterSale } from '@/hooks/stockAfterSale'
@@ -29,6 +30,7 @@ import { DECLINE_EVENTS, declineReason, paymentOutcome } from '@/lib/payments/ou
 import { enquirySummary } from '@/lib/enquiries/summary'
 import { orderTotalsFields } from '@/fields/orderTotals'
 import { lockFields } from '@/fields/lockFields'
+import { mapFieldsDeep } from '@/fields/mapFieldsDeep'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
@@ -310,6 +312,19 @@ export const plugins: Plugin[] = [
               position: 'sidebar',
             },
             defaultValue: 'unfulfilled',
+            /**
+             * Shipped emails the customer their tracking number, so it has to
+             * be there first. Only on the change to Shipped: an order shipped
+             * before this rule, without one, can still be edited.
+             */
+            validate: (
+              value: null | string | undefined,
+              { previousValue, siblingData }: { previousValue?: string; siblingData: Record<string, unknown> },
+            ) =>
+              value !== 'shipped' ||
+              previousValue === 'shipped' ||
+              Boolean(String(siblingData?.trackingNumber ?? '').trim()) ||
+              'Add the tracking number before marking the order Shipped — it goes in the customer’s email.',
             options: [
               { label: 'Awaiting fulfilment', value: 'unfulfilled' },
               { label: 'In the atelier', value: 'inAtelier' },
@@ -413,18 +428,59 @@ export const plugins: Plugin[] = [
       variants: {
         variantsCollectionOverride: ({ defaultCollection }) => ({
           ...defaultCollection,
+          access: {
+            ...defaultCollection.access,
+            /**
+             * A size is shown when its piece is. The plugin's rule read the
+             * size's own draft status, which is gone (below).
+             */
+            read: ({ req }) =>
+              (req.user && checkRole(['admin', 'staff'], req.user)) || {
+                'product._status': { equals: 'published' },
+              },
+          },
           admin: {
             ...defaultCollection?.admin,
-            defaultColumns: ['title', 'product', 'inventory', 'priceInQAR', '_status'],
+            defaultColumns: ['title', 'product', 'inventory', 'priceInQAR'],
+            // The plugin's text was written for developers (and misspelt).
+            description:
+              'Each size of a piece, with its own stock. Changes are live as soon as you save.',
             group: 'Shop',
             listSearchableFields: ['title'],
           },
-          // "Variant options" is the plugin's label; it heads a column on every piece's sizes list.
-          fields: defaultCollection.fields.map((field) =>
-            'name' in field && field.name === 'options'
-              ? ({ ...field, label: 'Size, colour or pattern' } as typeof field)
-              : field,
-          ),
+          fields: mapFieldsDeep(defaultCollection.fields, (field) => {
+            if (!('name' in field)) return field
+            // Filled in by the plugin ("Piece — S") and used as the list title; not hers to type.
+            if (field.name === 'title') {
+              return { ...field, admin: { ...field.admin, condition: () => false } } as typeof field
+            }
+            // "Variant options" is the plugin's label; it heads a column on every piece's sizes list.
+            if (field.name === 'options') {
+              return { ...field, label: 'Size, colour or pattern' } as typeof field
+            }
+            if (field.name === 'priceInQAREnabled') {
+              return {
+                ...field,
+                admin: {
+                  ...field.admin,
+                  description:
+                    'Only if this size costs more or less than the piece. Left unticked, it is charged at the piece’s price.',
+                },
+                label: 'This size has its own price',
+              } as typeof field
+            }
+            if (field.name === 'priceInQAR') {
+              return { ...field, label: 'Price for this size (QAR)' } as typeof field
+            }
+            return field
+          }),
+          /**
+           * No drafts for a size. With them every stock change needed its own
+           * Publish, and a size left in draft quietly did not count. Saving
+           * the size makes it live; the piece's own Publish decides whether
+           * any of it is on the shop.
+           */
+          versions: false,
           // A size's price is on the prerendered homepage; see @/hooks/revalidateStorefront.
           hooks: withStorefrontRefresh(defaultCollection.hooks),
           // Her words, not the plugin's: the stock alert emails point her here by this name.
@@ -449,6 +505,8 @@ export const plugins: Plugin[] = [
               'The sizes, colours and patterns a piece can come in. To offer a colour: add it here with "Colour" as its kind, then tick Colour under "Options offered" on the piece and add a row for each size and colour it is made in. Renaming one renames it on every piece that uses it.',
             group: 'Shop settings',
           },
+          // In the order they were added — S, M, L — not newest first (L, M, S).
+          defaultSort: 'createdAt',
           hooks: withStorefrontRefresh(defaultCollection.hooks),
           labels: { singular: 'Size, colour or pattern', plural: 'Sizes, colours & patterns' },
         }),

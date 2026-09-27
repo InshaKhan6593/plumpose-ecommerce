@@ -53,7 +53,7 @@ orders and subscribers, reviews with approval and replies, customer Spotted
 submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
 colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
-Payments run on SkipCash's sandbox; production keys come at launch. 238 integration and 57 end-to-end tests pass.
+Payments run on SkipCash's sandbox; production keys come at launch. 245 integration and 57 end-to-end tests pass.
 
 **Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). A test deploy runs
 at https://plumpose.vercel.app on the free plan; the live shop needs **Vercel

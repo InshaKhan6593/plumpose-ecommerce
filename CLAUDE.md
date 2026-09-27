@@ -202,7 +202,7 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (238)                                                                                         |
+| `pnpm test:int`                               | Integration tests (245)                                                                                         |
 | `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page                                                           |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |
@@ -392,6 +392,12 @@ From Git Bash, prefix commands taking a leading-slash argument with
 - **Each Vercel deploy has its own permanent address** and keeps running as
   it was. Test on https://plumpose.vercel.app (always the newest); a
   `plumpose-<hash>-….vercel.app` link is a snapshot.
+- **Check the admin on a visible screen.** Payload draws a group's fields only
+  once it is in view (`RenderIfInViewport`); in a hidden browser pane an
+  unnamed group — the price — renders empty and looks like a bug (BUILD-LOG
+  §43). Use Playwright headless, which counts as visible.
+- **Sizes have no drafts; products do, without autosave** (BUILD-LOG §43).
+  Public reads of a size go through its product's `_status`.
 - **"Hydration mismatch" on `fdprocessedid`** is a browser extension (password
   manager / autofill), not the site. Check in a private window.
 
