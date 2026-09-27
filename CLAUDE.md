@@ -150,8 +150,6 @@ client's reference recording (`../brand-assets/reference/`):
 
 ## What is NOT built
 
-- **Email from plumpose.com.** Works, but the domain is not verified in Resend,
-  so for now it sends from `onboarding@resend.dev` to the account owner only.
 - **SkipCash production.** Built and running on the sandbox keys. Going live
   is new keys, `SKIPCASH_ENV=production`, and the webhook and return URLs in
   the portal (BUILD-LOG §32).
@@ -165,8 +163,11 @@ client's reference recording (`../brand-assets/reference/`):
   The test deploy (https://plumpose.vercel.app) is on the free Hobby plan,
   which does not allow commercial use; the live shop goes on **Pro,
   $20/month**, before launch (BUILD-LOG §37–38).
-- Storage (Cloudflare R2, §33/§36) and production migrations (§33) are built
-  and no longer on this list.
+- **plumpose.com still points at her old site** (Netlify). Launch day is two
+  edits in Squarespace DNS — the `@` A record and the `www` CNAME — to Vercel's
+  values; never touch the MX (her Google Workspace email) (BUILD-LOG §41).
+- Storage (Cloudflare R2, §33/§36), production migrations (§33) and email from
+  plumpose.com (§41) are built and no longer on this list.
 - Built since and not on this list any more: payments view, CSV exports,
   reviews, Spotted submissions, enquiries inbox, Page text, sitemap, sale
   price, colour/pattern, exchange rates, login lockout (BUILD-LOG §29).
