@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **245 passing** (28 Sep) |
+| Integration tests | **246 passing** (28 Sep) |
 | End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -2699,3 +2699,37 @@ schema; product pages may not list sizes in that window.
 `admin-simplified.int.spec.ts` (7) covers the photo rule, drafts, the web
 address, sizes live-and-hidden, Shipped, and the customer page. `tsc` 0, lint
 0 errors, `pnpm test:int` 245 passed, `pnpm build` succeeds.
+
+## 44. Tutorial recording set up; two bugs it found — 28 Sep 2026
+
+**Bug — a new collection could not be made.** Categories (and CMS Pages)
+used Payload's own `slugField`, which makes the web address in a
+beforeChange hook, after validation; on create the required check ran first
+and failed "Slug is required". So "Resort 2027" could not be added in the
+admin, and `pnpm seed` failed on a fresh database (found when building the
+demo). Both now use `webAddress()` (§43's fix: the address is made from the
+title before validation) — same stored fields, no migration; the label reads
+"Web address". `admin-simplified.int.spec.ts` covers it.
+
+**Bug — duplicate React key in the footer.** With no piece offering
+embroidery the footer's Personalisation link falls back to `/shop`, the same
+href as Pyjamas, and the list was keyed by href. Keyed by label now.
+
+**The recorder** (`scripts/record/`, README there). A split-screen stage —
+admin left, website right, both the real localhost site in iframes on a
+page served same-origin by a Playwright route — recorded as one 1920×1080
+video, with a gliding pointer, a ring on what is used, a caption bar, title
+and recap cards, and a badge when the website side updates. Every action
+goes through the admin's own screens; photos through its own upload control
+(Playwright answers the browser's file request with her photograph). Each
+video writes `timeline.json` and `captions.srt` — every caption with its
+start and end — for a voiceover script. The recording view hides the admin
+bar, the dev error badge and the reward wheel; the site is unchanged.
+
+**The demo database** `plumpose_demo` (`reset-demo.sh build|reset`): migrate,
+seed, then `prepare-demo.ts` removes the piece, its sizes, the sample
+projects and the dev admin and creates one admin (login in
+`../recordings/demo-admin.json`). A template copy restores it in about a
+second before each take. Checked with a test take (announcement changed and
+shown on the website side; a photo uploaded, described and saved through the
+admin), then reset. `pnpm test:int` 246 passed.

@@ -11,7 +11,7 @@ import { Content } from '@/blocks/Content/config'
 import { FormBlock } from '@/blocks/Form/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { hero } from '@/fields/hero'
-import { slugField } from 'payload'
+import { webAddress } from '@/fields/webAddress'
 import { adminOrPublishedStatus } from '@/access/adminOrPublishedStatus'
 import {
   MetaDescriptionField,
@@ -131,7 +131,7 @@ export const Pages: CollectionConfig = {
         },
       ],
     },
-    slugField(),
+    webAddress(),
   ],
   hooks: {
     afterChange: [revalidatePage],

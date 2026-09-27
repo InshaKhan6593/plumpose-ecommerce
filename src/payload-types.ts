@@ -654,6 +654,9 @@ export interface Page {
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
+  /**
+   * Made from the title. Only change it before publishing — editing it later breaks existing links.
+   */
   slug: string;
   updatedAt: string;
   createdAt: string;
@@ -759,6 +762,9 @@ export interface Category {
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
+  /**
+   * Made from the title. Only change it before publishing — editing it later breaks existing links.
+   */
   slug: string;
   updatedAt: string;
   createdAt: string;

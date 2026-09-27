@@ -202,7 +202,7 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (245)                                                                                         |
+| `pnpm test:int`                               | Integration tests (246)                                                                                         |
 | `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page                                                           |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |
@@ -211,6 +211,8 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 | `npx tsx scripts/perf-probe.ts <url>`         | Load, blocking, scroll fps, dropped film frames, click latency — run against a production build (BUILD-LOG §27) |
 | `pnpm demo:seed` / `demo:remove`              | 20 demo pieces with Pexels photos, to see a full shop; removes only `demo-` records (BUILD-LOG §24)             |
 | `sh scripts/encode-videos.sh`                 | Rebuild `public/video/` from the camera originals                                                               |
+| `sh scripts/record/reset-demo.sh build\|reset` | The demo database the tutorial videos start from (no products) — see `scripts/record/README.md`                |
+| `npx tsx scripts/record/videos/<name>.ts`     | Record one split-screen tutorial into `../recordings/<name>/` (mp4 + timeline.json + captions.srt)             |
 
 **A production build locally:** `pnpm build`, then `next start` with
 `LOCAL_PRODUCTION_PREVIEW=on` (the `plumpose-prod` launch entry) — without it
@@ -396,6 +398,9 @@ From Git Bash, prefix commands taking a leading-slash argument with
   once it is in view (`RenderIfInViewport`); in a hidden browser pane an
   unnamed group — the price — renders empty and looks like a bug (BUILD-LOG
   §43). Use Playwright headless, which counts as visible.
+- **Use `webAddress()`, never Payload's bare `slugField()`.** The bare one
+  fails "Slug is required" on create; ours makes the address before
+  validation (BUILD-LOG §44).
 - **Sizes have no drafts; products do, without autosave** (BUILD-LOG §43).
   Public reads of a size go through its product's `_status`.
 - **"Hydration mismatch" on `fdprocessedid`** is a browser extension (password

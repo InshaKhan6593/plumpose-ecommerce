@@ -1,4 +1,4 @@
-import { slugField } from 'payload'
+import { webAddress } from '@/fields/webAddress'
 import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
@@ -28,8 +28,8 @@ export const Categories: CollectionConfig = {
       type: 'text',
       required: true,
     },
-    slugField({
-      position: undefined,
-    }),
+    // Made from the title before validation; Payload's own slugField failed
+    // "Slug is required" on create (BUILD-LOG §44).
+    webAddress(),
   ],
 }

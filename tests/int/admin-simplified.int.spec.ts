@@ -195,3 +195,16 @@ describe('the customer page', () => {
     expect(field('addresses').admin?.disabled).toBe(true)
   })
 })
+
+describe('a new collection', () => {
+  it('is made from its title alone — the web address fills itself in', async () => {
+    const collection = await payload.create({
+      collection: 'categories',
+      context: quiet,
+      data: { slug: '', title: 'TESTONLY Resort 2099' },
+      overrideAccess: true,
+    })
+    expect(collection.slug).toBe('testonly-resort-2099')
+    await payload.delete({ collection: 'categories', context: quiet, id: collection.id, overrideAccess: true })
+  })
+})

@@ -53,7 +53,7 @@ orders and subscribers, reviews with approval and replies, customer Spotted
 submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
 colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
-Payments run on SkipCash's sandbox; production keys come at launch. 245 integration and 57 end-to-end tests pass.
+Payments run on SkipCash's sandbox; production keys come at launch. 246 integration and 57 end-to-end tests pass.
 
 **Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). A test deploy runs
 at https://plumpose.vercel.app on the free plan; the live shop needs **Vercel
@@ -146,6 +146,7 @@ npx tsx scripts/create-admin.ts you@example.com "Your Name"
 | `pnpm test-shots`                                  | Import AI-generated **test** photographs from `../brand-assets/test-shots/` (shown only while `TEST_SHOTS=on`; never for launch — see `../docs/TEST-SHOTS.md`)                       |
 | `npx tsx scripts/shoot-storefront.ts [paths…]`     | Screenshot storefront pages at desktop and phone size, full page and first screen, with console errors                                                                               |
 | `sh scripts/encode-videos.sh`                      | Rebuild the web film from the camera originals                                                                                                                                       |
+| `sh scripts/record/reset-demo.sh build\|reset`     | The demo database for the client's tutorial videos (see `scripts/record/README.md`)                                                                                                 |
 
 Two ad-hoc helpers for chasing a single layout problem:
 

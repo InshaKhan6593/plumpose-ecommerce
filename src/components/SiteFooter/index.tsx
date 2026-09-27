@@ -112,7 +112,7 @@ export async function SiteFooter() {
                   <h2 className="caps mb-4 text-[0.625rem] text-ink">{column.heading}</h2>
                   <ul className="flex flex-col gap-1">
                     {column.links.map((link) => (
-                      <li key={link.href}>
+                      <li key={link.label}>
                         <a
                           className="text-[0.8125rem] leading-5 break-words text-ink-soft transition-colors hover:text-ink"
                           href={link.href}
