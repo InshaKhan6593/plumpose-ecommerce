@@ -28,6 +28,7 @@ import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { DECLINE_EVENTS, declineReason, paymentOutcome } from '@/lib/payments/outcome'
 import { enquirySummary } from '@/lib/enquiries/summary'
 import { orderTotalsFields } from '@/fields/orderTotals'
+import { lockFields } from '@/fields/lockFields'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
 
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
@@ -265,28 +266,18 @@ export const plugins: Plugin[] = [
         },
         fields: [
           /**
-           * Money and payment state are locked at field level. See
-           * @/access/isAdminOrStaff — the gateway is the source of truth and a
-           * hand-edited total breaks reconciliation against SkipCash.
+           * Money, payment state and what was bought are locked at field
+           * level. See @/access/isAdminOrStaff — the gateway is the source of
+           * truth and a hand-edited total or line breaks reconciliation
+           * against SkipCash.
            *
            * `extendArrayField` hangs personalisation off each order line. The
-           * plugin nests `items` inside a tabs field here, so it has to be
-           * walked for rather than mapped over.
+           * plugin nests `items` inside a tabs field and `amount` / `currency`
+           * in an unnamed row, so both helpers walk the tree.
            */
-          ...(extendArrayField(defaultCollection.fields, 'items', [personalisationField]).map(
-            (field) => {
-              if (
-                'name' in field &&
-                ['amount', 'currency', 'status', 'transactions'].includes(field.name as string)
-              ) {
-                return {
-                  ...field,
-                  access: { ...('access' in field ? field.access : {}), update: neverEditable },
-                  admin: { ...('admin' in field ? field.admin : {}), readOnly: true },
-                }
-              }
-              return field
-            },
+          ...(lockFields(
+            extendArrayField(defaultCollection.fields, 'items', [personalisationField]),
+            ['amount', 'currency', 'items', 'status', 'transactions'],
           ) as typeof defaultCollection.fields),
           ...orderTotalsFields,
           {

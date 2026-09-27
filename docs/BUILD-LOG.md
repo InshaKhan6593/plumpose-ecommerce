@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **229 passing** (26 Sep) |
+| Integration tests | **238 passing** (27 Sep) |
 | End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -2609,3 +2609,40 @@ MX on plumpose.com itself, which would take her mail away from Google.
 
 Her old site goes down the moment step 2 resolves, so this is the last step,
 after Pro and the production SkipCash keys.
+
+## 42. The admin checked by hand: a product, sizes, an order — 27 Sep 2026
+
+Run on the local Docker database (a `plumpose-local-db` launch entry: Docker,
+media on disk, email to the console), never on Neon.
+
+**Fixed — a paid order's total and lines could be changed.** The lock on
+order money mapped only the top level, where the plugin keeps `status` and
+`transactions`. `amount` and `currency` sit in an unnamed row and `items` in
+a tabs field, so an admin could set a QAR 1,419 order to QAR 1 or its quantity
+to 5, from the form or the API — reproduced, then restored. `lockFields()`
+(`src/fields/lockFields.ts`) walks tabs, rows and unnamed groups; `items` is now
+locked too (no "Add item", no quantity change). Fulfilment, tracking, notes,
+gift and the customer's email stay hers. `order-lock.int.spec.ts` fails on the
+three fields without the fix.
+
+**Works:** a new product with price, was-price (a was-price below the price is
+refused by name), stock, publish, sizes (Size → S with its own stock), and the
+shop page showing it; fulfilment Awaiting → In the atelier → Shipped →
+Delivered; deleting an order is refused (403).
+
+**Found, not fixed yet:**
+
+- **No cancel or refund.** An order's status is locked (rightly — the gateway
+  decides) but nothing moves it: there is no Cancel or Refund action, and
+  SkipCash's refund states are not written back to the order. REQUIREMENTS P5
+  asks for the full lifecycle.
+- **A new product's price section is blank on first load.** "Create new"
+  autosaves a draft and redirects; on that first render the price group is
+  empty — no "Set a price" box — until the page is reloaded.
+- **Abandoned "Create new" leaves an untitled draft** in the product list
+  (product 45 locally, from 24 Sep).
+- **A product can be published with no photo.**
+- **Shipped without a tracking number is allowed**; the field only asks.
+- **The size drawer shows the plugin's developer text** ("Product variants
+  allow you to offer…", with its typo "refrence") and "Enable QAR price";
+  sizes list as L, M, S.
