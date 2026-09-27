@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 26 Sep 2026 — hosting is Vercel Pro (§38)
+**Last updated:** 27 Sep 2026 — SEO fixes (§39), the client's corrections and films (§40)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -2539,3 +2539,13 @@ cannot start; its four database-free tests passed.
   version, it now starts just under the heading (measured, 32 px below it),
   centred and 24% wide, and grows from there. Checked at 1440×900 and a
   short, wide 1900×668 window.
+
+### Clean-up after the corrections
+
+Code left behind by her corrections is gone: the hero's framed print detail
+(markup, intro and curtain animation, the `detail` prop), the philosophy
+section's drifting photographs (it is now words on one screen; the drift is in
+the history before this commit), the unused `corridor` homepage photo, and the
+encode lines for `story-walk` and `story-cafe`, which no page shows any more
+(their files are still in R2 — harmless, and removable by hand). CLAUDE.md,
+README.md and ../docs/CLIENT-REQUEST.md are brought up to date.

@@ -213,8 +213,7 @@ export default async function HomePage() {
             }}
           />
         </div>
-        {/* No drifting photographs, at her request: the words stand alone. */}
-        <Philosophy copy={copy.philosophy} images={{}} />
+        <Philosophy copy={copy.philosophy} />
       </div>
 
       <PrintBand copy={copy.print} facts={facts} href="/our-story" image={image('print')} />

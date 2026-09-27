@@ -50,7 +50,6 @@ export const HOME = {
  */
 export const HOME_MEDIA = {
   armchair: 'brand-05-armchair.jpg',
-  corridor: 'brand-04-corridor.jpg',
   piping: 'brand-03-piping.jpg',
   print: 'brand-02-print-macro.jpg',
   qatarBook: 'brand-07-qatar-book.jpg',

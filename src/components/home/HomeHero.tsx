@@ -3,9 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-import type { Media as MediaType } from '@/payload-types'
-
-import { Media } from '@/components/Media'
 import { gsap, LINE_HIDDEN, prefersReducedMotion, ScrollTrigger, splitLines } from '@/motion/gsap'
 import { afterPageLoad } from '@/utilities/afterPageLoad'
 
@@ -16,10 +13,8 @@ import { HOME } from './content'
  * (brand-assets/reference/client-reference-animation.mov).
  *
  * One cinematic frame, not a collage: the café film full-screen, the header
- * over it in white, the headline in mixed upright and italic, and a small
- * framed "detail" — a still close-up of the print with its label — the way the
- * reference frames a detail of the face. (A frame drawn over the moving film
- * would frame nothing; she moves across the shot.)
+ * over it in white, the headline in mixed upright and italic. (A framed close-up
+ * of the print used to sit on the right; removed at her request, 27 Sep 2026.)
  *
  * The page wraps this in a sticky layer, so the next section slides up over it
  * like a curtain (see src/app/(app)/page.tsx). As it is covered the film leans
@@ -43,13 +38,11 @@ const FOCUS = '50% 28%'
 export function HomeHero({
   copy = HOME.hero,
   ctaHref,
-  detail,
   films,
 }: {
   /** Her words from Page text; the defaults in content.ts otherwise. */
   copy?: typeof HOME.hero
   ctaHref: string
-  detail?: MediaType
   films: { desktop: Film; mobile: Film }
 }) {
   const root = useRef<HTMLElement>(null)
@@ -69,16 +62,12 @@ export function HomeHero({
 
     const filmLayer = el.querySelector<HTMLElement>('[data-hero-film]')
     const depth = el.querySelector<HTMLElement>('[data-hero-depth]')
-    const detailBlock = el.querySelector<HTMLElement>('[data-hero-detail-block]')
     const dim = el.querySelector<HTMLElement>('[data-hero-dim]')
     const tagline = el.querySelector<HTMLElement>('[data-hero-tagline]')
     const words = Array.from(el.querySelectorAll<HTMLElement>('[data-hero-word]'))
-    const detailFrame = el.querySelector<HTMLElement>('[data-hero-detail]')
-    const detailPicture = detailFrame?.querySelector<HTMLElement>('[data-hero-detail-picture]')
-    const detailLabel = el.querySelector<HTMLElement>('[data-hero-detail-label]')
     const copy = el.querySelector<HTMLElement>('[data-hero-copy]')
 
-    gsap.set([tagline, ...words, detailFrame, detailLabel].filter(Boolean), { opacity: 0 })
+    gsap.set([tagline, ...words].filter(Boolean), { opacity: 0 })
 
     let ctx: gsap.Context | undefined
     let cancelled = false
@@ -109,37 +98,6 @@ export function HomeHero({
           1,
         )
 
-        // The detail: its frame draws open, the print settles inside, the label slides in.
-        if (detailFrame) {
-          intro.fromTo(
-            detailFrame,
-            { clipPath: 'inset(50% 50% 50% 50%)', opacity: 1 },
-            { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4 },
-            1.3,
-          )
-          if (detailPicture)
-            intro.fromTo(detailPicture, { scale: 1.6 }, { duration: 2, scale: 1.1 }, 1.3)
-        }
-        if (detailLabel)
-          intro.fromTo(
-            detailLabel,
-            { opacity: 0, x: -14 },
-            { duration: 1.1, opacity: 1, x: 0 },
-            1.9,
-          )
-
-        // The detail keeps breathing — slow, so the film stays the main motion.
-        if (detailPicture) {
-          gsap.to(detailPicture, {
-            delay: 3.4,
-            duration: 9,
-            ease: 'sine.inOut',
-            repeat: -1,
-            scale: 1.24,
-            yoyo: true,
-          })
-        }
-
         // ---------- curtain: as the next section covers the hero ----------
         /*
          * The film sinks and leans in behind the frame, dims, and the words lift
@@ -167,13 +125,6 @@ export function HomeHero({
             opacity: 0,
             scrollTrigger: { ...cover, end: '+=55%' },
             yPercent: -30,
-          })
-        if (detailBlock)
-          gsap.to(detailBlock, {
-            ease: 'none',
-            opacity: 0,
-            scrollTrigger: { ...cover, end: '+=55%' },
-            yPercent: -40,
           })
       }, el)
 
@@ -267,48 +218,6 @@ export function HomeHero({
           </p>
         </div>
       </div>
-
-      {/*
-        The framed detail — desktop only. On the right edge, which is café
-        background at every point of the loop; she moves from left of centre to
-        right of centre, so anywhere nearer the middle would cover her face.
-      */}
-      {detail ? (
-        <div
-          className="absolute top-[26%] right-4 hidden md:right-7 lg:block"
-          data-hero-detail-block
-        >
-          <div
-            className="relative size-[clamp(7rem,10vw,11rem)] overflow-hidden border border-white"
-            data-hero-detail
-            data-reveal-image
-          >
-            <div className="absolute inset-0" data-hero-detail-picture>
-              {/*
-                Desktop only. Lazy until the page has loaded — a phone, where
-                it is hidden, never fetches it — then eager, because it sits
-                behind a mask until its reveal. `film` is set at that moment.
-              */}
-              <Media
-                className="absolute inset-0"
-                fill
-                imgClassName="object-cover"
-                loading={film ? 'eager' : 'lazy'}
-                resource={detail}
-                size="176px"
-              />
-            </div>
-          </div>
-          <div
-            className="w-[clamp(7rem,10vw,11rem)] bg-white px-3 py-2.5 text-ink"
-            data-hero-detail-label
-            data-reveal
-          >
-            <p className="caps text-[0.5rem] text-ink-soft">The print</p>
-            <p className="mt-0.5 text-[0.75rem]">Hand-drawn whale shark</p>
-          </div>
-        </div>
-      ) : null}
     </section>
   )
 }

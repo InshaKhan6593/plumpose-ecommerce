@@ -51,23 +51,17 @@ TV="in_range=pc:out_range=tv"
 # first cut, from y=1300, sliced through her mouth and the cup in most shots.)
 enc_mp4 hero-wide EK3A2455.mp4 "crop=2160:1215:0:1500,setpts=2*PTS,scale=1920:1080:flags=lanczos:$TV,fps=30000/1001" 22 4500
 
-# Phone hero: the same café table clip as the desktop hero, in its full
-# portrait frame, half speed — 16.7 s. (It used to be IMG_5839, which is only
-# 5 s at 24 fps, so on a phone the same few seconds looped over and over, and
-# half speed would drop it to a choppy 12 fps.) CRF 25 for phones: 26% smaller
-# than the CRF 23 desktop portrait (story-cafe) for an SSIM 0.002 lower —
-# invisible on a phone screen. Also the phone version of story-cafe, so the two
-# pages share one download.
-# (Since 27 Sep 2026 the coffee clip, EK3A2455, like the desktop hero: full
-# portrait frame, half speed, no transpose — it carries its own rotation.)
+# Phone hero: the same coffee clip as the desktop hero (EK3A2455, since 27 Sep
+# 2026), in its full portrait frame, half speed, no transpose — it carries its
+# own rotation. CRF 25 for phones: about a quarter smaller than CRF 23 for an
+# SSIM 0.002 lower, invisible on a phone screen.
 enc_mp4 hero-mobile EK3A2455.mp4 "setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500
 
-# The walking clip (IMG_5839): already vertical, 24fps, standard range. The
-# in-view film beside "Behind the print" on Our Story.
-enc story-walk IMG_5839.mp4 "scale=1080:1920" 1600
 
-# Made for You, the Bridal tile: the café breakfast clip, full portrait frame, half speed.
-enc_mp4 story-cafe EK3A2406.mp4 "transpose=2,setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 23 3500
+
+# (story-walk, beside "Behind the print", and story-cafe, the Made for You
+# Bridal tile, are no longer used: the painting film and a words-only Made for
+# You replaced them on 27 Sep 2026. Their lines are in the history.)
 
 # Our Story opener: the other café clip (the pillow), the one the homepage does
 # not use. Portrait only: a landscape crop of it is nothing but her face, so

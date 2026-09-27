@@ -134,10 +134,11 @@ client's reference recording (`../brand-assets/reference/`):
 - `SiteHeader` / `SiteFooter` — real wordmark (vector, traced from the brand
   guideline), fixed nav, announcement from Site settings. Over the film, in
   white, on the homepage only.
-- Homepage (`src/components/home/`) — full-screen film hero, a curtain, her
-  words with drifting photographs, The Print expansion with her facts, a pinned
-  scrubbed 01–04 sequence, the product band. Copy placeholders are in
-  `content.ts`.
+- Homepage (`src/components/home/`) — full-screen film hero ("Wear your
+  world", the coffee film EK3A2455), a curtain, her philosophy words on one
+  screen, The Print (the card opens below the heading: pinned on desktop, not
+  on phones), a pinned scrubbed 01–04 sequence, the product band. Default copy
+  is in `content.ts` (see "Page text" below).
 - Shop, product page, embroidery drawer (`EmbroideryDrawer.tsx`), bag drawer
   (`CartModal.tsx`, priced by `/api/quote`, never by `cart.subtotal`).
 - Content pages (§17): Our Story, FAQ, Shipping & Returns, Made for You (+
@@ -155,9 +156,11 @@ client's reference recording (`../brand-assets/reference/`):
   is new keys, `SKIPCASH_ENV=production`, and the webhook and return URLs in
   the portal (BUILD-LOG §32).
 - **Content-page copy is partly placeholder.** Every block in
-  `src/content/pages.ts` is marked LEGACY (her old site) or PLACEHOLDER (ours,
-  to confirm) — BUILD-LOG §17. Made for You has three SAMPLE projects, seeded
-  outside production only.
+  `src/content/pages.ts` is marked LEGACY (her old site), PLACEHOLDER (ours, to
+  confirm) or hers (her corrections of 27 Sep 2026, BUILD-LOG §40). The SAMPLE
+  Made for You projects and the demo catalogue were removed from Neon on
+  27 Sep; `isPlaceholderSlug()` keeps any `demo-`/`sample-` record out of search
+  (§39). Waiting on her: legal pages, size chart, make and delivery times.
 - **Vercel Pro.** Hosting is **Vercel, decided 26 Sep 2026** — no Netlify.
   The test deploy (https://plumpose.vercel.app) is on the free Hobby plan,
   which does not allow commercial use; the live shop goes on **Pro,
@@ -190,6 +193,9 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
   projects only with `SEED_SAMPLES=yes`. The real admin comes from
   `scripts/create-admin.ts`.
 - **Integration tests always use Docker and local disk** (`vitest.setup.ts`).
+  If another project's container holds port 5434, `plumpose-pg` cannot start
+  and the database specs fail with "password authentication failed" — they
+  reached the other database. Stop that container; never repoint the suite.
 - **The e2e suite refuses a non-local database** unless
   `E2E_ALLOW_LIVE_DATABASE=yes` — it writes orders, stock and users.
 
@@ -356,6 +362,15 @@ From Git Bash, prefix commands taking a leading-slash argument with
   way never leaves the top.
 - **The film is a portrait source.** `hero-wide` is cut from the 4K original;
   check a new crop at several points in the loop and at several screen shapes.
+  A crop's top edge must never cross her face (the first cut of EK3A2455 went
+  through her mouth). **Check a new clip's rotation flag** (`ffprobe …
+  side_data rotation`): ffmpeg applies it itself, so a flagged clip takes no
+  `transpose` — EK3A2406 has none, EK3A2455 does.
+- **A film in a split band keeps its own shape** (`FILM_FRAME` on Our Story):
+  the photographs' 4:5 frame cropped and blew up the 9:16 drawing film.
+- **Pins on phones read as a fault.** A swipe that stops moving the page, a
+  scrub that trails the thumb, and the address bar resizing the pin — The
+  Print pins on desktop only (BUILD-LOG §40).
 - **Tests must not assume "the first product" is hers** — with the demo
   catalogue loaded it is not. Find `al-shaheen-nights` by its web address.
 - **Client media is never committed** (public repo): `seed-assets/`,
@@ -376,6 +391,17 @@ From Git Bash, prefix commands taking a leading-slash argument with
   manager / autofill), not the site. Check in a private window.
 
 ## House rules
+
+- **Designed in Doha — not made or finished there.** Her correction (27 Sep
+  2026, BUILD-LOG §40). "Hand-finished" is right; "hand-finished in Doha",
+  "made in Doha" and "cut and finished in Doha" are wrong, in copy, titles,
+  descriptions, emails and schema alike.
+- **Page text has never been saved on Neon**, so the pages show the defaults
+  in `content.ts` / `pages.ts`: change her words there, not in the global
+  (saving it would freeze today's defaults). After deploying new defaults,
+  clear the data cache, which survives deploys:
+  `POST /api/storefront/refresh` with `{"layout":true,"tags":["global_pageText","global_siteSettings"]}`
+  and header `X-Storefront-Refresh: <HMAC-SHA256 of "plumpose storefront refresh" keyed with PAYLOAD_SECRET>`.
 
 - **Order money fields are read-only.** `amount`, `currency`, `status`,
   `transactions` and the whole breakdown. The gateway is the source of truth and

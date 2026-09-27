@@ -17,8 +17,8 @@ the discount ledger. The payment webhook is the source of truth. Order emails
 Resend.
 
 **Storefront.** Built from the approved mockups and the client's reference
-animation: homepage (full-screen film hero, curtain, floating photographs, The
-Print, a pinned "made for you" sequence), shop, product page with the hand
+animation: homepage (full-screen film hero, curtain, The Print, a pinned "made
+for you" sequence), shop, product page with the hand
 embroidery drawer, bag drawer, branded header, footer and not-found page. Motion
 is GSAP + ScrollTrigger + Lenis, and all of it switches off under
 `prefers-reduced-motion`.
@@ -28,10 +28,17 @@ gift note and discount code, priced live; payment on SkipCash's own page (a
 redirect); a confirmation page reached by the
 order's private link.
 
-**Content pages.** Our Story (with the café film), FAQ, Shipping & Returns,
-Made for You with project pages, Press, Spotted, Contact (enquiry form) and
-Track order. Some copy is placeholder until the client confirms it — see
-[docs/BUILD-LOG.md](docs/BUILD-LOG.md) §17.
+**Content pages.** Our Story (with the café film and her illustration films),
+FAQ, Shipping & Returns, Made for You with project pages, Press, Spotted,
+Contact (enquiry form) and Track order. Her corrections of 27 Sep 2026 are in;
+some copy is still placeholder until she confirms it — see
+[docs/BUILD-LOG.md](docs/BUILD-LOG.md) §17 and §40. The pieces are **designed
+in Doha**, not made there: never write "hand-finished in Doha".
+
+**Search.** Canonicals, branded titles and descriptions, Product / ProductGroup,
+Organization and breadcrumb structured data, real 404s, a sitemap without
+demo or sample records (BUILD-LOG §39). An SEO audit scored 54, then 70 after
+the fixes.
 
 **Accounts.** Sign in, create an account, password reset on the storefront,
 orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
