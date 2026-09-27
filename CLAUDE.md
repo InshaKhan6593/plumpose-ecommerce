@@ -368,6 +368,10 @@ From Git Bash, prefix commands taking a leading-slash argument with
   `transpose` — EK3A2406 has none, EK3A2455 does.
 - **A film in a split band keeps its own shape** (`FILM_FRAME` on Our Story):
   the photographs' 4:5 frame cropped and blew up the 9:16 drawing film.
+- **On Vercel a regenerated homepage does not see `/`.** Background
+  regeneration renders it as `/index`, so `usePathname() === '/'` failed and
+  the header came out solid over the film. Check `/index` too, and verify a
+  route-dependent change through a refresh on the live site, not only locally.
 - **Pins on phones read as a fault.** A swipe that stops moving the page, a
   scrub that trails the thumb, and the address bar resizing the pin — The
   Print pins on desktop only (BUILD-LOG §40).

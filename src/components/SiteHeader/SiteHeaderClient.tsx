@@ -83,7 +83,12 @@ export function SiteHeaderClient({ announcement }: { announcement: null | string
    * Its height never changes — condensing only shrinks the wordmark and adds
    * the background — so nothing below it jumps when it condenses.
    */
-  const onHome = pathname === '/'
+  /*
+   * `/index` too: when Vercel regenerates the homepage in the background (after
+   * a storefront refresh), it renders it under that name, and the header came
+   * out solid over the film until the next deploy.
+   */
+  const onHome = pathname === '/' || pathname === '/index'
   const overlay = onHome && !condensed && !menuOpen
 
   /**

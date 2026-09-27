@@ -2549,3 +2549,11 @@ the history before this commit), the unused `corridor` homepage photo, and the
 encode lines for `story-walk` and `story-cafe`, which no page shows any more
 (their files are still in R2 — harmless, and removable by hand). CLAUDE.md,
 README.md and ../docs/CLIENT-REQUEST.md are brought up to date.
+- **The homepage header turned solid over the film.** It is transparent,
+  white on the film, only when `usePathname()` is `/`. When Vercel
+  regenerates the homepage in the background — after a storefront refresh —
+  that render does not see `/` (it is stored as `/index`), so the regenerated
+  page carried the paper-coloured header until the next deploy. Reproduced on
+  the live site (fresh deploy transparent; after refresh + `REVALIDATED`,
+  solid), never locally. `/index` now counts as the homepage; re-checked on the
+  live site through a refresh and regeneration.
