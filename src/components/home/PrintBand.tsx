@@ -15,9 +15,10 @@ import { HOME } from './content'
  * "The Print" — the image expansion, after the reference's "Craft over volume"
  * (brand-assets/reference/client-reference-animation.mov).
  *
- * The section holds still for 1.7 screens of scrolling while a small card of
- * the print opens out to fill the screen. The scroll is the easing — Lenis
- * gives it the inertia.
+ * On desktop the section holds still for 1.7 screens of scrolling while a
+ * small card of the print opens out to fill the screen. The scroll is the
+ * easing — Lenis gives it the inertia. On a phone it does not hold: the card
+ * opens as the section scrolls up, and is full as it reaches the top.
  *
  * **The words are there from the start** — heading top-left, figures
  * bottom-right, in ink on paper — and as the card grows beneath them, each
@@ -77,25 +78,41 @@ export function PrintBand({
               return `inset(${top.toFixed(1)}% 22% 14% 22% round 0px)`
             }
 
+        /*
+         * Desktop: the section holds still for 1.7 screens while the card opens.
+         * Phone: no hold. A swipe that suddenly stopped moving the page, a card
+         * still growing a second after the thumb lifted (scrub lag), and a jump
+         * as the address bar resized the pin read as a fault. There the card
+         * opens as the section scrolls up to the top, in step with the finger,
+         * and is full as the section arrives.
+         */
         const tl = gsap.timeline({
           defaults: { ease: 'none' },
-          scrollTrigger: {
-            end: '+=170%',
-            // Re-measure the phone card's start when the screen changes size.
-            invalidateOnRefresh: true,
-            pin: true,
-            /*
-             * Measured before every other trigger. This pin adds 1.7 screens
-             * of spacing, and triggers further down the page (the steps,
-             * the product band) were measuring their positions without it —
-             * the steps played two screens early. Higher refreshes first.
-             */
-            refreshPriority: 1,
-            // A beat of lag, so the card glides rather than tracking every wheel notch.
-            scrub: 1,
-            start: 'top top',
-            trigger: el,
-          },
+          scrollTrigger: desktop
+            ? {
+                end: '+=170%',
+                invalidateOnRefresh: true,
+                pin: true,
+                /*
+                 * Measured before every other trigger. This pin adds 1.7 screens
+                 * of spacing, and triggers further down the page (the steps,
+                 * the product band) were measuring their positions without it —
+                 * the steps played two screens early. Higher refreshes first.
+                 */
+                refreshPriority: 1,
+                // A beat of lag, so the card glides rather than tracking every wheel notch.
+                scrub: 1,
+                start: 'top top',
+                trigger: el,
+              }
+            : {
+                end: 'top top',
+                // Re-measure the card's start when the screen changes size.
+                invalidateOnRefresh: true,
+                scrub: true,
+                start: 'top 75%',
+                trigger: el,
+              },
         })
 
         tl.fromTo(

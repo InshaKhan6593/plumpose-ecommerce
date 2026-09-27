@@ -71,7 +71,7 @@ describe('page text — the merge', () => {
   it('writes and reads italics the same way', () => {
     const text = italicsToText(HOME.philosophy.headline)
     expect(text).toBe(
-      'A world of *silk*, inspired by nature, surroundings, and moments *in between*.',
+      'A world of *silk,* inspired by nature, surroundings, and moments *in between*.',
     )
     expect(textToItalics(text)).toEqual(HOME.philosophy.headline)
     // An unclosed asterisk is just an asterisk.

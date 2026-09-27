@@ -23,8 +23,9 @@ export const HOME = {
   philosophy: {
     headline: [
       { text: 'A world of ' },
-      { italic: true, text: 'silk' },
-      { text: ', inspired by nature, surroundings, and moments ' },
+      // The comma rides with the italic word: on its own it wrapped to the start of a phone line.
+      { italic: true, text: 'silk,' },
+      { text: ' inspired by nature, surroundings, and moments ' },
       { italic: true, text: 'in between' },
       { text: '.' },
     ] as ReadonlyArray<{ italic?: boolean; text: string }>,

@@ -2520,3 +2520,17 @@ Checked on a production build: 32 text checks over /, /shop, /our-story,
   them removed at her request it was empty scrolling (1,521 px between the
   words and "The print" at 1440 px wide). Without photographs it is now one
   screen (441 px); the empty phone photo row is not rendered either.
+- **The Print on phones held still, then grew.** On a phone the pin read as
+  a fault: the page stopped moving under the thumb for ~8 swipes, the card
+  kept growing a second after the swipe (scrub 1), and it first shrank (74%
+  to 69% wide) as the pin measured itself. Phones now have no pin and no lag:
+  the card opens as the section scrolls up (`top 75%` to `top top`, scrub
+  true) and is full as it arrives. Desktop keeps the 1.7-screen pin, traced
+  unchanged at 1440 px.
+- **", inspired by nature" started a phone line.** The comma sat outside the
+  italic "silk", and the line split broke before it; it now rides with the
+  word (`silk,`).
+
+Not run this time: the database half of `page-text.int.spec.ts`. Another
+project's container (`serenity-hue-db`) holds port 5434, so `plumpose-pg`
+cannot start; its four database-free tests passed.
