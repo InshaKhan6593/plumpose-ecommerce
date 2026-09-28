@@ -5,10 +5,14 @@
  */
 import type { APIRequestContext } from '@playwright/test'
 
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 
 import { BASE, PHOTOS } from './stage'
+
+/** The database the plumpose-demo launch entry runs on (see reset-demo.sh). */
+const DEMO_DATABASE_URL = 'postgres://plumpose:plumpose@localhost:5434/plumpose_demo'
 
 const ok = async (res: Awaited<ReturnType<APIRequestContext['get']>>, what: string) => {
   if (!res.ok()) throw new Error(`${what}: ${res.status()} ${await res.text()}`)
@@ -77,51 +81,15 @@ export const addSizes = async (api: APIRequestContext, productId: number) => {
 export const addPaidOrder = async (api: APIRequestContext) => {
   const productId = await addPiece(api)
   const sizes = await addSizes(api, productId)
-  const res = await api.post(`${BASE}/api/orders`, {
-    data: {
-      amount: 157900,
-      currency: 'QAR',
-      customerEmail: 'mariam.hassan@example.com',
-      fulfilment: 'unfulfilled',
-      gift: true,
-      giftNote: 'Happy birthday, Sara — with love, Mariam',
-      items: [
-        {
-          personalisation: [
-            {
-              feeQar: 16000,
-              lettering: 'S.H',
-              placement: 'pocket',
-              placementName: 'Pocket',
-              style: 'lettering',
-              thread: 'gold',
-              threadName: 'Gold',
-            },
-          ],
-          product: productId,
-          quantity: 1,
-          variant: sizes.M,
-        },
-      ],
-      personalisationTotalQar: 16000,
-      shippingAddress: {
-        addressLine1: 'Building 12, Street 840',
-        addressLine2: 'Al Sadd',
-        city: 'Doha',
-        country: 'QA',
-        firstName: 'Mariam',
-        lastName: 'Hassan',
-        phone: '+974 5555 0123',
-      },
-      shippingLabel: 'Doha',
-      shippingQar: 2000,
-      shippingZone: 'qatar',
-      status: 'processing',
-      subtotalQar: 139900,
-    },
+  // Orders cannot be created over REST (only a paid checkout makes one), so
+  // this one goes through the local API, against the demo database only.
+  const run = spawnSync('npx', ['tsx', 'scripts/record/add-demo-order.ts', String(productId), String(sizes.M)], {
+    encoding: 'utf8',
+    env: { ...process.env, DATABASE_URL: DEMO_DATABASE_URL, MEDIA_STORAGE: 'disk', RESEND_API_KEY: '' },
+    shell: true,
   })
-  const doc = (await ok(res, 'create the order')).doc as { accessToken?: string; id: number }
-  return { id: doc.id, token: doc.accessToken ?? '' }
+  if (run.status !== 0) throw new Error(`create the order: ${run.stderr || run.stdout}`)
+  return JSON.parse(run.stdout.trim().split('\n').at(-1)!) as { id: number; token: string }
 }
 
 /** The piece from video 01, published, with a price and photos and no sizes yet. */

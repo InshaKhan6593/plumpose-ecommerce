@@ -3001,3 +3001,54 @@ too short for a calm voice.
 The dev server's hot reload broke once ("module factory is not available")
 after many config edits; a restart fixed it. Checked: `tsc` 0; lint 0 errors;
 `audit:admin` no problems; no schema change; `pnpm test:int` 263 passed.
+
+## 51. Video 04 narrated, with a tour of every control; orders made only by checkout — 28 Sep 2026
+
+`videos/04-handle-an-order.ts` re-recorded (4:01, 37 steps), now **narrated**:
+the list (ID, search, Columns, Filters, spreadsheet, sort arrows, Per page),
+the top of the order (dates, Edit), what to make (Show / Collapse All, the
+locked lines, the piece's pencil, the embroidery), what was paid, delivery
+description and zone, gift, gift note, admin notes, the right-hand side
+(Status / Amount / Currency, Customer account, Customer email, Resend
+confirmation and the dates it leaves), the Shipping tab's address, then In
+the atelier → Shipped (refused without a tracking number, on camera) →
+Delivered, with her customer's order page following.
+
+**Fixed, found writing the tour** — each was something she could do by
+mistake:
+
+- **Create New and Duplicate made orders by hand.** A created order emails the
+  customer a confirmation and her a new-order alert, and counts in the list
+  and the spreadsheet — Duplicate would have sent a real customer a second
+  confirmation. Orders now have `create: () => false` and `disableDuplicate`;
+  only a paid checkout makes one (the plugin's `confirmOrder`, through the
+  local API, which access does not apply to). The recorder's paid order moved
+  to `scripts/record/add-demo-order.ts` (local API, demo database only).
+- **Ticking orders offered Edit for all of them at once** — one tracking
+  number or email across several orders. `disableBulkEdit` (admin and REST;
+  the server's own local-API writes are unaffected). The tickboxes, which then
+  did nothing, and a paid order's greyed copy / paste ⋯ menus are hidden
+  (`custom.scss`, orders only).
+- **Fulfilment's ×** emptied the stage altogether: `isClearable: false`.
+- **"Shipped" without a tracking number** said "Add the tracking number before
+  mark…", cut off in its one-line label. Now "Add the tracking number first."
+
+**Narration** (the idea borrowed from new-xp/ultrademo, which was looked at and
+not adopted — it films one browser window, and our videos are the split
+screen). `voice.ts` makes one ElevenLabs clip per caption (Alice,
+`eleven_multilingual_v2`), cached under `recordings/<video>/voice/` by a hash
+of voice + settings + words. `narrate.ts <video>` finds every `say('…')` and
+card `speak:` line in the video's source and makes the missing ones before a
+take (`--dry` counts the characters). On camera a line starts, the action
+follows about a second in, and the next line waits for it to end; `finish()`
+lays the clips on the video with ffmpeg. The first take held each step until
+its line ended, which left the ring on the previous field while the voice
+described the next — hence the overlap. Videos now open on the title card
+(04's first 13 s were a blank stage while both sides loaded). Cards take
+`{ hold, speak }`. `ELEVENLABS_API_KEY` is in `.env`; 04 used 2,669
+characters of the account's free tier.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed; no
+schema change (`isClearable`, the access and the admin flags are config
+only). Frames mid-line at five steps put the ring on what the line names; the
+refusal shows on camera.

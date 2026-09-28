@@ -27,28 +27,42 @@ sh scripts/record/reset-demo.sh reset   # before every take (≈1 s) — stop th
 
 ## Recording one video
 
-1. `sh scripts/record/reset-demo.sh reset`
-2. Start the `plumpose-demo` launch entry (the dev server on :3001 against the demo database).
-3. `npx tsx scripts/record/videos/<name>.ts` — a Chromium window opens and you
+1. `npx tsx scripts/record/narrate.ts <name>` — makes its voice (see below).
+2. `sh scripts/record/reset-demo.sh reset`
+3. Start the `plumpose-demo` launch entry (the dev server on :3001 against the demo database).
+4. `npx tsx scripts/record/videos/<name>.ts` — a Chromium window opens and you
    can watch it work; `RECORD_HEADLESS=1` runs it unseen.
-4. The video lands in `../recordings/<name>/`:
-   - `<name>.mp4` — 1920×1080
+5. The video lands in `../recordings/<name>/`:
+   - `<name>.mp4` — 1920×1080, narrated, opening on the title card
    - `timeline.json` — every caption with its start and end, in seconds
    - `captions.srt` — the same as subtitles
-
-A voiceover script written against `timeline.json` lines up with the actions:
-each caption is one step, and the next action starts when its step ends.
+   - `voice/` — the voice clips, kept so a retake bills nothing
 
 If a take shows a bug, fix it, reset, and record again from the start.
 
-## The voiceover script
+## The voice
+
+Every `say('…')` caption, and each card's `speak:` line, is said in the
+tutorials' voice (ElevenLabs, `voice.ts`; Alice by default, another with
+`TUTORIAL_VOICE_ID`). `ELEVENLABS_API_KEY` is in `.env`.
 
 ```bash
-npx tsx scripts/record/voiceover.ts <name> ["opening line"] ["closing line"]
+npx tsx scripts/record/narrate.ts <name> --dry   # lines, and the characters it will bill
+npx tsx scripts/record/narrate.ts <name>         # make them, before the take
 ```
 
-writes `../recordings/<name>/voiceover-script.md` from the timeline: one line
-per caption, its start and the time it has, for one ElevenLabs clip each.
+Clips are cached by voice + words, so a retake bills nothing and a changed
+line bills only itself. Keep captions plain string literals — `narrate.ts`
+finds them in the video's source; one it missed is made mid-take and shows as
+a pause.
+
+On camera a line plays **while** its action happens (the pointer moves about
+a second in), and the next line waits for it to end, so two never overlap and
+the voice never runs past its step. `RECORD_VOICE=off` records silent, holding
+each caption long enough to read.
+
+`voiceover.ts` writes a script for voicing a silent take by hand, timed from
+its `timeline.json` — only for videos recorded before the voice was built in.
 
 ## What every video covers
 
@@ -68,13 +82,13 @@ import { Recording } from '../stage'
 
 const r = new Recording('07-add-a-piece')
 await r.start({ adminPath: '/admin', sitePath: '/shop', warm: ['/admin/collections/products/create'] })
-await r.titleCard('Products', 'Add a new piece', ['Photos, price, sizes and stock'])
+await r.titleCard('Products', 'Add a new piece', ['Photos, price, sizes and stock'], { speak: 'How to add a new piece.' })
 await r.say('Open Products and click Create new.')
 await r.click(r.admin.getByRole('link', { name: 'Products' }).first())
 await r.type(r.admin.locator('#field-title'), 'Al Shaheen Nights')
 await r.upload(r.admin.getByRole('button', { name: /select a file/i }), '04-standing-window-full.jpg')
 await r.showOnSite('/shop', (site) => site.getByText('Al Shaheen Nights'))
-await r.recapCard('Add a new piece', ['…'])
+await r.recapCard('Add a new piece', ['…'], { speak: 'To recap: …' })
 await r.finish()
 ```
 

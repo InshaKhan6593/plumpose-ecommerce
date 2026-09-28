@@ -336,6 +336,13 @@ export const plugins: Plugin[] = [
         ...defaultCollection,
         access: {
           ...defaultCollection.access,
+          /**
+           * Orders are made only by a paid checkout (the plugin's confirmOrder,
+           * through the local API). By hand — the admin's Create New, or
+           * Duplicate — an order emails the customer a confirmation for
+           * something she never bought and counts in the list and exports.
+           */
+          create: () => false,
           /** Orders are archived, never deleted — they are financial records. */
           delete: () => false,
           /** Staff may work through orders; only admins see everything else. */
@@ -363,6 +370,13 @@ export const plugins: Plugin[] = [
           /** Rows were titled by createdAt, so every order looked the same. */
           useAsTitle: 'customerEmail',
         },
+        /**
+         * Ticking orders in the list offered Edit for all of them at once: one
+         * tracking number or email on several orders, or several Shipped
+         * emails in one go. Each order is moved along on its own.
+         */
+        disableBulkEdit: true,
+        disableDuplicate: true,
         endpoints: [...(defaultCollection.endpoints || []), resendConfirmationEndpoint],
         hooks: {
           ...defaultCollection.hooks,
@@ -415,6 +429,8 @@ export const plugins: Plugin[] = [
             admin: {
               description:
                 'Setting this to Shipped emails the customer — add the tracking number first.',
+              // Its × emptied the stage altogether; an order is always at one of the four.
+              isClearable: false,
               position: 'sidebar',
             },
             defaultValue: 'unfulfilled',
@@ -430,7 +446,8 @@ export const plugins: Plugin[] = [
               value !== 'shipped' ||
               previousValue === 'shipped' ||
               Boolean(String(siblingData?.trackingNumber ?? '').trim()) ||
-              'Add the tracking number before marking the order Shipped — it goes in the customer’s email.',
+              // Short: the admin shows it in a one-line label over the field, and cut the long one off.
+              'Add the tracking number first.',
             options: [
               { label: 'Awaiting fulfilment', value: 'unfulfilled' },
               { label: 'In the atelier', value: 'inAtelier' },

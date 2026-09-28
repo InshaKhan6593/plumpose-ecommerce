@@ -13,6 +13,12 @@
  * (timeline.json + captions.srt), timed from the start of the video, so a
  * voiceover script can be matched to it.
  *
+ * Narrated (the default; RECORD_VOICE=off for a silent take): each caption
+ * and each card's `speak` line is said in the tutorials' voice (voice.ts), and
+ * the step holds until it has been said. Make the clips first with
+ * `npx tsx scripts/record/narrate.ts <video>`, or a missing one is made
+ * mid-take and shows as a pause.
+ *
  * Nothing here changes the site; the overlay exists only on the stage page.
  */
 import type { APIRequestContext, Browser, BrowserContext, FrameLocator, Locator, Page } from '@playwright/test'
@@ -21,6 +27,8 @@ import { chromium } from '@playwright/test'
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+
+import { type Clip, mixVoice, Voice } from './voice'
 
 export const BASE = process.env.RECORD_BASE ?? 'http://localhost:3001'
 export const OUT_ROOT = path.resolve(process.cwd(), '..', 'recordings')
@@ -40,10 +48,22 @@ const VIEW_H = H - CAPTION_H
 const WORLD_BOTTOM = 44 + PANE_H + 8
 /** How close the camera comes to what is being used: text reads at a laptop's size or larger. */
 const ZOOM = 1.75
+/** The voice starts as its caption finishes fading in, and the step holds a breath after it ends. */
+const VOICE_LEAD = 0.25
+const VOICE_TAIL = 0.45
+/**
+ * How long a line plays before the pointer moves. The action then happens
+ * while the line is said — a line held to its end left the ring on the
+ * previous field while the voice described the next one.
+ */
+const VOICE_BEAT = 1.1
 
 type Rect = { height: number; width: number; x: number; y: number }
 
 type Step = { caption: string; end: number; index: number; start: number }
+
+/** `speak`: a plain string literal, so narrate.ts can find it and make its clip before the take. */
+type CardOptions = { hold?: number; speak?: string }
 
 const stageHtml = (title: string) => `<!doctype html>
 <html><head><meta charset="utf-8"><title>${title}</title>
@@ -113,10 +133,39 @@ export class Recording {
   private open: null | Omit<Step, 'end'> = null
   private readonly steps: Step[] = []
   private t0 = 0
+  private readonly spoken: { at: number; file: string }[] = []
+  /** When the line being said ends (ms, wall clock); the next line waits for it. */
+  private quietAt = 0
+  private readonly voice: null | Voice
   readonly dir: string
 
   constructor(readonly name: string) {
     this.dir = path.join(OUT_ROOT, name)
+    this.voice = process.env.RECORD_VOICE === 'off' ? null : new Voice(this.dir)
+  }
+
+  /** The line's clip, before its step opens, so a clip made mid-take never shifts the timeline. */
+  private async clipFor(line: string | undefined): Promise<Clip | null> {
+    if (!this.voice || !line) return null
+    const have = this.voice.cached(line)
+    if (have) return have
+    console.warn(`voice: making "${line}" mid-take — run narrate.ts first to keep it out of the video`)
+    return this.voice.clip(line)
+  }
+
+  /** Plays the clip from now; returns how long it takes, with a breath after. */
+  private speak(clip: Clip | null) {
+    if (!clip) return 0
+    this.spoken.push({ at: this.now() + VOICE_LEAD, file: clip.file })
+    const takes = VOICE_LEAD + clip.duration + VOICE_TAIL
+    this.quietAt = Date.now() + takes * 1000
+    return takes
+  }
+
+  /** Waits for the line being said to end, so two lines never overlap. */
+  private async untilQuiet() {
+    const wait = this.quietAt - Date.now()
+    if (wait > 0) await this.page.waitForTimeout(wait)
   }
 
   /** Signs in off camera, warms the pages the video uses, then starts recording on the stage. */
@@ -207,13 +256,17 @@ export class Recording {
   }
 
   /**
-   * A caption on screen, held long enough to read and to speak over (≈ 2.2
-   * words a second, at least 2.4 s — at 2.6 a calm voiceover ran past the
-   * shorter steps).
+   * A caption on screen. Narrated, it is said while the actions after it
+   * happen, and the next caption waits for it to end. Silent, it is held long
+   * enough to read (≈ 2.2 words a second, at least 2.4 s — at 2.6 a calm
+   * voiceover ran past the shorter steps).
    */
   async say(caption: string, hold?: number) {
+    const clip = await this.clipFor(caption)
+    await this.untilQuiet()
     this.close()
     this.open = { caption, index: this.steps.length + 1, start: this.now() }
+    this.speak(clip)
     await this.page.evaluate((text) => {
       const span = document.querySelector('#caption span') as HTMLElement
       span.style.opacity = '0'
@@ -223,7 +276,7 @@ export class Recording {
       }, 200)
     }, caption)
     const words = caption.split(/\s+/).length
-    await this.page.waitForTimeout((hold ?? Math.max(2.4, words / 2.2)) * 1000)
+    await this.page.waitForTimeout((clip ? Math.max(hold ?? 0, VOICE_BEAT) : (hold ?? Math.max(2.4, words / 2.2))) * 1000)
   }
 
   private close() {
@@ -233,25 +286,31 @@ export class Recording {
 
   /* -------------------------------------------------------------- cards */
 
-  async titleCard(kicker: string, title: string, lines: string[] = [], hold = 3.5) {
+  /** `speak`: a line said over the card (narrated takes); the card holds until it ends. */
+  async titleCard(kicker: string, title: string, lines: string[] = [], { hold = 3.5, speak }: CardOptions = {}) {
     await this.card(
       `<div class="kicker">${kicker}</div><h1>${title}</h1>${lines.map((l) => `<p>${l}</p>`).join('')}`,
       hold,
       `${kicker}: ${title}`,
+      speak,
     )
   }
 
-  async recapCard(title: string, points: string[], hold = 6) {
+  async recapCard(title: string, points: string[], { hold = 6, speak }: CardOptions = {}) {
     await this.card(
       `<div class="kicker">Remember</div><h1>${title}</h1><ol>${points.map((p) => `<li>${p}</li>`).join('')}</ol>`,
       hold,
       `Remember — ${points.join(' · ')}`,
+      speak,
     )
   }
 
-  private async card(html: string, hold: number, caption: string) {
+  private async card(html: string, hold: number, caption: string, line?: string) {
+    const clip = await this.clipFor(line)
+    await this.untilQuiet()
     this.close()
     this.open = { caption, index: this.steps.length + 1, start: this.now() }
+    hold = Math.max(hold, this.speak(clip) + 0.3)
     await this.page.evaluate((h) => {
       const card = document.getElementById('card')!
       card.innerHTML = h
@@ -486,23 +545,33 @@ export class Recording {
   }
 
   async finish() {
+    await this.untilQuiet()
     this.close()
     const video = this.page.video()
     await this.context.close()
     await this.browser.close()
     const webm = await video!.path()
     const mp4 = path.join(this.dir, `${this.name}.mp4`)
+    // The video opens on the first card: before it, the stage was blank while both sides loaded (13 s in 04).
+    const trim = Math.max(0.4, (this.steps[0]?.start ?? 0.4) - 0.3)
     const encode = spawnSync(
       'ffmpeg',
-      ['-y', '-loglevel', 'error', '-ss', '0.4', '-i', webm, '-c:v', 'libx264', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', mp4],
+      ['-y', '-loglevel', 'error', '-ss', trim.toFixed(2), '-i', webm, '-c:v', 'libx264', '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', mp4],
       { stdio: 'inherit' },
     )
     if (encode.status === 0) fs.rmSync(webm)
-    // The first 0.4 s (a blank frame) is trimmed; shift the timeline with it.
-    const steps = this.steps.map((s) => ({ ...s, end: +(s.end - 0.4).toFixed(2), start: +Math.max(0, s.start - 0.4).toFixed(2) }))
+    // What was trimmed from the start comes off the voice and the timeline too.
+    if (encode.status === 0 && this.spoken.length) {
+      const silent = path.join(this.dir, `${this.name}.silent.mp4`)
+      fs.renameSync(mp4, silent)
+      const clips = this.spoken.map((c) => ({ ...c, at: c.at - trim }))
+      if (mixVoice(silent, clips, mp4)) fs.rmSync(silent)
+      else fs.renameSync(silent, mp4)
+    }
+    const steps = this.steps.map((s) => ({ ...s, end: +(s.end - trim).toFixed(2), start: +Math.max(0, s.start - trim).toFixed(2) }))
     fs.writeFileSync(path.join(this.dir, 'timeline.json'), JSON.stringify({ steps, video: `${this.name}.mp4` }, null, 2))
     fs.writeFileSync(path.join(this.dir, 'captions.srt'), toSrt(steps))
-    console.log(`recorded ${mp4} — ${steps.length} steps, ${steps.at(-1)?.end ?? 0}s`)
+    console.log(`recorded ${mp4} — ${steps.length} steps, ${steps.at(-1)?.end ?? 0}s${this.spoken.length ? `, ${this.spoken.length} lines voiced` : ''}`)
   }
 }
 

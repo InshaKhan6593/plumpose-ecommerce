@@ -1,12 +1,14 @@
 /**
- * Tutorial 04 — handle an order: open a paid order, read what to make, what
- * was paid, the gift note and the address, then move it along — In the
- * atelier, Shipped with a tracking number, Delivered — and see the
- * customer's order page follow.
+ * Tutorial 04 — handle an order: find it, read what to make, what was paid,
+ * the gift note and the address, then move it along — In the atelier,
+ * Shipped with a tracking number, Delivered — and see the customer's order
+ * page follow. Every control on the list and the order screen is pointed at
+ * and explained, including the ones the video does not use.
  *
  * Starts from the demo database (`sh scripts/record/reset-demo.sh reset`);
  * the piece, its sizes and a paid order are made off camera first (the
- * customer is made up). Output in ../recordings/04-handle-an-order.
+ * customer is made up). Narrated: `npx tsx scripts/record/narrate.ts
+ * 04-handle-an-order` before the take. Output in ../recordings/04-handle-an-order.
  */
 import type { FrameLocator } from '@playwright/test'
 
@@ -31,56 +33,90 @@ const choose = async (label: string) => {
   await r.click(r.admin.locator('.rs__option').filter({ hasText: new RegExp(`^${label}$`) }).first())
 }
 
+/** A labelled field as a whole (label, box and description), for pointing at. */
+const field = (label: RegExp) =>
+  r.admin.locator('.field-type').filter({ has: r.admin.locator('label', { hasText: label }) }).first()
+
 const onOrderPage = (find: (site: FrameLocator) => ReturnType<FrameLocator['locator']>) =>
   r.showOnSite(orderPage, find)
 
 await r.run(async () => {
   await r.goSite(orderPage)
-  await r.titleCard('Orders', 'Handle an order', ['From a new order to delivered'])
+  await r.titleCard('Orders', 'Handle an order', ['From a new order to delivered'], {
+    speak: 'How to handle an order, from the moment it arrives until it is delivered.',
+  })
 
   /* ---- the list */
-  await r.say('New orders appear under Orders. You are also emailed each one.')
+  await r.say('New orders appear under Orders, and you are emailed each one.')
   await r.point(r.admin.locator('table tbody tr').first(), 2, 1.4)
+  await r.say('ID is the order number. The customer sees it in their emails.')
+  await r.point(r.admin.locator('table tbody tr').first().getByText(/ID:/), 1.5)
 
   await r.say('To find an order, type the customer’s email in the search box.')
-  await r.point(r.admin.getByPlaceholder(/search/i).first(), 2)
-  await r.say('Download as a spreadsheet saves the orders in the list, for Excel or Numbers.')
-  await r.point(r.admin.getByText(/download as a spreadsheet/i).first(), 2.5)
-
+  await r.point(r.admin.getByPlaceholder(/search/i).first(), 1.5)
+  await r.say('Columns chooses what the list shows. It changes only your view.')
+  await r.point(r.admin.locator('#toggle-list-columns'), 1.5)
   await r.say('Filters narrows the list — for example, to orders still awaiting fulfilment.')
-  await r.point(r.admin.getByRole('button', { name: /^filters$/i }).first(), 2)
+  await r.point(r.admin.locator('#toggle-list-filters'), 1.5)
+  await r.say('Download as a spreadsheet saves the orders in the list, for Excel or Numbers.')
+  await r.point(r.admin.getByText(/download as a spreadsheet/i).first(), 1.5)
+  await r.say('The small arrows beside each heading sort the list, for example newest first.')
+  await r.point(r.admin.getByRole('button', { name: /sort by created at descending/i }), 1.5)
+  await r.say('Per page sets how many orders show at once.')
+  await r.point(r.admin.getByRole('button', { name: /per page/i }), 1.5)
 
-  await r.say('Click the order to open it.')
+  await r.say('Click the customer’s email to open the order.')
   await r.click(r.admin.getByRole('link', { name: /mariam/i }).first())
   await r.admin.getByText(/× 1/).first().waitFor()
 
-  /* ---- reading it */
-  await r.say('At the top, what to make: the piece, the size and the embroidery.')
-  await r.point(r.admin.getByText(/× 1/).first(), 3)
+  /* ---- the top of the order */
+  await r.say('At the top: when the order came in, and when it was last changed.')
+  await r.point(r.admin.getByText(/last modified/i).first(), 1.5)
+  await r.say('Edit, on the right, is simply the page you are on.')
+  await r.point(r.admin.locator('.doc-tab__label', { hasText: /^edit$/i }).first(), 1.2)
 
-  await r.say('Below it, what the customer paid, line by line.')
-  await r.point(r.admin.getByText('QAR 1,399.00', { exact: true }).first(), 2.5)
+  /* ---- what to make */
+  await r.say('First, what to make: the piece, the size and the embroidery.')
+  await r.point(r.admin.getByText(/× 1/).first(), 2)
+  await r.say('Show All and Collapse All open and close these panels. They change nothing.')
+  await r.point(r.admin.getByRole('button', { name: 'Collapse All' }).first(), 1.2)
+  await r.say('The piece, size, quantity and embroidery are what the customer paid for, so they are locked.')
+  await r.point(field(/^piece$/i), 1.5)
+  await r.say('The small pencil opens the piece itself. A change there changes your shop, not this order.')
+  await r.point(r.admin.getByRole('button', { name: /^Edit Al Shaheen Nights — Silk Pyjama Set$/ }), 1.5)
+  await r.say('Letters, symbol and thread colour tell you exactly what to embroider.')
+  await r.point(r.admin.locator('#field-items__0__personalisation__0__lettering'), 1.5)
+
+  /* ---- what was paid, and the gift */
+  await r.say('Below, what the customer paid, line by line: the piece, the embroidery and delivery.')
+  await r.point(r.admin.getByText('QAR 1,399.00', { exact: true }).first(), 2)
+  await r.say('Delivery description and zone show which delivery rate was charged.')
+  await r.point(r.admin.locator('#field-shippingLabel'), 1.5)
 
   await r.say('Gift is ticked: pack it with a card, and leave the invoice out.')
-  await r.point(r.admin.locator('#field-gift'), 2)
+  await r.point(r.admin.locator('#field-gift'), 1.5)
   await r.say('This is the note to write on the card.')
-  await r.point(r.admin.locator('#field-giftNote'), 2.5)
-
+  await r.point(r.admin.locator('#field-giftNote'), 2)
   await r.say('Admin notes are for you and your team only. The customer never sees them.')
-  await r.point(r.admin.locator('#field-adminNotes'), 2.5)
+  await r.point(r.admin.locator('#field-adminNotes'), 1.5)
 
-  /* ---- also on this screen: the right-hand side */
-  await r.say('On the right: Status and Amount come from the payment. They can’t be changed.')
-  await r.point(r.admin.locator('#field-status').first(), 2.5, 1.5)
-  await r.say('Customer email is where every email for this order goes. Correct a typo here.')
-  await r.point(r.admin.locator('#field-customerEmail'), 2.5)
-  await r.say('Resend confirmation sends the order email to the customer again. It asks you first.')
-  await r.point(r.admin.getByRole('button', { name: /resend confirmation/i }), 3)
-  await r.say('Use it when a customer says the email never arrived.')
+  /* ---- the right-hand side */
+  await r.say('On the right, Status, Amount and Currency come from the payment. They cannot be changed.')
+  await r.point(r.admin.locator('#field-status').first(), 2, 1.5)
+  await r.say('Customer account shows their account, if they were signed in. It is empty for a guest.')
+  await r.point(field(/^customer account$/i), 1.5)
+  await r.say('Customer email is where every email about this order goes. Correct a typo here, then Save.')
+  await r.point(r.admin.locator('#field-customerEmail'), 1.5)
+  await r.say('Resend confirmation sends the order email again. It asks you first, and Cancel sends nothing.')
+  await r.point(r.admin.getByRole('button', { name: /resend confirmation/i }), 2)
+  await r.say('Use it when a customer says the email never arrived. Once an email has gone, its date shows here.')
 
-  await r.say('The Shipping tab has the address.')
+  /* ---- the address */
+  await r.say('The Shipping tab has the address and phone number.')
   await r.click(r.admin.getByRole('button', { name: 'Shipping', exact: true }))
-  await r.point(r.admin.locator('#field-shippingAddress__addressLine1'), 2.5)
+  await r.point(r.admin.locator('#field-shippingAddress__addressLine1'), 1.5)
+  await r.say('If the customer asks to change the address, correct it here and click Save. No email is sent.')
+  await r.point(r.admin.locator('#field-shippingAddress__phone'), 1.5)
 
   /* ---- in the atelier */
   await r.say('When you start making it, set Fulfilment to In the atelier, and click Save.')
@@ -91,11 +127,16 @@ await r.run(async () => {
   await r.say('No email is sent for this step. The customer’s order page shows it is being made.')
   await onOrderPage((site) => site.locator('main').getByText(/^in the atelier \(current\)$/i))
 
-  /* ---- shipped */
-  await r.say('When it is sent, type the tracking number first.')
-  await r.type(r.admin.locator('#field-trackingNumber'), TRACKING, { delay: 60 })
-  await r.say('Then choose Shipped, and click Save.')
+  /* ---- shipped, and the tracking number first */
+  await r.say('When it is sent, choose Shipped, and click Save.')
   await choose('Shipped')
+  await r.click(r.admin.locator('#action-save'))
+  await r.admin.getByText(/add the tracking number first/i).first().waitFor()
+  await r.say('Without a tracking number, Save stops and asks for it, because it goes in the customer’s email.')
+  await r.point(r.admin.locator('#field-fulfilment'), 2)
+
+  await r.say('Type the tracking number, and click Save again.')
+  await r.type(r.admin.locator('#field-trackingNumber'), TRACKING, { delay: 60 })
   await r.click(r.admin.locator('#action-save'))
   await r.saved()
 
@@ -109,12 +150,19 @@ await r.run(async () => {
   await r.saved()
   await onOrderPage((site) => site.locator('main').getByText(/^delivered \(current\)$/i))
 
-  await r.recapCard('Handle an order', [
-    'Orders → open the order: what to make, what was paid, the address',
-    'In the atelier → Save (no email)',
-    'Tracking number, then Shipped → Save (the customer is emailed)',
-    'Delivered → Save (no email)',
-    'Resend confirmation: the order email again, if it went missing',
-  ])
+  await r.recapCard(
+    'Handle an order',
+    [
+      'Orders → open the order: what to make, what was paid, the address',
+      'In the atelier → Save (no email)',
+      'Tracking number, then Shipped → Save (the customer is emailed)',
+      'Delivered → Save (no email)',
+      'Resend confirmation: the order email again, if it went missing',
+    ],
+    {
+      speak:
+        'To recap: open the order, move Fulfilment along as you go, and always add the tracking number before Shipped.',
+    },
+  )
   await r.finish()
 })
