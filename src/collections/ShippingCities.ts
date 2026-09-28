@@ -15,9 +15,15 @@ export const ShippingCities: CollectionConfig = {
   labels: { singular: 'Qatar city', plural: 'Qatar delivery' },
   admin: {
     defaultColumns: ['name', 'feeQar', 'active'],
+    description:
+      'What delivery costs to each place in Qatar. Checkout lists them in this order — drag a row by its handle to move it.',
     group: 'Shop settings',
     useAsTitle: 'name',
   },
+  /** A copy kept the hidden key, which must be unique, so Duplicate only ever failed. */
+  /** Editing several at once gave them all one fee. */
+  disableBulkEdit: true,
+  disableDuplicate: true,
   access: {
     create: adminOnly,
     delete: adminOnly,
@@ -29,12 +35,20 @@ export const ShippingCities: CollectionConfig = {
   fields: [
     { name: 'name', type: 'text', required: true },
     autoKey('name'),
-    { name: 'feeQar', type: 'number', label: 'Delivery fee (QAR)', min: 0, required: true },
+    {
+      name: 'feeQar',
+      type: 'number',
+      admin: { description: 'In riyals: type 20 for QAR 20. Live on checkout as soon as you save.' },
+      label: 'Delivery fee (QAR)',
+      min: 0,
+      required: true,
+    },
     {
       name: 'active',
       type: 'checkbox',
       admin: {
         components: { Cell: '@/components/admin/BooleanCell#BooleanCell' },
+        description: 'Untick to stop delivering here: it leaves the checkout list and the Shipping page.',
         position: 'sidebar',
       },
       defaultValue: true,

@@ -3060,3 +3060,45 @@ on the free tier until it resets on 27 Oct 2026 — a changed line is roughly
 60–100 characters, so wording changes before then need a paid plan. Frames
 mid-line in each put the ring on what the line names. Their hand-voiceover
 scripts were removed: the timings they were written against are gone.
+
+## 52. Tutorial 05 "Delivery prices"; the delivery tables made safe — 28 Sep 2026
+
+`videos/05-delivery-prices.ts` (2:53, 26 lines, narrated; a new ElevenLabs
+key, 1,873 characters): Qatar delivery → Doha 20 → 25 → the Shipping page;
+International delivery (from the side menu) → United Kingdom 200 → 220;
+Countries, for reference; Site settings → Shipping → free delivery above
+QAR 2,000, shown on the Shipping page. The tour: the order handles and the
+arrows that restore her order, Active, Create new, the ⋯ menu (Create new,
+Delete), why zones cannot be added, blocked countries, the surcharge.
+
+**Fixed, found writing the tour:**
+
+- **Zones could be created and deleted.** Countries point at a zone by a hidden
+  key she cannot see or set, so a new zone applied to no country, and deleting
+  one stopped every country in it from checking out. `ShippingZones`:
+  `create`/`delete` false, no Duplicate, no bulk edit. She changes a zone's
+  name, fee and Active. Plural label **International delivery** (was
+  "Shipping zones"), beside Qatar delivery.
+- **Countries could be edited, created and deleted** — a changed code or
+  currency broke that country's prices and delivery. It is reference only now
+  (`create`/`update`/`delete` false), with a description that says to ask the
+  developer.
+- **Duplicate on a Qatar city** copied its hidden unique key, so it only ever
+  failed; off. No bulk edit on cities (one fee for all of them).
+- **Fees said nothing about units** (she types 20 for QAR 20 — the major-unit
+  group in CLAUDE.md). Every fee box and the free-delivery amount now say "In
+  riyals: type 20 for QAR 20"; Active says what unticking does; both lists and
+  free delivery say what they do (to anywhere; pieces + embroidery count).
+- The tickboxes on the zones and countries lists (nothing to do there) are
+  hidden, as on orders; the rule now matches the tickbox cell itself, since
+  an orderable list's first column is the drag handle.
+
+**Recorder:** a video that moves between screens uses the side menu. The admin
+keeps it open once opened, and a closed menu's links still count as visible
+(they sit just off screen), so the video asks the layout
+(`.template-default--nav-open`) before opening it.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed;
+`audit:admin` no problems; no schema change (access, labels, descriptions and
+admin flags only). Frames mid-line put the ring on what each line names, and
+all three changes show on the Shipping page.

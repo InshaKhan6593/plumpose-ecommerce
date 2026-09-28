@@ -1,7 +1,5 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminOnly } from '@/access/adminOnly'
-
 /**
  * Where plumpose delivers. Ported from netlify/lib/countries.mjs.
  *
@@ -20,16 +18,23 @@ export const Countries: CollectionConfig = {
   labels: { singular: 'Country', plural: 'Countries' },
   admin: {
     defaultColumns: ['name', 'code', 'currencyCode', 'zoneKey', 'blockedReason'],
-    description: 'Delivery destinations. A country with a blocked reason cannot be ordered to.',
+    description:
+      'Where plumpose delivers, and the delivery zone each country is priced from. For reference: to move a country to another zone, or open a blocked one, ask your developer.',
     group: 'Shop settings',
     listSearchableFields: ['name', 'code'],
     useAsTitle: 'name',
   },
+  /**
+   * For reference only. Its zone and blocked reason were already locked; a
+   * country's code or currency changed by hand broke its prices and its
+   * delivery, and a deleted country could not check out at all.
+   */
+  disableBulkEdit: true,
   access: {
-    create: adminOnly,
-    delete: adminOnly,
+    create: () => false,
+    delete: () => false,
     read: () => true,
-    update: adminOnly,
+    update: () => false,
   },
   fields: [
     { name: 'name', type: 'text', required: true },

@@ -408,14 +408,16 @@ textarea,
 }
 
 /*
- * Orders: nothing to select, nothing to copy. With bulk edit and delete off
- * (see the orders config in @/plugins), the list's tickboxes did nothing,
- * and a paid order's lines are locked, so their copy / paste menu (⋯) only
- * ever showed greyed out.
+ * Orders, delivery zones and countries: nothing to select. With bulk edit and
+ * delete off (the orders config in @/plugins, ShippingZones, Countries), the
+ * list's tickboxes did nothing. On an order, the lines are locked, so their
+ * copy / paste menu (⋯) only ever showed greyed out.
  */
-.collection-list--orders {
-  .table th:first-child:has(.checkbox-input),
-  .table td:first-child:has(.checkbox-input) {
+.collection-list--orders,
+.collection-list--shippingZones,
+.collection-list--countries {
+  .table th:has(> .checkbox-input),
+  .table td:has(> .checkbox-input) {
     display: none;
   }
 }

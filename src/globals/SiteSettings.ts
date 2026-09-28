@@ -78,6 +78,10 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'freeShippingEnabled',
               type: 'checkbox',
+              admin: {
+                description:
+                  'Delivery becomes free, to anywhere, when the pieces and embroidery in a bag come to the amount below or more.',
+              },
               defaultValue: false,
               label: 'Offer free delivery above a spend',
             },
@@ -86,6 +90,7 @@ export const SiteSettings: GlobalConfig = {
               type: 'number',
               admin: {
                 condition: (_, siblingData) => siblingData?.freeShippingEnabled === true,
+                description: 'In riyals: type 2000 for QAR 2,000. Shown on the Shipping page and every piece.',
               },
               label: 'Free delivery above (QAR)',
               min: 0,
