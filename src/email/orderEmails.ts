@@ -1,5 +1,6 @@
 import type { Order, Product, Variant, VariantOption } from '@/payload-types'
 
+import { orderCode } from '@/hooks/orderReference'
 import { formatQar, type Minor } from '@/lib/pricing/money'
 
 import {
@@ -58,6 +59,8 @@ export type OrderView = {
   freeShippingApplied: boolean
   gift: boolean
   giftNote: string
+  /** The order code customers see — see @/hooks/orderReference. */
+  code: string
   id: number
   leadTime: string
   lines: OrderLineView[]
@@ -159,6 +162,7 @@ export const toOrderView = (
     freeShippingApplied: Boolean(order.freeShippingApplied),
     gift: Boolean(order.gift),
     giftNote: order.giftNote ?? '',
+    code: orderCode(order),
     id: order.id,
     leadTime: ctx.leadTime,
     lines,
@@ -281,7 +285,7 @@ export const customerConfirmation = (view: OrderView): EmailContent => {
     : ''
 
   const body = [
-    label(`Order #${view.id}`),
+    label(`Order ${view.code}`),
     heading(greeting),
     paragraph(
       `Your order is confirmed and we have started preparing it.${embroideryNote} We will write again as soon as it is on its way.`,
@@ -308,7 +312,7 @@ export const customerConfirmation = (view: OrderView): EmailContent => {
   ].join('\n')
 
   const text = [
-    `plumpose — Order #${view.id}`,
+    `plumpose — Order ${view.code}`,
     '',
     greeting,
     `Your order is confirmed and we have started preparing it.${hasEmbroidery(view) ? ` Your embroidery is worked by hand, so please allow ${view.leadTime || 'a few extra days'} before it leaves the atelier.` : ''} We will write again as soon as it is on its way.`,
@@ -329,9 +333,9 @@ export const customerConfirmation = (view: OrderView): EmailContent => {
     html: layout({
       body,
       footer: view.footer,
-      preheader: `Order #${view.id} is confirmed — ${formatQar(view.totals.total)}`,
+      preheader: `Order ${view.code} is confirmed — ${formatQar(view.totals.total)}`,
     }),
-    subject: `Your plumpose order #${view.id} is confirmed`,
+    subject: `Your plumpose order ${view.code} is confirmed`,
     text,
   }
 }
@@ -352,7 +356,7 @@ export const ownerNotification = (view: OrderView): EmailContent => {
     .join('<br>')
 
   const body = [
-    label(`New order #${view.id}`),
+    label(`New order ${view.code}`),
     heading(formatQar(view.totals.total)),
     paragraph(
       `From ${esc(who)}.${hasEmbroidery(view) ? ' <strong>Includes embroidery.</strong>' : ''}${view.gift ? ' <strong>Gift order.</strong>' : ''}`,
@@ -374,7 +378,7 @@ export const ownerNotification = (view: OrderView): EmailContent => {
   ].join('\n')
 
   const text = [
-    `New order #${view.id} — ${formatQar(view.totals.total)}`,
+    `New order ${view.code} — ${formatQar(view.totals.total)}`,
     `From ${who}`,
     '',
     linesText(view.lines),
@@ -395,7 +399,7 @@ export const ownerNotification = (view: OrderView): EmailContent => {
 
   return {
     html: layout({ body, footer: {}, preheader: `${who} — ${formatQar(view.totals.total)}` }),
-    subject: `New order #${view.id} — ${formatQar(view.totals.total)} — ${who}`,
+    subject: `New order ${view.code} — ${formatQar(view.totals.total)} — ${who}`,
     text,
   }
 }
@@ -405,7 +409,7 @@ export const shippedNotification = (view: OrderView): EmailContent => {
   const greeting = view.firstName ? `It’s on its way, ${view.firstName}.` : 'It’s on its way.'
 
   const body = [
-    label(`Order #${view.id}`),
+    label(`Order ${view.code}`),
     heading(greeting),
     paragraph('Your order has left the atelier.'),
     view.trackingNumber
@@ -424,7 +428,7 @@ export const shippedNotification = (view: OrderView): EmailContent => {
   ].join('\n')
 
   const text = [
-    `plumpose — Order #${view.id}`,
+    `plumpose — Order ${view.code}`,
     '',
     greeting,
     'Your order has left the atelier.',
@@ -445,9 +449,9 @@ export const shippedNotification = (view: OrderView): EmailContent => {
       footer: view.footer,
       preheader: view.trackingNumber
         ? `Tracking number ${view.trackingNumber}`
-        : `Order #${view.id} has shipped`,
+        : `Order ${view.code} has shipped`,
     }),
-    subject: `Your plumpose order #${view.id} is on its way`,
+    subject: `Your plumpose order ${view.code} is on its way`,
     text,
   }
 }

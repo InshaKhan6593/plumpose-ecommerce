@@ -29,6 +29,7 @@ import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { DECLINE_EVENTS, declineReason, paymentOutcome } from '@/lib/payments/outcome'
 import { enquirySummary } from '@/lib/enquiries/summary'
 import { orderTotalsFields } from '@/fields/orderTotals'
+import { orderReferenceField } from '@/hooks/orderReference'
 import { lockFields } from '@/fields/lockFields'
 import { mapFieldsDeep } from '@/fields/mapFieldsDeep'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
@@ -361,12 +362,12 @@ export const plugins: Plugin[] = [
             ],
           },
           // The first column is the link: the customer's email, not the bare "ID: 1" chip.
-          defaultColumns: ['customerEmail', 'id', 'status', 'amount', 'fulfilment', 'createdAt'],
+          defaultColumns: ['customerEmail', 'reference', 'status', 'amount', 'fulfilment', 'createdAt'],
           // The plugin's text ("Orders represent a customer's intent to purchase…") was written for developers.
           description:
             'Every paid order. Open one to see what to make and where it goes, then move Fulfilment along as you go.',
           group: 'Shop',
-          listSearchableFields: ['customerEmail'],
+          listSearchableFields: ['customerEmail', 'reference'],
           /** Rows were titled by createdAt, so every order looked the same. */
           useAsTitle: 'customerEmail',
         },
@@ -400,6 +401,7 @@ export const plugins: Plugin[] = [
             ),
           ) as typeof defaultCollection.fields),
           ...orderTotalsFields,
+          orderReferenceField,
           {
             name: 'accessToken',
             type: 'text',

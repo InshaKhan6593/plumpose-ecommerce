@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 
 import { HouseAlert, HouseButton, HouseField, houseInput } from '@/components/forms/house'
 import { TRACK_PAGE } from '@/content/pages'
+import { cn } from '@/utilities/cn'
 
 import { sendOrderAccessEmail } from './sendOrderAccessEmail'
 
@@ -49,8 +50,8 @@ export const FindOrderForm: React.FC<Props & { sent?: { body: string; heading: s
     try {
       const result = await sendOrderAccessEmail({
         email: data.email.trim(),
-        // Accept "#105" or "105" — the order number as the confirmation email shows it.
-        orderID: data.orderID.replace(/[^\d]/g, ''),
+        // As typed: the server reads a code ("PLM-250928-7K4QX2") or an older number ("#105").
+        orderID: data.orderID.trim(),
       })
 
       if (result.success) {
@@ -88,16 +89,17 @@ export const FindOrderForm: React.FC<Props & { sent?: { body: string; heading: s
           type="email"
         />
       </HouseField>
-      <HouseField error={errors.orderID?.message} id="orderID" label="Order number">
+      <HouseField error={errors.orderID?.message} id="orderID" label="Order code">
         <input
           aria-invalid={Boolean(errors.orderID)}
-          className={houseInput}
+          autoCapitalize="characters"
+          className={cn(houseInput, 'uppercase')}
           id="orderID"
-          inputMode="numeric"
-          placeholder="e.g. 105"
+          placeholder="e.g. PLM-250928-7K4QX2"
+          spellCheck={false}
           {...register('orderID', {
-            required: 'Please enter your order number.',
-            validate: (v) => /\d/.test(v) || 'Your order number is in your confirmation email.',
+            required: 'Please enter your order code.',
+            validate: (v) => /\d/.test(v) || 'Your order code is in your confirmation email.',
           })}
           type="text"
         />

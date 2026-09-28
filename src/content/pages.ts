@@ -329,7 +329,7 @@ export const CONTACT_PAGE = {
 export const TRACK_PAGE = {
   heading: 'Track your order',
   intro:
-    'Enter the email you ordered with and your order number. We will email you a private link to your order and where it is.',
+    'Enter the email you ordered with and your order code (it begins PLM-). We will email you a private link to your order and where it is.',
   sent: {
     heading: 'Check your email',
     body: 'If an order matches those details, a link to it is on its way. It can take a minute to arrive.',

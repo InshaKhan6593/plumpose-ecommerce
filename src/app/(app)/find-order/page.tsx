@@ -43,7 +43,7 @@ export default async function FindOrderPage() {
 }
 
 export const metadata: Metadata = {
-  description: 'Follow your plumpose order with your email and order number.',
+  description: 'Follow your plumpose order with your email and order code.',
   openGraph: mergeOpenGraph({
     title: 'Track your order',
     url: '/find-order',

@@ -1257,6 +1257,10 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: 'QAR' | null;
+  /**
+   * The code your customer sees on their receipt and in every email — also the Transaction ID in SkipCash.
+   */
+  reference?: string | null;
   accessToken?: string | null;
   /**
    * Setting this to Shipped emails the customer — add the tracking number first.
@@ -3206,6 +3210,7 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  reference?: T;
   accessToken?: T;
   fulfilment?: T;
   trackingNumber?: T;

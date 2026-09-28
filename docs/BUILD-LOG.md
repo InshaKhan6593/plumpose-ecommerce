@@ -3271,3 +3271,30 @@ Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 270 passed (new:
 `shipping-text-and-return-days.int.spec.ts` — the merge of every new field,
 empty fields keeping the defaults, the FAQ replacement, and on the database an
 FAQ changing when Site settings is saved).
+
+## 57. The order page's progress, and order codes — 28 Sep 2026
+
+**Progress timeline** (`/order/[id]`). Each line ran centre to centre, so the
+next step's line crossed the previous dot; now it runs edge to edge with a
+gap (measured: 9 px each side, desktop and phone). On arrival the reached
+steps fill in turn — dot, then the line on to the next, 0.55 s apart — and the
+current step breathes a soft ring until the order is delivered. CSS only
+(`order-*` in globals.css, `--i` per step), still under reduced motion (checked:
+no animation, ring hidden).
+
+**Order codes.** Orders were "No. 105". Each order now has `reference` —
+"PLM-260928-7K4QX2", its paid payment's SkipCash reference, so the receipt,
+the portal and the admin show one code (`orderReferenceField`, filled on
+create inside the confirm transaction with `req`; an order without a SkipCash
+payment gets a fresh code of the same form). Shown on the order page, the
+account's orders, every email subject and heading, the Track order email, the
+admin list (column, searchable) and the spreadsheet ("Order code"). Track
+order takes the code however it is typed (`readOrderCode`) and still takes an
+old number. Migration `20260928_140809_order_reference`: the column (unique),
+existing orders given their payment's reference (a succeeded one first), any
+other a new code. Read-only preview on Neon: all four live orders map to their
+SkipCash references; on a copy of the local database the 16 older orders got
+16 distinct codes; up, down, up on a throwaway copy.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 277 passed (new:
+`order-reference.int.spec.ts`; email subjects by code, "no. 1042" before codes).

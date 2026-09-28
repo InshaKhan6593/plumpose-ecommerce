@@ -6,6 +6,7 @@ import { getPayload } from 'payload'
 import { isUndeliverable } from '@/email/config'
 import { button, heading, label, layout, muted, paragraph } from '@/email/layout'
 import { orderLink } from '@/email/sendOrderEmail'
+import { orderCode, readOrderCode } from '@/hooks/orderReference'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 
 type Args = { email: string; orderID: string }
@@ -28,8 +29,11 @@ export async function sendOrderAccessEmail({ email, orderID }: Args): Promise<Re
   const typed = email.trim()
   // Account emails are stored lower-case; a guest's as typed at checkout.
   const address = typed.toLowerCase()
-  const id = Number(orderID)
-  if (!address || !Number.isInteger(id) || id <= 0) return { success: true }
+  // The order code ("PLM-250928-7K4QX2", however it is typed), or for an order
+  // from before codes, its number ("#105" or "105").
+  const code = readOrderCode(orderID)
+  const id = code ? 0 : Number(orderID.replace(/[^\d]/g, ''))
+  if (!address || (!code && (!Number.isInteger(id) || id <= 0))) return { success: true }
 
   try {
     const { docs } = await payload.find({
@@ -39,7 +43,7 @@ export async function sendOrderAccessEmail({ email, orderID }: Args): Promise<Re
       overrideAccess: true,
       where: {
         and: [
-          { id: { equals: id } },
+          code ? { reference: { equals: code } } : { id: { equals: id } },
           {
             or: [
               { customerEmail: { in: [...new Set([typed, address])] } },
@@ -59,7 +63,7 @@ export async function sendOrderAccessEmail({ email, orderID }: Args): Promise<Re
     await payload.sendEmail({
       html: layout({
         body: [
-          label(`Order no. ${order.id}`),
+          label(`Order ${orderCode(order)}`),
           heading('Your order'),
           paragraph(
             'Here is the private link to your order, where you can see each step from our atelier to your door.',
@@ -75,11 +79,11 @@ export async function sendOrderAccessEmail({ email, orderID }: Args): Promise<Re
           instagramUrl: settings.instagramUrl,
           whatsappNumber: settings.whatsappNumber,
         },
-        preheader: `The link to order no. ${order.id}.`,
+        preheader: `The link to order ${orderCode(order)}.`,
       }),
       replyTo: settings.contactEmail || undefined,
-      subject: `Your plumpose order no. ${order.id}`,
-      text: `The private link to your order no. ${order.id}:\n${href}\n\nIf you did not ask for this, you can ignore it.`,
+      subject: `Your plumpose order ${orderCode(order)}`,
+      text: `The private link to your order ${orderCode(order)}:\n${href}\n\nIf you did not ask for this, you can ignore it.`,
       to: typed,
     })
   } catch (err) {

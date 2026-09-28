@@ -154,6 +154,56 @@ html.js-motion:not(.motion-ready) [data-reveal-image] {
   }
 }
 
+/*
+ * The order page's progress (src/app/(app)/order/[id]/page.tsx). On arrival
+ * the reached steps fill in turn — dot, then the line on to the next — each
+ * `--i` × 0.55s after the first; the current step then breathes a soft ring
+ * until the order is delivered. CSS only (a server page), and all of it off
+ * under reduced motion, where the finished state simply stands.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .order-dot-reached {
+    animation: order-dot-in 0.5s var(--ease-brand) calc(0.2s + var(--i) * 0.55s) both;
+  }
+  .order-line-fill {
+    animation: order-line-in 0.4s cubic-bezier(0.45, 0, 0.25, 1) calc(var(--i) * 0.55s - 0.1s) both;
+  }
+  .order-label-reached {
+    animation: order-label-in 0.6s var(--ease-brand) calc(0.25s + var(--i) * 0.55s) both;
+  }
+  .order-dot-ring {
+    animation: order-ring 2.4s var(--ease-brand) calc(0.8s + var(--i) * 0.55s) infinite both;
+  }
+}
+
+@keyframes order-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes order-line-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes order-label-in {
+  from {
+    opacity: 0.35;
+  }
+}
+@keyframes order-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
 /* Lenis — required styles for smooth scrolling. */
 html.lenis,
 html.lenis body {

@@ -32,6 +32,7 @@ const order = {
   gift: true,
   giftNote: 'For Mariam <3 — <script>alert(1)</script>',
   id: 1042,
+  reference: 'PLM-260928-7K4QX2',
   items: [
     {
       personalisation: [
@@ -133,8 +134,18 @@ describe('customer confirmation', () => {
     expect(email.html).toContain('href="http://localhost:3000/orders/1042?accessToken=tok-123"')
   })
 
-  it('names the order in the subject', () => {
-    expect(email.subject).toBe('Your plumpose order #1042 is confirmed')
+  it('names the order by its code in the subject', () => {
+    expect(email.subject).toBe('Your plumpose order PLM-260928-7K4QX2 is confirmed')
+  })
+
+  it('names an order from before codes by its number', () => {
+    const older = toOrderView({ ...order, reference: null }, {
+      adminUrl: '',
+      footer: {} as never,
+      leadTime: '',
+      orderUrl: '',
+    })
+    expect(older.code).toBe('no. 1042')
   })
 })
 
@@ -154,7 +165,7 @@ describe('owner alert', () => {
   })
 
   it('puts the total and the customer in the subject', () => {
-    expect(email.subject).toBe('New order #1042 — QAR 1,509.00 — Mariam Al-Kuwari')
+    expect(email.subject).toBe('New order PLM-260928-7K4QX2 — QAR 1,509.00 — Mariam Al-Kuwari')
   })
 })
 
@@ -166,7 +177,7 @@ describe('shipped', () => {
   it('still sends without one', () => {
     const email = shippedNotification({ ...view, trackingNumber: '' })
     expect(email.text).not.toContain('Tracking number')
-    expect(email.subject).toBe('Your plumpose order #1042 is on its way')
+    expect(email.subject).toBe('Your plumpose order PLM-260928-7K4QX2 is on its way')
   })
 })
 

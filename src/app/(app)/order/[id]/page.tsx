@@ -152,7 +152,9 @@ export default async function OrderPage({
 
         <div className="mx-auto mt-10 inline-flex flex-col items-center border border-line px-8 py-4">
           <span className="caps text-[0.5625rem] text-ink-soft">Order</span>
-          <span className="caps mt-1.5 text-sm tracking-[0.18em] tabular-nums">No. {order.id}</span>
+          <span className="caps mt-1.5 text-sm tracking-[0.18em] tabular-nums">
+            {order.reference ?? `No. ${order.id}`}
+          </span>
           <span className="mt-1.5 text-xs text-ink-soft">
             {formatDateTime({ date: order.createdAt, format: 'd MMMM yyyy' })}
           </span>
@@ -161,32 +163,54 @@ export default async function OrderPage({
 
       {/* Where it is */}
       <section aria-label="Progress" className="mt-16">
+        {/*
+          Each line runs from the previous dot's edge to this one's, with a gap
+          either side — it used to run centre to centre and cross the dots. On
+          arrival the reached steps fill in turn and the current one breathes
+          a ring (the order-* animations in globals.css; still under reduced
+          motion).
+        */}
         <ol className="grid grid-cols-4">
           {STEPS.map((step, i) => {
             const reached = i <= stepIndex
+            const current = i === stepIndex && step.key !== 'delivered'
+            const stagger = { '--i': i } as React.CSSProperties
             return (
               <li className="relative flex flex-col items-center text-center" key={step.key}>
                 {i > 0 ? (
                   <span
                     aria-hidden
-                    className={cn(
-                      'absolute top-[5px] right-1/2 h-px w-full',
-                      i <= stepIndex ? 'bg-ink' : 'bg-line',
-                    )}
-                  />
+                    className="absolute top-[5px] right-[calc(50%+14px)] left-[calc(-50%+14px)] h-px bg-line"
+                  >
+                    {reached ? (
+                      <span
+                        className="order-line-fill absolute inset-0 origin-left bg-ink"
+                        style={stagger}
+                      />
+                    ) : null}
+                  </span>
                 ) : null}
-                <span
-                  aria-hidden
-                  className={cn(
-                    'relative size-[11px] rounded-full border',
-                    reached ? 'border-ink bg-ink' : 'border-ink-faint bg-background',
-                  )}
-                />
+                <span aria-hidden className="relative size-[11px]">
+                  {current ? (
+                    <span
+                      className="order-dot-ring absolute inset-0 rounded-full border border-ink opacity-0"
+                      style={stagger}
+                    />
+                  ) : null}
+                  <span
+                    className={cn(
+                      'absolute inset-0 rounded-full border',
+                      reached ? 'order-dot-reached border-ink bg-ink' : 'border-ink-faint bg-background',
+                    )}
+                    style={reached ? stagger : undefined}
+                  />
+                </span>
                 <span
                   className={cn(
                     'caps mt-3 text-[0.5625rem] leading-snug',
-                    reached ? 'text-ink' : 'text-ink-soft',
+                    reached ? 'order-label-reached text-ink' : 'text-ink-soft',
                   )}
+                  style={reached ? stagger : undefined}
                 >
                   {step.label}
                   {i === stepIndex ? <span className="sr-only"> (current)</span> : null}

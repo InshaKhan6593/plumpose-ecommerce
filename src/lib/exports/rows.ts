@@ -32,6 +32,7 @@ const SOURCE: Record<string, string> = {
 
 export const ORDER_COLUMNS = [
   'Order',
+  'Order code',
   'Date (Doha)',
   'Payment',
   'Fulfilment',
@@ -87,6 +88,7 @@ export function orderRow(order: Order): Cell[] {
 
   return [
     order.id,
+    order.reference ?? '',
     dohaTime(order.createdAt),
     ORDER_STATUS[order.status ?? ''] ?? order.status ?? '',
     FULFILMENT[order.fulfilment ?? ''] ?? '',

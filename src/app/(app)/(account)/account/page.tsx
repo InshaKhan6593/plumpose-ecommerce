@@ -48,7 +48,7 @@ export default async function AccountOrdersPage({ searchParams }: Props) {
     limit: 100,
     overrideAccess: false,
     pagination: false,
-    select: { amount: true, createdAt: true, fulfilment: true, items: true },
+    select: { amount: true, createdAt: true, fulfilment: true, items: true, reference: true },
     sort: '-createdAt',
     user,
     where: { customer: { equals: user.id } },
@@ -71,7 +71,9 @@ export default async function AccountOrdersPage({ searchParams }: Props) {
                   href={`/order/${order.id}`}
                 >
                   <span>
-                    <span className="caps block text-[0.625rem]">No. {order.id}</span>
+                    <span className="caps block text-[0.625rem] tabular-nums">
+                      {order.reference ?? `No. ${order.id}`}
+                    </span>
                     <span className="mt-1 block text-[0.8125rem] text-ink-soft">
                       {dateFormat.format(new Date(order.createdAt))}
                     </span>
