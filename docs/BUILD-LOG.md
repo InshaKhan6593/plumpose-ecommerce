@@ -3237,3 +3237,37 @@ browser and logging the animation against the section's position.
 
 Checked: `tsc` 0 errors; lint 0 errors; frames at 390 × 844 and measurements at
 1440 × 900 on the local database.
+
+## 56. Shipping & returns fully editable; FAQs follow the returns window; the size page on phones — 28 Sep 2026
+
+**Every part of Shipping & returns is in Page text now** — order
+preparation, customs & duties, delivery information (and the line above the
+WhatsApp link), the line after the conditions, requesting a return, and a
+list for refunds / exchanges / damaged items (title + words; a blank line
+starts a paragraph). Page text nests one group deep, so `returns.request.*`
+became `returns.requestHeading` / `returns.requestBody`. The request text
+takes `{days}`, filled from Site settings → Returns, so the two cannot
+disagree. The page still falls back, section by section, to the code's copy
+when a cached Page text lacks one (the §54 500). Migration
+`20260928_135124_shipping_text_editable` (10 columns, one array table; up,
+down, up on a throwaway copy). Page text has still never been saved on Neon.
+
+**FAQs follow the returns window.** `syncReturnDays` (Site settings
+afterChange): when Days to ask for a return changes, every FAQ answer that
+says "within <old> days" says the new number — inside the rich text, so her
+formatting stays; "14 business days" and other numbers are left alone. Two of
+her FAQs said "within 14 days of delivery". (One of them still says to send a
+message on Instagram, from her old policy — hers to change.)
+
+**The size page froze on phones.** The six-measurement chart was wider than a
+phone and scrolled sideways in its own frame (`overflow-x-auto
+overscroll-x-contain`): a slightly diagonal swipe that began on it was taken
+by the table, and at its edge nothing moved. No table scrolls now: on a phone
+the chart is turned (measurements down the side, XS–XL across), and fits at
+360 px; from `md` it is laid out as her chart. Checked at 360, 390, 768 and
+1440: page width equals the screen, no element scrolls sideways.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 270 passed (new:
+`shipping-text-and-return-days.int.spec.ts` — the merge of every new field,
+empty fields keeping the defaults, the FAQ replacement, and on the database an
+FAQ changing when Site settings is saved).

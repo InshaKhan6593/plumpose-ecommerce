@@ -2,6 +2,7 @@ import type { GlobalAfterChangeHook, GlobalConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { refreshStorefront } from '@/hooks/revalidateStorefront'
+import { syncReturnDays } from '@/hooks/syncReturnDays'
 
 /**
  * The storefront reads these through `getCachedGlobal('siteSettings')`, which
@@ -28,7 +29,7 @@ export const SiteSettings: GlobalConfig = {
     read: () => true,
     update: adminOnly,
   },
-  hooks: { afterChange: [revalidateSiteSettings] },
+  hooks: { afterChange: [syncReturnDays, revalidateSiteSettings] },
   fields: [
     {
       type: 'tabs',
@@ -145,7 +146,7 @@ export const SiteSettings: GlobalConfig = {
               type: 'number',
               admin: {
                 description:
-                  'How many days after receiving an order a customer has to ask for a return or exchange. Shown on Shipping & returns, and told to Google. Your FAQs are written separately — change them there too.',
+                  'How many days after receiving an order a customer has to ask for a return or exchange. Shown on Shipping & returns and told to Google; when you save, any FAQ that said "within" the old number of days says the new one.',
               },
               defaultValue: 14,
               label: 'Days to ask for a return',

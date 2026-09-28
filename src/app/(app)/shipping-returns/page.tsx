@@ -13,9 +13,8 @@ import {
   TextLink,
 } from '@/components/editorial'
 import { getPageText } from '@/content/getPageText'
-// Sections not in Page text are read from the code, never through getPageText:
-// its data cache survives deploys, and an older cached copy lacks them (500).
-import { SHIPPING_PAGE as FIXED } from '@/content/pages'
+// The code's copy, under anything a stale cache is missing (see below).
+import { SHIPPING_PAGE as DEFAULTS } from '@/content/pages'
 import { formatQar } from '@/lib/pricing/money'
 import { rateCard } from '@/lib/pricing/shipping'
 import { Reveal } from '@/motion/Reveal'
@@ -38,7 +37,20 @@ export const metadata: Metadata = {
  * Anchors the footer links to: #delivery, #returns, #gifting.
  */
 export default async function ShippingReturnsPage() {
-  const { SHIPPING_PAGE } = await getPageText()
+  const { SHIPPING_PAGE: stored } = await getPageText()
+  /*
+   * Page text is cached in Next's data cache, which survives deploys: a copy
+   * cached before a section existed lacks it, and reading it crashed the page
+   * (500) until the cache was cleared. So each section falls back to the code.
+   */
+  const SHIPPING_PAGE = {
+    ...DEFAULTS,
+    ...stored,
+    customs: stored.customs ?? DEFAULTS.customs,
+    deliveryInfo: stored.deliveryInfo ?? DEFAULTS.deliveryInfo,
+    preparation: stored.preparation ?? DEFAULTS.preparation,
+    returns: { ...DEFAULTS.returns, ...stored.returns },
+  }
   const payload = await getPayload({ config: configPromise })
   const settings = await getCachedGlobal('siteSettings', 0)()
 
@@ -93,9 +105,9 @@ export default async function ShippingReturnsPage() {
         {/* Delivery */}
         <div className="mx-auto mt-16 max-w-4xl scroll-mt-32 md:mt-24" id="delivery">
           <Reveal as="section" className="mb-16 md:mb-20">
-            <SectionLabel>{FIXED.preparation.heading}</SectionLabel>
+            <SectionLabel>{SHIPPING_PAGE.preparation.heading}</SectionLabel>
             <div className="mt-6 grid gap-6 text-[0.9375rem] leading-[1.8] text-ink-soft md:grid-cols-2 md:gap-12">
-              {FIXED.preparation.body.map((p) => (
+              {SHIPPING_PAGE.preparation.body.map((p) => (
                 <p data-reveal key={p}>
                   {p}
                 </p>
@@ -171,20 +183,20 @@ export default async function ShippingReturnsPage() {
 
           <div className="mt-16 grid gap-14 md:mt-20 md:grid-cols-2 md:gap-12">
             <Reveal as="section">
-              <SectionLabel>{FIXED.customs.heading}</SectionLabel>
+              <SectionLabel>{SHIPPING_PAGE.customs.heading}</SectionLabel>
               <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
-                {FIXED.customs.body}
+                {SHIPPING_PAGE.customs.body}
               </p>
             </Reveal>
             <Reveal as="section">
-              <SectionLabel>{FIXED.deliveryInfo.heading}</SectionLabel>
+              <SectionLabel>{SHIPPING_PAGE.deliveryInfo.heading}</SectionLabel>
               <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
-                {FIXED.deliveryInfo.body}
+                {SHIPPING_PAGE.deliveryInfo.body}
               </p>
               {whatsappHref ? (
                 <div className="mt-5" data-reveal>
                   <p className="text-[0.9375rem] leading-[1.8] text-ink-soft">
-                    {FIXED.deliveryInfo.contact}
+                    {SHIPPING_PAGE.deliveryInfo.contact}
                   </p>
                   <TextLink className="mt-3" href={whatsappHref}>
                     WhatsApp {settings.whatsappNumber}
@@ -212,20 +224,20 @@ export default async function ShippingReturnsPage() {
                 ))}
               </ul>
               <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
-                {FIXED.returns.notAccepted}
+                {SHIPPING_PAGE.returns.notAccepted}
               </p>
 
               <h3 className="caps mt-12 text-[0.625rem]" data-reveal>
-                {FIXED.returns.request.heading}
+                {SHIPPING_PAGE.returns.requestHeading}
               </h3>
               <p className="mt-3 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
-                {FIXED.returns.request.body.replace('{days}', String(returnDays))}
+                {SHIPPING_PAGE.returns.requestBody.replaceAll('{days}', String(returnDays))}
               </p>
 
-              {FIXED.returns.more.map((block) => (
-                <div data-reveal key={block.heading}>
-                  <h3 className="caps mt-10 text-[0.625rem]">{block.heading}</h3>
-                  {block.body.map((p) => (
+              {SHIPPING_PAGE.returns.more.map((block) => (
+                <div data-reveal key={block.title}>
+                  <h3 className="caps mt-10 text-[0.625rem]">{block.title}</h3>
+                  {block.body.split(/\n\s*\n/).map((p) => (
                     <p className="mt-3 text-[0.9375rem] leading-[1.8] text-ink-soft" key={p}>
                       {p}
                     </p>

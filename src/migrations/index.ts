@@ -4,6 +4,7 @@ import * as migration_20260927_205742_free_embroidery_prize from './20260927_205
 import * as migration_20260927_205800_her_prizes_and_care_text from './20260927_205800_her_prizes_and_care_text';
 import * as migration_20260927_214513_price_box_starts_ticked from './20260927_214513_price_box_starts_ticked';
 import * as migration_20260928_130315_return_window_days from './20260928_130315_return_window_days';
+import * as migration_20260928_135124_shipping_text_editable from './20260928_135124_shipping_text_editable';
 
 export const migrations = [
   {
@@ -34,6 +35,11 @@ export const migrations = [
   {
     up: migration_20260928_130315_return_window_days.up,
     down: migration_20260928_130315_return_window_days.down,
-    name: '20260928_130315_return_window_days'
+    name: '20260928_130315_return_window_days',
+  },
+  {
+    up: migration_20260928_135124_shipping_text_editable.up,
+    down: migration_20260928_135124_shipping_text_editable.down,
+    name: '20260928_135124_shipping_text_editable'
   },
 ];

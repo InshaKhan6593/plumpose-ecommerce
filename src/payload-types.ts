@@ -3352,7 +3352,7 @@ export interface SiteSetting {
    */
   intlSurchargePct?: number | null;
   /**
-   * How many days after receiving an order a customer has to ask for a return or exchange. Shown on Shipping & returns, and told to Google. Your FAQs are written separately — change them there too.
+   * How many days after receiving an order a customer has to ask for a return or exchange. Shown on Shipping & returns and told to Google; when you save, any FAQ that said "within" the old number of days says the new one.
    */
   returnWindowDays: number;
   /**
@@ -3512,6 +3512,13 @@ export interface PageText {
   shipping?: {
     heading?: string | null;
     intro?: string | null;
+    preparation?: {
+      heading?: string | null;
+      /**
+       * A blank line between paragraphs.
+       */
+      body?: string | null;
+    };
     delivery?: {
       qatarHeading?: string | null;
       qatarNote?: string | null;
@@ -3520,13 +3527,41 @@ export interface PageText {
       timing?: string | null;
       currency?: string | null;
     };
+    customs?: {
+      heading?: string | null;
+      body?: string | null;
+    };
+    deliveryInfo?: {
+      heading?: string | null;
+      body?: string | null;
+      /**
+       * Shown above the WhatsApp link, when Site settings has a WhatsApp number.
+       */
+      contact?: string | null;
+    };
     returns?: {
       heading?: string | null;
       intro?: string | null;
       /**
-       * One term per line.
+       * One condition per line.
        */
       terms?: string | null;
+      notAccepted?: string | null;
+      requestHeading?: string | null;
+      /**
+       * Type {days} where the number of days goes: it is filled in from Site settings → Returns, so the two can never disagree.
+       */
+      requestBody?: string | null;
+      /**
+       * Each row is a heading and its words; a blank line in the words starts a new paragraph.
+       */
+      more?:
+        | {
+            title?: string | null;
+            body?: string | null;
+            id?: string | null;
+          }[]
+        | null;
       exceptionLabel?: string | null;
       exception?: string | null;
       contact?: string | null;
@@ -3782,6 +3817,12 @@ export interface PageTextSelect<T extends boolean = true> {
     | {
         heading?: T;
         intro?: T;
+        preparation?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+            };
         delivery?:
           | T
           | {
@@ -3792,12 +3833,35 @@ export interface PageTextSelect<T extends boolean = true> {
               timing?: T;
               currency?: T;
             };
+        customs?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+            };
+        deliveryInfo?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+              contact?: T;
+            };
         returns?:
           | T
           | {
               heading?: T;
               intro?: T;
               terms?: T;
+              notAccepted?: T;
+              requestHeading?: T;
+              requestBody?: T;
+              more?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                    id?: T;
+                  };
               exceptionLabel?: T;
               exception?: T;
               contact?: T;

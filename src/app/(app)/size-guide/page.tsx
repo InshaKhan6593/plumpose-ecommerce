@@ -13,15 +13,20 @@ export const metadata: Metadata = {
   title: 'Size guide: silk pyjama measurements',
 }
 
-const cell = 'px-4 py-3.5 text-[0.9375rem] tabular-nums whitespace-nowrap'
-const head = 'caps px-4 pb-3 text-[0.5625rem] font-normal text-ink-soft whitespace-nowrap'
-/** The size column stays in view while a phone scrolls the rest of the table. */
-const pinned = 'sticky left-0 bg-paper-2'
+const cell = 'px-1.5 py-3.5 text-[0.8125rem] tabular-nums md:px-4 md:text-[0.9375rem]'
+const head = 'caps px-2 pb-3 text-[0.5625rem] font-normal text-ink-soft md:px-4'
+const label = 'py-3.5 pr-2 text-[0.875rem] font-normal leading-snug md:text-[0.9375rem]'
 
 /**
  * Size guide — her size chart (SIZE_GUIDE in src/content/pages.ts), linked
- * from the size picker on every piece. On a phone each table scrolls sideways
- * inside its own frame, the size column held still; the page never does.
+ * from the size picker on every piece.
+ *
+ * **No table scrolls sideways.** On a phone the six-measurement chart was
+ * wider than the screen and scrolled inside its own frame, which took any
+ * slightly diagonal swipe that began on it — at its edge nothing moved, and
+ * the page felt frozen. So on a phone the chart is turned: measurements down
+ * the side, the five sizes across, which fits a 360 px screen. From `md` it
+ * is laid out as her chart is, sizes down the side.
  */
 export default function SizeGuidePage() {
   const { conversion, measurements } = SIZE_GUIDE
@@ -36,72 +41,107 @@ export default function SizeGuidePage() {
           <p className="mt-4 text-[0.8125rem] text-ink-soft" data-reveal>
             {measurements.note}
           </p>
-          <div className="mt-6 overflow-x-auto overscroll-x-contain" data-lenis-prevent data-reveal>
-            <table className="w-full text-left">
-              <caption className="sr-only">Garment measurements by size, in centimetres</caption>
-              <thead>
-                <tr className="border-b border-line">
-                  <th className={`${head} ${pinned} pl-0`} scope="col">
-                    Size
+
+          {/* Phone: a row per measurement, a column per size. */}
+          <table className="mt-6 w-full table-fixed text-left md:hidden" data-reveal>
+            <caption className="sr-only">Garment measurements by size, in centimetres</caption>
+            <colgroup>
+              <col className="w-[30%]" />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-line">
+                <th className={`${head} pl-0`} scope="col">
+                  <span className="sr-only">Measurement</span>
+                </th>
+                {measurements.rows.map((row) => (
+                  <th className={`${head} text-right`} key={row.size} scope="col">
+                    {row.size}
                   </th>
-                  {measurements.columns.map((c) => (
-                    <th className={head} key={c} scope="col">
-                      {c}
-                    </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {measurements.columns.map((name, i) => (
+                <tr className="border-b border-line" key={name}>
+                  <th className={label} scope="row">
+                    {name}
+                  </th>
+                  {measurements.rows.map((row) => (
+                    <td className={`${cell} text-right text-ink-soft`} key={row.size}>
+                      {row.values[i]}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {measurements.rows.map((row) => (
-                  <tr className="border-b border-line" key={row.size}>
-                    <th className={`${cell} ${pinned} pl-0 font-normal`} scope="row">
-                      {row.size}
-                    </th>
-                    {row.values.map((v, i) => (
-                      <td className={`${cell} text-ink-soft`} key={i}>
-                        {v}
-                      </td>
-                    ))}
-                  </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* From md: as her chart, a row per size. */}
+          <table className="mt-6 hidden w-full text-left md:table" data-reveal>
+            <caption className="sr-only">Garment measurements by size, in centimetres</caption>
+            <thead>
+              <tr className="border-b border-line">
+                <th className={`${head} pl-0`} scope="col">
+                  Size
+                </th>
+                {measurements.columns.map((c) => (
+                  <th className={head} key={c} scope="col">
+                    {c}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody>
+              {measurements.rows.map((row) => (
+                <tr className="border-b border-line" key={row.size}>
+                  <th className={`${cell} pl-0 font-normal`} scope="row">
+                    {row.size}
+                  </th>
+                  {row.values.map((v, i) => (
+                    <td className={`${cell} text-ink-soft`} key={i}>
+                      {v}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Reveal>
 
         <Reveal as="section" className="mx-auto mt-20 max-w-4xl md:mt-28">
           <SectionLabel>{conversion.heading}</SectionLabel>
-          <div className="mt-6 overflow-x-auto overscroll-x-contain" data-lenis-prevent data-reveal>
-            <table className="w-full text-left">
-              <caption className="sr-only">plumpose sizes in other countries’ sizing</caption>
-              <thead>
-                <tr className="border-b border-line">
-                  <th className={`${head} ${pinned} pl-0`} scope="col">
-                    <span className="sr-only">Country</span>
+          <table className="mt-6 w-full table-fixed text-left" data-reveal>
+            <caption className="sr-only">plumpose sizes in other countries’ sizing</caption>
+            <colgroup>
+              <col className="w-[30%]" />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-line">
+                <th className={`${head} pl-0`} scope="col">
+                  <span className="sr-only">Country</span>
+                </th>
+                {conversion.sizes.map((s) => (
+                  <th className={`${head} text-right md:text-left`} key={s} scope="col">
+                    {s}
                   </th>
-                  {conversion.sizes.map((s) => (
-                    <th className={head} key={s} scope="col">
-                      {s}
-                    </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {conversion.rows.map((row) => (
+                <tr className="border-b border-line" key={row.region}>
+                  <th className={label} scope="row">
+                    {row.region}
+                  </th>
+                  {row.values.map((v, i) => (
+                    <td className={`${cell} text-right text-ink-soft md:text-left`} key={i}>
+                      {v}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {conversion.rows.map((row) => (
-                  <tr className="border-b border-line" key={row.region}>
-                    <th className={`${cell} ${pinned} pl-0 font-normal`} scope="row">
-                      {row.region}
-                    </th>
-                    {row.values.map((v, i) => (
-                      <td className={`${cell} text-ink-soft`} key={i}>
-                        {v}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </Reveal>
       </PageShell>
 

@@ -125,10 +125,7 @@ export const FAQ_PAGE = {
  * "[X days]" is Site settings → Returns (14, from her old policy). Her "Sale items"
  * section had no policy in it yet, so it is not shown.
  *
- * The keys Page text edits (heading, intro, delivery.*, returns.intro/terms/
- * exception/contact, gifting.*) are unchanged; the new sections below them
- * (preparation, customs, deliveryInfo, returns.request, refunds, exchanges,
- * damaged) are not in Page text yet — adding them there is a migration.
+ * Every part is editable in Page text → Shipping & returns (pageTextSchema.ts).
  */
 export const SHIPPING_PAGE = {
   heading: 'Shipping & returns',
@@ -172,33 +169,26 @@ export const SHIPPING_PAGE = {
       'Show no signs of perfume, makeup, stains, damage or alteration',
     ],
     notAccepted: 'Items that do not meet these conditions may not be accepted.',
-    request: {
-      heading: 'Requesting a return or exchange',
-      /** `{days}` is Site settings → Returns → Days to ask for a return. */
-      body: 'Contact us within {days} days of receiving your order, with your order number and the reason for your request. Once your request has been reviewed and approved, we will send you instructions for the return.',
-    },
+    requestHeading: 'Requesting a return or exchange',
+    /** `{days}` is Site settings → Returns → Days to ask for a return. */
+    requestBody:
+      'Contact us within {days} days of receiving your order, with your order number and the reason for your request. Once your request has been reviewed and approved, we will send you instructions for the return.',
     exceptionLabel: 'Personalised pieces',
     exception:
       'Custom-made, personalised, altered or specially commissioned pieces are generally non-returnable unless they arrive damaged or defective. For hygiene and product-integrity reasons, certain other items may not be eligible either.',
+    /** Title and words per block; a blank line in the words starts a new paragraph. */
     more: [
       {
-        heading: 'Refunds',
-        body: [
-          'Once an approved return has been received and inspected, we will let you know the outcome.',
-          'Approved refunds are issued to the original payment method, subject to its processing times. Original shipping fees may be non-refundable unless the item you received was incorrect, damaged or defective.',
-        ],
+        title: 'Refunds',
+        body: 'Once an approved return has been received and inspected, we will let you know the outcome.\n\nApproved refunds are issued to the original payment method, subject to its processing times. Original shipping fees may be non-refundable unless the item you received was incorrect, damaged or defective.',
       },
       {
-        heading: 'Exchanges',
-        body: [
-          'Exchanges are subject to stock availability. If the replacement you would like is unavailable, we may offer an alternative or a refund under this policy.',
-        ],
+        title: 'Exchanges',
+        body: 'Exchanges are subject to stock availability. If the replacement you would like is unavailable, we may offer an alternative or a refund under this policy.',
       },
       {
-        heading: 'Damaged or incorrect items',
-        body: [
-          'If your order arrives damaged, or you receive the wrong item, contact us as soon as possible with your order number and clear photographs of the item and its packaging. We will review it and work with you to put it right.',
-        ],
+        title: 'Damaged or incorrect items',
+        body: 'If your order arrives damaged, or you receive the wrong item, contact us as soon as possible with your order number and clear photographs of the item and its packaging. We will review it and work with you to put it right.',
       },
     ],
     contact: 'For returns, exchanges or refunds, write to us:',
