@@ -57,6 +57,21 @@ enc_mp4 hero-wide EK3A2455.mp4 "crop=2160:1215:0:1500,setpts=2*PTS,scale=1920:10
 # SSIM 0.002 lower, invisible on a phone screen.
 enc_mp4 hero-mobile EK3A2455.mp4 "setpts=2*PTS,scale=1080:1920:flags=lanczos:$TV,fps=30000/1001" 25 2500
 
+# Intro hero: the fountain clip ("Introduction video.mov", sent 28 Sep 2026),
+# played once and held on its last frame — the camera drifts through all 5.5 s,
+# so no two frames match well enough to loop without the fountain ghosting.
+# An iPhone clip: HEVC 10-bit HLG (BT.2020), so it is tone-mapped to SDR
+# BT.709 first; left as HDR it plays grey and flat. 1080 wide portrait with a
+# rotation flag (applied by ffmpeg). 30 fps, so half speed needs motion
+# interpolation (minterpolate) to stay smooth — checked on the hands and paper.
+# Desktop: a 16:9 band from y=540 keeps her head and the paper in every frame;
+# kept at its own 1080 px (the browser scales it), not enlarged here.
+INTRO="introduction-fountain.mov"
+HLG="zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv"
+SLOW="minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,setpts=2*PTS,fps=30"
+enc_mp4 hero-intro-wide "$INTRO" "$HLG,crop=1080:608:0:540,$SLOW" 20 4500
+enc_mp4 hero-intro-mobile "$INTRO" "$HLG,$SLOW" 23 3000
+
 
 
 # (story-walk, beside "Behind the print", and story-cafe, the Made for You

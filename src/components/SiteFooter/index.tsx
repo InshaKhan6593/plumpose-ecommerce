@@ -59,7 +59,8 @@ export async function SiteFooter() {
       links: [
         { href: '/shipping-returns', label: 'Delivery' },
         { href: '/shipping-returns#returns', label: 'Returns' },
-        { href: '/fabric-care', label: 'Fabric & care' },
+        { href: '/size-guide', label: 'Size guide' },
+        { href: '/fabric-care', label: 'Wash & care' },
         { href: '/faq', label: 'FAQ' },
         { href: '/find-order', label: 'Track order' },
         { href: '/contact', label: 'Contact us' },
@@ -137,9 +138,15 @@ export async function SiteFooter() {
             className="caps self-start text-left text-[0.5625rem] text-ink-soft"
             variant="country"
           />
-          <p className="caps text-[0.5625rem] text-ink-soft">
-            All orders are charged in QAR · © {new Date().getFullYear()} plumpose
-          </p>
+          <div className="caps flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.5625rem] text-ink-soft">
+            <Link className="transition-colors hover:text-ink" href="/terms">
+              Terms
+            </Link>
+            <Link className="transition-colors hover:text-ink" href="/privacy">
+              Privacy
+            </Link>
+            <p>All orders are charged in QAR · © {new Date().getFullYear()} plumpose</p>
+          </div>
         </div>
       </div>
     </footer>

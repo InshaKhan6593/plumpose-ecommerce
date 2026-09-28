@@ -28,8 +28,11 @@ const CONDENSE_AT = 80
  * is rendered on the server, so nothing jumps when the script arrives. Screen
  * readers get the whole line once; reduced motion keeps the first phrase still.
  */
-function AnnouncementBar({ text }: { text: string }) {
-  const parts = text.split(/\s*·\s*/).filter(Boolean)
+function AnnouncementBar({ text: typed }: { text: string }) {
+  // "·" is hard to type on most keyboards, so "|" and "•" separate phrases too;
+  // the site always shows the dot.
+  const parts = typed.split(/\s*[·•|]\s*/).filter(Boolean)
+  const text = parts.join(' · ')
   const [index, setIndex] = useState(0)
 
   useEffect(() => {

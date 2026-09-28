@@ -55,11 +55,32 @@ const dirname = path.dirname(filename)
 /**
  * No "API" tab on her documents: it opened the raw JSON of the page she was
  * editing. Last in the plugin list, so it reaches the plugins' collections too.
+ *
+ * A global without versions is then left with one "Edit" tab, alone in the
+ * corner, that goes nowhere — hidden too.
  */
 const hideApiTab: Plugin = (config) => ({
   ...config,
   collections: config.collections?.map((c) => ({ ...c, admin: { ...c.admin, hideAPIURL: true } })),
-  globals: config.globals?.map((g) => ({ ...g, admin: { ...g.admin, hideAPIURL: true } })),
+  globals: config.globals?.map((g) => ({
+    ...g,
+    admin: {
+      ...g.admin,
+      hideAPIURL: true,
+      ...(g.versions
+        ? {}
+        : {
+            components: {
+              ...g.admin?.components,
+              views: {
+                ...g.admin?.components?.views,
+                // Neither global has other edit views to keep.
+                edit: { default: { tab: { condition: () => false } } },
+              },
+            },
+          }),
+    },
+  })),
 })
 
 export default buildConfig({

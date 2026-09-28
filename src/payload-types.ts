@@ -3312,20 +3312,32 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface SiteSetting {
   id: number;
   /**
-   * Shown on the site, and where customers’ replies to order emails arrive.
+   * Shown in the footer, on the Contact page and at the foot of every email. Customers’ replies to order emails arrive here.
    */
   contactEmail?: string | null;
   /**
-   * Every new order is emailed here. Leave empty to use the contact email.
+   * Every new order, and every message from the Contact page, is emailed here. Leave empty to use the contact email.
    */
   orderAlertEmail?: string | null;
   /**
-   * International format, e.g. +974 1234 5678. Used for click-to-chat links.
+   * A WhatsApp link in the footer and on the Contact page. Type it with the country code, e.g. +974 1234 5678. Leave empty to hide it.
    */
   whatsappNumber?: string | null;
+  /**
+   * Shown beside the Instagram links, e.g. @plumpose.
+   */
   instagramHandle?: string | null;
+  /**
+   * Where the Instagram links go. Leave empty to use the name above.
+   */
   instagramUrl?: string | null;
+  /**
+   * The dark line above the menu, on every page. Untick to hide it.
+   */
   announcementEnabled?: boolean | null;
+  /**
+   * Separate phrases with a bar ( | ) or a dot ( · ) — the site shows a dot. On a phone they take turns, one at a time. It shows in capitals, however you type it.
+   */
   announcementText?: string | null;
   /**
    * Delivery becomes free, to anywhere, when the pieces and embroidery in a bag come to the amount below or more.
@@ -3339,6 +3351,10 @@ export interface SiteSetting {
    * Added to every international zone fee. Use when carrier fuel costs rise.
    */
   intlSurchargePct?: number | null;
+  /**
+   * How many days after receiving an order a customer has to ask for a return or exchange. Shown on Shipping & returns, and told to Google. Your FAQs are written separately — change them there too.
+   */
+  returnWindowDays: number;
   /**
    * Untick to stop all stock emails. The dashboard still shows low stock.
    */
@@ -3366,7 +3382,7 @@ export interface SiteSetting {
    */
   currencyDetectLocation?: boolean | null;
   /**
-   * The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.
+   * Leave this as it is unless your developer asks. The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.
    */
   currencyAnchorQar?: number | null;
   /**
@@ -3388,7 +3404,7 @@ export interface SiteSetting {
    */
   spinWheelDailyLimit?: number | null;
   /**
-   * Charged per placement, per garment.
+   * In riyals: type 160 for QAR 160. Charged per placement, per garment.
    */
   personalisationFeeQar: number;
   /**
@@ -3396,15 +3412,15 @@ export interface SiteSetting {
    */
   personalisationMaxChars: number;
   /**
-   * Most placements allowed on a single set.
+   * Most placements allowed on a single piece.
    */
   personalisationMaxPlacements: number;
   /**
-   * Shown beside the picker, e.g. "4–10 working days".
+   * How long embroidery takes, e.g. "4–10 working days". Shown with the embroidery choices, on Our Story, and on the customer’s order page and email.
    */
   personalisationLeadTime?: string | null;
   /**
-   * Leave unticked — personalised pieces are not eligible for return under the current policy.
+   * Unticked, the piece’s page and Shipping & Returns say embroidered pieces cannot be returned — your current policy. Tick only if that changes.
    */
   personalisationReturnable?: boolean | null;
   updatedAt?: string | null;
@@ -3644,6 +3660,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   freeShippingEnabled?: T;
   freeShippingThresholdQar?: T;
   intlSurchargePct?: T;
+  returnWindowDays?: T;
   stockAlertsEnabled?: T;
   stockAlertEmail?: T;
   lowStockThreshold?: T;

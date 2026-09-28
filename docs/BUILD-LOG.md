@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 28 Sep 2026 — videos 01–03 re-recorded with a tour of every control; API tab hidden (§50)
+**Last updated:** 28 Sep 2026 — plumpose.com on Vercel; her legal pages, size guide and fountain hero film (§54)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -3143,3 +3143,73 @@ as the signed-in recorder — here, putting size M in the bag.
 
 Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed;
 `audit:admin` no problems; `quote.e2e.spec.ts` 18 passed; no schema change.
+
+## 54. The domain live; her legal pages, size guide and hero film — 28 Sep 2026
+
+**plumpose.com points at Vercel.** Squarespace DNS: `@` A → `216.198.79.1`,
+`www` CNAME → `9096f6de0d6ee77f.vercel-dns-017.com` (Vercel's project values;
+TTL 1 hr, was 4). `www` 308-redirects to `plumpose.com`, which stays the main
+address (SkipCash URLs, canonicals and emails already used it). MX and the
+Resend records untouched. `CRON_SECRET` set on Vercel.
+
+**Site settings in her words (video 07).** Labels made from field names are
+gone ("Announcement Enabled", "Instagram Url"); each field says where it
+shows. Contact-page messages go to "New-order alerts go to" too, and now it
+says so. The lone "Edit" tab on a global without versions is hidden with the
+API tab (`hideApiTab`). The announcement also splits on `|` and `•` — most
+keyboards cannot type `·` — and the site always shows the dot.
+`videos/07-site-settings.ts` is written; not recorded (the ElevenLabs key ran
+out mid-narration — 12 of its 34 lines are cached — and the machine was at
+~300 MB free).
+
+**Checkout.** Pay seemed to do nothing when a field was missing: it looked
+for `[name="country"]`, which the country search box (§45) did not have, and
+Lenis undid the browser's jump. Both boxes carry a `name`; Pay scrolls with
+Lenis (`force: true`) and focuses without the browser's jump. The Qatar city
+list, a native select, is the same search box now (checkout and address
+book). Apply already worked: without a destination it says the code will be
+checked once one is chosen.
+
+**Her text** (`src/content/pages.ts`, hers, lightly edited):
+
+- **Shipping & returns** — preparation (2–4 business days), delivery, customs,
+  delivery information (WhatsApp from Site settings), eligibility, requesting a
+  return, refunds, exchanges, damaged items. Her "[your email]" is the contact
+  email; her "[X days]" is **Site settings → Returns → Days to ask for a
+  return** (default 14), which also sets `merchantReturnDays`. Her "Sale items"
+  is left out until she writes it. New sections are read from the code, not
+  through `getPageText()`: its data cache survives deploys and a cached copy
+  without them 500'd the page. Not editable in Page text yet (a migration).
+- **Wash & care** (`/fabric-care`) — "The plumpose ritual": five steps, why
+  gentle care matters, storing. Her product-page care line ("Cold wash only…")
+  now differs from it — asked.
+- **Size guide** (`/size-guide`) — her chart and conversion table; a "Size
+  guide" link beside every size picker. Tables scroll sideways on a phone with
+  the size column pinned.
+- **Terms** (`/terms`) and **Privacy** (`/privacy`), `LegalPage`; linked in the
+  footer's bottom row. All four new pages are in the sitemap.
+
+**Sizes XS and XL** (her chart; "yes add them"). Size buttons follow
+clothing order (XXS…XXXL) whatever order the sizes were made in.
+`scripts/add-sizes-xs-xl.ts` adds them to Al Shaheen Nights at stock 0 — the
+piece is Made to order — and is safe to re-run.
+
+**Migration** `20260928_130315_return_window_days`: `site_settings.return_window_days`
+(default 14, not null) and the page-text column defaults following her new
+shipping words. Tested on a throwaway copy of a migrated database: up (14),
+down, up.
+
+**Hero film: her fountain clip** ("Introduction video.mov" →
+`../brand-assets/video/introduction-fountain.mov`). iPhone HEVC 10-bit HLG,
+1080 × 1920, 5.5 s at 30 fps. Tone-mapped to SDR BT.709, half speed with
+motion interpolation (checked on hands and paper), desktop a 16:9 band from
+y=540. The camera drifts through the whole clip — the best-matching pair of
+frames still differed by ~32/255 — so no loop is clean: the film plays once
+(`once` on the hero's film) and rests on its last frame; returning to the top
+does not restart it. `hero-intro-wide` / `hero-intro-mobile` in R2; the coffee
+film stays there to switch back to. Softer than the 4K coffee film on wide
+screens (enlarged ~1.5× at 1440, ~1.8× at 1920); a 4K / 60 fps take would fix
+it. The newspaper's front page is legible mid-film — raised with her.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed; the new
+pages, checkout and hero at desktop and phone on the local database.

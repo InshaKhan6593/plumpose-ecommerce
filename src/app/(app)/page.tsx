@@ -207,9 +207,20 @@ export default async function HomePage() {
           <HomeHero
             copy={copy.hero}
             ctaHref={productHref}
+            // Her fountain intro (28 Sep 2026): plays once and rests on its last
+            // frame (scripts/encode-videos.sh says why). The coffee film,
+            // hero-wide / hero-mobile, is still in public/video to switch back to.
             films={{
-              desktop: { mp4: '/video/hero-wide.mp4', poster: '/video/hero-wide-poster.jpg' },
-              mobile: { mp4: '/video/hero-mobile.mp4', poster: '/video/hero-mobile-poster.jpg' },
+              desktop: {
+                mp4: '/video/hero-intro-wide.mp4',
+                once: true,
+                poster: '/video/hero-intro-wide-poster.jpg',
+              },
+              mobile: {
+                mp4: '/video/hero-intro-mobile.mp4',
+                once: true,
+                poster: '/video/hero-intro-mobile-poster.jpg',
+              },
             }}
           />
         </div>

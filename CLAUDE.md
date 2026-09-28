@@ -158,14 +158,17 @@ client's reference recording (`../brand-assets/reference/`):
   confirm) or hers (her corrections of 27 Sep 2026, BUILD-LOG §40). The SAMPLE
   Made for You projects and the demo catalogue were removed from Neon on
   27 Sep; `isPlaceholderSlug()` keeps any `demo-`/`sample-` record out of search
-  (§39). Waiting on her: legal pages, size chart, make and delivery times.
+  (§39). Her legal pages, size guide, shipping/returns and care text arrived
+  28 Sep (§54). Waiting on her: the sale-items policy, the returns window
+  (Site settings → Returns, 14 for now), ready-to-ship vs "hand-finished to
+  order", and whether the product care line should follow her new care page.
 - **Vercel Pro.** Hosting is **Vercel, decided 26 Sep 2026** — no Netlify.
   The test deploy (https://plumpose.vercel.app) is on the free Hobby plan,
   which does not allow commercial use; the live shop goes on **Pro,
   $20/month**, before launch (BUILD-LOG §37–38).
-- **plumpose.com still points at her old site** (Netlify). Launch day is two
-  edits in Squarespace DNS — the `@` A record and the `www` CNAME — to Vercel's
-  values; never touch the MX (her Google Workspace email) (BUILD-LOG §41).
+- **plumpose.com points at Vercel since 28 Sep 2026** (BUILD-LOG §54) —
+  while checkout is still on the SkipCash sandbox. Squarespace DNS: `@` A and
+  `www` CNAME are Vercel's; never touch the MX (her Google Workspace email).
 - Storage (Cloudflare R2, §33/§36), production migrations (§33) and email from
   plumpose.com (§41) are built and no longer on this list.
 - Built since and not on this list any more: payments view, CSV exports,

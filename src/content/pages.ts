@@ -118,39 +118,90 @@ export const FAQ_PAGE = {
 
 /* ----------------------------------------------------------- Shipping & Returns */
 
+/**
+ * Hers — "Shipping & Delivery" and "Returns, Exchanges & Refunds", sent
+ * 28 Sep 2026, edited lightly to sit on the page: the fees stay in the live
+ * tables, her "[your email]" is the contact email from Site settings, and her
+ * "[X days]" is Site settings → Returns (14, from her old policy). Her "Sale items"
+ * section had no policy in it yet, so it is not shown.
+ *
+ * The keys Page text edits (heading, intro, delivery.*, returns.intro/terms/
+ * exception/contact, gifting.*) are unchanged; the new sections below them
+ * (preparation, customs, deliveryInfo, returns.request, refunds, exchanges,
+ * damaged) are not in Page text yet — adding them there is a migration.
+ */
 export const SHIPPING_PAGE = {
   heading: 'Shipping & returns',
-  /** LEGACY. */
-  intro: 'We’re pleased to offer delivery across Qatar and worldwide.',
+  intro: 'At plumpose, every order is carefully prepared before making its way to you.',
+  preparation: {
+    heading: 'Order preparation',
+    body: [
+      'Ready-to-ship orders are generally prepared and dispatched within 2–4 business days after your order is confirmed.',
+      'During launches, special projects, promotions or periods of high demand, preparation times may occasionally be longer. If this applies to your order, we will communicate the expected timeframe.',
+    ],
+  },
   delivery: {
     qatarHeading: 'Within Qatar',
-    qatarNote: 'A flat rate by city, shown at checkout.',
-    intlHeading: 'Worldwide',
-    intlNote: 'A flat rate by destination, shown at checkout before you pay.',
-    /** LEGACY. */
+    qatarNote: 'A flat rate by city, shown at checkout. Delivery times depend on your destination.',
+    intlHeading: 'GCC & worldwide',
+    intlNote:
+      'A flat rate by destination, shown at checkout before you pay. International orders are generally delivered within 14 business days after dispatch.',
     timing:
-      'Every piece is hand-finished to order. Delivery times may vary with location and customs; your order confirmation email sets out what happens next, and you can follow it from Track order.',
+      'Delivery estimates do not include delays caused by customs clearance, public holidays, incorrect delivery information, courier disruptions or circumstances outside our control.',
     currency:
       'Every order is charged in Qatari Riyal. Where we show your own currency, it is a guide.',
   },
-  /** LEGACY — "Returns & exchanges policy", verbatim. */
+  customs: {
+    heading: 'Customs & duties',
+    body: 'International and GCC orders may be subject to customs duties, taxes or other import charges imposed by the destination country. Any such charges are the responsibility of the customer unless otherwise stated at checkout.',
+  },
+  deliveryInfo: {
+    heading: 'Delivery information',
+    body: 'Please make sure your delivery address and contact details are accurate before completing your order. We cannot be responsible for delays caused by incorrect or incomplete delivery information.',
+    contact: 'For questions about an order or its delivery, message us on WhatsApp.',
+  },
   returns: {
     heading: 'Returns & exchanges',
     intro:
-      'We hope you love every piece as much as we loved creating it. If you’re not completely satisfied, we offer returns and exchanges under the following terms:',
+      'We want you to love your plumpose piece. Because our garments are delicate and carefully prepared, returns and exchanges have specific conditions. To be eligible, items must:',
     terms: [
-      'Returns and exchanges accepted within 14 days of delivery.',
-      'Items must be unworn, unwashed and in original condition, with all packaging and tags intact.',
-      'For hygiene and quality, any item showing signs of wear, washing, damage or alteration cannot be accepted.',
-      'Original shipping charges are non-refundable.',
-      'Customers cover return shipping unless the item is faulty or incorrect.',
-      'For a damaged or incorrect item, contact us within 48 hours of delivery.',
-      'Approved refunds are processed to the original payment method once the return is received and inspected.',
+      'Be unused and unworn',
+      'Be unwashed',
+      'Be in their original condition',
+      'Have all original tags and packaging attached',
+      'Show no signs of perfume, makeup, stains, damage or alteration',
     ],
+    notAccepted: 'Items that do not meet these conditions may not be accepted.',
+    request: {
+      heading: 'Requesting a return or exchange',
+      /** `{days}` is Site settings → Returns → Days to ask for a return. */
+      body: 'Contact us within {days} days of receiving your order, with your order number and the reason for your request. Once your request has been reviewed and approved, we will send you instructions for the return.',
+    },
     exceptionLabel: 'Personalised pieces',
-    exception: 'Personalised or monogrammed pieces are not eligible for return or exchange.',
-    contact:
-      'For any return or exchange enquiry, write to us or send a message on Instagram. Our team will attend to you.',
+    exception:
+      'Custom-made, personalised, altered or specially commissioned pieces are generally non-returnable unless they arrive damaged or defective. For hygiene and product-integrity reasons, certain other items may not be eligible either.',
+    more: [
+      {
+        heading: 'Refunds',
+        body: [
+          'Once an approved return has been received and inspected, we will let you know the outcome.',
+          'Approved refunds are issued to the original payment method, subject to its processing times. Original shipping fees may be non-refundable unless the item you received was incorrect, damaged or defective.',
+        ],
+      },
+      {
+        heading: 'Exchanges',
+        body: [
+          'Exchanges are subject to stock availability. If the replacement you would like is unavailable, we may offer an alternative or a refund under this policy.',
+        ],
+      },
+      {
+        heading: 'Damaged or incorrect items',
+        body: [
+          'If your order arrives damaged, or you receive the wrong item, contact us as soon as possible with your order number and clear photographs of the item and its packaging. We will review it and work with you to put it right.',
+        ],
+      },
+    ],
+    contact: 'For returns, exchanges or refunds, write to us:',
   },
   /** LEGACY — the gift packaging copy and the checkout's gift note. */
   gifting: {
@@ -326,26 +377,280 @@ export const FABRIC = {
 } as const
 
 /**
- * /fabric-care — the full guidance the product page links to.
- *
- * PLACEHOLDER in its arrangement only: she said she will send the full text.
- * Every instruction below is one of hers from FABRIC.care.line, grouped into
- * steps as on the page she pointed at; the step titles are ours. Nothing is
- * added — no washing bag, no temperatures, no returns wording — until she
- * writes it.
+ * /fabric-care — the full guidance the product page links to. Hers, "Wash &
+ * Care — the plumpose ritual", sent 28 Sep 2026, lightly edited.
  */
 export const CARE_PAGE = {
-  label: 'Fabric & care',
-  heading: 'Caring for your silk',
+  label: 'Wash & care',
+  heading: 'The plumpose ritual',
+  intro:
+    'Our pieces are made from delicate fabrics chosen for their softness, fluidity and beauty. With a little care, your plumpose piece can remain beautiful for years to come.',
   steps: [
     {
-      title: 'Wash cold',
-      body: 'Cold wash only, with a mild detergent. Wash your piece inside out, and do not bleach.',
+      title: 'Wash with care',
+      body: [
+        'For silk and other delicate fabrics, we recommend professional dry cleaning, or gentle hand washing where the care label permits.',
+        'If machine washing is permitted, place the garment in a protective laundry bag and choose a delicate cycle. Wash separately, or with similar colours.',
+      ],
     },
-    { title: 'Dry flat', body: 'Dry flat, in the shade. Do not tumble dry.' },
-    { title: 'Iron low', body: 'Iron on low heat.' },
+    {
+      title: 'Keep it cool',
+      body: [
+        'Use cold water. Avoid hot water, harsh detergents, bleach and fabric softeners: heat and strong chemicals can affect delicate fibres, colour and prints.',
+      ],
+    },
+    {
+      title: 'Dry gently',
+      body: [
+        'Do not tumble dry. Gently press out excess water without wringing or twisting, then lay the piece flat on a clean towel to dry, away from direct sunlight and heat.',
+      ],
+    },
+    {
+      title: 'Iron with care',
+      body: [
+        'Iron inside out at the lowest suitable temperature. For silk, place a clean cloth between the iron and the garment.',
+        'Steaming on a gentle setting may also suit, if the care label allows it.',
+      ],
+    },
+    {
+      title: 'Let it breathe',
+      body: [
+        'Natural fabrics absorb the scents around them. Before washing, try airing your piece in a cool, well-ventilated space.',
+        'Avoid spraying perfume, oils or alcohol-based products directly onto the fabric.',
+      ],
+    },
   ],
+  why: {
+    heading: 'Why gentle care matters',
+    body: [
+      'Natural fibres respond to heat, moisture and friction. Even pre-washed fabrics may change in shape or size when exposed to heat or the wrong washing.',
+      'Shrinkage, colour change or damage caused by incorrect washing, drying, ironing or care is not a manufacturing defect, and may not be covered by our returns policy.',
+    ],
+  },
+  store: {
+    heading: 'Store with care',
+    body: [
+      'Keep your pieces clean, dry and away from direct sunlight. Hang silk on a padded hanger, or fold it loosely in a breathable garment bag.',
+      'Avoid storing delicate fabrics in plastic for long periods.',
+    ],
+  },
+  closing: 'Care for your plumpose, and it will stay with you beautifully.',
 } as const
+
+/**
+ * /size-guide — hers, from her size chart image of 28 Sep 2026. Spellings
+ * corrected ("trauser" → trouser, "convertion" → conversion). Measurements
+ * are of the garment, in centimetres.
+ */
+export const SIZE_GUIDE = {
+  label: 'Size guide',
+  heading: 'Finding your size',
+  intro:
+    'plumpose pyjamas are designed for a relaxed fit, with slightly longer trousers for an elegant look. If you are between sizes, we recommend sizing up for extra comfort.',
+  measurements: {
+    heading: 'Size chart',
+    note: 'Garment measurements, in centimetres.',
+    columns: ['Chest', 'Shirt hem', 'Sleeve length', 'Trouser waist', 'Trouser hip', 'Inside leg'],
+    rows: [
+      { size: 'XS', values: ['50', '53', '58', '36.5', '51', '75.75'] },
+      { size: 'S', values: ['52', '55', '58.5', '39', '53.5', '76.5'] },
+      { size: 'M', values: ['54', '57', '59', '41.5', '56', '77.25'] },
+      { size: 'L', values: ['56', '59', '59', '44', '58.5', '78'] },
+      { size: 'XL', values: ['58', '64', '59', '46.5', '61', '78.75'] },
+    ],
+  },
+  conversion: {
+    heading: 'Size conversion',
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    rows: [
+      { region: 'UK', values: ['8', '10', '12', '14', '16'] },
+      { region: 'USA', values: ['4', '6', '8', '10', '12'] },
+      { region: 'EU', values: ['36', '38', '40', '42', '44'] },
+      { region: 'Australia', values: ['8', '10', '12', '14', '16'] },
+      { region: 'Japan', values: ['7', '9', '11', '13', '15'] },
+    ],
+  },
+} as const
+
+/* ---------------------------------------------------------------------- Legal */
+
+/**
+ * Terms & Conditions and Privacy — hers, sent 28 Sep 2026. A section's body is
+ * paragraphs; an array inside it is a bulleted list. Her "10. Contact" was
+ * left blank; it takes the same contact as her privacy policy. Legal text is
+ * published only as she approved it — change it only on her word.
+ */
+type LegalSection = { heading: string; body: ReadonlyArray<string | ReadonlyArray<string>> }
+
+export const TERMS_PAGE: { heading: string; updated: string; intro: string[]; sections: LegalSection[] } = {
+  heading: 'Terms & conditions',
+  updated: 'September 2026',
+  intro: [
+    'Welcome to plumpose. By accessing or using our website, you agree to these Terms & Conditions.',
+    'Please read them carefully before placing an order.',
+  ],
+  sections: [
+    {
+      heading: 'About plumpose',
+      body: [
+        'plumpose is a luxury loungewear and resortwear brand offering carefully designed garments and special pieces through our online store.',
+      ],
+    },
+    {
+      heading: 'Products',
+      body: [
+        'We make every effort to ensure that product descriptions, colours, measurements and images are accurate. However, colours may appear slightly different depending on your device or screen settings.',
+        'Our garments are made from delicate materials and natural fibres. Minor variations in texture, colour or appearance may naturally occur and are not necessarily considered defects.',
+      ],
+    },
+    {
+      heading: 'Orders',
+      body: [
+        'When you place an order, you are making an offer to purchase the selected products.',
+        'An order confirmation will be sent to the email address provided at checkout. We reserve the right to cancel or refuse an order where necessary, including in cases of incorrect pricing, stock discrepancies, suspected fraudulent activity or other exceptional circumstances.',
+      ],
+    },
+    {
+      heading: 'Prices & payment',
+      body: [
+        'All prices displayed on our website are in Qatari Riyals unless otherwise stated.',
+        'Payment must be completed through the available payment methods at checkout.',
+        'Any applicable customs duties, taxes or import charges associated with international orders are the responsibility of the customer unless otherwise stated.',
+      ],
+    },
+    {
+      heading: 'Shipping',
+      body: [
+        'Orders are generally prepared for dispatch within 2–4 business days. Estimated delivery times are:',
+        [
+          'Qatar: after dispatch, according to the selected delivery service',
+          'GCC: generally within the applicable courier delivery timeframe',
+          'International: generally within 14 business days',
+        ],
+        'Delivery times are estimates and may be affected by customs clearance, public holidays, courier delays or circumstances outside our control.',
+      ],
+    },
+    {
+      heading: 'Returns & exchanges',
+      body: [
+        'Please refer to our Returns & Exchange Policy for eligibility, timeframes and conditions.',
+        'Due to the delicate nature of our garments, items must be returned in their original condition and must not have been worn, washed, altered, damaged or otherwise used.',
+      ],
+    },
+    {
+      heading: 'Intellectual property',
+      body: [
+        'All content on the plumpose website, including photography, illustrations, designs, graphics, logos, text, product names and other creative materials, belongs to or is licensed to plumpose unless otherwise stated.',
+        'Content may not be copied, reproduced, modified, distributed or used commercially without prior written permission.',
+      ],
+    },
+    {
+      heading: 'Website use',
+      body: [
+        'You agree not to misuse our website, attempt to gain unauthorised access, interfere with its operation, or use the website for unlawful purposes.',
+      ],
+    },
+    {
+      heading: 'Changes',
+      body: [
+        'plumpose may update these Terms & Conditions from time to time. The latest version will always be published on our website.',
+      ],
+    },
+    {
+      heading: 'Contact',
+      body: ['For questions regarding these Terms & Conditions, please contact us.'],
+    },
+  ],
+}
+
+/** Hers, in full — sent in two parts on 28 Sep 2026. */
+export const PRIVACY_PAGE: { heading: string; updated: string; intro: string[]; sections: LegalSection[] } = {
+  heading: 'Privacy policy',
+  updated: 'September 2026',
+  intro: [
+    'At plumpose, we respect your privacy and are committed to protecting the information you share with us.',
+    'This Privacy Policy explains how we collect, use and protect your personal information when you visit or make a purchase through our website.',
+  ],
+  sections: [
+    {
+      heading: 'Information we collect',
+      body: [
+        'When you place an order, create an account, subscribe to our newsletter, contact us, or interact with our website, we may collect information such as:',
+        [
+          'Your name',
+          'Email address',
+          'Telephone number',
+          'Billing and delivery address',
+          'Order and transaction details',
+          'Account information',
+          'Information you provide when contacting us',
+          'Website usage and technical information, such as browser type, device and IP address',
+        ],
+        'Payment information may be processed securely through our third-party payment provider. plumpose does not store your complete payment card details.',
+      ],
+    },
+    {
+      heading: 'How we use your information',
+      body: [
+        'We use your information to:',
+        [
+          'Process and deliver your orders',
+          'Communicate with you regarding your orders',
+          'Provide customer support',
+          'Process payments and refunds',
+          'Improve our website, products and services',
+          'Send newsletters or marketing communications where you have chosen to receive them',
+          'Prevent fraud and protect the security of our website',
+          'Comply with applicable legal and regulatory requirements',
+        ],
+      ],
+    },
+    {
+      heading: 'Marketing',
+      body: [
+        'If you subscribe to our newsletter or otherwise provide consent to receive marketing communications, we may contact you about new collections, special projects, events and plumpose updates.',
+        'You may unsubscribe from marketing communications at any time using the unsubscribe option included in our emails or by contacting us.',
+      ],
+    },
+    {
+      heading: 'Cookies',
+      body: [
+        'Our website may use cookies and similar technologies to provide essential website functionality, remember preferences, understand website usage and improve your experience.',
+        'Third-party services such as analytics, payment or social-media tools may also use cookies or similar technologies in accordance with their own privacy policies.',
+      ],
+    },
+    {
+      heading: 'Sharing your information',
+      body: [
+        'We may share necessary information with trusted service providers who assist us with:',
+        [
+          'Payment processing',
+          'Order fulfilment',
+          'Shipping and delivery',
+          'Website hosting and technical services',
+          'Analytics and marketing',
+        ],
+        'We do not sell your personal information.',
+      ],
+    },
+    {
+      heading: 'Data security',
+      body: [
+        'We take reasonable measures to protect your personal information against unauthorised access, alteration, disclosure or destruction. However, no online transmission or storage system can be guaranteed to be completely secure.',
+      ],
+    },
+    {
+      heading: 'Your information',
+      body: [
+        'You may contact us to request access to, correction of, or information regarding the personal data we hold about you, subject to applicable law.',
+      ],
+    },
+    {
+      heading: 'Contact',
+      body: ['For privacy-related enquiries, please contact us.'],
+    },
+  ],
+}
 
 /* ---------------------------------------------------------------------- Media */
 

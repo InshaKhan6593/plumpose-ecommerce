@@ -3,6 +3,7 @@ import * as migration_20260927_184819_simplify_sizes_and_product_drafts from './
 import * as migration_20260927_205742_free_embroidery_prize from './20260927_205742_free_embroidery_prize';
 import * as migration_20260927_205800_her_prizes_and_care_text from './20260927_205800_her_prizes_and_care_text';
 import * as migration_20260927_214513_price_box_starts_ticked from './20260927_214513_price_box_starts_ticked';
+import * as migration_20260928_130315_return_window_days from './20260928_130315_return_window_days';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20260927_214513_price_box_starts_ticked.up,
     down: migration_20260927_214513_price_box_starts_ticked.down,
-    name: '20260927_214513_price_box_starts_ticked'
+    name: '20260927_214513_price_box_starts_ticked',
+  },
+  {
+    up: migration_20260928_130315_return_window_days.up,
+    down: migration_20260928_130315_return_window_days.down,
+    name: '20260928_130315_return_window_days'
   },
 ];

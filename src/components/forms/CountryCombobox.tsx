@@ -51,23 +51,34 @@ export const filterCountries = <T extends ComboCountry>(countries: T[], query: s
  * Enter picks, Escape puts the last choice back. Leaving the field without
  * picking keeps the country it had. An exact name (typed, or put there by the
  * browser's autofill) is picked on its own.
+ *
+ * Also the Qatar city field (checkout, address book) — a native select there
+ * looked like the browser's own and could not be searched.
  */
 export function CountryCombobox({
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
+  autoComplete = 'country-name',
   className,
   countries,
   id,
+  name,
+  noMatch = 'No country matches',
   onChange,
   placeholder = 'Type to search',
   value,
 }: {
   'aria-describedby'?: string
   'aria-invalid'?: boolean
+  autoComplete?: string
   /** Classes for the text field — the page's own input style. */
   className?: string
   countries: ComboCountry[]
   id: string
+  /** So a form can find the field by name (checkout moves to the first one missing). */
+  name?: string
+  /** Shown when nothing matches, before the typed text. */
+  noMatch?: string
   onChange: (code: string) => void
   placeholder?: string
   value: string
@@ -116,9 +127,10 @@ export function CountryCombobox({
         aria-describedby={describedBy}
         aria-expanded={open}
         aria-invalid={invalid}
-        autoComplete="country-name"
+        autoComplete={autoComplete}
         className={cn(className, 'pr-8')}
         id={id}
+        name={name}
         onBlur={() => {
           setOpen(false)
           setQuery('')
@@ -212,7 +224,7 @@ export function CountryCombobox({
             ))
           ) : (
             <li className="px-4 py-2.5 text-[0.9375rem] text-ink-faint" role="presentation">
-              No country matches “{query}”
+              {noMatch} “{query}”
             </li>
           )}
         </ul>

@@ -5,8 +5,25 @@ import type { Product } from '@/payload-types'
 import { purchaseLimit, readyStock } from '@/lib/pricing/stock'
 import { createUrl } from '@/utilities/createUrl'
 import clsx from 'clsx'
+import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React from 'react'
+
+const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+
+/** Known sizes in clothing order; anything else keeps its place after them. */
+const bySizeOrder = <T,>(docs: T[] | undefined): T[] | undefined => {
+  if (!docs) return docs
+  const rank = (o: T) => {
+    const label = typeof o === 'object' && o ? String((o as { label?: string }).label ?? '') : ''
+    const at = SIZE_ORDER.indexOf(label.trim().toUpperCase())
+    return at === -1 ? SIZE_ORDER.length : at
+  }
+  return docs
+    .map((doc, i) => ({ doc, i }))
+    .sort((a, b) => rank(a.doc) - rank(b.doc) || a.i - b.i)
+    .map(({ doc }) => doc)
+}
 
 export function VariantSelector({ product }: { product: Product }) {
   const router = useRouter()
@@ -25,7 +42,9 @@ export function VariantSelector({ product }: { product: Product }) {
       return <></>
     }
 
-    const options = type.options?.docs
+    // Sizes in clothing order, however they were added (XS and XL came after S, M, L).
+    const isSize = /^size$/i.test(type.name ?? type.label ?? '')
+    const options = isSize ? bySizeOrder(type.options?.docs) : type.options?.docs
 
     if (!options || !Array.isArray(options) || !options.length) {
       return <></>
@@ -33,7 +52,17 @@ export function VariantSelector({ product }: { product: Product }) {
 
     return (
       <dl key={type.id}>
-        <dt className="caps mb-3 text-[0.625rem] text-ink">{type.label}</dt>
+        <dt className="caps mb-3 flex items-baseline justify-between text-[0.625rem] text-ink">
+          {type.label}
+          {isSize ? (
+            <Link
+              className="text-ink-soft underline underline-offset-4 transition-colors hover:text-ink"
+              href="/size-guide"
+            >
+              Size guide
+            </Link>
+          ) : null}
+        </dt>
         <dd className="flex flex-wrap gap-2.5">
           <React.Fragment>
             {options?.map((option) => {

@@ -237,22 +237,26 @@ function AddressForm({
       </HouseField>
       {inQatar ? (
         <HouseField className="sm:col-span-2" error={errors.city?.message} id="a-city" label="City">
-          <select
-            aria-invalid={Boolean(errors.city)}
-            className={cn(houseInput, 'cursor-pointer')}
-            id="a-city"
+          <input
+            type="hidden"
             {...register('city', {
               // A city typed for another country is not one of Qatar's delivery cities.
               validate: (v) => cities.some((c) => c.name === v) || 'Please choose a city.',
             })}
-          >
-            <option value="">Choose your city</option>
-            {cities.map((c) => (
-              <option key={c.key} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          />
+          <CountryCombobox
+            aria-invalid={Boolean(errors.city)}
+            autoComplete="address-level2"
+            className={houseInput}
+            countries={cities.map((c) => ({ code: c.name, name: c.name }))}
+            id="a-city"
+            noMatch="No city matches"
+            onChange={(name) =>
+              setValue('city', name, { shouldDirty: true, shouldValidate: true })
+            }
+            placeholder="Choose your city"
+            value={watch('city')}
+          />
         </HouseField>
       ) : null}
       <HouseField

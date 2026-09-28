@@ -13,6 +13,9 @@ import {
   TextLink,
 } from '@/components/editorial'
 import { getPageText } from '@/content/getPageText'
+// Sections not in Page text are read from the code, never through getPageText:
+// its data cache survives deploys, and an older cached copy lacks them (500).
+import { SHIPPING_PAGE as FIXED } from '@/content/pages'
 import { formatQar } from '@/lib/pricing/money'
 import { rateCard } from '@/lib/pricing/shipping'
 import { Reveal } from '@/motion/Reveal'
@@ -20,7 +23,7 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/shipping-returns' },
-  description: 'Delivery across Qatar and worldwide, our 14-day returns policy, and gift wrapping.',
+  description: 'Delivery across Qatar and worldwide, our returns and exchanges policy, and gift wrapping.',
   title: 'Shipping & returns: Qatar and worldwide',
 }
 
@@ -60,6 +63,10 @@ export default async function ShippingReturnsPage() {
   const intlRows = [...card.zones].sort((a, b) => a.feeQar - b.feeQar)
 
   const personalisedReturnable = Boolean(settings.personalisationReturnable)
+  const returnDays = settings.returnWindowDays ?? 14
+  const whatsappHref = settings.whatsappNumber
+    ? `https://wa.me/${settings.whatsappNumber.replace(/[^\d]/g, '')}`
+    : null
 
   return (
     <>
@@ -85,6 +92,23 @@ export default async function ShippingReturnsPage() {
 
         {/* Delivery */}
         <div className="mx-auto mt-16 max-w-4xl scroll-mt-32 md:mt-24" id="delivery">
+          <Reveal as="section" className="mb-16 md:mb-20">
+            <SectionLabel>{FIXED.preparation.heading}</SectionLabel>
+            <div className="mt-6 grid gap-6 text-[0.9375rem] leading-[1.8] text-ink-soft md:grid-cols-2 md:gap-12">
+              {FIXED.preparation.body.map((p) => (
+                <p data-reveal key={p}>
+                  {p}
+                </p>
+              ))}
+            </div>
+            {settings.personalisationLeadTime ? (
+              <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                Pieces with hand embroidery take {settings.personalisationLeadTime} to
+                prepare.
+              </p>
+            ) : null}
+          </Reveal>
+
           <div className="grid gap-14 md:grid-cols-2 md:gap-12">
             <Reveal as="section">
               <SectionLabel>{SHIPPING_PAGE.delivery.qatarHeading}</SectionLabel>
@@ -144,6 +168,31 @@ export default async function ShippingReturnsPage() {
               </p>
             </div>
           </Reveal>
+
+          <div className="mt-16 grid gap-14 md:mt-20 md:grid-cols-2 md:gap-12">
+            <Reveal as="section">
+              <SectionLabel>{FIXED.customs.heading}</SectionLabel>
+              <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                {FIXED.customs.body}
+              </p>
+            </Reveal>
+            <Reveal as="section">
+              <SectionLabel>{FIXED.deliveryInfo.heading}</SectionLabel>
+              <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                {FIXED.deliveryInfo.body}
+              </p>
+              {whatsappHref ? (
+                <div className="mt-5" data-reveal>
+                  <p className="text-[0.9375rem] leading-[1.8] text-ink-soft">
+                    {FIXED.deliveryInfo.contact}
+                  </p>
+                  <TextLink className="mt-3" href={whatsappHref}>
+                    WhatsApp {settings.whatsappNumber}
+                  </TextLink>
+                </div>
+              ) : null}
+            </Reveal>
+          </div>
         </div>
 
         {/* Returns */}
@@ -162,6 +211,27 @@ export default async function ShippingReturnsPage() {
                   </li>
                 ))}
               </ul>
+              <p className="mt-6 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                {FIXED.returns.notAccepted}
+              </p>
+
+              <h3 className="caps mt-12 text-[0.625rem]" data-reveal>
+                {FIXED.returns.request.heading}
+              </h3>
+              <p className="mt-3 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                {FIXED.returns.request.body.replace('{days}', String(returnDays))}
+              </p>
+
+              {FIXED.returns.more.map((block) => (
+                <div data-reveal key={block.heading}>
+                  <h3 className="caps mt-10 text-[0.625rem]">{block.heading}</h3>
+                  {block.body.map((p) => (
+                    <p className="mt-3 text-[0.9375rem] leading-[1.8] text-ink-soft" key={p}>
+                      {p}
+                    </p>
+                  ))}
+                </div>
+              ))}
             </div>
 
             <div className="self-start" data-reveal>
@@ -182,9 +252,7 @@ export default async function ShippingReturnsPage() {
                     {settings.contactEmail}
                   </TextLink>
                 ) : null}
-                {settings.instagramUrl ? (
-                  <TextLink href={settings.instagramUrl}>Instagram</TextLink>
-                ) : null}
+                {whatsappHref ? <TextLink href={whatsappHref}>WhatsApp</TextLink> : null}
               </div>
             </div>
           </div>

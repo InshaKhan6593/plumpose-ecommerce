@@ -16,8 +16,9 @@ const revalidateSiteSettings: GlobalAfterChangeHook = ({ doc, req }) => {
 }
 
 /**
- * Everything the client needs to change without a developer:
- * contact details, the WhatsApp number, socials and the free-shipping threshold.
+ * Everything the client needs to change without a developer: contact
+ * details, the announcement, delivery, stock emails, currencies, the reward
+ * wheel and embroidery. Labels and descriptions are in her words (video 07).
  */
 export const SiteSettings: GlobalConfig = {
   slug: 'siteSettings',
@@ -39,16 +40,17 @@ export const SiteSettings: GlobalConfig = {
               type: 'email',
               admin: {
                 description:
-                  'Shown on the site, and where customers’ replies to order emails arrive.',
+                  'Shown in the footer, on the Contact page and at the foot of every email. Customers’ replies to order emails arrive here.',
               },
               defaultValue: 'info@plumpose.com',
+              label: 'Contact email',
             },
             {
               name: 'orderAlertEmail',
               type: 'email',
               admin: {
                 description:
-                  'Every new order is emailed here. Leave empty to use the contact email.',
+                  'Every new order, and every message from the Contact page, is emailed here. Leave empty to use the contact email.',
               },
               label: 'New-order alerts go to',
             },
@@ -57,19 +59,46 @@ export const SiteSettings: GlobalConfig = {
               type: 'text',
               admin: {
                 description:
-                  'International format, e.g. +974 1234 5678. Used for click-to-chat links.',
+                  'A WhatsApp link in the footer and on the Contact page. Type it with the country code, e.g. +974 1234 5678. Leave empty to hide it.',
               },
               label: 'WhatsApp number',
             },
-            { name: 'instagramHandle', type: 'text', defaultValue: '@plumpose' },
-            { name: 'instagramUrl', type: 'text' },
+            {
+              name: 'instagramHandle',
+              type: 'text',
+              admin: { description: 'Shown beside the Instagram links, e.g. @plumpose.' },
+              defaultValue: '@plumpose',
+              label: 'Instagram name',
+            },
+            {
+              name: 'instagramUrl',
+              type: 'text',
+              admin: {
+                description: 'Where the Instagram links go. Leave empty to use the name above.',
+              },
+              label: 'Instagram link',
+            },
           ],
           label: 'Contact',
         },
         {
           fields: [
-            { name: 'announcementEnabled', type: 'checkbox', defaultValue: true },
-            { name: 'announcementText', type: 'text' },
+            {
+              name: 'announcementEnabled',
+              type: 'checkbox',
+              admin: { description: 'The dark line above the menu, on every page. Untick to hide it.' },
+              defaultValue: true,
+              label: 'Show the announcement',
+            },
+            {
+              name: 'announcementText',
+              type: 'text',
+              admin: {
+                description:
+                  'Separate phrases with a bar ( | ) or a dot ( · ) — the site shows a dot. On a phone they take turns, one at a time. It shows in capitals, however you type it.',
+              },
+              label: 'Announcement',
+            },
           ],
           label: 'Announcement',
         },
@@ -108,6 +137,24 @@ export const SiteSettings: GlobalConfig = {
             },
           ],
           label: 'Shipping',
+        },
+        {
+          fields: [
+            {
+              name: 'returnWindowDays',
+              type: 'number',
+              admin: {
+                description:
+                  'How many days after receiving an order a customer has to ask for a return or exchange. Shown on Shipping & returns, and told to Google. Your FAQs are written separately — change them there too.',
+              },
+              defaultValue: 14,
+              label: 'Days to ask for a return',
+              max: 365,
+              min: 1,
+              required: true,
+            },
+          ],
+          label: 'Returns',
         },
         {
           /**
@@ -208,7 +255,7 @@ export const SiteSettings: GlobalConfig = {
               admin: {
                 condition: (data) => data?.currencyDisplayEnabled !== false,
                 description:
-                  'The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.',
+                  'Leave this as it is unless your developer asks. The QAR price your hand-set prices under Currencies are for — Al Shaheen Nights, QAR 1,399. A piece at this price shows exactly your figure; other amounts convert at the rate it implies.',
               },
               defaultValue: 1399,
               label: 'Hand-set prices are for a piece at (QAR)',
@@ -280,7 +327,7 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'personalisationFeeQar',
               type: 'number',
-              admin: { description: 'Charged per placement, per garment.' },
+              admin: { description: 'In riyals: type 160 for QAR 160. Charged per placement, per garment.' },
               defaultValue: 160,
               label: 'Embroidery fee (QAR)',
               min: 0,
@@ -298,7 +345,7 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'personalisationMaxPlacements',
               type: 'number',
-              admin: { description: 'Most placements allowed on a single set.' },
+              admin: { description: 'Most placements allowed on a single piece.' },
               defaultValue: 2,
               label: 'Maximum placements',
               min: 1,
@@ -307,7 +354,10 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'personalisationLeadTime',
               type: 'text',
-              admin: { description: 'Shown beside the picker, e.g. "4–10 working days".' },
+              admin: {
+                description:
+                  'How long embroidery takes, e.g. "4–10 working days". Shown with the embroidery choices, on Our Story, and on the customer’s order page and email.',
+              },
               defaultValue: '4–10 working days',
               label: 'Lead time',
             },
@@ -316,7 +366,7 @@ export const SiteSettings: GlobalConfig = {
               type: 'checkbox',
               admin: {
                 description:
-                  'Leave unticked — personalised pieces are not eligible for return under the current policy.',
+                  'Unticked, the piece’s page and Shipping & Returns say embroidered pieces cannot be returned — your current policy. Tick only if that changes.',
               },
               defaultValue: false,
               label: 'Personalised pieces can be returned',

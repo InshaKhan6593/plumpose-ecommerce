@@ -175,7 +175,7 @@ export default async function ProductPage({ params }: Args) {
   const offer = (priceMinor: number, inStock: boolean) => ({
     '@type': 'Offer',
     availability: availability(inStock),
-    hasMerchantReturnPolicy: RETURN_POLICY,
+    hasMerchantReturnPolicy: { ...RETURN_POLICY, merchantReturnDays: settings.returnWindowDays ?? 14 },
     price: toMajor(priceMinor).toFixed(2),
     priceCurrency: 'QAR',
     url: pageUrl,
@@ -370,10 +370,11 @@ async function productDetails({
 }
 
 /**
- * The returns rule the Shipping & returns page states: 14 days from delivery,
- * return postage paid by the customer (src/seed/index.ts, her old policy).
- * Personalised pieces are final sale, but the piece itself is returnable, so
- * this describes the offer as sold. Change it here if her policy changes.
+ * The returns rule the Shipping & returns page states, return postage paid by
+ * the customer (her old policy). The days are hers to set — Site settings →
+ * Returns — and replace `merchantReturnDays` where this is used; 14 is only
+ * the fallback. Personalised pieces are final sale, but the piece itself is
+ * returnable, so this describes the offer as sold.
  */
 const RETURN_POLICY = {
   '@type': 'MerchantReturnPolicy',

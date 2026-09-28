@@ -1,7 +1,7 @@
 'use client'
 
 import { useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
-import { ChevronDown, Lock } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
@@ -12,6 +12,7 @@ import { formatQar } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
 import { CountryCombobox } from '@/components/forms/CountryCombobox'
 import { WHEEL_CODE_KEY } from '@/components/spin/RewardWheel'
+import { useLenis } from '@/motion/MotionProvider'
 import { useLocale, useMoney } from '@/providers/Locale'
 import { cn } from '@/utilities/cn'
 
@@ -171,6 +172,7 @@ export function CheckoutPage({
   const [submitting, setSubmitting] = useState(false)
   const [payError, setPayError] = useState<null | string>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const lenis = useLenis()
 
   const items = useMemo(() => cart?.items ?? [], [cart])
   const paymentsReady = paymentMethods.some((m) => m.name === 'skipcash')
@@ -319,7 +321,15 @@ export function CheckoutPage({
     setErrors(found)
     const first = Object.keys(found)[0]
     if (first) {
-      formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus()
+      // Lenis owns the scroll, so move the page there first, then focus
+      // without the browser's own jump (which Lenis would undo).
+      const field = formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)
+      if (field) {
+        // `force`: a paused Lenis (a drawer that closed as the page changed) ignores scrollTo.
+        lenis.current?.scrollTo(field, { force: true, offset: -140 })
+        if (!lenis.current) field.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        field.focus({ preventScroll: true })
+      }
       return
     }
     if (blocked || !destinationReady) return
@@ -515,6 +525,7 @@ export function CheckoutPage({
                     note: c.blockedReason ? '— unavailable' : undefined,
                   }))}
                   id="country"
+                  name="country"
                   onChange={(code) => {
                     set('country', code)
                     set('cityKey', '')
@@ -557,29 +568,18 @@ export function CheckoutPage({
 
               {inQatar ? (
                 <Field className="col-span-2" error={errors.cityKey} id="cityKey" label="City">
-                  <SelectBox>
-                    <select
-                      aria-invalid={Boolean(errors.cityKey)}
-                      className={cn(
-                        inputClass,
-                        'appearance-none pr-8',
-                        !form.cityKey && 'text-ink-faint',
-                      )}
-                      id="cityKey"
-                      name="cityKey"
-                      onChange={(e) => set('cityKey', e.target.value)}
-                      value={form.cityKey}
-                    >
-                      <option disabled value="">
-                        Choose your city
-                      </option>
-                      {cities.map((c) => (
-                        <option className="text-ink" key={c.key} value={c.key}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </SelectBox>
+                  <CountryCombobox
+                    aria-invalid={Boolean(errors.cityKey)}
+                    autoComplete="address-level2"
+                    className={inputClass}
+                    countries={cities.map((c) => ({ code: c.key, name: c.name }))}
+                    id="cityKey"
+                    name="cityKey"
+                    noMatch="No city matches"
+                    onChange={(key) => set('cityKey', key)}
+                    placeholder="Choose your city"
+                    value={form.cityKey}
+                  />
                 </Field>
               ) : null}
 
@@ -963,18 +963,6 @@ function Field({
   )
 }
 
-function SelectBox({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative">
-      {children}
-      <ChevronDown
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 right-0 size-4 -translate-y-1/2 text-ink-soft"
-        strokeWidth={1.25}
-      />
-    </div>
-  )
-}
 
 function Row({ label, muted, value }: { label: string; muted?: boolean; value: string }) {
   return (

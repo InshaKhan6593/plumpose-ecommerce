@@ -25,8 +25,12 @@ import { HOME } from './content'
  * under reduced motion, where the poster stands in.
  */
 
-/** `webm` is optional: the café films ship as H.264 only (scripts/encode-videos.sh). */
-type Film = { mp4: string; poster: string; webm?: string }
+/**
+ * `webm` is optional: the café films ship as H.264 only (scripts/encode-videos.sh).
+ * `once`: play through a single time and rest on the last frame, for a film
+ * whose end does not meet its start.
+ */
+type Film = { mp4: string; once?: boolean; poster: string; webm?: string }
 
 /**
  * Where the crop anchors when the screen's shape differs from the film's. Her
@@ -223,9 +227,10 @@ export function HomeHero({
 }
 
 /**
- * The film, over the poster, once the screen size is known. Muted, inline and
- * looping — the only way a film may autoplay on iOS — and paused whenever it
- * is off screen.
+ * The film, over the poster, once the screen size is known. Muted and inline
+ * — the only way a film may autoplay on iOS — and paused whenever it is off
+ * screen. A `once` film does not loop, and once it has ended it stays on its
+ * last frame: coming back to the top does not start it again.
  */
 function HeroFilm({ active, film }: { active: boolean; film: Film }) {
   const ref = useRef<HTMLVideoElement>(null)
@@ -234,8 +239,9 @@ function HeroFilm({ active, film }: { active: boolean; film: Film }) {
     const video = ref.current
     if (!video) return
     const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) video.play().catch(() => undefined)
-      else video.pause()
+      if (entry.isIntersecting) {
+        if (!video.ended) video.play().catch(() => undefined)
+      } else video.pause()
     })
     io.observe(video)
     return () => io.disconnect()
@@ -248,7 +254,7 @@ function HeroFilm({ active, film }: { active: boolean; film: Film }) {
           aria-hidden
           autoPlay
           className="absolute inset-0 h-full w-full object-cover"
-          loop
+          loop={!film.once}
           muted
           playsInline
           poster={film.poster}
