@@ -3429,3 +3429,12 @@ Checked: `tsc` 0 errors; lint 0 errors; integration 285 of 286 — the one
 failure is SkipCash's sandbox itself, which now answers "Private key or online
 payment is disabled" (their side; the sandbox test account may have been
 switched off as production is set up). `pricing-live` prices only offered sizes.
+
+**Catalogue on phones (same day).** Checked on iPhone SE, iPhone 13 and
+Pixel 7: pages 3 and 5 cut their text off on smaller phones, turned pages
+showed as a white strip at the left edge, the page background repeated as a
+lighter band behind the buttons, and the hint offered arrow keys on a phone.
+A phone-only CSS block in `catalogue.html` (in R2, not the repository): the
+text takes its height and the photo the rest, the stage clips turned pages,
+`html` carries the background, the hint's keys hide on touch screens, and the
+‹ › glyphs are thin SVG chevrons. Desktop unchanged.
