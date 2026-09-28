@@ -21,7 +21,9 @@ await r.start({
 })
 
 await r.run(async () => {
-  await r.titleCard('Products', 'Put a piece on sale', ['Show the old price crossed out, then end the sale'])
+  await r.titleCard('Products', 'Put a piece on sale', ['Show the old price crossed out, then end the sale'], {
+    speak: 'How to put a piece on sale, and end the sale.',
+  })
 
   /* ---- open the piece */
   await r.say('Open Products, and click the piece.')
@@ -66,6 +68,6 @@ await r.run(async () => {
     'Price & sizes → Was price: the old, higher price',
     'Publish changes — it shows crossed out',
     'Clear Was price and publish to end the sale',
-  ])
+  ], { speak: 'To recap: a Was price starts the sale, and clearing it ends it.' })
   await r.finish()
 })

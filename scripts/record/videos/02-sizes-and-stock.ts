@@ -26,7 +26,9 @@ await r.start({
 })
 
 await r.run(async () => {
-  await r.titleCard('Products', 'Sizes & stock', ['Add sizes to a piece, each with its own stock'])
+  await r.titleCard('Products', 'Sizes & stock', ['Add sizes to a piece, each with its own stock'], {
+    speak: 'How to add sizes, each with its own stock.',
+  })
 
   /* ---- open the piece */
   await r.say('Open Products, and click the piece.')
@@ -104,6 +106,6 @@ await r.run(async () => {
     'Options offered: Size → Publish changes',
     'Add new: choose the size, type the stock, Save',
     'Click a size to change its stock',
-  ])
+  ], { speak: 'To recap: add each size with its stock, and update the stock as it sells.' })
   await r.finish()
 })

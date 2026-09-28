@@ -29,7 +29,9 @@ const tab = (name: string) => r.admin.getByRole('button', { name, exact: true })
 const field = (id: string) => r.admin.locator(`#field-${id}`)
 
 await r.run(async () => {
-  await r.titleCard('Products', 'Add a new piece', ['Name, words, photos, fabric and price — then publish'])
+  await r.titleCard('Products', 'Add a new piece', ['Name, words, photos, fabric and price — then publish'], {
+    speak: 'How to add a new piece to your shop.',
+  })
 
   /* ---- open a new piece */
   await r.say('Your pieces live under Products. The shop is empty for now.')
@@ -140,6 +142,6 @@ await r.run(async () => {
     'Name, a few sentences, photos',
     'Fabric & Care, then the price',
     'Save draft to keep it hidden, Publish changes to put it live',
-  ])
+  ], { speak: 'To recap: fill in the piece, add its photos and price, then Publish.' })
   await r.finish()
 })

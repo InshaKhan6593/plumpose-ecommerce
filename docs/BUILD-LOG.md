@@ -3052,3 +3052,11 @@ Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed; no
 schema change (`isClearable`, the access and the admin flags are config
 only). Frames mid-line at five steps put the ring on what the line names; the
 refusal shows on camera.
+
+**Then 01–03, narrated** — re-recorded on the same stage, each with a spoken
+title and recap (`speak:`): 01 "Add a new piece" 4:50 (37 lines), 02 "Sizes &
+stock" 2:40 (22), 03 "Sale price" 1:30 (13). 4,460 characters, leaving 241
+on the free tier until it resets on 27 Oct 2026 — a changed line is roughly
+60–100 characters, so wording changes before then need a paid plan. Frames
+mid-line in each put the ring on what the line names. Their hand-voiceover
+scripts were removed: the timings they were written against are gone.
