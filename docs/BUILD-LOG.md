@@ -3438,3 +3438,11 @@ A phone-only CSS block in `catalogue.html` (in R2, not the repository): the
 text takes its height and the photo the rest, the stage clips turned pages,
 `html` carries the background, the hint's keys hide on touch screens, and the
 ‹ › glyphs are thin SVG chevrons. Desktop unchanged.
+
+**Reviews and Spotted, sent through the site's own forms (same day).** Both
+forms work (thank-you messages; pending until approved). Found and fixed:
+partial star ratings (4, 4.5) drew squeezed, misaligned filled stars — the
+clipped row shrank into its narrower box (`Stars`: `w-max`, `shrink-0`); the
+rating sat on the price's line ("QAR 1,399.00★★★★"); the homepage's "In your
+words" left one or two reviews beside an empty column, and Spotted one photo
+at the left of an empty row — both now centred.

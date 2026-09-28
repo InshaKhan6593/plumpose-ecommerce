@@ -106,9 +106,10 @@ export function ReviewsBand({ reviews }: { reviews: PublicReview[] }) {
       <h2 className="caps text-[0.6875rem]" data-reveal>
         In your words
       </h2>
-      <ul className="mt-12 grid gap-12 md:grid-cols-3 md:gap-8">
+      {/* Centred as a row, so one or two reviews do not sit left of an empty column. */}
+      <ul className="mt-12 flex flex-col gap-12 md:flex-row md:flex-wrap md:justify-center md:gap-8">
         {reviews.map((review) => (
-          <li data-reveal key={review.id}>
+          <li className="md:basis-[calc((100%-4rem)/3)]" data-reveal key={review.id}>
             <blockquote className="serif-italic text-[1.75rem] leading-snug">
               “{review.body}”
             </blockquote>

@@ -17,10 +17,12 @@ export function Stars({
 }) {
   const pct = Math.max(0, Math.min(100, (value / 5) * 100))
   const row = (filled: boolean) => (
-    <span className="flex gap-[3px]">
+    // w-max and shrink-0: the filled row is clipped by its narrower box, never squeezed into it.
+    <span className="flex w-max gap-[3px]">
       {Array.from({ length: 5 }, (_, i) => (
         <svg
           aria-hidden
+          className="shrink-0"
           fill={filled ? 'currentColor' : 'none'}
           height={size}
           key={i}

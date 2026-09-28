@@ -65,11 +65,12 @@ export default async function SpottedPage() {
         <PageHeading intro={SPOTTED_PAGE.intro} title={SPOTTED_PAGE.heading} />
 
         {posts.length ? (
-          <ul className="mt-14 grid grid-cols-2 gap-2 md:mt-20 md:grid-cols-4">
+          // Centred, so the first few photographs do not sit at the left of an empty row.
+          <ul className="mt-14 flex flex-wrap justify-center gap-2 md:mt-20">
             {posts.map((post) => {
               const Tag = post.postUrl ? 'a' : 'div'
               return (
-                <li key={post.id}>
+                <li className="w-[calc(50%-0.25rem)] md:w-[calc(25%-0.375rem)]" key={post.id}>
                   <Tag
                     className="group relative block aspect-square overflow-hidden bg-paper-3"
                     {...(post.postUrl

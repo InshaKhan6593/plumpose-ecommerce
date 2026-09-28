@@ -118,7 +118,7 @@ export function ProductInfo({
           <ChargedInQar className="mt-1.5 block text-[0.75rem] text-ink-soft" minor={price} />
           {rating ? (
             <a
-              className="mt-3 inline-flex items-center gap-3 text-[0.8125rem] text-ink-soft transition-colors hover:text-ink"
+              className="mt-3 flex w-fit items-center gap-3 text-[0.8125rem] text-ink-soft transition-colors hover:text-ink"
               href="#reviews"
             >
               <Stars value={rating.average} />
