@@ -3405,9 +3405,10 @@ hero's still frame under Safari's play button, battery at 3%: Low Power Mode,
 where Safari refuses autoplay. The live films were fine (H.264 High, 206
 ranges, `video/mp4`). The site gave up on a refused `play()`. Now
 `@/utilities/playFilm` retries on the visitor's first tap, click or key (a
-gesture Low Power Mode allows), in the hero and every in-view film; and
-Safari's own play button is hidden on our control-less films (globals.css), so
-a refused film reads as its poster. Reduce Motion still shows posters only, by
+gesture Low Power Mode allows), in the hero and every in-view film; until then
+the refused film is hidden (`visibility`), so the poster behind it shows
+instead of Safari's play button. (A `::-webkit-media-controls-*` CSS rule was
+tried first: the production build drops it.) `play-film.int.spec.ts`. Reduce Motion still shows posters only, by
 design.
 
 **XS and XL crossed out, kept listed.** The piece is made to order, so stock 0

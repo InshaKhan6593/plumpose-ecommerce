@@ -398,15 +398,3 @@ button {
   @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 dark:focus-visible:ring-neutral-600 dark:focus-visible:ring-offset-neutral-900;
 }
 
-/*
- * The films are muted backgrounds with no controls. When Safari refuses to
- * autoplay one (Low Power Mode), it draws its own play button over the still
- * frame, which reads as broken; the poster shows instead, and the film starts
- * on the visitor's first tap (@/utilities/playFilm).
- */
-video:not([controls])::-webkit-media-controls,
-video:not([controls])::-webkit-media-controls-start-playback-button,
-video:not([controls])::-webkit-media-controls-overlay-play-button {
-  display: none !important;
-  -webkit-appearance: none;
-}
