@@ -134,6 +134,10 @@ export const createSkipcashAdapter = (
     const { data, req, transactionsSlug } = args
     const { cart, customerEmail } = data
 
+    // Site settings → Orders → Take orders. Paused, no payment starts, whatever the browser sends.
+    const settings = await req.payload.findGlobal({ depth: 0, req, slug: 'siteSettings' })
+    if (settings.ordersOpen === false) throw new Error('Orders are paused — Site settings → Orders.')
+
     /**
      * The plugin passes the adapter only its own fields; ours — delivery
      * city, discount code, gift note, the full address — are read from the

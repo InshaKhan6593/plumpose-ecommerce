@@ -361,7 +361,8 @@ export const FABRIC = {
   care: {
     label: 'Care',
     intro: 'Gentle care for beautiful silk.',
-    line: 'Cold wash only · mild detergent · wash inside out · do not bleach · dry flat in shade · iron on low heat · do not tumble dry',
+    /** From her Wash & care page (28 Sep 2026), in one line; it replaced "Cold wash only…". */
+    line: 'Dry clean or gentle hand wash · cold water · no bleach or softener · dry flat, away from the sun · iron low, inside out · do not tumble dry',
     link: 'Full fabric & care guidance',
   },
 } as const

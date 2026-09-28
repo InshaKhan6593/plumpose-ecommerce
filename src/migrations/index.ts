@@ -6,6 +6,9 @@ import * as migration_20260927_214513_price_box_starts_ticked from './20260927_2
 import * as migration_20260928_130315_return_window_days from './20260928_130315_return_window_days';
 import * as migration_20260928_135124_shipping_text_editable from './20260928_135124_shipping_text_editable';
 import * as migration_20260928_140809_order_reference from './20260928_140809_order_reference';
+import * as migration_20260928_151157_orders_open from './20260928_151157_orders_open';
+import * as migration_20260928_151659_order_cancel_refund from './20260928_151659_order_cancel_refund';
+import * as migration_20260928_151900_ready_to_ship_wording from './20260928_151900_ready_to_ship_wording';
 
 export const migrations = [
   {
@@ -46,6 +49,21 @@ export const migrations = [
   {
     up: migration_20260928_140809_order_reference.up,
     down: migration_20260928_140809_order_reference.down,
-    name: '20260928_140809_order_reference'
+    name: '20260928_140809_order_reference',
+  },
+  {
+    up: migration_20260928_151157_orders_open.up,
+    down: migration_20260928_151157_orders_open.down,
+    name: '20260928_151157_orders_open',
+  },
+  {
+    up: migration_20260928_151659_order_cancel_refund.up,
+    down: migration_20260928_151659_order_cancel_refund.down,
+    name: '20260928_151659_order_cancel_refund',
+  },
+  {
+    up: migration_20260928_151900_ready_to_ship_wording.up,
+    down: migration_20260928_151900_ready_to_ship_wording.down,
+    name: '20260928_151900_ready_to_ship_wording'
   },
 ];

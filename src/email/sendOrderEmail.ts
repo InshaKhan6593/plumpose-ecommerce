@@ -12,6 +12,8 @@ import {
   type EmailContent,
   type OrderView,
   ownerNotification,
+  cancelledNotification,
+  refundedNotification,
   shippedNotification,
   toOrderView,
 } from './orderEmails'
@@ -38,20 +40,29 @@ import {
  * `emailError` on the order, where the client can see it and resend.
  */
 
-export type OrderEmailKind = 'confirmation' | 'notification' | 'shipped'
+export type OrderEmailKind = 'cancelled' | 'confirmation' | 'notification' | 'refunded' | 'shipped'
 
-type SentField = 'confirmationEmailSentAt' | 'notificationEmailSentAt' | 'shippedEmailSentAt'
+type SentField =
+  | 'cancelledEmailSentAt'
+  | 'confirmationEmailSentAt'
+  | 'notificationEmailSentAt'
+  | 'refundedEmailSentAt'
+  | 'shippedEmailSentAt'
 
 const SENT_FIELD: Record<OrderEmailKind, SentField> = {
   confirmation: 'confirmationEmailSentAt',
   notification: 'notificationEmailSentAt',
   shipped: 'shippedEmailSentAt',
+  cancelled: 'cancelledEmailSentAt',
+  refunded: 'refundedEmailSentAt',
 }
 
 const BUILD: Record<OrderEmailKind, (view: OrderView) => EmailContent> = {
   confirmation: customerConfirmation,
   notification: ownerNotification,
   shipped: shippedNotification,
+  cancelled: cancelledNotification,
+  refunded: refundedNotification,
 }
 
 export type SendResult = { ok: false; reason: string; skipped?: true } | { ok: true; to: string }

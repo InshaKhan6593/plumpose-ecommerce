@@ -19,7 +19,7 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { getPageText } from '@/content/getPageText'
 
 const SITE_DESCRIPTION =
-  'Silk sleepwear with a hand-drawn whale-shark print, designed in Doha and hand-finished to order. Personalised with hand embroidery.'
+  'Silk sleepwear with a hand-drawn whale-shark print, designed in Doha and carefully hand-finished. Personalised with hand embroidery.'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },

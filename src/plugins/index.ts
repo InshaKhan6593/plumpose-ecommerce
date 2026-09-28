@@ -21,7 +21,7 @@ import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { checkRole } from '@/access/utilities'
 import { sendEnquiryAlert } from '@/email/enquiryAlert'
-import { resendConfirmationEndpoint, sendOrderEmails } from '@/email/orderHooks'
+import { resendConfirmationEndpoint, sendOrderEmails, statusFollowsClosure } from '@/email/orderHooks'
 import { stockAfterSale } from '@/hooks/stockAfterSale'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { validateEnquiry } from '@/hooks/validateEnquiry'
@@ -135,7 +135,7 @@ const tidyOrderFields = (fields: Field[]): Field[] =>
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title
     ? `${doc.title} | plumpose`
-    : 'plumpose — silk nightwear, hand-finished to order'
+    : 'plumpose — silk nightwear, carefully hand-finished'
 }
 
 const generateURL: GenerateURL<Product | Page> = ({ doc }) => {
@@ -381,7 +381,11 @@ export const plugins: Plugin[] = [
         endpoints: [...(defaultCollection.endpoints || []), resendConfirmationEndpoint],
         hooks: {
           ...defaultCollection.hooks,
-          afterChange: [...(defaultCollection.hooks?.afterChange ?? []), sendOrderEmails],
+          afterChange: [
+            ...(defaultCollection.hooks?.afterChange ?? []),
+            statusFollowsClosure,
+            sendOrderEmails,
+          ],
         },
         fields: mainFieldsIntoFirstTab([
           /**
@@ -430,7 +434,7 @@ export const plugins: Plugin[] = [
             type: 'select',
             admin: {
               description:
-                'Setting this to Shipped emails the customer — add the tracking number first.',
+                'Setting this to Shipped emails the customer — add the tracking number first. Cancelled or Refunded: refund the payment in the SkipCash portal first; the customer is then emailed. Stock is not added back — do that in Sizes & stock if the piece returns.',
               // Its × emptied the stage altogether; an order is always at one of the four.
               isClearable: false,
               position: 'sidebar',
@@ -455,6 +459,8 @@ export const plugins: Plugin[] = [
               { label: 'In the atelier', value: 'inAtelier' },
               { label: 'Shipped', value: 'shipped' },
               { label: 'Delivered', value: 'delivered' },
+              { label: 'Cancelled', value: 'cancelled' },
+              { label: 'Refunded', value: 'refunded' },
             ],
           },
           {
@@ -495,6 +501,8 @@ export const plugins: Plugin[] = [
               ['confirmationEmailSentAt', 'Confirmation emailed'],
               ['notificationEmailSentAt', 'New-order alert sent'],
               ['shippedEmailSentAt', 'Shipped email sent'],
+              ['cancelledEmailSentAt', 'Cancellation emailed'],
+              ['refundedEmailSentAt', 'Refund email sent'],
             ] as const
           ).map(([name, label]): Field => ({
             name,

@@ -15,7 +15,7 @@ import { cn } from '@/utilities/cn'
 export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
   description:
-    'Silk pyjama sets with a hand-drawn whale-shark print, designed in Doha and hand-finished to order.',
+    'Silk pyjama sets with a hand-drawn whale-shark print, designed in Doha and carefully hand-finished.',
   title: 'Silk pyjamas & sleepwear, designed in Doha',
 }
 
@@ -114,7 +114,7 @@ export default async function ShopPage({ searchParams }: Props) {
         <p className="serif-italic mt-4 text-lg text-ink-soft md:text-xl" data-reveal>
           {q
             ? `${docs.length} ${docs.length === 1 ? 'piece' : 'pieces'} found`
-            : 'Silk, designed in Doha and hand-finished to order'}
+            : 'Silk, designed in Doha and carefully hand-finished'}
         </p>
       </Reveal>
 

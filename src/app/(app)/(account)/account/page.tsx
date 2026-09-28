@@ -16,8 +16,10 @@ export const metadata: Metadata = {
 }
 
 const FULFILMENT: Record<NonNullable<Order['fulfilment']>, string> = {
+  cancelled: 'Cancelled',
   delivered: 'Delivered',
   inAtelier: 'In the atelier',
+  refunded: 'Refunded',
   shipped: 'On its way',
   unfulfilled: 'Order placed',
 }

@@ -404,7 +404,7 @@ function metaDescription(product: Product): string {
   const fabric = product.fabric ? ` ${product.fabric}` : ''
   const colour = product.colour ? `, ${product.colour}` : ''
   const embroidery = product.personalisationEnabled ? ', with optional hand embroidery' : ''
-  const built = `${product.title}${fabric}${colour}. Designed in Doha, hand-finished to order${embroidery}.`
+  const built = `${product.title}${fabric}${colour}. Designed in Doha, carefully hand-finished${embroidery}.`
   return clip(built)
 }
 

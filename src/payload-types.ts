@@ -1263,13 +1263,15 @@ export interface Order {
   reference?: string | null;
   accessToken?: string | null;
   /**
-   * Setting this to Shipped emails the customer — add the tracking number first.
+   * Setting this to Shipped emails the customer — add the tracking number first. Cancelled or Refunded: refund the payment in the SkipCash portal first; the customer is then emailed. Stock is not added back — do that in Sizes & stock if the piece returns.
    */
-  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
+  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') | null;
   trackingNumber?: string | null;
   confirmationEmailSentAt?: string | null;
   notificationEmailSentAt?: string | null;
   shippedEmailSentAt?: string | null;
+  cancelledEmailSentAt?: string | null;
+  refundedEmailSentAt?: string | null;
   /**
    * The last email that failed. Use "Resend confirmation" once fixed.
    */
@@ -3217,6 +3219,8 @@ export interface OrdersSelect<T extends boolean = true> {
   confirmationEmailSentAt?: T;
   notificationEmailSentAt?: T;
   shippedEmailSentAt?: T;
+  cancelledEmailSentAt?: T;
+  refundedEmailSentAt?: T;
   emailError?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3316,6 +3320,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface SiteSetting {
   id: number;
+  /**
+   * Untick to pause orders: customers can still browse and fill their bag, but checkout says orders open soon and no payment can start. Tick it again to take orders.
+   */
+  ordersOpen?: boolean | null;
   /**
    * Shown in the footer, on the Contact page and at the foot of every email. Customers’ replies to order emails arrive here.
    */
@@ -3690,6 +3698,7 @@ export interface PageText {
  * via the `definition` "siteSettings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
+  ordersOpen?: T;
   contactEmail?: T;
   orderAlertEmail?: T;
   whatsappNumber?: T;

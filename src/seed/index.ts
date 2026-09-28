@@ -531,7 +531,7 @@ export async function seed(payload: Payload): Promise<void> {
     [
       'How long does my order take?',
       'delivery',
-      'Every piece is hand-finished to order. Personalised pieces take an additional 4–10 working days in our atelier.',
+      'Ready-to-ship orders are prepared and dispatched within 2–4 business days. Personalised pieces take an additional 4–10 working days in our atelier.',
     ],
     [
       'Where do you deliver?',
@@ -588,7 +588,7 @@ export async function seed(payload: Payload): Promise<void> {
     [
       'How do I return or exchange a piece?',
       'returns',
-      'Write to info@plumpose.com or send us a message on Instagram within 14 days of delivery. Pieces must be unworn, unwashed and in their original packaging. Return shipping is paid by the customer unless the item is faulty or incorrect.',
+      'Write to info@plumpose.com or message us on WhatsApp within 14 days of delivery. Pieces must be unworn, unwashed and in their original packaging. Return shipping is paid by the customer unless the item is faulty or incorrect.',
     ],
     [
       'My piece arrived damaged or incorrect. What should I do?',
@@ -757,7 +757,7 @@ export async function seed(payload: Payload): Promise<void> {
       instagramHandle: '@plumpose',
       instagramUrl: 'https://instagram.com/plumpose',
       announcementEnabled: true,
-      announcementText: 'RESORT 2026 · NOW SHIPPING WORLDWIDE · EACH PIECE HAND-FINISHED TO ORDER',
+      announcementText: 'RESORT 2026 · NOW SHIPPING WORLDWIDE · HAND EMBROIDERY AVAILABLE',
       freeShippingEnabled: false,
       intlSurchargePct: 0,
       // From the constants at the top of the old personalisation.mjs

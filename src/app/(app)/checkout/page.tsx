@@ -35,6 +35,8 @@ export default async function Checkout({
 }) {
   const { payload, user } = await getSessionUser()
   const { payment } = await searchParams
+  // Read fresh (the page is dynamic): pausing orders must take effect on the next visit.
+  const settings = await payload.findGlobal({ depth: 0, slug: 'siteSettings' })
 
   const [countries, cities, addresses] = await Promise.all([
     payload.find({
@@ -102,6 +104,7 @@ export default async function Checkout({
       returned={payment === 'cancelled' || payment === 'failed' ? payment : null}
       cities={cityList}
       countries={countryList}
+      ordersOpen={settings.ordersOpen !== false}
       testMode={isSkipcashEnabled() && skipcashConfig().isSandbox}
     />
   )

@@ -145,12 +145,15 @@ const inputClass =
 export function CheckoutPage({
   cities,
   countries,
+  ordersOpen,
   returned,
   saved,
   testMode,
 }: {
   cities: CheckoutCity[]
   countries: CheckoutCountry[]
+  /** Site settings → Orders → Take orders. Off: no Pay, a note that orders open soon. */
+  ordersOpen: boolean
   /** Back from SkipCash without paying: left the page, or the card was refused. */
   returned: 'cancelled' | 'failed' | null
   saved?: CheckoutSavedAddress
@@ -316,6 +319,8 @@ export function CheckoutPage({
   const pay = async (event: React.FormEvent) => {
     event.preventDefault()
     setPayError(null)
+    // Enter in a field still submits the form; paused orders never reach the payment page.
+    if (!ordersOpen) return
 
     const found = validate()
     setErrors(found)
@@ -386,7 +391,7 @@ export function CheckoutPage({
         <h1 className="serif-display text-[clamp(2.25rem,4vw,3.25rem)] leading-tight">
           Your bag is empty.
         </h1>
-        <p className="mt-4 text-ink-soft">Every piece is hand-finished to order.</p>
+        <p className="mt-4 text-ink-soft">Every piece is carefully hand-finished.</p>
         <Link
           className="caps mt-10 bg-ink px-10 py-4 text-[0.6875rem] text-white hover:bg-ink/85"
           href="/shop"
@@ -414,7 +419,7 @@ export function CheckoutPage({
    * still needed and moves to it. A greyed-out button said nothing, and on a
    * phone it looked like there was no button at all.
    */
-  const canPay = paymentsReady && !submitting && !blocked
+  const canPay = ordersOpen && paymentsReady && !submitting && !blocked
   const total = quote && !quote.deliveryPending ? formatQar(quote.totals.total) : null
 
   /** `withTotal: false` where the total already stands beside the button. */
@@ -430,7 +435,9 @@ export function CheckoutPage({
       type="submit"
     >
       <Lock aria-hidden className="size-3.5" strokeWidth={1.5} />
-      {submitting
+      {!ordersOpen
+        ? 'Orders open soon'
+        : submitting
         ? 'Opening secure payment…'
         : total && withTotal
           ? `Pay ${total}`
@@ -457,7 +464,16 @@ export function CheckoutPage({
           Your bag and details are just as you left them.
         </p>
       ) : null}
-      {!paymentsReady ? (
+      {!ordersOpen ? (
+        <p
+          className="mt-6 max-w-2xl border-l border-ink pl-4 text-[0.9375rem] leading-relaxed text-ink-soft"
+          role="status"
+        >
+          <span className="text-ink">Orders open soon.</span> We are putting the final touches to
+          checkout. Leave your email at the foot of the page and we will tell you the moment
+          they open — your bag will keep until then.
+        </p>
+      ) : !paymentsReady ? (
         <p
           className="mt-6 max-w-2xl border-l border-[#8a2424] pl-4 text-[0.9375rem] text-ink-soft"
           role="alert"
@@ -882,10 +898,12 @@ export function CheckoutPage({
               </p>
             ) : null}
 
-            <p className="mt-4 text-center text-xs leading-relaxed text-ink-soft">
-              You will pay on SkipCash’s secure page, then come straight back here.
-            </p>
-            {testMode ? (
+            {ordersOpen ? (
+              <p className="mt-4 text-center text-xs leading-relaxed text-ink-soft">
+                You will pay on SkipCash’s secure page, then come straight back here.
+              </p>
+            ) : null}
+            {testMode && ordersOpen ? (
               <p className="mt-3 border border-line px-3 py-2 text-center text-[0.6875rem] leading-relaxed text-ink-soft">
                 {/* SkipCash's non-3-D-Secure card: its sandbox 3-D Secure card (4000 0000 0000
                     2503) fails there with "Empty TermURL for the CRes POST". */}

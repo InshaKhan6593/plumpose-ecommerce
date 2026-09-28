@@ -40,6 +40,7 @@ export const metadata: Metadata = {
  * the browser forgets the bag that was just paid for.
  */
 
+/** Cancelled and Refunded are not steps: the page says so in place of the timeline. */
 const STEPS: Array<{ key: NonNullable<Order['fulfilment']>; label: string }> = [
   { key: 'unfulfilled', label: 'Order placed' },
   { key: 'inAtelier', label: 'In the atelier' },
@@ -161,7 +162,20 @@ export default async function OrderPage({
         </div>
       </header>
 
-      {/* Where it is */}
+      {/* Where it is — or, once cancelled or refunded, that it is closed. */}
+      {order.fulfilment === 'cancelled' || order.fulfilment === 'refunded' ? (
+        <section aria-label="Order status" className="mt-16 border border-line px-6 py-6 text-center">
+          <p className="caps text-[0.625rem]">
+            {order.fulfilment === 'cancelled' ? 'Order cancelled' : 'Order refunded'}
+          </p>
+          <p className="mx-auto mt-3 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft">
+            {order.fulfilment === 'cancelled'
+              ? 'This order has been cancelled, and anything paid refunded to the original payment method.'
+              : 'This order has been refunded to the original payment method.'}{' '}
+            Depending on your bank, it can take a few working days to appear.
+          </p>
+        </section>
+      ) : (
       <section aria-label="Progress" className="mt-16">
         {/*
           Each line runs from the previous dot's edge to this one's, with a gap
@@ -230,6 +244,7 @@ export default async function OrderPage({
           </p>
         ) : null}
       </section>
+      )}
 
       {/* What is in it */}
       <section aria-label="Your pieces" className="mt-16 bg-paper-3 px-6 py-8 md:px-10">

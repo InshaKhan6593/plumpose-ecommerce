@@ -46,7 +46,38 @@ export const sendOrderEmails: CollectionAfterChangeHook<Order> = ({
     runAfterResponse(payload, () => sendOrderEmail(payload, doc.id, 'shipped'))
   }
 
+  // Cancelled / Refunded: once each, on the change (the sent date is the guard).
+  for (const kind of ['cancelled', 'refunded'] as const) {
+    if (operation === 'update' && doc.fulfilment === kind && previousDoc?.fulfilment !== kind) {
+      runAfterResponse(payload, () => sendOrderEmail(payload, doc.id, kind))
+    }
+  }
+
   return doc
+}
+
+/**
+ * Cancelled or Refunded in Fulfilment carries to the order's own status —
+ * the plugin's, which is locked against hand edits (the gateway is its source
+ * of truth) and would otherwise still read "Paid". She refunds in the SkipCash
+ * portal first (the field's description says so); this only records it. A
+ * write straight to the database: the lock is field access, and a hook's
+ * own `update` would run every order hook again.
+ */
+export const statusFollowsClosure: CollectionAfterChangeHook<Order> = async ({
+  doc,
+  operation,
+  previousDoc,
+  req,
+}) => {
+  if (operation !== 'update') return doc
+  const closed = doc.fulfilment === 'cancelled' || doc.fulfilment === 'refunded'
+  const wasClosed = previousDoc?.fulfilment === 'cancelled' || previousDoc?.fulfilment === 'refunded'
+  // Closed now: the status says so. Reopened by mistake: back to Paid.
+  const status = closed ? doc.fulfilment : wasClosed ? 'processing' : null
+  if (!status || status === doc.status) return doc
+  await req.payload.db.updateOne({ collection: 'orders', data: { status }, id: doc.id, req })
+  return { ...doc, status } as Order
 }
 
 /**

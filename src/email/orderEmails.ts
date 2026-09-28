@@ -455,3 +455,63 @@ export const shippedNotification = (view: OrderView): EmailContent => {
     text,
   }
 }
+
+/**
+ * To the customer when an order is set to Cancelled or Refunded — after she
+ * has refunded the payment in the SkipCash portal. No amount is named: a
+ * return may be refunded only in part (delivery is not always refundable),
+ * and the portal, not the order, knows what was sent back.
+ */
+const closedNotification =
+  (kind: 'cancelled' | 'refunded') =>
+  (view: OrderView): EmailContent => {
+    const cancelled = kind === 'cancelled'
+    const name = view.firstName ? `, ${view.firstName}` : ''
+    const greeting = cancelled ? `Your order has been cancelled${name}.` : `Your refund is on its way${name}.`
+    const lines = cancelled
+      ? [
+          `We have cancelled order ${view.code}.`,
+          'Anything you paid is being refunded to your original payment method. Depending on your bank, it can take a few working days to appear.',
+        ]
+      : [
+          `We have refunded order ${view.code} to your original payment method.`,
+          'Depending on your bank, it can take a few working days to appear.',
+        ]
+
+    const body = [
+      label(`Order ${view.code}`),
+      heading(greeting),
+      ...lines.map(paragraph),
+      rule(),
+      label(cancelled ? 'The order' : 'Refunded order'),
+      table(linesHtml(view.lines)),
+      view.orderUrl ? button(view.orderUrl, 'View your order') : '',
+      rule(),
+      muted('Questions? Simply reply to this email.'),
+    ].join('\n')
+
+    const text = [
+      `plumpose — Order ${view.code}`,
+      '',
+      greeting,
+      ...lines,
+      '',
+      linesText(view.lines),
+      view.orderUrl ? `\nView your order: ${view.orderUrl}` : '',
+      '',
+      'Questions? Simply reply to this email.',
+    ].join('\n')
+
+    return {
+      html: layout({ body, footer: view.footer, preheader: lines[0] }),
+      subject: cancelled
+        ? `Your plumpose order ${view.code} has been cancelled`
+        : `Your plumpose order ${view.code} has been refunded`,
+      text,
+    }
+  }
+
+/** To the customer, when the order is set to Cancelled. */
+export const cancelledNotification = closedNotification('cancelled')
+/** To the customer, when the order is set to Refunded. */
+export const refundedNotification = closedNotification('refunded')

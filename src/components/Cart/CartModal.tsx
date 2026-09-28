@@ -151,7 +151,7 @@ export function CartModal() {
           {!items.length ? (
             <div className="flex flex-1 flex-col items-center justify-center px-7 text-center">
               <p className="serif-display text-3xl">Your bag is empty.</p>
-              <p className="mt-3 text-sm text-ink-soft">Every piece is hand-finished to order.</p>
+              <p className="mt-3 text-sm text-ink-soft">Every piece is carefully hand-finished.</p>
               <Link
                 className="caps mt-8 bg-ink px-8 py-4 text-[0.6875rem] text-white hover:bg-ink/85"
                 href="/shop"

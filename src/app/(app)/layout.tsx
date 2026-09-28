@@ -17,9 +17,13 @@ import './globals.css'
 /* plumpose house fonts — matches the existing site:
    Fraunces for display, Jost for body. */
 // Fraunces is a variable font. When `axes` are requested, `weight` must be
-// omitted — next/font exposes the full weight range instead.
+// omitted — next/font exposes the full weight range instead. Optical size
+// (headings 144, italics 48) and WONK: without WONK the italic comes with its
+// wonky letters (the h of "with", the b of "between"), which the site turns
+// off. SOFT is left out — only ever 0, its default — and it alone made the two
+// files 264 KB instead of 145 KB, the heaviest thing a phone loaded first.
 const fraunces = Fraunces({
-  axes: ['SOFT', 'WONK', 'opsz'],
+  axes: ['WONK', 'opsz'],
   display: 'swap',
   style: ['normal', 'italic'],
   subsets: ['latin'],

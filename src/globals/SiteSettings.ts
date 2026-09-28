@@ -35,6 +35,27 @@ export const SiteSettings: GlobalConfig = {
       type: 'tabs',
       tabs: [
         {
+          /**
+           * The shop's open sign. Unticked, checkout shows "Orders open soon"
+           * in place of Pay and the server refuses to start a payment
+           * (src/payments/skipcash/adapter.ts) — browsing and the bag still
+           * work. For the weeks the site is public on SkipCash's test system.
+           */
+          fields: [
+            {
+              name: 'ordersOpen',
+              type: 'checkbox',
+              admin: {
+                description:
+                  'Untick to pause orders: customers can still browse and fill their bag, but checkout says orders open soon and no payment can start. Tick it again to take orders.',
+              },
+              defaultValue: true,
+              label: 'Take orders',
+            },
+          ],
+          label: 'Orders',
+        },
+        {
           fields: [
             {
               name: 'contactEmail',

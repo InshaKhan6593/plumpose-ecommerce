@@ -95,8 +95,11 @@ export const BeforeDashboard: React.FC = async () => {
     }),
   ]).catch(() => [null, null, null, null, null, null, null, null, null] as any)
 
+  // Money kept: an order cancelled or refunded today is not revenue.
   const revenueToday =
-    ordersToday?.docs?.reduce((sum: number, o: any) => sum + (o.amount || 0), 0) ?? 0
+    ordersToday?.docs
+      ?.filter((o: any) => o.fulfilment !== 'cancelled' && o.fulfilment !== 'refunded')
+      .reduce((sum: number, o: any) => sum + (o.amount || 0), 0) ?? 0
 
   const stats: Array<{ hint?: string; label: string; value: string }> = [
     { label: 'Orders today', value: String(ordersToday?.totalDocs ?? 0) },

@@ -18,8 +18,10 @@ const ORDER_STATUS: Record<string, string> = {
   refunded: 'Refunded',
 }
 const FULFILMENT: Record<string, string> = {
+  cancelled: 'Cancelled',
   delivered: 'Delivered',
   inAtelier: 'In the atelier',
+  refunded: 'Refunded',
   shipped: 'Shipped',
   unfulfilled: 'Awaiting fulfilment',
 }

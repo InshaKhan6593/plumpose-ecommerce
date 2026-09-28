@@ -71,6 +71,9 @@ HLG="zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat
 SLOW="minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1,setpts=2*PTS,fps=30"
 enc_mp4 hero-intro-wide "$INTRO" "$HLG,crop=1080:608:0:540,$SLOW" 20 4500
 enc_mp4 hero-intro-mobile "$INTRO" "$HLG,$SLOW" 23 3000
+# Its poster is what a phone paints first (the LCP): at the default -q:v 2 it
+# was 353 KB; -q:v 5 is 218 KB and indistinguishable on a phone (SSIM 0.990).
+ffmpeg -hide_banner -loglevel error -y -i "$OUT/hero-intro-mobile.mp4" -frames:v 1 -q:v 5 "$OUT/hero-intro-mobile-poster.jpg"
 
 
 
