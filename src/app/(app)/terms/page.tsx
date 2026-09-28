@@ -7,7 +7,8 @@ import { TERMS_PAGE } from '@/content/pages'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/terms' },
-  description: 'The terms that apply when you use the plumpose website and place an order.',
+  description:
+    'The terms for using plumpose.com and ordering: products, orders, prices in Qatari riyals, payment, shipping, returns and intellectual property.',
   title: 'Terms & conditions',
 }
 

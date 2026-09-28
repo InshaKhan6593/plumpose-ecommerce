@@ -17,8 +17,9 @@ import { loadPageMedia } from '@/utilities/pageMedia'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/spotted' },
-  description: 'plumpose, as you wear it. Tag @plumpose to be featured.',
-  title: 'Spotted',
+  description:
+    'plumpose silk pyjamas as our customers wear them, shared with their permission. Tag @plumpose on Instagram, or send us your photo.',
+  title: 'Spotted: plumpose as you wear it',
 }
 
 /**

@@ -43,13 +43,25 @@ export function MadeSteps({
   const root = useRef<HTMLElement>(null)
   const [pinned, setPinned] = useState(true)
   /*
-   * The photographs wait for the page to finish loading, then load eagerly.
-   * Eager from the start, all four shared a phone's connection with the hero
-   * poster and fonts and held back the first paint (BUILD-LOG §39); lazy
-   * throughout, the clipped ones only began loading as their wipe began.
+   * The photographs are not in the page until it has finished loading, or
+   * until the section is within 2.5 screens — whichever comes first — and then
+   * load eagerly. Eager from the start, all four shared a phone's connection
+   * with the hero poster and fonts and held back the first paint (BUILD-LOG
+   * §39); merely `lazy`, Chrome still fetched them at once on a slow
+   * connection (its lazy margin grows to ~2,500 px there) — measured 28 Sep
+   * 2026 at 1.6 Mbps, they started at 2.6 s beside the poster and held it to
+   * 9.8 s; lazy throughout, the clipped ones only began as their wipe began.
    */
   const [photosReady, setPhotosReady] = useState(false)
-  useEffect(() => afterPageLoad(() => setPhotosReady(true)), [])
+  useEffect(() => {
+    const ready = () => setPhotosReady(true)
+    const stopLoad = afterPageLoad(ready)
+    const stopNear = root.current ? whenReached(root.current, 2.5, ready) : () => undefined
+    return () => {
+      stopLoad()
+      stopNear()
+    }
+  }, [])
 
   useLayoutEffect(() => {
     const el = root.current
@@ -247,14 +259,16 @@ export function MadeSteps({
                             and a lazy image the browser cannot see only started
                             loading as the wipe uncovered it — an empty frame, then a pop.
                           */}
-                            <Media
-                              className="absolute inset-0"
-                              fill
-                              imgClassName="object-cover"
-                              loading={photosReady ? 'eager' : 'lazy'}
-                              resource={step.image}
-                              size="(min-width: 1024px) 26rem, 70vw"
-                            />
+                            {photosReady ? (
+                              <Media
+                                className="absolute inset-0"
+                                fill
+                                imgClassName="object-cover"
+                                loading="eager"
+                                resource={step.image}
+                                size="(min-width: 1024px) 26rem, 70vw"
+                              />
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -293,13 +307,15 @@ export function MadeSteps({
             <li className="flex flex-col gap-5" key={step.title}>
               {step.image ? (
                 <div className="relative aspect-[4/5] overflow-hidden bg-paper-3">
-                  <Media
-                    className="absolute inset-0"
-                    fill
-                    imgClassName="object-cover"
-                    resource={step.image}
-                    size="(min-width: 768px) 45vw, 90vw"
-                  />
+                  {photosReady ? (
+                    <Media
+                      className="absolute inset-0"
+                      fill
+                      imgClassName="object-cover"
+                      resource={step.image}
+                      size="(min-width: 768px) 45vw, 90vw"
+                    />
+                  ) : null}
                 </div>
               ) : null}
               <p className="caps text-[0.5625rem] text-ink-soft">{count(i)}</p>

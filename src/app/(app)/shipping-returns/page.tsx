@@ -22,7 +22,8 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/shipping-returns' },
-  description: 'Delivery across Qatar and worldwide, our returns and exchanges policy, and gift wrapping.',
+  description:
+    'Delivery across Qatar, the GCC and worldwide, with orders prepared in 2–4 business days; our returns and exchanges policy, and gift wrapping.',
   title: 'Shipping & returns: Qatar and worldwide',
 }
 

@@ -223,7 +223,9 @@ function Lines({ heading }: { heading: ReadonlyArray<string> }) {
   return (
     <>
       {heading.map((line, n) => (
+        // A leading space for text readers ("the hours that", not "hoursthat"); it does not render.
         <span className={cn('block', n === heading.length - 1 && 'serif-italic')} key={line}>
+          {n > 0 ? ' ' : null}
           {line}
         </span>
       ))}

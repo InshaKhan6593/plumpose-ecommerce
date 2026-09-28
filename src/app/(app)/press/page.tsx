@@ -14,8 +14,9 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/press' },
-  description: 'plumpose in print and online, and press enquiries.',
-  title: 'Press',
+  description:
+    'Press enquiries and features about plumpose, the silk sleepwear designed in Doha with a hand-drawn whale-shark print.',
+  title: 'Press & features',
 }
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' })

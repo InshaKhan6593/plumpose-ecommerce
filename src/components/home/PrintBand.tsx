@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { gsap, prefersReducedMotion } from '@/motion/gsap'
+import { whenReached } from '@/motion/Reveal'
+import { afterPageLoad } from '@/utilities/afterPageLoad'
 import { cn } from '@/utilities/cn'
 
 import { HOME } from './content'
@@ -46,6 +48,23 @@ export function PrintBand({
   image?: MediaType
 }) {
   const root = useRef<HTMLElement>(null)
+
+  /*
+   * The print is not in the page until it has loaded, or the band is within
+   * 2.5 screens. Merely lazy, Chrome fetched it at once on a slow phone
+   * connection — 473 KB beside the hero poster, which it held back (BUILD-LOG
+   * §58). Until then the frame is its paper colour.
+   */
+  const [pictureReady, setPictureReady] = useState(false)
+  useEffect(() => {
+    const ready = () => setPictureReady(true)
+    const stopLoad = afterPageLoad(ready)
+    const stopNear = root.current ? whenReached(root.current, 2.5, ready) : () => undefined
+    return () => {
+      stopLoad()
+      stopNear()
+    }
+  }, [])
 
   useLayoutEffect(() => {
     const el = root.current
@@ -163,17 +182,19 @@ export function PrintBand({
             A portrait photo in this landscape frame keeps the shark's head,
             which sits high in the shot; a landscape photo is simply centred.
           */}
-          <Media
-            className="absolute inset-0"
-            fill
-            imgClassName={
-              (image.width ?? 0) > (image.height ?? 0)
-                ? 'object-cover'
-                : 'object-cover object-[50%_22%]'
-            }
-            resource={image}
-            size="100vw"
-          />
+          {pictureReady ? (
+            <Media
+              className="absolute inset-0"
+              fill
+              imgClassName={
+                (image.width ?? 0) > (image.height ?? 0)
+                  ? 'object-cover'
+                  : 'object-cover object-[50%_22%]'
+              }
+              resource={image}
+              size="100vw"
+            />
+          ) : null}
         </div>
         {/* Shade under the white words: top-left for the heading, bottom-right for the figures. */}
         <div
@@ -222,8 +243,10 @@ function Words({
           {copy.label}
         </p>
         <h2 className="serif-display mt-4 text-[clamp(2.75rem,5.5vw,5rem)] leading-[1]">
-          {copy.heading.map((line) => (
+          {copy.heading.map((line, n) => (
+            // A leading space for text readers; it does not render at a line start.
             <span className="block" key={line}>
+              {n > 0 ? ' ' : null}
               {line}
             </span>
           ))}

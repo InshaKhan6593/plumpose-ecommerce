@@ -7,11 +7,12 @@ import { PRIVACY_PAGE } from '@/content/pages'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
-  description: 'How plumpose looks after your personal information.',
+  description:
+    'How plumpose collects, uses and protects your personal information when you browse or order: payments, delivery, cookies and your choices.',
   title: 'Privacy policy',
 }
 
-/** Privacy — hers (PRIVACY_PAGE in src/content/pages.ts); its opening sections are still to come. */
+/** Privacy — hers, in full (PRIVACY_PAGE in src/content/pages.ts). */
 export default function PrivacyPage() {
   return <LegalPage {...PRIVACY_PAGE} />
 }

@@ -158,7 +158,7 @@ export function HomeHero({
           <picture>
             <source media="(min-width: 1024px)" srcSet={films.desktop.poster} />
             <img
-              alt="The Al Shaheen Nights set, worn in a café"
+              alt="The Al Shaheen Nights set, worn reading the paper beside a courtyard fountain"
               className="absolute inset-0 h-full w-full object-cover"
               fetchPriority="high"
               src={films.mobile.poster}
@@ -195,7 +195,8 @@ export function HomeHero({
               data-reveal-lines
             >
               <span className="serif-display block">{copy.tagline[0]}</span>
-              <span className="serif-italic block">{copy.tagline[1]}</span>
+              {/* The space is for text readers (search, screen readers): "Wear your world", not "Wearyour". */}
+              <span className="serif-italic block"> {copy.tagline[1]}</span>
             </h1>
             <div className="mt-8 flex flex-wrap items-center gap-7" data-hero-word data-reveal>
               <Link

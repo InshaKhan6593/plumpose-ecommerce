@@ -3298,3 +3298,65 @@ SkipCash references; on a copy of the local database the 16 older orders got
 
 Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 277 passed (new:
 `order-reference.int.spec.ts`; email subjects by code, "no. 1042" before codes).
+
+## 58. Orders paused, cancel/refund, the ready-to-ship wording, and the plumpose.com SEO audit — 28 Sep 2026
+
+**Orders can be paused** — Site settings → Orders → Take orders. Unticked,
+checkout says "Orders open soon", Pay is disabled, the test-card and
+"you will pay on SkipCash's page" lines are hidden, and `initiatePayment`
+refuses on the server whatever the browser sends. Migration
+`20260928_151157_orders_open` adds it (default ticked) and **pauses the live
+row**: plumpose.com went public while SkipCash is on its sandbox. Tick it when
+the production keys are in.
+
+**Cancel / refund.** Fulfilment has Cancelled and Refunded. She refunds in
+the SkipCash portal first (the field says so); `statusFollowsClosure` then sets
+the plugin's locked `status` to match (a direct database write, since the
+field is locked), and back to Paid if she reopens the order. The customer is
+emailed once (`cancelledEmailSentAt` / `refundedEmailSentAt`), with no amount
+named, because a return may be refunded only in part. The order page shows a
+note in place of the steps; today's revenue on the dashboard leaves them out.
+Stock is not added back automatically. Migration `20260928_151659_order_cancel_refund`
+(its down step moves closed orders to Delivered before dropping the values).
+
+**Ready-to-ship wording** (her shipping text: 2–4 business days). "Hand-finished
+to order" → "carefully hand-finished" in titles, descriptions, the bag and
+checkout. The live announcement and two FAQs change through the data migration
+`20260928_151900_ready_to_ship_wording`, only where the text is still exactly
+as seeded (checked on the live site first): announcement "… · Hand embroidery
+available"; FAQs "Ready-to-ship orders are prepared and dispatched within 2–4
+business days" and "message us on WhatsApp" (was Instagram). The care line
+under each piece follows her Wash & care page.
+
+**`plumpose.vercel.app` → plumpose.com** (308, `redirects.ts`), except
+`/api/`, where the SkipCash sandbox may still post webhooks. Preview deploy
+addresses are untouched.
+
+**SEO audit of plumpose.com** (`../plumpose.com-audit/`): 69 live; ~76 with
+these changes, measured on a local production build.
+
+- *Homepage on a slow phone: ~10 s to the main image* (it was 6.4–7.1 s on
+  27 Sep). The new hero poster shared 1.6 Mbps with the heading fonts and five
+  photos further down, which Chrome fetched although they were `lazy` (on a slow
+  connection its lazy margin is ~2,500 px). Now: the poster 353 → 218 KB
+  (`-q:v 5`, SSIM 0.990); Fraunces with `WONK` and `opsz` only (SOFT, only ever
+  0, made the files 264 KB instead of 145; dropping WONK as well changed the
+  italic's letters, so it stays; pixel-identical, SSIM 1.000); the step photos
+  and the Print image are only added once the page has loaded or the section
+  is within 2.5 screens (checked: they arrive before they are reached, fast
+  and slow). Measured: **4.2–4.4 s**, and the poster is now the only image
+  loaded first.
+- *Split headings read "Wearyour world"* to search and screen readers: a
+  leading space on each line after the first. Line positions and the animated
+  lines are identical at 1440 and 390 px.
+- *Short descriptions* (Press, Spotted, Privacy, Contact, Terms, Shipping) are
+  now 117–145 characters; `public/llms.txt`; the poster's alt text describes the
+  fountain film.
+
+The audit ran in this session, not as parallel agents (memory), and speed came
+from the 27 Sep script (PageSpeed's keyless quota was exhausted). A production
+build locally needs `NEXT_DIST_DIR` and then `tsconfig.json` reverted (as §31).
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 281 passed (new:
+`orders-paused-and-closed.int.spec.ts`); the three migrations up and down on a
+seeded copy.
