@@ -12,6 +12,7 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 import path from 'path'
+import type { Plugin } from 'payload'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
@@ -50,6 +51,16 @@ import { plugins } from './plugins'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+/**
+ * No "API" tab on her documents: it opened the raw JSON of the page she was
+ * editing. Last in the plugin list, so it reaches the plugins' collections too.
+ */
+const hideApiTab: Plugin = (config) => ({
+  ...config,
+  collections: config.collections?.map((c) => ({ ...c, admin: { ...c.admin, hideAPIURL: true } })),
+  globals: config.globals?.map((g) => ({ ...g, admin: { ...g.admin, hideAPIURL: true } })),
+})
 
 export default buildConfig({
   admin: {
@@ -173,10 +184,26 @@ export default buildConfig({
    * so those screens edited nothing she could see.
    */
   globals: [SiteSettings, PageText],
+  /*
+   * An empty list said "No Sizes & stock found. Either no Sizes & stock exist
+   * yet or none match the filters you've specified above." — under a piece
+   * that simply has no sizes yet.
+   */
+  i18n: {
+    translations: {
+      en: {
+        general: {
+          noResults: '{{label}} you add will be listed here.',
+          noResultsFound: 'Nothing yet.',
+          noResultsDescription: 'Nothing here yet — or nothing matches your search.',
+        },
+      },
+    },
+  },
   /** Required for the responsive imageSizes on the Media collection. */
   sharp,
   /** Photographs go to Cloudflare R2 when MEDIA_STORAGE=r2 (the host); to disk otherwise. */
-  plugins: [...plugins, ...mediaStorage()],
+  plugins: [...plugins, ...mediaStorage(), hideApiTab],
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

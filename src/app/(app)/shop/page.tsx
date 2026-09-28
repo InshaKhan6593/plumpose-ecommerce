@@ -207,6 +207,11 @@ export default async function ShopPage({ searchParams }: Props) {
             </React.Fragment>
           ))}
         </div>
+      ) : !active && !q ? (
+        /* Nothing published at all: no filter to undo, so no link back to the shop. */
+        <div className="mx-auto max-w-md py-24 text-center">
+          <p className="serif-display text-3xl">New pieces are on their way.</p>
+        </div>
       ) : (
         <div className="mx-auto max-w-md py-24 text-center">
           <p className="serif-display text-3xl">Nothing matches that — yet.</p>

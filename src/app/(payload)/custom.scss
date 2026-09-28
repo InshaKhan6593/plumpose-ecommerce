@@ -379,3 +379,30 @@ textarea,
     font-size: 1.1rem;
   }
 }
+
+/*
+ * Lists inside a document (a piece's sizes): the row opened only from its
+ * small pencil, and clicking the size itself did nothing. The pencil's click
+ * area is stretched over the whole row, so anywhere on it opens the item.
+ */
+.relationship-table {
+  tbody tr {
+    position: relative;
+    cursor: pointer;
+  }
+
+  tbody tr:hover td {
+    background: var(--theme-elevation-50);
+  }
+
+  // Payload makes the first cell relative, which kept the click area inside it.
+  tbody td {
+    position: static;
+  }
+
+  tbody .drawer-link__doc-drawer-toggler::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+}

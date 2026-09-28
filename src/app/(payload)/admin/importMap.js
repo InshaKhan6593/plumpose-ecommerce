@@ -10,7 +10,7 @@ import { OrderedListFeatureClient as OrderedListFeatureClient_e70f5e05f09f93e00b
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
-import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
+import { WebAddressField as WebAddressField_43b49c7228bddb58dd45b2281eb2cdac } from '@/components/admin/WebAddressField'
 import { ExportButton as ExportButton_d374f1d98c0ba3d31281c1d26b6f2d1a } from '@/components/admin/ExportButton'
 import { InlineToolbarFeatureClient as InlineToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { FixedToolbarFeatureClient as FixedToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
@@ -26,16 +26,20 @@ import { MarkEnquiryRead as MarkEnquiryRead_459c947d99afee5f4b3eb20a211bce82 } f
 import { VariantOptionsSelector as VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
 import { PriceCell as PriceCell_e27bf7b8cc50640dcdd584767b8eac3c } from '@payloadcms/plugin-ecommerce/client'
 import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
+import { SizeSaveButton as SizeSaveButton_165a1642b7b14c23d14166720254bc24 } from '@/components/admin/SizeSaveButton'
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { PriceCell as PriceCell_5f4598cde5ccff61871e267c42cb1c7e } from '@/components/admin/PriceCell'
+import { ReadOnlyMoneyField as ReadOnlyMoneyField_f640ede693715f85b3f90094bd3b61b9 } from '@/components/admin/ReadOnlyMoneyField'
+import { PlacementLabel as PlacementLabel_88ce32223484a41d1abd46858136faaa } from '@/components/admin/PlacementLabel'
+import { OrderItemLabel as OrderItemLabel_7acf055c6ba164a0d9afd88addcb02e1 } from '@/components/admin/OrderItemLabel'
 import { ResendConfirmation as ResendConfirmation_6791d7b469d34035194ed804b2fc0fc4 } from '@/components/admin/ResendConfirmation'
 import { AdminIcon as AdminIcon_5fee7b1d7887f8ee4c45775348e4cb18 } from '@/components/AdminBrand'
 import { AdminLogo as AdminLogo_5fee7b1d7887f8ee4c45775348e4cb18 } from '@/components/AdminBrand'
 import { BeforeDashboard as BeforeDashboard_1a7510af427896d367a49dbf838d2de6 } from '@/components/BeforeDashboard'
 import { BeforeLogin as BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
 import { AdminQuickLinks as AdminQuickLinks_1f244695ecb941be065033c3c3feeb3c } from '@/components/AdminQuickLinks'
-import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -51,7 +55,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
+  "@/components/admin/WebAddressField#WebAddressField": WebAddressField_43b49c7228bddb58dd45b2281eb2cdac,
   "@/components/admin/ExportButton#ExportButton": ExportButton_d374f1d98c0ba3d31281c1d26b6f2d1a,
   "@payloadcms/richtext-lexical/client#InlineToolbarFeatureClient": InlineToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#FixedToolbarFeatureClient": FixedToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
@@ -67,14 +71,18 @@ export const importMap = {
   "@payloadcms/plugin-ecommerce/rsc#VariantOptionsSelector": VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb,
   "@payloadcms/plugin-ecommerce/client#PriceCell": PriceCell_e27bf7b8cc50640dcdd584767b8eac3c,
   "@payloadcms/plugin-ecommerce/rsc#PriceInput": PriceInput_b91672ccd6e8b071c11142ab941fedfb,
+  "@/components/admin/SizeSaveButton#SizeSaveButton": SizeSaveButton_165a1642b7b14c23d14166720254bc24,
   "@payloadcms/richtext-lexical/client#HorizontalRuleFeatureClient": HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/PriceCell#PriceCell": PriceCell_5f4598cde5ccff61871e267c42cb1c7e,
+  "@/components/admin/ReadOnlyMoneyField#ReadOnlyMoneyField": ReadOnlyMoneyField_f640ede693715f85b3f90094bd3b61b9,
+  "@/components/admin/PlacementLabel#PlacementLabel": PlacementLabel_88ce32223484a41d1abd46858136faaa,
+  "@/components/admin/OrderItemLabel#OrderItemLabel": OrderItemLabel_7acf055c6ba164a0d9afd88addcb02e1,
   "@/components/admin/ResendConfirmation#ResendConfirmation": ResendConfirmation_6791d7b469d34035194ed804b2fc0fc4,
   "@/components/AdminBrand#AdminIcon": AdminIcon_5fee7b1d7887f8ee4c45775348e4cb18,
   "@/components/AdminBrand#AdminLogo": AdminLogo_5fee7b1d7887f8ee4c45775348e4cb18,
   "@/components/BeforeDashboard#BeforeDashboard": BeforeDashboard_1a7510af427896d367a49dbf838d2de6,
   "@/components/BeforeLogin#BeforeLogin": BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e,
   "@/components/AdminQuickLinks#AdminQuickLinks": AdminQuickLinks_1f244695ecb941be065033c3c3feeb3c,
-  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

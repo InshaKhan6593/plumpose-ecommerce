@@ -25,6 +25,8 @@ export const Media: CollectionConfig = {
     useAsTitle: 'alt',
   },
   slug: 'media',
+  // Images only (see mimeTypes), so "Photos" rather than "Media": the upload drawer read "Creating new Media".
+  labels: { plural: 'Photos', singular: 'Photo' },
   // A photo's description, focal point or file shows on prerendered pages.
   hooks: withStorefrontRefresh(),
   access: {
@@ -37,11 +39,25 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
+      // Was "Alt" — developer shorthand.
+      admin: {
+        description:
+          'A few words about what is in the photo. Google reads it, and so do people who cannot see the photo.',
+      },
+      label: 'Describe the photo',
       required: true,
     },
     {
       name: 'caption',
       type: 'richText',
+      admin: {
+        /*
+         * Only the template's picture section (unused) prints a caption, so an
+         * empty box under every upload was one more thing to wonder about.
+         * Shown only on a photo that already has one.
+         */
+        condition: (data) => Boolean(data?.caption),
+      },
       editor: lexicalEditor({
         features: ({ rootFeatures }) => {
           return [...rootFeatures, FixedToolbarFeature(), InlineToolbarFeature()]

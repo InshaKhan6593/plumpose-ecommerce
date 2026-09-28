@@ -1,7 +1,8 @@
 import type { RowField, TextField } from 'payload'
 
 import { slugField } from 'payload'
-import { slugify } from 'payload/shared'
+
+import { webSlug } from '@/utilities/webSlug'
 
 /**
  * "Slug" is developer vocabulary. To the client this is simply the web
@@ -18,9 +19,18 @@ export const webAddress = (useAsSlug = 'title'): RowField =>
       // A RowField's admin has no description, so it goes on the text field.
       for (const sub of field.fields) {
         if ('name' in sub && sub.name === 'slug') {
-          sub.label = 'Web address'
-          sub.admin = {
-            ...sub.admin,
+          const slug = sub as TextField
+          slug.label = 'Web address'
+          slug.admin = {
+            ...slug.admin,
+            // Payload's box, plus its description and a live preview while empty.
+            components: {
+              ...slug.admin?.components,
+              Field: {
+                clientProps: { useAsSlug },
+                path: '@/components/admin/WebAddressField#WebAddressField',
+              },
+            },
             description:
               'Made from the title. Only change it before publishing — editing it later breaks existing links.',
           }
@@ -30,13 +40,12 @@ export const webAddress = (useAsSlug = 'title'): RowField =>
            * no longer autosave a draft first) failed "Web address is required"
            * before it could be made. Fill it from the title before validating.
            */
-          const slug = sub as TextField
           slug.hooks = {
             ...slug.hooks,
             beforeValidate: [
               ...(slug.hooks?.beforeValidate ?? []),
               ({ data, value }) =>
-                value || (typeof data?.[useAsSlug] === 'string' ? slugify(data[useAsSlug]) : value),
+                value || (typeof data?.[useAsSlug] === 'string' ? webSlug(data[useAsSlug]) : value),
             ],
           }
         }
@@ -44,5 +53,8 @@ export const webAddress = (useAsSlug = 'title'): RowField =>
 
       return field
     },
+    // Payload's slugify doubled hyphens around a dash and dropped accented letters.
+    slugify: ({ valueToSlugify }) =>
+      typeof valueToSlugify === 'string' ? webSlug(valueToSlugify) : valueToSlugify,
     useAsSlug,
   })

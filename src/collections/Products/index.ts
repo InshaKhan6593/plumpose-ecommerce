@@ -244,8 +244,13 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
             {
               name: 'personalisationEnabled',
               type: 'checkbox',
-              admin: { description: 'Offer hand embroidery on this piece.' },
+              admin: {
+                description:
+                  'Ticked: customers can add hand embroidery to this piece (the fees are in Personalisation). Unticked: no embroidery offered.',
+              },
               defaultValue: true,
+              // Was "Personalisation Enabled", made from the field's name.
+              label: 'Offer hand embroidery',
             },
           ],
           label: 'Fabric & Care',
@@ -285,12 +290,23 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                   description: 'Tick this if the piece is made in more than one size or colour.',
                   label: 'This piece comes in different sizes',
                 },
+                // Was "Inventory". Hidden by the plugin once the piece has sizes.
+                inventory: {
+                  description:
+                    'How many you have ready to send. A piece in different sizes keeps its stock on each size instead.',
+                  label: 'Stock',
+                },
                 // The price sits in an unnamed group and row, hence mapFieldsDeep.
                 priceInQAR: {
                   description:
                     'The price shown in the shop. A size with its own price is charged at that price instead.',
                   label: 'Price (QAR)',
                 },
+                /*
+                 * Every piece needs a price, so the box starts ticked and is
+                 * hidden (see below): unticked, the price field was hidden and a
+                 * new piece looked as if it had nowhere to type one.
+                 */
                 priceInQAREnabled: { label: 'Set a price' },
                 variantTypes: {
                   description: 'Which options this piece is offered in — for example Size.',
@@ -308,6 +324,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               if (name === 'variantTypes') {
                 field = {
                   ...field,
+                  // No "+": it made a new kind of option (beside Size, Colour,
+                  // Pattern) — a developer's job. New sizes go in "Sizes,
+                  // colours & patterns".
+                  admin: { ...('admin' in field ? field.admin : {}), allowCreate: false },
                   filterOptions: async ({ req }: { req: PayloadRequest }) => {
                     const { docs } = await req.payload.find({
                       collection: 'variantOptions',
@@ -323,6 +343,32 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
                     )
                     return { id: { in: [...new Set(ids)] } }
                   },
+                } as typeof field
+              }
+
+              /*
+               * Hidden as well: every piece has a price, so the box had nothing
+               * to decide, and sharing a row with it pushed the price box to
+               * the right of Stock and Was price.
+               */
+              /*
+               * The piece's own list of sizes: oldest first (she adds S, M, L
+               * and it read L, M, S), and only the size and its stock — the
+               * title column repeated the piece's whole name on every row.
+               */
+              if (name === 'variants' && field.type === 'join') {
+                field = {
+                  ...field,
+                  admin: { ...field.admin, defaultColumns: ['options', 'inventory'] },
+                  defaultSort: 'createdAt',
+                } as typeof field
+              }
+
+              if (name === 'priceInQAREnabled') {
+                field = {
+                  ...field,
+                  admin: { ...('admin' in field ? field.admin : {}), hidden: true },
+                  defaultValue: true,
                 } as typeof field
               }
 
@@ -381,6 +427,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         },
         {
           name: 'meta',
+          /*
+           * The SEO plugin marks empty boxes "Missing" in red, which read as
+           * something broken. Nothing is: the page falls back to these.
+           */
+          description:
+            'Optional. Left empty, Google and shared links use the piece’s name, its description and its first photo — the red “Missing” marks can be ignored. Fill these in only to word it differently for Google.',
           label: 'Google & sharing',
           fields: [
             OverviewField({

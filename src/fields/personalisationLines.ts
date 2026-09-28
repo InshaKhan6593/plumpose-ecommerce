@@ -16,38 +16,47 @@ import type { Field } from 'payload'
  * `netlify/lib/personalisation.mjs`, which returns exactly these pairs.
  */
 export const personalisationLineFields: Field[] = [
+  /*
+   * The keys (`pocket`, `text`, `gold`) are what the engine matches on; the
+   * names beside them are what she reads. Keys are hidden in the admin.
+   */
   {
     name: 'placement',
     type: 'text',
-    admin: { description: 'Option key, e.g. `pocket`.' },
+    admin: { description: 'Option key, e.g. `pocket`.', hidden: true },
     required: true,
   },
   {
     name: 'placementName',
     type: 'text',
-    admin: { description: 'What it was called when the order was placed.' },
+    admin: { description: 'Where on the piece, as it was called when the order was placed.' },
+    label: 'Placement',
   },
   {
     name: 'style',
     type: 'text',
-    admin: { description: '`text`, `symbol` or `both`.' },
+    admin: { description: '`text`, `symbol` or `both`.', hidden: true },
     required: true,
   },
   {
     name: 'lettering',
     type: 'text',
-    admin: { description: 'The letters to embroider. Empty for a symbol-only placement.' },
+    admin: { description: 'The letters to embroider. Empty for a symbol only.' },
+    label: 'Letters',
   },
-  { name: 'symbol', type: 'text' },
-  { name: 'symbolName', type: 'text' },
-  { name: 'thread', type: 'text' },
-  { name: 'threadName', type: 'text' },
+  { name: 'symbol', type: 'text', admin: { hidden: true } },
+  { name: 'symbolName', type: 'text', label: 'Symbol' },
+  { name: 'thread', type: 'text', admin: { hidden: true } },
+  { name: 'threadName', type: 'text', label: 'Thread colour' },
   {
     name: 'feeQar',
     type: 'number',
     admin: {
-      description: 'Fee charged for this placement, in minor units. Snapshot, never recalculated.',
+      // Minor units, shown as QAR 160.00.
+      components: { Field: '@/components/admin/ReadOnlyMoneyField#ReadOnlyMoneyField' },
+      description: 'What this placement cost the customer.',
     },
+    label: 'Fee',
   },
 ]
 
@@ -56,12 +65,12 @@ export const personalisationField: Field = {
   name: 'personalisation',
   type: 'array',
   admin: {
-    description:
-      'Hand-embroidery on this piece. Written by the server from the personalisation options — never typed in by hand.',
-    initCollapsed: true,
+    components: { RowLabel: '@/components/admin/PlacementLabel#PlacementLabel' },
+    description: 'The hand embroidery the customer chose for this piece.',
+    initCollapsed: false,
   },
   fields: personalisationLineFields,
-  label: 'Personalisation',
+  label: 'Embroidery',
   labels: { plural: 'Placements', singular: 'Placement' },
 }
 

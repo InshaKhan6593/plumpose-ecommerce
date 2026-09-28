@@ -362,9 +362,12 @@ export interface Product {
    */
   madeToOrder?: boolean | null;
   /**
-   * Offer hand embroidery on this piece.
+   * Ticked: customers can add hand embroidery to this piece (the fees are in Personalisation). Unticked: no embroidery offered.
    */
   personalisationEnabled?: boolean | null;
+  /**
+   * How many you have ready to send. A piece in different sizes keeps its stock on each size instead.
+   */
   inventory?: number | null;
   /**
    * Tick this if the piece is made in more than one size or colour.
@@ -419,6 +422,9 @@ export interface Product {
  */
 export interface Media {
   id: number;
+  /**
+   * A few words about what is in the photo. Google reads it, and so do people who cannot see the photo.
+   */
   alt: string;
   caption?: {
     root: {
@@ -1041,6 +1047,9 @@ export interface Variant {
   title?: string | null;
   product: number | Product;
   options: (number | VariantOption)[];
+  /**
+   * How many of this size you have ready to send.
+   */
   inventory?: number | null;
   /**
    * Only if this size costs more or less than the piece. Left unticked, it is charged at the piece’s price.
@@ -1107,6 +1116,8 @@ export interface Discountus {
   createdAt: string;
 }
 /**
+ * Every paid order. Open one to see what to make and where it goes, then move Fulfilment along as you go.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "orders".
  */
@@ -1118,7 +1129,7 @@ export interface Order {
         variant?: (number | null) | Variant;
         quantity: number;
         /**
-         * Hand-embroidery on this piece. Written by the server from the personalisation options — never typed in by hand.
+         * The hand embroidery the customer chose for this piece.
          */
         personalisation?:
           | {
@@ -1127,7 +1138,7 @@ export interface Order {
                */
               placement: string;
               /**
-               * What it was called when the order was placed.
+               * Where on the piece, as it was called when the order was placed.
                */
               placementName?: string | null;
               /**
@@ -1135,7 +1146,7 @@ export interface Order {
                */
               style: string;
               /**
-               * The letters to embroider. Empty for a symbol-only placement.
+               * The letters to embroider. Empty for a symbol only.
                */
               lettering?: string | null;
               symbol?: string | null;
@@ -1143,7 +1154,7 @@ export interface Order {
               thread?: string | null;
               threadName?: string | null;
               /**
-               * Fee charged for this placement, in minor units. Snapshot, never recalculated.
+               * What this placement cost the customer.
                */
               feeQar?: number | null;
               id?: string | null;
@@ -1152,25 +1163,6 @@ export interface Order {
         id?: string | null;
       }[]
     | null;
-  shippingAddress?: {
-    title?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    company?: string | null;
-    addressLine1?: string | null;
-    addressLine2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postalCode?: string | null;
-    country?: string | null;
-    phone?: string | null;
-  };
-  customer?: (number | null) | User;
-  customerEmail?: string | null;
-  transactions?: (number | Transaction)[] | null;
-  status?: OrderStatus;
-  amount?: number | null;
-  currency?: 'QAR' | null;
   /**
    * The garments alone, before embroidery, delivery or any discount.
    */
@@ -1211,12 +1203,6 @@ export interface Order {
    * The total as it read on their screen, e.g. "£355". Kept so the receipt and the order email match the page they paid from.
    */
   displayTotal?: string | null;
-  accessToken?: string | null;
-  /**
-   * Setting this to Shipped emails the customer — add the tracking number first.
-   */
-  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
-  trackingNumber?: string | null;
   /**
    * Internal only. Never shown to the customer.
    */
@@ -1226,6 +1212,34 @@ export interface Order {
    */
   gift?: boolean | null;
   giftNote?: string | null;
+  shippingAddress?: {
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    company?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
+  /**
+   * Their account, if they were signed in. Empty for a guest checkout.
+   */
+  customer?: (number | null) | User;
+  customerEmail?: string | null;
+  transactions?: (number | Transaction)[] | null;
+  status?: OrderStatus;
+  amount?: number | null;
+  currency?: 'QAR' | null;
+  accessToken?: string | null;
+  /**
+   * Setting this to Shipped emails the customer — add the tracking number first.
+   */
+  fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered') | null;
+  trackingNumber?: string | null;
   confirmationEmailSentAt?: string | null;
   notificationEmailSentAt?: string | null;
   shippedEmailSentAt?: string | null;
@@ -1291,7 +1305,7 @@ export interface Cart {
         variant?: (number | null) | Variant;
         quantity: number;
         /**
-         * Hand-embroidery on this piece. Written by the server from the personalisation options — never typed in by hand.
+         * The hand embroidery the customer chose for this piece.
          */
         personalisation?:
           | {
@@ -1300,7 +1314,7 @@ export interface Cart {
                */
               placement: string;
               /**
-               * What it was called when the order was placed.
+               * Where on the piece, as it was called when the order was placed.
                */
               placementName?: string | null;
               /**
@@ -1308,7 +1322,7 @@ export interface Cart {
                */
               style: string;
               /**
-               * The letters to embroider. Empty for a symbol-only placement.
+               * The letters to embroider. Empty for a symbol only.
                */
               lettering?: string | null;
               symbol?: string | null;
@@ -1316,7 +1330,7 @@ export interface Cart {
               thread?: string | null;
               threadName?: string | null;
               /**
-               * Fee charged for this placement, in minor units. Snapshot, never recalculated.
+               * What this placement cost the customer.
                */
               feeQar?: number | null;
               id?: string | null;
@@ -3119,6 +3133,19 @@ export interface OrdersSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  subtotalQar?: T;
+  personalisationTotalQar?: T;
+  shippingQar?: T;
+  discountTotalQar?: T;
+  shippingLabel?: T;
+  shippingZone?: T;
+  discountCode?: T;
+  freeShippingApplied?: T;
+  displayCurrency?: T;
+  displayTotal?: T;
+  adminNotes?: T;
+  gift?: T;
+  giftNote?: T;
   shippingAddress?:
     | T
     | {
@@ -3140,22 +3167,9 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
-  subtotalQar?: T;
-  personalisationTotalQar?: T;
-  shippingQar?: T;
-  discountTotalQar?: T;
-  shippingLabel?: T;
-  shippingZone?: T;
-  discountCode?: T;
-  freeShippingApplied?: T;
-  displayCurrency?: T;
-  displayTotal?: T;
   accessToken?: T;
   fulfilment?: T;
   trackingNumber?: T;
-  adminNotes?: T;
-  gift?: T;
-  giftNote?: T;
   confirmationEmailSentAt?: T;
   notificationEmailSentAt?: T;
   shippedEmailSentAt?: T;

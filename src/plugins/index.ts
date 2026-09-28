@@ -33,6 +33,104 @@ import { lockFields } from '@/fields/lockFields'
 import { mapFieldsDeep } from '@/fields/mapFieldsDeep'
 import { extendArrayField, personalisationField } from '@/fields/personalisationLines'
 
+/** The order status in her words: a paid order read "Processing". Values unchanged. */
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  cancelled: 'Cancelled',
+  completed: 'Completed',
+  processing: 'Paid',
+  refunded: 'Refunded',
+}
+
+/**
+ * The order screen in her words. Each line is headed by what to make ("Al
+ * Shaheen Nights — Silk Pyjama Set — M × 1 · Embroidery: Pocket, S.H, Gold")
+ * and starts open, instead of a closed "Item 01"; the status reads Paid.
+ */
+/**
+ * The order's own fields (breakdown, notes, gift) in its first tab. Below the
+ * plugin's tabs they showed under every tab, so on Shipping the money and the
+ * gift note read as part of the address. Unnamed tabs are layout only: the
+ * stored data does not move. Sidebar fields stay where they are.
+ */
+const mainFieldsIntoFirstTab = (fields: Field[]): Field[] => {
+  const tabsAt = fields.findIndex((field) => field.type === 'tabs')
+  if (tabsAt < 0) return fields
+  const tabs = fields[tabsAt] as Extract<Field, { type: 'tabs' }>
+  const isMain = (field: Field) =>
+    !('admin' in field && field.admin && 'position' in field.admin && field.admin.position === 'sidebar')
+  const after = fields.slice(tabsAt + 1)
+  const moved = after.filter(isMain)
+  const [first, ...rest] = tabs.tabs
+  return [
+    ...fields.slice(0, tabsAt),
+    { ...tabs, tabs: [{ ...first, fields: [...first.fields, ...moved] }, ...rest] },
+    ...after.filter((field) => !isMain(field)),
+  ]
+}
+
+const tidyOrderFields = (fields: Field[]): Field[] =>
+  fields.map((field) => {
+    if (field.type === 'tabs') {
+      return { ...field, tabs: field.tabs.map((tab) => ({ ...tab, fields: tidyOrderFields(tab.fields) })) }
+    }
+    if (!('name' in field) && 'fields' in field && Array.isArray(field.fields)) {
+      return { ...field, fields: tidyOrderFields(field.fields) } as Field
+    }
+    if (field.type === 'array' && field.name === 'items') {
+      return {
+        ...field,
+        // The line's own fields: "Variant" is plugin vocabulary.
+        fields: field.fields.map((sub) =>
+          'name' in sub && sub.name === 'variant'
+            ? ({ ...sub, label: 'Size' } as Field)
+            : 'name' in sub && sub.name === 'product'
+              ? ({ ...sub, label: 'Piece' } as Field)
+              : sub,
+        ),
+        admin: {
+          ...field.admin,
+          components: { ...field.admin?.components, RowLabel: '@/components/admin/OrderItemLabel#OrderItemLabel' },
+          initCollapsed: false,
+        },
+      }
+    }
+    // The payment record SkipCash's reply is kept in; empty on an order made any other way.
+    if (field.type === 'relationship' && field.name === 'transactions') {
+      return {
+        ...field,
+        admin: {
+          ...field.admin,
+          condition: (data: Record<string, unknown>) =>
+            Array.isArray(data?.transactions) && data.transactions.length > 0,
+        },
+        label: 'Payment',
+      } as Field
+    }
+    // Set at checkout (empty for a guest); a picker with "Add new User" invited a change.
+    if (field.type === 'relationship' && field.name === 'customer') {
+      return {
+        ...field,
+        admin: {
+          ...field.admin,
+          description: 'Their account, if they were signed in. Empty for a guest checkout.',
+          readOnly: true,
+        },
+        label: 'Customer account',
+      } as Field
+    }
+    if (field.type === 'select' && field.name === 'status') {
+      return {
+        ...field,
+        options: field.options.map((option) =>
+          typeof option === 'object' && ORDER_STATUS_LABELS[option.value]
+            ? { ...option, label: ORDER_STATUS_LABELS[option.value] }
+            : option,
+        ),
+      }
+    }
+    return field
+  })
+
 const generateTitle: GenerateTitle<Product | Page> = ({ doc }) => {
   return doc?.title
     ? `${doc.title} | plumpose`
@@ -255,7 +353,11 @@ export const plugins: Plugin[] = [
               },
             ],
           },
-          defaultColumns: ['id', 'customerEmail', 'status', 'amount', 'fulfilment', 'createdAt'],
+          // The first column is the link: the customer's email, not the bare "ID: 1" chip.
+          defaultColumns: ['customerEmail', 'id', 'status', 'amount', 'fulfilment', 'createdAt'],
+          // The plugin's text ("Orders represent a customer's intent to purchase…") was written for developers.
+          description:
+            'Every paid order. Open one to see what to make and where it goes, then move Fulfilment along as you go.',
           group: 'Shop',
           listSearchableFields: ['customerEmail'],
           /** Rows were titled by createdAt, so every order looked the same. */
@@ -266,7 +368,7 @@ export const plugins: Plugin[] = [
           ...defaultCollection.hooks,
           afterChange: [...(defaultCollection.hooks?.afterChange ?? []), sendOrderEmails],
         },
-        fields: [
+        fields: mainFieldsIntoFirstTab([
           /**
            * Money, payment state and what was bought are locked at field
            * level. See @/access/isAdminOrStaff — the gateway is the source of
@@ -277,9 +379,11 @@ export const plugins: Plugin[] = [
            * plugin nests `items` inside a tabs field and `amount` / `currency`
            * in an unnamed row, so both helpers walk the tree.
            */
-          ...(lockFields(
-            extendArrayField(defaultCollection.fields, 'items', [personalisationField]),
-            ['amount', 'currency', 'items', 'status', 'transactions'],
+          ...(tidyOrderFields(
+            lockFields(
+              extendArrayField(defaultCollection.fields, 'items', [personalisationField]),
+              ['amount', 'currency', 'items', 'status', 'transactions'],
+            ),
           ) as typeof defaultCollection.fields),
           ...orderTotalsFields,
           {
@@ -288,6 +392,8 @@ export const plugins: Plugin[] = [
             unique: true,
             index: true,
             admin: {
+              // The order's private link key: nothing for her to read or change.
+              hidden: true,
               position: 'sidebar',
               readOnly: true,
             },
@@ -376,6 +482,8 @@ export const plugins: Plugin[] = [
             type: 'date',
             access: { update: neverEditable },
             admin: {
+              // Only once it has been sent: an empty date box looked like something to fill in.
+              condition: (data) => Boolean(data?.[name]),
               date: { displayFormat: 'd MMM yyyy, HH:mm', pickerAppearance: 'dayAndTime' },
               position: 'sidebar',
               readOnly: true,
@@ -394,7 +502,7 @@ export const plugins: Plugin[] = [
             },
             label: 'Email problem',
           },
-        ],
+        ]),
       }),
     },
     /**
@@ -441,6 +549,14 @@ export const plugins: Plugin[] = [
           },
           admin: {
             ...defaultCollection?.admin,
+            components: {
+              ...defaultCollection?.admin?.components,
+              edit: {
+                ...defaultCollection?.admin?.components?.edit,
+                // Closes the size's window after Save when opened from its piece.
+                SaveButton: '@/components/admin/SizeSaveButton#SizeSaveButton',
+              },
+            },
             defaultColumns: ['title', 'product', 'inventory', 'priceInQAR'],
             // The plugin's text was written for developers (and misspelt).
             description:
@@ -472,6 +588,14 @@ export const plugins: Plugin[] = [
             if (field.name === 'priceInQAR') {
               return { ...field, label: 'Price for this size (QAR)' } as typeof field
             }
+            // Was "Inventory", as on the piece (Products relabels it there too).
+            if (field.name === 'inventory') {
+              return {
+                ...field,
+                admin: { ...field.admin, description: 'How many of this size you have ready to send.' },
+                label: 'Stock',
+              } as typeof field
+            }
             return field
           }),
           /**
@@ -484,7 +608,7 @@ export const plugins: Plugin[] = [
           // A size's price is on the prerendered homepage; see @/hooks/revalidateStorefront.
           hooks: withStorefrontRefresh(defaultCollection.hooks),
           // Her words, not the plugin's: the stock alert emails point her here by this name.
-          labels: { plural: 'Sizes & stock', singular: 'Size & stock' },
+          labels: { plural: 'Sizes & stock', singular: 'Size' },
         }),
         variantTypesCollectionOverride: ({ defaultCollection }) => ({
           ...defaultCollection,
