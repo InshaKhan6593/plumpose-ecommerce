@@ -146,16 +146,23 @@ export function Reveal({
  * `start` is where the frame's top must reach before it opens. The default
  * waits until it is a little way up the screen; use `'top bottom'` where an
  * empty frame arriving from below would read as a gap in the page.
+ *
+ * `scrub` ties the unveil to the scroll instead of a timer: it opens from
+ * `start` until the frame's top reaches `scrub` (e.g. 'top 35%'). For a frame
+ * that arrives straight after a pin, where a timed unveil was over before the
+ * photograph was in view (the homepage's product band, measured 28 Sep 2026).
  */
 export function RevealImage({
   children,
   className,
   parallax = true,
+  scrub,
   start = 'top 90%',
 }: {
   children: React.ReactNode
   className?: string
   parallax?: boolean
+  scrub?: string
   start?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -169,8 +176,25 @@ export function RevealImage({
     // Closed until it arrives: `data-reveal-wait` in globals.css, for the reason given in Reveal.
     const ctx = gsap.context(() => undefined, el)
 
+    // Scrubbed: made once the frame is within a screen, then it follows the scroll.
+    const stopScrub = scrub
+      ? whenReached(el, 2, () => {
+          ctx.add(() => {
+            el.removeAttribute('data-reveal-wait')
+            const tl = gsap.timeline({
+              defaults: { ease: 'none' },
+              scrollTrigger: { end: scrub, scrub: 0.6, start, trigger: el },
+            })
+            tl.fromTo(el, { clipPath: CLOSED, opacity: 1 }, { clipPath: 'inset(0% 0% 0% 0%)' }, 0)
+            if (inner) tl.fromTo(inner, { scale: 1.2 }, { scale: rest }, 0)
+          })
+        })
+      : () => undefined
+
     // The unveil plays when the frame reaches its line.
-    const stopReveal = whenReached(el, lineOf(start, 0.9), () => {
+    const stopReveal = scrub
+      ? () => undefined
+      : whenReached(el, lineOf(start, 0.9), () => {
       ctx.add(() => {
         gsap.fromTo(
           el,
@@ -206,11 +230,12 @@ export function RevealImage({
         : () => undefined
 
     return () => {
+      stopScrub()
       stopReveal()
       stopDrift()
       ctx.revert()
     }
-  }, [parallax, start])
+  }, [parallax, scrub, start])
 
   return (
     <div className={className} data-reveal-image="" data-reveal-wait="" ref={ref}>

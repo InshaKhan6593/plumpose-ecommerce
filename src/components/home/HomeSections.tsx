@@ -46,9 +46,15 @@ export function ProductBand({
      */
     <section className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 pt-10 pb-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-24 lg:pt-12 lg:pb-10">
       {image ? (
-        // Opens as soon as it enters, so it arrives already unveiling rather than as an empty frame.
+        /*
+         * Opens with the scroll, evenly, from the moment it enters until its top is
+         * 30% of the way down. A timed unveil started as it peeked in below
+         * the pinned steps and was 90% done before half of it was on screen,
+         * so it was usually missed (measured at 1440 × 900, 28 Sep 2026).
+         */
         <RevealImage
           className="relative aspect-[4/5] overflow-hidden bg-paper-3 lg:aspect-square"
+          scrub="top 30%"
           start="top bottom"
         >
           <Media

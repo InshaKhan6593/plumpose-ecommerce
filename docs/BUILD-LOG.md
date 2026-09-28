@@ -3213,3 +3213,27 @@ it. The newspaper's front page is legible mid-film — raised with her.
 
 Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed; the new
 pages, checkout and hero at desktop and phone on the local database.
+
+## 55. Two homepage animations that were missed — 28 Sep 2026
+
+Both reported from the live site, both measured by wheel-scrolling a real
+browser and logging the animation against the section's position.
+
+- **The product band's photograph (after the pinned steps).** Its timed unveil
+  started as the frame's top peeked in (`'top bottom'`) and was 90% open with
+  the band's top still at 441 of 900 px — before half the photograph was on
+  screen — so it was usually over before it was seen. `RevealImage` takes
+  `scrub` now: the unveil follows the scroll, evenly, from `start` until the
+  frame's top reaches `scrub` (`'top 30%'` here). Measured again: a quarter open
+  at 576, half at 446, nearly full at 199 — on screen throughout.
+- **The Print on phones.** The card grew from `'top 75%'` and was full with
+  the section only half-way up (top ≈ 210 of 844), most of the growth below
+  the screen; it now starts at `'top 60%'`, with no trailing hold on phones, so
+  it is full as the section reaches the top. And the "Read the story" link was
+  at full opacity inside the half-open card, cut by its edge: a staggered
+  `fromTo` applies its "from" only to the first target at once, so the
+  paragraph was hidden and the link was not. `gsap.set` hides both first
+  (desktop had the same fault, mostly covered by the card).
+
+Checked: `tsc` 0 errors; lint 0 errors; frames at 390 × 844 and measurements at
+1440 × 900 on the local database.

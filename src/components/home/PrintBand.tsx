@@ -111,10 +111,23 @@ export function PrintBand({
                 // Re-measure the card's start when the screen changes size.
                 invalidateOnRefresh: true,
                 scrub: true,
-                start: 'top 75%',
+                /*
+                 * From when the card's top edge peeks in at the bottom. It
+                 * started at 'top 75%', when the card was still below the
+                 * screen: most of its growth happened out of sight, and it was
+                 * full with the section only half-way up (measured at 390 × 844).
+                 */
+                start: 'top 60%',
                 trigger: el,
               },
         })
+
+        /*
+         * Hidden before the timeline is built. A staggered fromTo applies its
+         * "from" only to the first element straight away, so the link stood at
+         * full opacity inside the half-open card, cut off by its edge.
+         */
+        gsap.set(more, { opacity: 0, y: 24 })
 
         tl.fromTo(
           frame,
@@ -123,13 +136,10 @@ export function PrintBand({
           0,
         )
           .fromTo(picture, { scale: 1.3 }, { duration: 1.3, scale: 1 }, 0)
-          .fromTo(
-            more,
-            { opacity: 0, y: 24 },
-            { duration: 0.3, ease: 'power2.out', opacity: 1, stagger: 0.05, y: 0 },
-            1,
-          )
-          .to({}, { duration: 0.2 })
+          .to(more, { duration: 0.3, ease: 'power2.out', opacity: 1, stagger: 0.05, y: 0 }, 1)
+        // Desktop holds the full frame a beat before the pin lets go. On a phone
+        // the section is already leaving, so the words finish as it reaches the top.
+        if (desktop) tl.to({}, { duration: 0.2 })
       })
     }, el)
 
