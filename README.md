@@ -38,7 +38,7 @@ in Doha**, not made there: never write "hand-finished in Doha".
 **Search.** Canonicals, branded titles and descriptions, Product / ProductGroup,
 Organization and breadcrumb structured data, real 404s, a sitemap without
 demo or sample records (BUILD-LOG §39). An SEO audit scored 54, then 70 after
-the fixes.
+the fixes; on plumpose.com it scored 69, and ~76 with the §58 fixes.
 
 **Accounts.** Sign in, create an account, password reset on the storefront,
 orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
@@ -53,11 +53,14 @@ orders and subscribers, reviews with approval and replies, customer Spotted
 submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
 colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
-Payments run on SkipCash's sandbox; production keys come at launch. 263 integration and 57 end-to-end tests pass.
+**Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is paused on the live site until SkipCash production.
 
-**Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). A test deploy runs
-at https://plumpose.vercel.app on the free plan; the live shop needs **Vercel
-Pro, $20/month**, because the free plan does not allow commercial use.
+Payments run on SkipCash's sandbox; production keys come at launch. 281 integration tests pass; the 57 end-to-end tests last passed on 28 Sep before the checkout changes.
+
+**Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). Live at
+https://plumpose.com since 28 Sep 2026 (plumpose.vercel.app redirects there).
+The shop needs **Vercel Pro, $20/month**, because the free plan does not allow
+commercial use.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 [CLAUDE.md](CLAUDE.md) for the briefing.

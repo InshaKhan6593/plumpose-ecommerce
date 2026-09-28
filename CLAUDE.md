@@ -118,6 +118,15 @@ every email — the order's random `accessToken`, never the email address, in
 the URL. A signed-in customer's order has no `customerEmail` (the plugin links
 the account instead): read it with `customerEmailOf()`.
 
+**Orders** — known to customers by `reference`, "PLM-260928-7K4QX2": the paid
+payment's SkipCash reference, filled on create (`src/hooks/orderReference.ts`);
+show it with `orderCode()`, which falls back to "no. 105" for an order from
+before codes. Track order takes the code as typed. Fulfilment has Cancelled and
+Refunded: she refunds in SkipCash first, then `statusFollowsClosure` sets the
+locked `status` and the customer is emailed once. **Site settings → Orders →
+Take orders** pauses checkout (the server refuses to start a payment too);
+it is paused on the live site until SkipCash production (BUILD-LOG §57–§58).
+
 **Data model** — personalisation on cart and order lines (snapshots, not
 relationships, so old orders still read correctly when options are renamed);
 the money breakdown on orders; `discountUses`, `spinEntries`, `webhookLog`.
@@ -150,22 +159,23 @@ client's reference recording (`../brand-assets/reference/`):
 
 ## What is NOT built
 
-- **SkipCash production.** Built and running on the sandbox keys. Going live
-  is new keys, `SKIPCASH_ENV=production`, and the webhook and return URLs in
-  the portal (BUILD-LOG §32).
+- **SkipCash production.** Built and running on the sandbox keys, with orders
+  paused on the live site. Going live is new keys, `SKIPCASH_ENV=production`,
+  the webhook and return URLs in the portal (BUILD-LOG §32), then ticking Site
+  settings → Orders → Take orders.
 - **Content-page copy is partly placeholder.** Every block in
   `src/content/pages.ts` is marked LEGACY (her old site), PLACEHOLDER (ours, to
   confirm) or hers (her corrections of 27 Sep 2026, BUILD-LOG §40). The SAMPLE
   Made for You projects and the demo catalogue were removed from Neon on
   27 Sep; `isPlaceholderSlug()` keeps any `demo-`/`sample-` record out of search
   (§39). Her legal pages, size guide, shipping/returns and care text arrived
-  28 Sep (§54). Waiting on her: the sale-items policy, the returns window
-  (Site settings → Returns, 14 for now), ready-to-ship vs "hand-finished to
-  order", and whether the product care line should follow her new care page.
-- **Vercel Pro.** Hosting is **Vercel, decided 26 Sep 2026** — no Netlify.
-  The test deploy (https://plumpose.vercel.app) is on the free Hobby plan,
-  which does not allow commercial use; the live shop goes on **Pro,
-  $20/month**, before launch (BUILD-LOG §37–38).
+  28 Sep (§54); the wording follows her ready-to-ship text (§58). Waiting on
+  her: the sale-items policy, and confirming the returns window (Site settings
+  → Returns, 14 for now).
+- **Vercel Pro, in her name.** Hosting is **Vercel, decided 26 Sep 2026** — no
+  Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
+  use). Handover: she creates a Pro team, the developer joins as its one paid
+  seat, the project is transferred in; Neon, R2 and Resend move separately.
 - **plumpose.com points at Vercel since 28 Sep 2026** (BUILD-LOG §54) —
   while checkout is still on the SkipCash sandbox. Squarespace DNS: `@` A and
   `www` CNAME are Vercel's; never touch the MX (her Google Workspace email).
@@ -205,7 +215,7 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (263)                                                                                         |
+| `pnpm test:int`                               | Integration tests (281)                                                                                         |
 | `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page                                                           |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |

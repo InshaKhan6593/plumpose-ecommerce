@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 28 Sep 2026 — plumpose.com on Vercel; her legal pages, size guide and fountain hero film (§54)
+**Last updated:** 28 Sep 2026 — orders paused until SkipCash production; cancel/refund; order codes; plumpose.com SEO audit and phone speed (§55–§58)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,12 +16,12 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **263 passing** (28 Sep) |
-| End-to-end tests | **57 passing**, none skipped |
+| Integration tests | **281 passing** (28 Sep) |
+| End-to-end tests | **57 passing** at §53; not re-run since (checkout now a city search box, and pausable) |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
-| Payments | SkipCash sandbox (§32); a full browser payment on the deployed site succeeded 26 Sep (§38) |
-| Hosting | Vercel — test deploy at plumpose.vercel.app; **Pro ($20/month)** for launch (§38) |
+| Payments | SkipCash sandbox (§32); **orders paused** on the live site until the production keys (§58) |
+| Hosting | Vercel — **live at plumpose.com** since 28 Sep (§54); plumpose.vercel.app redirects there (§58); **Pro ($20/month)** |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
 
