@@ -213,35 +213,58 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Codes customers type at checkout — yours, and the ones the reward wheel gives out. Untick Active to stop one.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "discountCodes".
  */
 export interface DiscountCode {
   id: number;
+  /**
+   * What customers type at checkout, e.g. EID15. Small or capital letters both work.
+   */
   code: string;
   type: 'percent' | 'fixed' | 'freeShipping' | 'freeEmbroidery';
   /**
-   * Percentage (e.g. 10) or amount in QAR (e.g. 100). For free hand embroidery: how many placements are free (e.g. 1) — leave empty to make all of them free.
+   * Type 15 for 15% off, or 100 for QAR 100 off. Free hand embroidery: how many placements are free (e.g. 1) — empty makes all of them free.
    */
   value?: number | null;
+  /**
+   * In riyals, on the pieces and embroidery in the bag. Empty: no minimum.
+   */
   minSpendQar?: number | null;
   /**
-   * Total uses allowed. Leave empty for unlimited.
+   * How many times it can be used in all, by everyone. Empty: no limit.
    */
   usageLimit?: number | null;
+  /**
+   * How many times one customer (one email) may use it. Empty: no limit.
+   */
   perCustomerLimit?: number | null;
+  /**
+   * Counted when an order is paid.
+   */
   usageCount?: number | null;
+  /**
+   * Works from the start of this day, Qatar time. Empty: straight away.
+   */
   startsAt?: string | null;
+  /**
+   * Works until the end of this day, Qatar time. Empty: never ends.
+   */
   expiresAt?: string | null;
   /**
-   * Leave empty to apply to everything.
+   * Only these pieces. Empty: every piece.
    */
   appliesTo?: (number | Product)[] | null;
   source?: ('manual' | 'spinWheel') | null;
   /**
-   * Set when the code came from the wheel.
+   * Only this customer’s email can use it. The wheel sets it to the winner’s email. Empty: anyone.
    */
   issuedToEmail?: string | null;
+  /**
+   * Untick to stop the code working. Customers are told it is not valid.
+   */
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1928,6 +1951,8 @@ export interface PersonalisationOption {
   createdAt: string;
 }
 /**
+ * What delivery costs outside Qatar. Each country is priced from one of these zones (see Countries).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "shippingZones".
  */
@@ -1939,12 +1964,20 @@ export interface ShippingZone {
    * Used internally to link this record to the rest of the site. Generated automatically.
    */
   key?: string | null;
+  /**
+   * In riyals: type 200 for QAR 200. The international surcharge in Site settings is added on top.
+   */
   feeQar: number;
+  /**
+   * Untick to stop delivering to every country in this zone — customers there are asked to email you.
+   */
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * What delivery costs to each place in Qatar. Checkout lists them in this order — drag a row by its handle to move it.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "shippingCities".
  */
@@ -1956,13 +1989,19 @@ export interface ShippingCity {
    * Used internally to link this record to the rest of the site. Generated automatically.
    */
   key?: string | null;
+  /**
+   * In riyals: type 20 for QAR 20. Live on checkout as soon as you save.
+   */
   feeQar: number;
+  /**
+   * Untick to stop delivering here: it leaves the checkout list and the Shipping page.
+   */
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Delivery destinations. A country with a blocked reason cannot be ordered to.
+ * Where plumpose delivers, and the delivery zone each country is priced from. For reference: to move a country to another zone, or open a blocked one, ask your developer.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "countries".
@@ -3288,7 +3327,13 @@ export interface SiteSetting {
   instagramUrl?: string | null;
   announcementEnabled?: boolean | null;
   announcementText?: string | null;
+  /**
+   * Delivery becomes free, to anywhere, when the pieces and embroidery in a bag come to the amount below or more.
+   */
   freeShippingEnabled?: boolean | null;
+  /**
+   * In riyals: type 2000 for QAR 2,000. Shown on the Shipping page and every piece.
+   */
   freeShippingThresholdQar?: number | null;
   /**
    * Added to every international zone fee. Use when carrier fuel costs rise.
