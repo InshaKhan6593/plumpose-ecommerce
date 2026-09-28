@@ -67,6 +67,8 @@ await r.run(async () => {
       await r.point(drawer.locator('#field-product'), 2)
       await r.say('Tick “This size has its own price” only if this size costs more or less than the piece.')
       await r.point(drawer.getByText(/this size has its own price/i).first(), 2.5)
+      await r.say('Untick Offer this size when you cannot make it. It stays on your website, crossed out.')
+      await r.point(drawer.getByText(/^offer this size$/i).first(), 2)
       await r.say('Click Save. The size is live straight away.')
     }
     await r.click(drawer.locator('#action-save'))
@@ -106,6 +108,7 @@ await r.run(async () => {
     'Options offered: Size → Publish changes',
     'Add new: choose the size, type the stock, Save',
     'Click a size to change its stock',
+    'Untick Offer this size to show it crossed out',
   ], { speak: 'To recap: add each size with its stock, and update the stock as it sells.' })
   await r.finish()
 })

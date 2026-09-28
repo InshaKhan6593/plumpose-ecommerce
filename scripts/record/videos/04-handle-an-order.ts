@@ -2,7 +2,7 @@
  * Tutorial 04 — handle an order: find it, read what to make, what was paid,
  * the gift note and the address, then move it along — In the atelier,
  * Shipped with a tracking number, Delivered — and see the customer's order
- * page follow. Every control on the list and the order screen is pointed at
+ * page follow; Cancelled and Refunded are pointed at (each emails the customer). Every control on the list and the order screen is pointed at
  * and explained, including the ones the video does not use.
  *
  * Starts from the demo database (`sh scripts/record/reset-demo.sh reset`);
@@ -49,8 +49,8 @@ await r.run(async () => {
   /* ---- the list */
   await r.say('New orders appear under Orders, and you are emailed each one.')
   await r.point(r.admin.locator('table tbody tr').first(), 2, 1.4)
-  await r.say('ID is the order number. The customer sees it in their emails.')
-  await r.point(r.admin.locator('table tbody tr').first().getByText(/ID:/), 1.5)
+  await r.say('The order code starts with PLM. The customer sees it in their emails and on their order page.')
+  await r.point(r.admin.locator('table tbody tr').first().getByText(/PLM-/), 1.5)
 
   await r.say('To find an order, type the customer’s email in the search box.')
   await r.point(r.admin.getByPlaceholder(/search/i).first(), 1.5)
@@ -150,6 +150,13 @@ await r.run(async () => {
   await r.saved()
   await onOrderPage((site) => site.locator('main').getByText(/^delivered \(current\)$/i))
 
+  /* ---- cancelled and refunded: pointed at, not chosen */
+  await r.say('Fulfilment has two more choices: Cancelled and Refunded. Each one emails the customer.')
+  await r.click(r.admin.locator('#field-fulfilment .rs__control').first())
+  await r.point(r.admin.locator('.rs__menu').first(), 2.5)
+  await r.say('To refund, return the money in SkipCash first, then choose Refunded and Save.')
+  await r.admin.locator('body').press('Escape')
+
   await r.recapCard(
     'Handle an order',
     [
@@ -157,6 +164,7 @@ await r.run(async () => {
       'In the atelier → Save (no email)',
       'Tracking number, then Shipped → Save (the customer is emailed)',
       'Delivered → Save (no email)',
+      'Cancelled or Refunded email the customer: refund in SkipCash first',
       'Resend confirmation: the order email again, if it went missing',
     ],
     {
