@@ -41,6 +41,26 @@ each caption is one step, and the next action starts when its step ends.
 
 If a take shows a bug, fix it, reset, and record again from the start.
 
+## The voiceover script
+
+```bash
+npx tsx scripts/record/voiceover.ts <name> ["opening line"] ["closing line"]
+```
+
+writes `../recordings/<name>/voiceover-script.md` from the timeline: one line
+per caption, its start and the time it has, for one ElevenLabs clip each.
+
+## What every video covers
+
+Every button and setting visible on the screens a video teaches is pointed at
+and explained — including the ones the video does not use, and what happens
+if she uses them (which ones email the customer, which are live at once).
+
+The camera zooms to whatever is clicked or typed (`ZOOM`), pulls back to both
+sides while the website reloads, and closes in on the change there. What a
+video starts from is made off camera with `start({ setup })` and
+`demo-data.ts` (a piece, its sizes, a paid order).
+
 ## Writing a video
 
 ```ts

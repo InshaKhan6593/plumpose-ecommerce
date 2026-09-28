@@ -15,7 +15,7 @@
  *
  * Nothing here changes the site; the overlay exists only on the stage page.
  */
-import type { Browser, BrowserContext, FrameLocator, Locator, Page } from '@playwright/test'
+import type { APIRequestContext, Browser, BrowserContext, FrameLocator, Locator, Page } from '@playwright/test'
 
 import { chromium } from '@playwright/test'
 import { spawnSync } from 'node:child_process'
@@ -33,6 +33,15 @@ const PANE_H = 880
 /** The admin and the site render at 1280 wide, shown at 950 — a laptop screen, scaled. */
 const INNER_W = 1280
 const SCALE = PANE_W / INNER_W
+/** The caption bar across the bottom; the camera frames the screen above it. */
+const CAPTION_H = H - 44 - PANE_H - 16
+const VIEW_H = H - CAPTION_H
+/** Where the panes end, in stage pixels — the camera never shows below it. */
+const WORLD_BOTTOM = 44 + PANE_H + 8
+/** How close the camera comes to what is being used: text reads at a laptop's size or larger. */
+const ZOOM = 1.75
+
+type Rect = { height: number; width: number; x: number; y: number }
 
 type Step = { caption: string; end: number; index: number; start: number }
 
@@ -56,11 +65,16 @@ const stageHtml = (title: string) => `<!doctype html>
   #badge { position:absolute; top:60px; right:${((W / 2 - PANE_W) / 2 + 16) | 0}px; padding:8px 14px; border-radius:999px;
     background:var(--accent); color:#fff; font-size:15px; opacity:0; transform:translateY(-6px); transition:all .35s; z-index:5; }
   #badge.on { opacity:1; transform:none; }
-  #caption { position:absolute; left:0; right:0; bottom:0; height:${H - 44 - PANE_H - 16}px; display:flex; align-items:center;
-    justify-content:center; padding:0 80px; font-size:30px; line-height:1.25; text-align:center; }
+  /* Fixed: a fixed box adds no scrollable area, so scrolling a field into view inside the
+     admin can no longer scroll the stage itself (it did, and every ring landed off target). */
+  #world { position:fixed; left:0; top:0; width:${W}px; height:${H}px; transform-origin:0 0;
+    transition:transform .9s cubic-bezier(.45,0,.2,1); will-change:transform; }
+  #caption { position:absolute; left:0; right:0; bottom:0; height:${CAPTION_H}px; display:flex; align-items:center;
+    justify-content:center; padding:0 80px; font-size:32px; line-height:1.25; text-align:center; z-index:15;
+    background:var(--paper); box-shadow:0 -10px 24px rgba(244,241,236,.95); }
   #caption span { transition:opacity .25s; }
   #card { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:var(--paper); z-index:20; transition:opacity .5s; }
+    background:var(--paper); z-index:40; transition:opacity .5s; }
   #card.off { opacity:0; pointer-events:none; }
   #card .kicker { font-size:16px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
   #card h1 { font-family: Georgia, "Times New Roman", serif; font-weight:400; font-size:64px; margin:.25em 0 .3em; }
@@ -74,10 +88,12 @@ const stageHtml = (title: string) => `<!doctype html>
   #cursor svg { filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
   #cursor.press svg { transform:scale(.85); transform-origin:4px 4px; }
 </style></head><body>
-  <div class="label left">Your admin</div><div class="label right">Your website</div>
-  <div class="pane left"><iframe name="admin" src="about:blank"></iframe></div>
-  <div class="pane right" id="sitePane"><iframe name="site" src="about:blank"></iframe></div>
-  <div id="badge">Updated on your website</div>
+  <div id="world">
+    <div class="label left">Your admin</div><div class="label right">Your website</div>
+    <div class="pane left"><iframe name="admin" src="about:blank"></iframe></div>
+    <div class="pane right" id="sitePane"><iframe name="site" src="about:blank"></iframe></div>
+    <div id="badge">Updated on your website</div>
+  </div>
   <div id="ring"></div>
   <div id="caption"><span></span></div>
   <div id="card"></div>
@@ -92,6 +108,8 @@ export class Recording {
   private browser!: Browser
   private context!: BrowserContext
   private cursor = { x: W / 2, y: H / 2 }
+  /** The camera: stage pixel p shows at p × z + t. */
+  private cam = { tx: 0, ty: 0, z: 1 }
   private open: null | Omit<Step, 'end'> = null
   private readonly steps: Step[] = []
   private t0 = 0
@@ -102,10 +120,23 @@ export class Recording {
   }
 
   /** Signs in off camera, warms the pages the video uses, then starts recording on the stage. */
-  async start(options: { adminPath: string; sitePath: string; warm?: string[] }) {
-    // Empty the folder rather than remove it: Windows refuses while anything has it open.
+  async start(options: {
+    adminPath: string
+    /** Off camera, signed in: make what the video starts from (see demo-data.ts). */
+    setup?: (api: APIRequestContext) => Promise<void>
+    sitePath: string
+    warm?: string[]
+  }) {
+    /*
+     * Only a stopped take's raw .webm is cleared. The last finished video, its
+     * timeline and anything written beside it (a voiceover script) stay until
+     * this take finishes and replaces them: emptying the folder here lost a
+     * finished video and its script when a take was stopped part-way.
+     */
     fs.mkdirSync(this.dir, { recursive: true })
-    for (const f of fs.readdirSync(this.dir)) fs.rmSync(path.join(this.dir, f), { force: true, recursive: true })
+    for (const f of fs.readdirSync(this.dir)) {
+      if (f.endsWith('.webm') || f === 'failure.png') fs.rmSync(path.join(this.dir, f), { force: true })
+    }
     const login = JSON.parse(fs.readFileSync(path.join(OUT_ROOT, 'demo-admin.json'), 'utf8'))
 
     this.browser = await chromium.launch({ headless: process.env.RECORD_HEADLESS === '1' })
@@ -118,6 +149,7 @@ export class Recording {
     await p.fill('#field-password', login.password)
     await p.click('button[type=submit]')
     await p.waitForURL(`${BASE}/admin`)
+    if (options.setup) await options.setup(prep.request)
     for (const url of [options.adminPath, options.sitePath, ...(options.warm ?? [])]) {
       await p.goto(`${BASE}${url}`, { waitUntil: 'networkidle' }).catch(() => undefined)
     }
@@ -174,7 +206,11 @@ export class Recording {
     return (Date.now() - this.t0) / 1000
   }
 
-  /** A caption on screen, held long enough to read (≈ 2.6 words a second, at least 2.2 s). */
+  /**
+   * A caption on screen, held long enough to read and to speak over (≈ 2.2
+   * words a second, at least 2.4 s — at 2.6 a calm voiceover ran past the
+   * shorter steps).
+   */
   async say(caption: string, hold?: number) {
     this.close()
     this.open = { caption, index: this.steps.length + 1, start: this.now() }
@@ -187,7 +223,7 @@ export class Recording {
       }, 200)
     }, caption)
     const words = caption.split(/\s+/).length
-    await this.page.waitForTimeout((hold ?? Math.max(2.2, words / 2.6)) * 1000)
+    await this.page.waitForTimeout((hold ?? Math.max(2.4, words / 2.2)) * 1000)
   }
 
   private close() {
@@ -221,18 +257,95 @@ export class Recording {
       card.innerHTML = h
       card.classList.remove('off')
     }, html)
-    await this.page.waitForTimeout(hold * 1000)
+    // Behind the card, back to the whole stage, so each section opens wide.
+    const t = Date.now()
+    await this.overview()
+    await this.page.waitForTimeout(Math.max(0, hold * 1000 - (Date.now() - t)))
     await this.page.evaluate(() => document.getElementById('card')!.classList.add('off'))
     await this.page.waitForTimeout(500)
   }
 
   /* ------------------------------------------------------------ pointer */
 
-  private async glideTo(target: Locator) {
+  /* ------------------------------------------------------------- camera */
+
+  private toWorld(box: Rect): Rect {
+    const { tx, ty, z } = this.cam
+    return { height: box.height / z, width: box.width / z, x: (box.x - tx) / z, y: (box.y - ty) / z }
+  }
+
+  /** Moves the camera to frame `rect` (stage pixels) at `zoom`, kept inside the stage. */
+  private async moveCamera(rect: null | Rect, zoom: number) {
+    let z = 1
+    let tx = 0
+    let ty = 0
+    if (rect && zoom > 1) {
+      // A big target gets less zoom, so all of it stays in view.
+      z = Math.max(1, Math.min(zoom, (0.9 * W) / rect.width, (0.8 * VIEW_H) / rect.height))
+      const cx = rect.x + rect.width / 2
+      const cy = rect.y + rect.height / 2
+      tx = Math.min(0, Math.max(W - W * z, W / 2 - cx * z))
+      ty = Math.min(0, Math.max(VIEW_H - WORLD_BOTTOM * z, VIEW_H / 2 - cy * z))
+    }
+    const same = Math.abs(z - this.cam.z) < 0.02 && Math.abs(tx - this.cam.tx) < 4 && Math.abs(ty - this.cam.ty) < 4
+    if (same) return
+    this.cam = { tx, ty, z }
+    await this.page.evaluate(
+      ([x, y, s]) => {
+        document.getElementById('world')!.style.transform = `translate(${x}px, ${y}px) scale(${s})`
+      },
+      [tx, ty, z],
+    )
+    await this.page.waitForTimeout(950)
+  }
+
+  /** Is the box (screen pixels) comfortably inside the view at the zoom wanted? */
+  private framed(box: Rect, zoom: number) {
+    if (Math.abs(this.cam.z - zoom) > 0.3) return false
+    const m = 0.12
+    return (
+      box.x > W * m && box.x + box.width < W * (1 - m) && box.y > VIEW_H * m && box.y + box.height < VIEW_H * (1 - m)
+    )
+  }
+
+  /** Back to the whole stage: both sides at once. */
+  async overview() {
+    await this.moveCamera(null, 1)
+  }
+
+  /** Brings a target into view with the camera, following as she works. */
+  /**
+   * The box once it has stopped moving. A page still scrolling (smoothly, or
+   * as a section above it renders) put the ring on the field above — the
+   * gift note's ring landed on Admin notes.
+   */
+  private async settledBox(target: Locator) {
+    let last = await target.boundingBox()
+    for (let i = 0; i < 15; i++) {
+      await this.page.waitForTimeout(100)
+      const next = await target.boundingBox()
+      if (last && next && Math.abs(next.x - last.x) < 1 && Math.abs(next.y - last.y) < 1) return next
+      last = next
+    }
+    return last
+  }
+
+  private async bringIntoView(target: Locator, zoom = ZOOM) {
     await target.scrollIntoViewIfNeeded()
-    await this.page.waitForTimeout(250)
-    const box = await target.boundingBox()
+    await this.page.waitForTimeout(150)
+    let box = await this.settledBox(target)
     if (!box) throw new Error(`Not on screen: ${target}`)
+    const wanted = Math.max(1, Math.min(zoom, (0.9 * W) / (box.width / this.cam.z), (0.8 * VIEW_H) / (box.height / this.cam.z)))
+    if (!this.framed(box, wanted)) {
+      await this.moveCamera(this.toWorld(box), zoom)
+      box = await this.settledBox(target)
+      if (!box) throw new Error(`Not on screen: ${target}`)
+    }
+    return box
+  }
+
+  private async glideTo(target: Locator, zoom = ZOOM) {
+    const box = await this.bringIntoView(target, zoom)
     const to = { x: box.x + Math.min(box.width / 2, 60), y: box.y + box.height / 2 }
     const steps = 24
     const from = { ...this.cursor }
@@ -277,11 +390,15 @@ export class Recording {
 
   /* ------------------------------------------------------------ actions */
 
-  async click(target: Locator, pause = 350) {
+  /**
+   * `force` clicks at the spot even when something else takes the click
+   * there — a list row, where the whole row opens the item.
+   */
+  async click(target: Locator, pause = 350, { force = false } = {}) {
     await this.glideTo(target)
     await this.page.waitForTimeout(pause)
     await this.press()
-    await target.click()
+    await target.click({ force })
     await this.page.waitForTimeout(300)
     await this.unring()
   }
@@ -311,8 +428,8 @@ export class Recording {
     await this.unring()
   }
 
-  async point(target: Locator, hold = 1.2) {
-    await this.glideTo(target)
+  async point(target: Locator, hold = 1.2, zoom = ZOOM) {
+    await this.glideTo(target, zoom)
     await this.page.waitForTimeout(hold * 1000)
     await this.unring()
   }
@@ -327,7 +444,9 @@ export class Recording {
    * Shows the change on the website side: reloads the page until `until`
    * appears (the site may take a moment to refresh), then flashes the pane.
    */
-  async showOnSite(url: string, until: (site: FrameLocator) => Locator, tries = 10) {
+  async showOnSite(url: string, until: (site: FrameLocator) => Locator, { tries = 10, zoom = 1.5 } = {}) {
+    // Pull back so both sides show while the website reloads, then close in on the change.
+    await this.overview()
     for (let i = 0; i < tries; i++) {
       await this.goSite(url)
       if (await until(this.site).first().isVisible().catch(() => false)) break
@@ -339,7 +458,8 @@ export class Recording {
       document.getElementById('sitePane')!.classList.add('flash')
       document.getElementById('badge')!.classList.add('on')
     })
-    await this.point(found, 1.4)
+    await this.page.waitForTimeout(900)
+    await this.point(found, 1.4, zoom)
     await this.page.waitForTimeout(1200)
     await this.page.evaluate(() => {
       document.getElementById('sitePane')!.classList.remove('flash')
@@ -348,6 +468,22 @@ export class Recording {
   }
 
   /* -------------------------------------------------------------- finish */
+
+  /**
+   * Runs the video's steps; if one fails, saves what the stage showed at that
+   * moment as failure.png beside the video and closes the browser, so a broken
+   * take says where it broke.
+   */
+  async run(steps: () => Promise<void>) {
+    try {
+      await steps()
+    } catch (error) {
+      await this.page?.screenshot({ path: path.join(this.dir, 'failure.png') }).catch(() => undefined)
+      console.error(`failed at step ${this.open?.index ?? '?'} "${this.open?.caption ?? ''}" — see ${path.join(this.dir, 'failure.png')}`)
+      await this.browser?.close().catch(() => undefined)
+      throw error
+    }
+  }
 
   async finish() {
     this.close()

@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 28 Sep 2026 — her notes of 28 Sep: fabric and care, wheel prizes, country search, email logo (§45)
+**Last updated:** 28 Sep 2026 — videos 01–03 re-recorded with a tour of every control; API tab hidden (§50)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **246 passing** (28 Sep) |
+| Integration tests | **263 passing** (28 Sep) |
 | End-to-end tests | **57 passing**, none skipped |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -2818,3 +2818,186 @@ country search). Desktop and 375 px: the fabric section, /fabric-care, Our
 Story's two text-only bands, gift wrapping, the country search. Not run: the
 database half of `pnpm test:int` — another project's container
 (`serenity-hue-db`) holds port 5434.
+
+## 46. Tutorial 01 "Add a new piece" recorded; what it found — 28 Sep 2026
+
+`scripts/record/videos/01-add-a-piece.ts` → `../recordings/01-add-a-piece/`
+(2 min 56 s, 18 timed steps in `timeline.json` / `captions.srt`). Products →
+Create new → name, description, three of her photos uploaded through the
+admin's own drawer, Fabric & Care, price, collection, Publish → the shop and
+the piece's page on the website side. The demo database was rebuilt first, so
+it carries the §45 migrations. Sizes and stock are video 02.
+
+**Fixed, found on camera:**
+
+- **Web address with a double hyphen.** Payload's slugify turns each space
+  into a hyphen and drops everything else, so "Al Shaheen Nights — Silk Pyjama
+  Set" became `al-shaheen-nights--silk-pyjama-set` (and accented letters
+  vanished). `webSlug()` (`src/utilities/webSlug.ts`) is used by `webAddress()`
+  for the before-validate fill, the save hook and the admin's Generate button.
+  Existing addresses are unchanged.
+- **The web address looked forgotten.** Payload's slug box shows no
+  description and stays empty until the first save. `WebAddressField` wraps it:
+  its description, and while empty, "Will be `<address>` — made from the title
+  when you save."
+- **The price was hidden on a new piece.** "Set a price" started unticked, and
+  the price box only appears once it is ticked. It starts ticked now
+  (migration `20260927_214513_price_box_starts_ticked`, a column default only).
+- **"Inventory"** reads **Stock**, with what it means.
+- **Photos:** the collection is labelled Photos (the drawer said "Creating new
+  Media"); "Alt" is "Describe the photo", with why; the Caption box (printed
+  only by the unused template picture section) shows only on a photo that
+  already has one.
+- **Empty shop.** With nothing published it said "Nothing matches that — yet."
+  with a link back to the same page; now "New pieces are on their way." The
+  filter message stays for a search or collection with no results.
+
+**Recorder:** `Recording.run()` wraps a video's steps; on a failure it saves
+`failure.png` of the stage and names the step.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` **263 passed**
+(new: `web-slug.int.spec.ts`). The migration is not yet run on Neon.
+
+## 47. Tutorial 02 "Sizes & stock"; a camera for legible videos — 28 Sep 2026
+
+`scripts/record/videos/02-sizes-and-stock.ts` → `../recordings/02-sizes-and-stock/`
+(2 min 29 s, 17 steps, with `voiceover-script.md` timed to it). The piece
+from video 01 is made off camera first (`demo-data.ts`, `start({ setup })`,
+through the admin API as the recorder); on camera: tick sizes, choose Size,
+Publish, add S / M / L with stock, the size buttons on the website, then change
+L's stock with the pencil and see the list update.
+
+**The camera** (`stage.ts`). Video 01 showed both 1280-wide screens at 74% in
+one 1920 frame — the admin's text came out at 8–9 px. The stage now zooms
+(×1.75) and pans to whatever is clicked or typed, pulls back to both sides
+while the website reloads, then closes in (×1.5) on the change. The caption
+bar sits over the bottom. `overview()` returns to the whole stage; cards reset
+it behind them. Video 01 was not re-recorded (the owner asked not to).
+
+**Fixed, found on camera:**
+
+- **Price box pushed right.** It shared a row with the "Set a price" tickbox;
+  the tickbox is now hidden (it starts ticked — §46 — and every piece has a
+  price). Checked on Neon first: its one product has it ticked.
+- **Sizes listed L, M, S** (newest first) → oldest first, as she adds them.
+- **Each size row repeated the piece's whole name**; the list shows the size
+  and its stock only.
+- **"Inventory"** on a size reads **Stock**; the size drawer says "Creating
+  new Size", not "Size & stock".
+- **Empty lists** said "No Results. No Sizes & stock found. Either no Sizes &
+  stock exist yet or none match the filters you've specified above." → "Nothing
+  yet. Sizes & stock you add will be listed here." (`i18n` in
+  `payload.config.ts`, admin-wide).
+
+**Recorder:** a take no longer empties its folder at the start (a stopped take
+deleted video 01's finished files and its voiceover script); only a stopped
+take's `.webm` is cleared, and the finished files are replaced when the new
+take finishes.
+
+**Noted, not changed:** a size opens only from its pencil, not its name (the
+video says so); saving an existing size leaves its window open (the video
+closes it). Takes failed twice with the machine at ~350 MB free memory — close
+other apps before recording.
+
+Checked: `tsc` 0; lint 0 errors; `pnpm test:int` 263 passed.
+
+## 48. A size opens from its row and closes after Save — 28 Sep 2026
+
+The two things §47 left for the video to explain are fixed instead:
+
+- **The whole row opens a size.** Only the small pencil did; clicking "L" or
+  its stock did nothing. `custom.scss` stretches the pencil's click area over
+  its row in any list inside a document (`.relationship-table`), with a hover
+  shade. Payload makes the first cell `position: relative`, which kept the area
+  inside that cell; the cells are static there now.
+- **Saving an existing size closes its window.** It stayed open over the
+  list, so a save looked like nothing had happened. `SizeSaveButton`
+  (variants' `components.edit.SaveButton`) is Payload's Save button, and
+  closes the drawer once `savedDocumentData.updatedAt` changes — only inside a
+  drawer; the size's own page is unchanged.
+
+Checked in a headless browser on the demo database: clicking the stock cell
+opened the size; Save closed it and the list read the new stock; Add new still
+adds and closes; the size's own page stays open after Save. `tsc` 0, lint 0
+errors. Video 02's script now clicks the row and has no close step — the
+recorded 02 still shows the pencil and the close; record it again to match.
+
+## 49. Tutorials 03 "Sale price" and 04 "Handle an order"; the order screen — 28 Sep 2026
+
+`videos/03-sale-price.ts` (1:37): Was price 1600 → crossed out in the shop and
+on the piece's page → cleared → back to normal. No UI problems found.
+
+`videos/04-handle-an-order.ts` (2:21): a paid order (made off camera by
+`addPaidOrder()` in `demo-data.ts` — size M, pocket embroidery "S.H" in gold,
+Doha delivery, a gift note; the customer is made up) → read it → In the
+atelier → tracking number + Shipped → Delivered, with the customer's order page
+following each step. Both have a `voiceover-script.md`.
+
+**The order screen, fixed** (what she will use most):
+
+- **Money read "139900", "16000", "2000".** The breakdown is minor units in
+  number boxes; `ReadOnlyMoneyField` shows QAR 1,399.00 / 160.00 / 20.00. The
+  embroidery fee per placement too.
+- **Lines were closed rows titled "Item 01".** `OrderItemLabel` heads each
+  line "Al Shaheen Nights — Silk Pyjama Set — M × 1 · Embroidery: Pocket, S.H,
+  Gold" and lines start open; placements read "Pocket: S.H in Gold"
+  (`PlacementLabel`). Product / Variant read Piece / Size; the embroidery's key
+  fields (`pocket`, `text`, `gold`) are hidden, the names shown.
+- **Words:** the plugin's "Orders represent a customer's intent to purchase…"
+  is hers; status "Processing" reads **Paid** (labels only, values unchanged);
+  "Personalisation … Written by the server…" reads Embroidery, "The hand
+  embroidery the customer chose for this piece."
+- **Clutter:** the access token is hidden; Discount, Discount code, Free
+  shipping, Display currency / total, the email-sent dates and the Payment
+  link show only when they hold something; the customer account is read-only
+  (it offered "Add new User").
+- **The breakdown, notes and gift note showed under the Shipping tab too**
+  (they sat below the plugin's tabs). `mainFieldsIntoFirstTab()` moves them into
+  Order Details; unnamed tabs are layout only — `migrate:create` found no schema
+  change.
+- **The list linked only the "ID: 1" chip**; the customer's email is now the
+  first, linked column.
+
+**Recorder:** the stage could scroll when a field near the bottom of the admin
+was scrolled into view, shifting everything and putting rings on the wrong
+field (the gift note's landed on Admin notes). `#world` is `position: fixed`,
+and boxes are measured once they stop moving (`settledBox`).
+
+Checked: `tsc` 0; lint 0 errors; `pnpm audit:admin` no problems; `pnpm
+test:int` 263 passed; no schema change.
+
+## 50. Videos 01–03 re-recorded with a tour of every control — 28 Sep 2026
+
+The owner's rule: a video explains every button and setting on its screens,
+including the ones it does not use, and what happens if she uses them. 01
+(6:16), 02 (3:36) and 03 (2:01) were recorded again with that tour (Trash,
+Unlock, the text toolbar, a photo's ⋯ menu, Fabric weight / Trims / Fit note,
+the three text boxes, Made to order, Offer hand embroidery, Stock, Was price,
+Google & sharing, the collection +, Save draft, Live preview / Preview,
+Versions, Duplicate / Unpublish / Delete; Product and "This size has its own
+price" on a size, Columns, deleting a size). 01 and 02 are now at the zoomed
+camera and current behaviour.
+
+`scripts/record/voiceover.ts <video> ["opening"] ["closing"]` writes
+`voiceover-script.md` from the timeline — one line per caption with its start
+and slot, symbols spoken ("⋯" → "three-dot", "&" → "and"), long lines flagged.
+Captions are now held at 2.2 words a second (was 2.6), which left some lines
+too short for a calm voice.
+
+**Fixed, found writing the tours:**
+
+- **The "API" tab on every document** (raw JSON of what she was editing) is
+  hidden — `hideApiTab`, the last plugin in `payload.config.ts`, sets
+  `hideAPIURL` on every collection and global.
+- **"Personalisation Enabled"** (a label made from the field name) reads
+  **Offer hand embroidery**, with what ticking it does.
+- **Google & sharing showed red "Missing" and "0/3 checks are passing"** on
+  every piece, though nothing is missing — the page falls back to the name,
+  description and first photo. The tab now says so.
+- **The + beside Options offered** made a new kind of option (beside Size,
+  Colour, Pattern). Removed (`allowCreate: false`); new sizes go in Sizes,
+  colours & patterns.
+
+The dev server's hot reload broke once ("module factory is not available")
+after many config edits; a restart fixed it. Checked: `tsc` 0; lint 0 errors;
+`audit:admin` no problems; no schema change; `pnpm test:int` 263 passed.
