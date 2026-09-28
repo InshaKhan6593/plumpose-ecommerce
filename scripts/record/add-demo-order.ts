@@ -5,7 +5,7 @@
  * the piece and size it made; prints the order's id and private link token as
  * JSON on the last line. Refuses anything but the local plumpose_demo database.
  *
- *   npx tsx scripts/record/add-demo-order.ts <productId> <variantId>
+ *   npx tsx scripts/record/add-demo-order.ts <productId> <variantId> [--payments]
  */
 import path from 'node:path'
 
@@ -21,7 +21,7 @@ if (!isLocalDatabase() || !/plumpose_demo/.test(process.env.DATABASE_URL ?? ''))
   process.exit(1)
 }
 
-const [productId, variantId] = process.argv.slice(2).map(Number)
+const [productId, variantId] = process.argv.slice(2, 4).map(Number)
 if (!productId || !variantId) {
   console.error('usage: add-demo-order.ts <productId> <variantId>')
   process.exit(1)
@@ -76,6 +76,59 @@ const order = await payload.create({
   },
   overrideAccess: true,
 })
+
+/*
+ * Its payment, as SkipCash's callback leaves one — plus, with `--payments`,
+ * two checkouts that did not end in an order (video 13): one left on the
+ * payment page an afternoon ago, one whose card was refused.
+ */
+if (process.argv.includes('--payments')) {
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString()
+  const skipcash = (reference: string) => ({
+    cardNumber: '520000******0007',
+    cardType: 'Credit Card',
+    paymentId: crypto.randomUUID(),
+    reference,
+  })
+  const made = [
+    {
+      amount: 139900,
+      createdAt: hoursAgo(5),
+      customerEmail: 'hessa.m@example.com',
+      skipcash: { ...skipcash('PLM-260928-K7Q2VD'), cardNumber: '' },
+      status: 'pending',
+    },
+    {
+      amount: 157900,
+      createdAt: hoursAgo(1.5),
+      customerEmail: 'mariam.hassan@example.com',
+      order: order.id,
+      skipcash: skipcash(String((order as { reference?: string }).reference ?? '')),
+      status: 'succeeded',
+    },
+    {
+      amount: 141900,
+      createdAt: hoursAgo(0.5),
+      customerEmail: 'latifa@example.com',
+      skipcash: skipcash('PLM-260928-R3TW8N'),
+      status: 'failed',
+    },
+  ] as const
+  for (const data of made) {
+    const doc = await payload.create({
+      collection: 'transactions',
+      context: { disableRevalidate: true },
+      data: { ...data, currency: 'QAR', paymentMethod: 'skipcash' } as never,
+      overrideAccess: true,
+    })
+    // Payload stamps createdAt itself; the list should read like a real day.
+    await payload.db.updateOne({
+      collection: 'transactions',
+      data: { createdAt: data.createdAt },
+      id: doc.id,
+    })
+  }
+}
 
 console.log(JSON.stringify({ id: order.id, token: order.accessToken ?? '' }))
 process.exit(0)

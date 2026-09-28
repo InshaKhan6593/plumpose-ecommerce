@@ -17,6 +17,9 @@ import type { Product, Variant } from '@/payload-types'
  *     ordered beyond it; those pieces are made to order (the storefront says
  *     so, and the order notes it for the atelier — see ./stockAfterSale.ts).
  *
+ * A size whose "Offer this size" is unticked (`offered: false`) can never be
+ * bought, made to order or not: the storefront shows it crossed out.
+ *
  * Quantities are summed per size across the basket, so two lines of the same
  * size (one plain, one embroidered) cannot each pass on their own.
  */
@@ -34,8 +37,11 @@ export const readyStock = (record: { inventory?: null | number }): number =>
  */
 export const purchaseLimit = (
   product: Pick<Product, 'madeToOrder'>,
-  record: { inventory?: null | number },
-): number => (product.madeToOrder === false ? readyStock(record) : Number.POSITIVE_INFINITY)
+  record: { inventory?: null | number; offered?: boolean | null },
+): number => {
+  if (record.offered === false) return 0
+  return product.madeToOrder === false ? readyStock(record) : Number.POSITIVE_INFINITY
+}
 
 /** A size asked for beyond its ready stock. */
 export type StockShortage = {
@@ -43,6 +49,8 @@ export type StockShortage = {
   label: string
   /** The product's switch: true means the extra pieces are made to order, not refused. */
   madeToOrder: boolean
+  /** False for a size she does not offer ("Offer this size" unticked). */
+  offered: boolean
   productId: number
   requested: number
   variantId?: number
@@ -58,15 +66,18 @@ export const stockShortages = (lines: StockLine[]): StockShortage[] => {
     const current = wanted.get(key)
 
     if (current) current.requested += quantity
-    else
+    else {
+      const offered = line.variant?.offered !== false
       wanted.set(key, {
-        available: readyStock(line.variant ?? line.product),
+        available: offered ? readyStock(line.variant ?? line.product) : 0,
         label: sizeLabel(line.product, line.variant),
-        madeToOrder: line.product.madeToOrder !== false,
+        madeToOrder: offered && line.product.madeToOrder !== false,
+        offered,
         productId: line.product.id,
         requested: quantity,
         variantId: line.variant?.id,
       })
+    }
   }
 
   return [...wanted.values()].filter((w) => w.requested > w.available)
@@ -79,6 +90,8 @@ export const stockShortages = (lines: StockLine[]): StockShortage[] => {
 export const stockRefusal = (lines: StockLine[]): null | string => {
   const first = stockShortages(lines).find((s) => !s.madeToOrder)
   if (!first) return null
+  if (!first.offered)
+    return `${first.label} is not available. Please remove it from your bag or choose another size.`
   if (first.available === 0)
     return `${first.label} is sold out. Please remove it from your bag or choose another size.`
   return `Only ${first.available} left in ${first.label}. Please lower the quantity in your bag.`

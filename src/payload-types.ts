@@ -1079,6 +1079,10 @@ export interface Variant {
    */
   priceInQAREnabled?: boolean | null;
   priceInQAR?: number | null;
+  /**
+   * Untick to show this size crossed out: customers see it but cannot choose it, even when the piece is made to order.
+   */
+  offered?: boolean | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -3029,6 +3033,7 @@ export interface VariantsSelect<T extends boolean = true> {
   inventory?: T;
   priceInQAREnabled?: T;
   priceInQAR?: T;
+  offered?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;

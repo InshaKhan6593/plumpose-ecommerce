@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { gsap, LINE_HIDDEN, prefersReducedMotion, ScrollTrigger, splitLines } from '@/motion/gsap'
 import { afterPageLoad } from '@/utilities/afterPageLoad'
+import { playFilm } from '@/utilities/playFilm'
 
 import { HOME } from './content'
 
@@ -239,13 +240,18 @@ function HeroFilm({ active, film }: { active: boolean; film: Film }) {
   useEffect(() => {
     const video = ref.current
     if (!video) return
+    let stopWaiting = () => {}
     const io = new IntersectionObserver(([entry]) => {
+      stopWaiting()
       if (entry.isIntersecting) {
-        if (!video.ended) video.play().catch(() => undefined)
+        if (!video.ended) stopWaiting = playFilm(video)
       } else video.pause()
     })
     io.observe(video)
-    return () => io.disconnect()
+    return () => {
+      io.disconnect()
+      stopWaiting()
+    }
   }, [active])
 
   return (

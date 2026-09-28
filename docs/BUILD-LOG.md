@@ -3368,3 +3368,63 @@ matched six — it fills only the typed field now
 (`input:not([aria-hidden="true"]):not([readonly])`, `tests/helpers/skipcashCheckout.ts`);
 and three expectations followed today's changes (the "Order code" column and
 label). New: Track order takes a code as typed.
+
+## 59. Tutorials 07–13 recorded; two admin fixes the takes found — 28 Sep 2026
+
+Recorded, narrated (new ElevenLabs key, free tier), into `../recordings/`:
+07 Site settings (now with the Orders tab — "Take orders" — and nine tabs),
+08 Reviews & Spotted, 09 Enquiries & subscribers, 10 Reward wheel, 11 Page
+text & FAQs (Press and Made for You pointed at), 12 Collections & photos, 13
+Payments. The demo database was rebuilt first (today's migrations).
+`add-demo-order.ts --payments` adds the order's payment plus a checkout left on
+the payment page and a refused card (video 13).
+
+**Enquiries could not be saved after opening.** Opening a new enquiry marks it
+read with its own PATCH, so the edit view's load time went stale and Save
+refused with "Document modified… by another user" — every time she set
+Replied or Archived. `MarkEnquiryRead` now hands the view the new `updatedAt`
+(`setData`). The customer's rows ("Submission Datum 05", with an "Add" button)
+are read-only and read "Everything they filled in" / "Answer".
+
+**Payments name the order by its code:** "Paid — order PLM-260928-VQAKTW"
+(the payment's reference is the order's code), `#id` only without one.
+
+Script lessons: `goto` to the same URL plus a `#hash` is only a fragment jump,
+not a reload; the announcement bar is outside `<header>`; a `.field-type`
+filtered by label can match the tabs wrapper — use `getByLabel` in tabbed
+globals.
+
+## 60. The client's note of 28 Sep: films on iPad, XS/XL crossed out, the catalogue — 29 Sep 2026
+
+Her note (a two-page PDF of annotated screenshots) asked four things; checkout
+("unable to continue") is the pause of §58, waiting for SkipCash's production
+keys.
+
+**"All videos do not open on iPad / laptop."** Her iPad screenshot shows the
+hero's still frame under Safari's play button, battery at 3%: Low Power Mode,
+where Safari refuses autoplay. The live films were fine (H.264 High, 206
+ranges, `video/mp4`). The site gave up on a refused `play()`. Now
+`@/utilities/playFilm` retries on the visitor's first tap, click or key (a
+gesture Low Power Mode allows), in the hero and every in-view film; and
+Safari's own play button is hidden on our control-less films (globals.css), so
+a refused film reads as its poster. Reduce Motion still shows posters only, by
+design.
+
+**XS and XL crossed out, kept listed.** The piece is made to order, so stock 0
+would not stop them. New per-size field **Offer this size** (`variants.offered`,
+default true; Sizes & stock): unticked, the size shows crossed out ("not
+available"), `purchaseLimit` is 0, and checkout refuses it ("… size XS is not
+available") even made to order. Migration `20260929_090000_size_offered` adds
+the column and unticks the sizes whose option reads XS or XL (up, down, up on a
+copy). Loaded on the product page and in the bag.
+
+**plumpose.com/catalogue** (her Instagram link) was a 404: the old site's
+flip-book `Catalogue.html` (1.7 MB, her photographs embedded) had not been
+carried over. Like the films it is her media, so it lives in R2 under `video/`
+as `catalogue.html`, is fetched into `public/video` at build, and is served at
+`/catalogue` by a rewrite.
+
+Checked: `tsc` 0 errors; lint 0 errors; integration 285 of 286 — the one
+failure is SkipCash's sandbox itself, which now answers "Private key or online
+payment is disabled" (their side; the sandbox test account may have been
+switched off as production is set up). `pricing-live` prices only offered sizes.

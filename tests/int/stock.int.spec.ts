@@ -116,3 +116,30 @@ describe('stock — naming a choice', () => {
     ).toMatch(/^Classic \(Blush\) is sold out/)
   })
 })
+
+describe('stock — a size she does not offer (Offer this size unticked)', () => {
+  const xs = { ...size(9, 'XS', 5), offered: false } as Variant
+
+  it('can never be chosen, made to order or not', () => {
+    expect(purchaseLimit(product(true), xs)).toBe(0)
+    expect(purchaseLimit(product(false), xs)).toBe(0)
+  })
+
+  it('is refused at checkout, in words, even on a made-to-order piece', () => {
+    expect(stockRefusal([{ product: product(true), quantity: 1, variant: xs }])).toBe(
+      'Al Shaheen Nights, size XS is not available. Please remove it from your bag or choose another size.',
+    )
+  })
+
+  it('is never listed as made to order', () => {
+    expect(stockSummary([{ product: product(true), quantity: 1, variant: xs }]).madeToOrder).toEqual(
+      [],
+    )
+  })
+
+  it('an offered size is unaffected', () => {
+    expect(purchaseLimit(product(true), { ...size(2, 'M', 0), offered: true })).toBe(
+      Number.POSITIVE_INFINITY,
+    )
+  })
+})

@@ -21,7 +21,11 @@ import { isAdminOrStaff, neverEditable } from '@/access/isAdminOrStaff'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { checkRole } from '@/access/utilities'
 import { sendEnquiryAlert } from '@/email/enquiryAlert'
-import { resendConfirmationEndpoint, sendOrderEmails, statusFollowsClosure } from '@/email/orderHooks'
+import {
+  resendConfirmationEndpoint,
+  sendOrderEmails,
+  statusFollowsClosure,
+} from '@/email/orderHooks'
 import { stockAfterSale } from '@/hooks/stockAfterSale'
 import { withStorefrontRefresh } from '@/hooks/revalidateStorefront'
 import { validateEnquiry } from '@/hooks/validateEnquiry'
@@ -58,7 +62,12 @@ const mainFieldsIntoFirstTab = (fields: Field[]): Field[] => {
   if (tabsAt < 0) return fields
   const tabs = fields[tabsAt] as Extract<Field, { type: 'tabs' }>
   const isMain = (field: Field) =>
-    !('admin' in field && field.admin && 'position' in field.admin && field.admin.position === 'sidebar')
+    !(
+      'admin' in field &&
+      field.admin &&
+      'position' in field.admin &&
+      field.admin.position === 'sidebar'
+    )
   const after = fields.slice(tabsAt + 1)
   const moved = after.filter(isMain)
   const [first, ...rest] = tabs.tabs
@@ -72,7 +81,10 @@ const mainFieldsIntoFirstTab = (fields: Field[]): Field[] => {
 const tidyOrderFields = (fields: Field[]): Field[] =>
   fields.map((field) => {
     if (field.type === 'tabs') {
-      return { ...field, tabs: field.tabs.map((tab) => ({ ...tab, fields: tidyOrderFields(tab.fields) })) }
+      return {
+        ...field,
+        tabs: field.tabs.map((tab) => ({ ...tab, fields: tidyOrderFields(tab.fields) })),
+      }
     }
     if (!('name' in field) && 'fields' in field && Array.isArray(field.fields)) {
       return { ...field, fields: tidyOrderFields(field.fields) } as Field
@@ -90,7 +102,10 @@ const tidyOrderFields = (fields: Field[]): Field[] =>
         ),
         admin: {
           ...field.admin,
-          components: { ...field.admin?.components, RowLabel: '@/components/admin/OrderItemLabel#OrderItemLabel' },
+          components: {
+            ...field.admin?.components,
+            RowLabel: '@/components/admin/OrderItemLabel#OrderItemLabel',
+          },
           initCollapsed: false,
         },
       }
@@ -205,7 +220,14 @@ const paymentOutcomeField: FieldHook = async ({ data, req }) => {
     declines = (logged?.docs ?? []).map((d) => declineReason(d.payload))
   }
   const orderId = typeof data.order === 'object' ? data.order?.id : data.order
-  return paymentOutcome({ createdAt: data.createdAt, declines, orderId, status: data.status }).label
+  return paymentOutcome({
+    createdAt: data.createdAt,
+    declines,
+    // The order takes its code from this payment's reference (@/hooks/orderReference).
+    orderCode: data.skipcash?.reference,
+    orderId,
+    status: data.status,
+  }).label
 }
 
 /** Chosen but not configured is a silent "payments are not switched on" at checkout — say why here. */
@@ -244,7 +266,21 @@ export const plugins: Plugin[] = [
       },
       defaultSort: '-createdAt',
       fields: ({ defaultFields }) => [
-        ...defaultFields,
+        // What the customer sent is theirs: shown, never edited or added to.
+        ...defaultFields.map((field): Field =>
+          'name' in field && (field.name === 'form' || field.name === 'submissionData')
+            ? ({
+                ...field,
+                admin: { ...field.admin, readOnly: true },
+                ...(field.name === 'submissionData'
+                  ? {
+                      label: 'Everything they filled in',
+                      labels: { plural: 'Answers', singular: 'Answer' },
+                    }
+                  : {}),
+              } as Field)
+            : field,
+        ),
         {
           name: 'status',
           type: 'select',
@@ -362,7 +398,14 @@ export const plugins: Plugin[] = [
             ],
           },
           // The first column is the link: the customer's email, not the bare "ID: 1" chip.
-          defaultColumns: ['customerEmail', 'reference', 'status', 'amount', 'fulfilment', 'createdAt'],
+          defaultColumns: [
+            'customerEmail',
+            'reference',
+            'status',
+            'amount',
+            'fulfilment',
+            'createdAt',
+          ],
           // The plugin's text ("Orders represent a customer's intent to purchase…") was written for developers.
           description:
             'Every paid order. Open one to see what to make and where it goes, then move Fulfilment along as you go.',
@@ -447,7 +490,10 @@ export const plugins: Plugin[] = [
              */
             validate: (
               value: null | string | undefined,
-              { previousValue, siblingData }: { previousValue?: string; siblingData: Record<string, unknown> },
+              {
+                previousValue,
+                siblingData,
+              }: { previousValue?: string; siblingData: Record<string, unknown> },
             ) =>
               value !== 'shipped' ||
               previousValue === 'shipped' ||
@@ -584,47 +630,66 @@ export const plugins: Plugin[] = [
                 SaveButton: '@/components/admin/SizeSaveButton#SizeSaveButton',
               },
             },
-            defaultColumns: ['title', 'product', 'inventory', 'priceInQAR'],
+            defaultColumns: ['title', 'product', 'inventory', 'offered', 'priceInQAR'],
             // The plugin's text was written for developers (and misspelt).
             description:
               'Each size of a piece, with its own stock. Changes are live as soon as you save.',
             group: 'Shop',
             listSearchableFields: ['title'],
           },
-          fields: mapFieldsDeep(defaultCollection.fields, (field) => {
-            if (!('name' in field)) return field
-            // Filled in by the plugin ("Piece — S") and used as the list title; not hers to type.
-            if (field.name === 'title') {
-              return { ...field, admin: { ...field.admin, condition: () => false } } as typeof field
-            }
-            // "Variant options" is the plugin's label; it heads a column on every piece's sizes list.
-            if (field.name === 'options') {
-              return { ...field, label: 'Size, colour or pattern' } as typeof field
-            }
-            if (field.name === 'priceInQAREnabled') {
-              return {
-                ...field,
-                admin: {
-                  ...field.admin,
-                  description:
-                    'Only if this size costs more or less than the piece. Left unticked, it is charged at the piece’s price.',
-                },
-                label: 'This size has its own price',
-              } as typeof field
-            }
-            if (field.name === 'priceInQAR') {
-              return { ...field, label: 'Price for this size (QAR)' } as typeof field
-            }
-            // Was "Inventory", as on the piece (Products relabels it there too).
-            if (field.name === 'inventory') {
-              return {
-                ...field,
-                admin: { ...field.admin, description: 'How many of this size you have ready to send.' },
-                label: 'Stock',
-              } as typeof field
-            }
-            return field
-          }),
+          fields: [
+            ...mapFieldsDeep(defaultCollection.fields, (field) => {
+              if (!('name' in field)) return field
+              // Filled in by the plugin ("Piece — S") and used as the list title; not hers to type.
+              if (field.name === 'title') {
+                return {
+                  ...field,
+                  admin: { ...field.admin, condition: () => false },
+                } as typeof field
+              }
+              // "Variant options" is the plugin's label; it heads a column on every piece's sizes list.
+              if (field.name === 'options') {
+                return { ...field, label: 'Size, colour or pattern' } as typeof field
+              }
+              if (field.name === 'priceInQAREnabled') {
+                return {
+                  ...field,
+                  admin: {
+                    ...field.admin,
+                    description:
+                      'Only if this size costs more or less than the piece. Left unticked, it is charged at the piece’s price.',
+                  },
+                  label: 'This size has its own price',
+                } as typeof field
+              }
+              if (field.name === 'priceInQAR') {
+                return { ...field, label: 'Price for this size (QAR)' } as typeof field
+              }
+              // Was "Inventory", as on the piece (Products relabels it there too).
+              if (field.name === 'inventory') {
+                return {
+                  ...field,
+                  admin: {
+                    ...field.admin,
+                    description: 'How many of this size you have ready to send.',
+                  },
+                  label: 'Stock',
+                } as typeof field
+              }
+              return field
+            }),
+            {
+              /** A size she lists but cannot make: shown crossed out, never sold (@/lib/pricing/stock). */
+              name: 'offered',
+              type: 'checkbox',
+              admin: {
+                description:
+                  'Untick to show this size crossed out: customers see it but cannot choose it, even when the piece is made to order.',
+              },
+              defaultValue: true,
+              label: 'Offer this size',
+            },
+          ],
           /**
            * No drafts for a size. With them every stock change needed its own
            * Publish, and a size left in draft quietly did not count. Saving

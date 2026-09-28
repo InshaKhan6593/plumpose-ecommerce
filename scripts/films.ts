@@ -31,6 +31,8 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIR = process.env.FILMS_DIR || path.resolve(dirname, '../public/video')
 
 const TYPES: Record<string, string> = {
+  // The catalogue (a flip-book with her photographs inside), served at /catalogue.
+  '.html': 'text/html; charset=utf-8',
   '.jpg': 'image/jpeg',
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',

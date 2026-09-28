@@ -112,7 +112,9 @@ export function VariantSelector({ product }: { product: Product }) {
                 Boolean(exact) && isAvailableForSale && readyStock(exact!) === 0
               const unavailableReason = !candidates.length
                 ? 'not made in this combination'
-                : 'sold out'
+                : candidates.every((v) => v.offered === false)
+                  ? 'not available'
+                  : 'sold out'
 
               const optionUrl = createUrl(pathname, optionSearchParams)
 

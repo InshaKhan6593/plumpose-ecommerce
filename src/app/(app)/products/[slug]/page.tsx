@@ -440,6 +440,8 @@ const queryProductBySlug = cache(async (slug: string) => {
         title: true,
         priceInQAR: true,
         inventory: true,
+        // "Offer this size": an unticked size shows crossed out (@/lib/pricing/stock).
+        offered: true,
         options: true,
       },
     },

@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react'
  * she can set it back to New, or on to Replied or Archived, herself.
  */
 export const MarkEnquiryRead = () => {
-  const { id } = useDocumentInfo()
+  const { data, id, setData } = useDocumentInfo()
   const { setValue, value } = useField<string>({ path: 'status' })
   const done = useRef(false)
 
@@ -22,11 +22,19 @@ export const MarkEnquiryRead = () => {
       headers: { 'Content-Type': 'application/json' },
       method: 'PATCH',
     })
-      .then((res) => {
-        if (res.ok) setValue('read', true)
+      .then(async (res) => {
+        if (!res.ok) return
+        setValue('read', true)
+        /*
+         * The edit view remembers when it loaded the document and, on Save,
+         * refuses as "Document modified… by another user" if it changed since.
+         * This save is ours: hand the view its new time.
+         */
+        const { doc } = (await res.json()) as { doc?: { updatedAt?: string } }
+        if (doc?.updatedAt) setData({ ...data, status: 'read', updatedAt: doc.updatedAt })
       })
       .catch(() => undefined)
-  }, [id, setValue, value])
+  }, [data, id, setData, setValue, value])
 
   return null
 }

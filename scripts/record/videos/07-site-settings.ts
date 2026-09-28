@@ -1,6 +1,6 @@
 /**
  * Tutorial 07 — Site settings: the one screen that holds the shop's contact
- * details, the announcement line, delivery, stock emails, currencies, the
+ * details, the switch that pauses orders, the announcement line, delivery, stock emails, currencies, the
  * reward wheel's words and the embroidery rules. Two changes on camera (her
  * WhatsApp number, seen on the Contact page; a new announcement, seen in the
  * website's header); every other setting on every tab is pointed at and
@@ -43,11 +43,18 @@ await r.run(async () => {
   }
   await r.click(r.admin.getByRole('link', { name: 'Site settings', exact: true }).first())
   await r.admin.locator('h1').filter({ hasText: 'Site settings' }).first().waitFor()
-  await r.say('It has eight tabs. One Save button, at the top, saves all of them together.')
+  await r.say('It has nine tabs. One Save button, at the top, saves all of them together.')
   await r.point(r.admin.locator('.tabs-field__tabs').first(), 2)
   await r.point(r.admin.locator('#action-save'), 1)
 
+  /* ---- Orders */
+  await r.say('Orders comes first. Take orders is ticked while your shop is open.')
+  await r.point(r.admin.locator('#field-ordersOpen'), 1.5)
+  await r.say('Untick it to pause orders. Customers can still browse, but checkout says orders open soon and nobody can pay.')
+  await r.point(r.admin.locator('#field-ordersOpen'), 1.5)
+
   /* ---- Contact */
+  await r.click(tab('Contact'))
   await r.say('Contact email is shown on your website and in every email. Customers’ replies arrive there.')
   await r.point(field(/^contact email$/i), 1.5)
   await r.say('New orders and Contact page messages are emailed to the next address. Empty means the contact email.')
@@ -75,7 +82,7 @@ await r.run(async () => {
   await r.point(r.admin.locator('#field-announcementEnabled'), 1.5)
   await r.click(r.admin.locator('#action-save'))
   await r.saved()
-  await r.showOnSite('/', (site) => site.locator('header').getByText(/hand embroidery on every piece/i).first())
+  await r.showOnSite('/', (site) => site.getByText(/hand embroidery on every piece/i).filter({ visible: true }))
 
   /* ---- Shipping */
   await r.say('Shipping holds free delivery and the international surcharge. The Delivery prices video shows them.')
@@ -144,7 +151,7 @@ await r.run(async () => {
     'Site settings',
     [
       'Side menu → Everyday → Site settings',
-      'Eight tabs, one Save for all of them',
+      'Nine tabs, one Save for all of them',
       'Contact: emails, WhatsApp, Instagram',
       'Announcement: phrases separated by |',
     ],

@@ -185,7 +185,12 @@ describe('pricing engine against seeded data', () => {
   })
 
   it('prices the real product with its real variants', async () => {
-    const variants = await payload.find({ collection: 'variants', limit: 10 })
+    // Sizes she does not offer are refused by design (see stock.int.spec.ts).
+    const variants = await payload.find({
+      collection: 'variants',
+      limit: 10,
+      where: { offered: { not_equals: false } },
+    })
     expect(variants.docs.length).toBeGreaterThan(0)
 
     const product = await payload.findByID({ collection: 'products', id: productId })

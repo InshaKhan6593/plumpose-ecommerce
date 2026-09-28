@@ -26,6 +26,8 @@ export function paymentOutcome(args: {
   /** Card declines the gateway reported during this checkout, newest first. */
   declines?: string[]
   now?: Date
+  /** The order's code (PLM-…), which is also this payment's reference; shown instead of the number. */
+  orderCode?: null | string
   orderId?: null | number | string
   status?: null | PaymentStatus | string
 }): Outcome {
@@ -37,7 +39,8 @@ export function paymentOutcome(args: {
 
   switch (args.status) {
     case 'succeeded':
-      return { fine: true, label: args.orderId ? `Paid — order #${args.orderId}` : 'Paid' }
+      if (!args.orderId) return { fine: true, label: 'Paid' }
+      return { fine: true, label: `Paid — order ${args.orderCode || `#${args.orderId}`}` }
     case 'refunded':
       return { fine: true, label: 'Refunded' }
     case 'processing':

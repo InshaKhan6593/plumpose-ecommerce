@@ -43,6 +43,7 @@ export const Providers: React.FC<{
                   variants: {
                     title: true,
                     inventory: true,
+                    offered: true,
                   },
                 },
               },

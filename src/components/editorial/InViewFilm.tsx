@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { prefersReducedMotion } from '@/motion/gsap'
 import { afterPageLoad } from '@/utilities/afterPageLoad'
 import { cn } from '@/utilities/cn'
+import { playFilm } from '@/utilities/playFilm'
 
 /**
  * `webm` is optional: the café films ship as H.264 only (scripts/encode-videos.sh).
@@ -72,12 +73,17 @@ export function InViewFilm({
   useEffect(() => {
     const video = videoRef.current
     if (!load || !video) return
+    let stopWaiting = () => {}
     const visible = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) video.play().catch(() => undefined)
+      stopWaiting()
+      if (entry.isIntersecting) stopWaiting = playFilm(video)
       else video.pause()
     })
     visible.observe(video)
-    return () => visible.disconnect()
+    return () => {
+      visible.disconnect()
+      stopWaiting()
+    }
   }, [load])
 
   return (

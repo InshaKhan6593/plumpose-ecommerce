@@ -76,14 +76,15 @@ export const addSizes = async (api: APIRequestContext, productId: number) => {
  * A paid order waiting to be made, as checkout leaves one (BUILD-LOG §32):
  * size M with hand embroidery on the pocket, delivery in Doha, a gift note.
  * Money in minor units, the breakdown adding up to the amount. The customer is
- * made up. Returns the order's id and its private link token.
+ * made up. Returns the order's id and its private link token. With
+ * `payments`, also its payment and two checkouts that were not paid (video 13).
  */
-export const addPaidOrder = async (api: APIRequestContext) => {
+export const addPaidOrder = async (api: APIRequestContext, { payments = false } = {}) => {
   const productId = await addPiece(api)
   const sizes = await addSizes(api, productId)
   // Orders cannot be created over REST (only a paid checkout makes one), so
   // this one goes through the local API, against the demo database only.
-  const run = spawnSync('npx', ['tsx', 'scripts/record/add-demo-order.ts', String(productId), String(sizes.M)], {
+  const run = spawnSync('npx', ['tsx', 'scripts/record/add-demo-order.ts', String(productId), String(sizes.M), ...(payments ? ['--payments'] : [])], {
     encoding: 'utf8',
     env: { ...process.env, DATABASE_URL: DEMO_DATABASE_URL, MEDIA_STORAGE: 'disk', RESEND_API_KEY: '' },
     shell: true,

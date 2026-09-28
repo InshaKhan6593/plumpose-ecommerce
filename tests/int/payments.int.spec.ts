@@ -25,6 +25,18 @@ describe('payments — what happened, in words', () => {
     ).toEqual({ fine: true, label: 'Paid — order #42' })
   })
 
+  it('names the order by its code when it has one', () => {
+    expect(
+      paymentOutcome({
+        createdAt: minutesAgo(5),
+        now,
+        orderCode: 'PLM-260928-VQAKTW',
+        orderId: 42,
+        status: 'succeeded',
+      }).label,
+    ).toBe('Paid — order PLM-260928-VQAKTW')
+  })
+
   it('a checkout still within the payment page’s hour is not yet a lost sale', () => {
     expect(paymentOutcome({ createdAt: minutesAgo(10), now, status: 'pending' })).toMatchObject({
       fine: true,

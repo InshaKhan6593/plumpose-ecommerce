@@ -59,6 +59,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   redirects,
   /*
+   * The catalogue flip-book from the old site, linked from her Instagram as
+   * plumpose.com/catalogue. It carries her photographs, so like the films it
+   * lives in R2 and is fetched into public/video at build (scripts/films.ts).
+   */
+  rewrites: async () => [{ destination: '/video/catalogue.html', source: '/catalogue' }],
+  /*
    * Baseline security headers on every response. Framing is same-origin only:
    * the admin's live preview shows the storefront in a frame on this domain.
    * No Content-Security-Policy yet — the films, R2 photos, Payload admin and
