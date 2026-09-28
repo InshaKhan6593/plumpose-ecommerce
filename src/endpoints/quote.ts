@@ -176,10 +176,14 @@ export const quoteEndpoint: Endpoint = {
      * price once without it to get that figure, then price again with it.
      * Cheap — the engine is pure and touches no database.
      */
-    const base = priceOrder(
-      { destination: { countryCode: asText(body.country, 2) }, lines },
-      context,
-    )
+    const destination = { cityKey: asText(body.city, 40), countryCode: asText(body.country, 2) }
+    /*
+     * The same destination as the priced order, city included: without the
+     * city a Qatar order does not price, the goods total came out 0, and every
+     * code with a minimum spend was refused at checkout (found recording
+     * tutorial 06). The payment path (priceCart) already passed the city.
+     */
+    const base = priceOrder({ destination, lines }, context)
     const goodsTotal = base.ok ? base.order.subtotal + base.order.personalisationTotal : 0
 
     let discount: null | ValidatedDiscount = null
@@ -198,14 +202,7 @@ export const quoteEndpoint: Endpoint = {
       else discountError = result.refusal.message
     }
 
-    const priced = priceOrder(
-      {
-        destination: { cityKey: asText(body.city, 40), countryCode: asText(body.country, 2) },
-        discount,
-        lines,
-      },
-      context,
-    )
+    const priced = priceOrder({ destination, discount, lines }, context)
 
     if (!priced.ok) {
       return json(

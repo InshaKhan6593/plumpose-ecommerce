@@ -247,6 +247,48 @@ test.describe('POST /api/quote', () => {
       expect(body.totalsInQar.total).toBe(1419)
     })
 
+    /*
+     * The minimum was measured on a bag priced without the city, which does
+     * not price in Qatar, so it read QAR 0 and every minimum-spend code was
+     * refused at checkout — QAR 1,399 "needed a minimum spend of QAR 1,000".
+     */
+    test('measures a minimum spend on the bag, Qatar city and all', async ({ request }) => {
+      const headers = { Authorization: `JWT ${token}` }
+      const make = async (code: string, minSpendQar: number) =>
+        (
+          await (
+            await request.post(`${BASE}/api/discountCodes`, {
+              data: { active: true, code, minSpendQar, perCustomerLimit: 0, type: 'percent', value: 15 },
+              headers,
+            })
+          ).json()
+        ).doc?.id as number
+      const met = await make(`${PREFIX}MIN1000`, 1000)
+      const unmet = await make(`${PREFIX}MIN5000`, 5000)
+      try {
+        const reached = await quote(request, {
+          ...doha,
+          discountCode: `${PREFIX}MIN1000`,
+          email: 'shopper@plumpose.local',
+          items: [{ productId: 1, quantity: 1 }],
+        })
+        expect(reached.body.discountError).toBeNull()
+        expect(reached.body.totalsInQar.discount).toBeCloseTo(1399 * 0.15, 2)
+
+        const short = await quote(request, {
+          ...doha,
+          discountCode: `${PREFIX}MIN5000`,
+          email: 'shopper@plumpose.local',
+          items: [{ productId: 1, quantity: 1 }],
+        })
+        expect(short.body.discountError).toBe('That code needs a minimum spend of QAR 5,000.')
+      } finally {
+        for (const id of [met, unmet]) {
+          if (id) await request.delete(`${BASE}/api/discountCodes/${id}`, { headers })
+        }
+      }
+    })
+
     test('quoting a code never consumes it', async ({ request }) => {
       for (let i = 0; i < 3; i++) {
         await quote(request, {

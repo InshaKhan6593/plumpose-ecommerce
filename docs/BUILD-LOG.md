@@ -3102,3 +3102,44 @@ Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed;
 `audit:admin` no problems; no schema change (access, labels, descriptions and
 admin flags only). Frames mid-line put the ring on what each line names, and
 all three changes show on the Shipping page.
+
+## 53. Tutorial 06 "Discount codes"; minimum spend refused every Qatar bag — 28 Sep 2026
+
+`videos/06-discount-codes.ts` (2:15, 22 lines, 1,552 characters): Create new
+→ EID15, Percentage off (the four types shown), 15, minimum spend QAR 1,000,
+ends 30 Sep → Save; then on the website side, with size M in the bag, Doha
+chosen, "eid15" typed in small letters → "EID15 applied — QAR 209.85 off".
+The tour: Total uses allowed, Uses per customer, Starts, Only for these
+pieces, Times used, Source, Only for this email, Active, and Delete.
+
+**Bug, found on camera: a minimum-spend code was refused on every Qatar bag.**
+`/api/quote` measured the bag for the code by pricing it without the city; a
+Qatar address does not price without one, so the bag read QAR 0 — "That code
+needs a minimum spend of QAR 1,000" on a QAR 1,399 bag. It now prices with
+the same destination as the order. Only the checkout display was wrong (the
+payment's `priceCart` passed the city), but a customer could not get past
+it. New e2e case in `quote.e2e.spec.ts`, which fails on the old code with
+that exact message; the spec's 18 pass against the local database.
+
+**Fixed in the admin:**
+
+- **Dates stopped at 3 pm.** The date picker keeps a day as 12:00 UTC, so a
+  code "expiring 30 Sep" ended mid-afternoon in Qatar. Starts is now the start
+  of the chosen day and Ends its last moment, Qatar time (`qatarDay()` in
+  `DiscountCodes.ts`, admin saves only — wheel codes keep their exact expiry;
+  saving again never moves the day). EID15 saved as 30 Sep 23:59:59 +03:00.
+- **Deleting a used code** failed on the database's link to its uses; it now
+  says "This code has been used, so it is kept with those orders. Untick
+  Active to stop it working." (`APIError`, public).
+- **Duplicate** copied the unique code and its use count: off. Bulk edit off.
+  Type cannot be cleared; the product picker offers no "Add new Product".
+- **Words:** every field says what it does and what empty means — "Total uses
+  allowed", "Uses per customer", "Times used", "Starts", "Ends", "Only for
+  these pieces", "Only for this email" (it limits any code to one email, not
+  only wheel codes), minimum spend in riyals on pieces + embroidery.
+
+**Recorder:** `start({ prepare })` uses the website off camera after `setup`,
+as the signed-in recorder — here, putting size M in the bag.
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 263 passed;
+`audit:admin` no problems; `quote.e2e.spec.ts` 18 passed; no schema change.

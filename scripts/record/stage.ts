@@ -173,6 +173,8 @@ export class Recording {
     adminPath: string
     /** Off camera, signed in: make what the video starts from (see demo-data.ts). */
     setup?: (api: APIRequestContext) => Promise<void>
+    /** Off camera, after setup: use the website as a customer would — for example, fill the bag. */
+    prepare?: (page: Page) => Promise<void>
     sitePath: string
     warm?: string[]
   }) {
@@ -199,6 +201,7 @@ export class Recording {
     await p.click('button[type=submit]')
     await p.waitForURL(`${BASE}/admin`)
     if (options.setup) await options.setup(prep.request)
+    if (options.prepare) await options.prepare(p)
     for (const url of [options.adminPath, options.sitePath, ...(options.warm ?? [])]) {
       await p.goto(`${BASE}${url}`, { waitUntil: 'networkidle' }).catch(() => undefined)
     }
