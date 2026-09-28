@@ -131,7 +131,7 @@ test('exports: orders and subscribers download as a spreadsheet, admin only', as
 
     const orders = await request.get(`${BASE}/api/exports/orders`, { headers: admin() })
     expect((await orders.text()).slice(1).split('\r\n')[0]).toMatch(
-      /^Order,Date \(Doha\),Payment,Fulfilment,/,
+      /^Order,Order code,Date \(Doha\),Payment,Fulfilment,/,
     )
   } finally {
     await request.delete(`${BASE}/api/subscribers/${subId}`, { headers: admin() })

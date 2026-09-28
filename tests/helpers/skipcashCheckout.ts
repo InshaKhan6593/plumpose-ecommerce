@@ -132,15 +132,21 @@ export const skipcashPayment = async (
 /**
  * Fills SkipCash's page with the sandbox card and submits it. The card
  * number and CVV live in CyberSource's secure iframes, in that order.
+ *
+ * Each frame also carries hidden helpers — read-only focus traps and
+ * autofill inputs (seen 28 Sep 2026) — so a bare `input` matched six; only
+ * the field a person types into is filled.
  */
+const typedField = 'input:not([aria-hidden="true"]):not([readonly])'
+
 export const payOnSkipcash = async (page: Page, redirectURL: string): Promise<void> => {
   await page.goto(redirectURL)
   const secure = page.locator('iframe[title="secure payment field"]')
   await expect(secure.first()).toBeVisible({ timeout: 30_000 })
 
-  await secure.nth(0).contentFrame().locator('input').fill(SANDBOX_CARD.number)
+  await secure.nth(0).contentFrame().locator(typedField).fill(SANDBOX_CARD.number)
   await page.locator('#CardExpiryDate:visible').fill(SANDBOX_CARD.expiry)
-  await secure.nth(1).contentFrame().locator('input').fill(SANDBOX_CARD.cvv)
+  await secure.nth(1).contentFrame().locator(typedField).fill(SANDBOX_CARD.cvv)
   await page.locator('#CardholderName').fill('Test Shopper')
 
   await page.locator('#submit_button').click()

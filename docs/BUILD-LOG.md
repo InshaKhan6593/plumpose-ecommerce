@@ -17,7 +17,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Type errors | **0** |
 | Admin config audit | **No problems** |
 | Integration tests | **281 passing** (28 Sep) |
-| End-to-end tests | **57 passing** at §53; not re-run since (checkout now a city search box, and pausable) |
+| End-to-end tests | **62 passing** (28 Sep, §58) |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
 | Payments | SkipCash sandbox (§32); **orders paused** on the live site until the production keys (§58) |
@@ -3360,3 +3360,11 @@ build locally needs `NEXT_DIST_DIR` and then `tsconfig.json` reverted (as §31).
 Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 281 passed (new:
 `orders-paused-and-closed.int.spec.ts`); the three migrations up and down on a
 seeded copy.
+
+**End-to-end, 28 Sep:** 62 passing. Two causes of failures on the first run,
+neither in the site: SkipCash's (CyberSource's) card frames now carry hidden
+focus-trap and autofill inputs, so `payOnSkipcash` filled a bare `input` that
+matched six — it fills only the typed field now
+(`input:not([aria-hidden="true"]):not([readonly])`, `tests/helpers/skipcashCheckout.ts`);
+and three expectations followed today's changes (the "Order code" column and
+label). New: Track order takes a code as typed.

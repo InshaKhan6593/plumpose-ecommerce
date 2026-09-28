@@ -258,7 +258,7 @@ Simulator. Point the e2e suite at this machine's port with
 users, where the bare subpath does not resolve — that silently broke the admin
 spec for a commit.
 
-**`pnpm test:e2e` passes: 57 tests, none skipped.** `storefront.e2e.spec.ts`
+**`pnpm test:e2e` passes: 62 tests, none skipped.** `storefront.e2e.spec.ts`
 covers the customer's path; it replaced the template's skipped suite. If the
 run lists **0 tests**, a spec failed to load — usually a bare `next/*` import
 reached by the Payload config (above); `npx playwright test --list` shows it.

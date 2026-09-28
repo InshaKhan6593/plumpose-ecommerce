@@ -207,7 +207,15 @@ test('a wrong password says so, without saying whether the account exists', asyn
 test('Track order gives the same reply whether or not an order matches', async ({ page }) => {
   await page.goto(`${BASE}/find-order`)
   await main(page).getByLabel('Email').fill(`nobody-${Date.now()}@plumpose.local`)
-  await main(page).getByLabel('Order number').fill('#999999')
+  await main(page).getByLabel('Order code').fill('#999999')
+  await main(page).getByRole('button', { name: 'Find my order' }).click()
+  await expect(main(page).getByText('Check your email')).toBeVisible()
+})
+
+test('Track order takes an order code as typed, with the same reply', async ({ page }) => {
+  await page.goto(`${BASE}/find-order`)
+  await main(page).getByLabel('Email').fill(`nobody-${Date.now()}@plumpose.local`)
+  await main(page).getByLabel('Order code').fill('plm 260928 zzzzzz')
   await main(page).getByRole('button', { name: 'Find my order' }).click()
   await expect(main(page).getByText('Check your email')).toBeVisible()
 })
@@ -216,5 +224,5 @@ test('Track order asks for what is missing before sending anything', async ({ pa
   await page.goto(`${BASE}/find-order`)
   await main(page).getByRole('button', { name: 'Find my order' }).click()
   await expect(main(page).getByText('Please enter the email you ordered with.')).toBeVisible()
-  await expect(main(page).getByText('Please enter your order number.')).toBeVisible()
+  await expect(main(page).getByText('Please enter your order code.')).toBeVisible()
 })
