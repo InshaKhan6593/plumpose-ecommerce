@@ -3652,3 +3652,7 @@ settles. Measured during a turn: the page reaches 27 px past the spine at most,
 never the window. Phones keep the full turn, clipped to the book (§60).
 Uploaded, redeployed, checked live.
 
+**Backdrop.** The radial gradient between two near-blacks (#232323 → #0e0e0e)
+was drawn with visible dithering — a grainy, speckled surround. Now one flat
+`#121212` (html and body); sampled flat across the screen. Uploaded, live.
+
