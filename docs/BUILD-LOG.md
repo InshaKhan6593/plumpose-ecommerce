@@ -3642,3 +3642,13 @@ no sideways scroll. Uploaded with `films.ts upload`, redeployed, checked live
 (543×750, turned pages hidden). The previous file is kept outside the
 repository if it is ever needed.
 
+**The turn itself (same day, her developer's report: "it opens and cuts the
+page").** Frame by frame at 1440×900 the turning page swung a full page-width
+left of the spine — past the window's edge, its blank back showing — because a
+single centred page has no room on its left. On computers a page now lifts to
+a right angle (`rotateY(-90deg)`) and fades (`.turned`, opacity after .36 s)
+as it goes, revealing the next page; turning back it is opaque at once and
+settles. Measured during a turn: the page reaches 27 px past the spine at most,
+never the window. Phones keep the full turn, clipped to the book (§60).
+Uploaded, redeployed, checked live.
+
