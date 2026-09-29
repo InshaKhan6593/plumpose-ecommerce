@@ -53,9 +53,9 @@ orders and subscribers, reviews with approval and replies, customer Spotted
 submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
 colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
-**Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is paused on the live site until SkipCash production.
+**Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is open on the live site since SkipCash production went in (29 Sep 2026).
 
-Payments run on SkipCash's sandbox; production keys come at launch. 281 integration and 62 end-to-end tests pass.
+Payments run on **SkipCash production** since 29 Sep 2026 (BUILD-LOG §61); local development stays on the sandbox. 289 integration tests (288 pass; the other needs SkipCash's sandbox, which they switched off on 29 Sep) and 62 end-to-end tests (all passed on 28 Sep; they too need the sandbox).
 
 **Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). Live at
 https://plumpose.com since 28 Sep 2026 (plumpose.vercel.app redirects there).
@@ -77,7 +77,7 @@ See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 | Commerce      | `@payloadcms/plugin-ecommerce`              |
 | Styling       | TailwindCSS 4 + shadcn/ui                   |
 | Language      | TypeScript                                  |
-| Payments      | SkipCash (sandbox until launch) — see below |
+| Payments      | SkipCash (production; sandbox locally) — see below |
 | Hosting       | Vercel — Pro ($20/month) for the live shop  |
 | Media         | Cloudflare R2 (EU)                          |
 
@@ -194,12 +194,14 @@ Without all four, checkout says payments are not switched on.
   fails on SkipCash's sandbox with "Empty TermURL for the CRes POST" before it
   returns to us. More at dev.skipcash.app → Test Cards.
 
-**Going live:** the client clicks _Enable Production_ in the portal and
-generates a production key; the four production values reach us through a
-one-time secure link (never chat); set them with `SKIPCASH_ENV=production`, and
-put the webhook URL (`https://plumpose.com/api/payments/skipcash/webhooks`)
-and return URL (`https://plumpose.com/checkout/return`) in the portal's
-Production settings.
+**Production (live since 29 Sep 2026).** The four production values and
+`SKIPCASH_ENV=production` are **Vercel environment variables only** — never in
+the local `.env`, which stays on the sandbox because the test suites pay
+through it. The portal's Production settings take the webhook URL
+(`https://plumpose.com/api/payments/skipcash/webhooks`) and the return URL
+(`https://plumpose.com/checkout/return`). Production has no test cards: test
+with a real card for a small amount (a one-use fixed-amount discount code),
+then refund it in the portal. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §61.
 
 See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §32.
 

@@ -1,8 +1,8 @@
 # plumpose — Build Log
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
-**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash, on the client's sandbox keys (§32); Stripe removed. Content-page copy partly placeholder (§17).
-**Last updated:** 28 Sep 2026 — orders paused until SkipCash production; cancel/refund; order codes; plumpose.com SEO audit and phone speed (§55–§58)
+**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Content-page copy partly placeholder (§17).
+**Last updated:** 29 Sep 2026 — SkipCash production live and orders open; the amounts and emails checked against the live records (§61)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,11 +16,11 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **281 passing** (28 Sep) |
-| End-to-end tests | **62 passing** (28 Sep, §58) |
+| Integration tests | **288 of 289 passing** (29 Sep, §62) — the one failure is SkipCash's sandbox, switched off on their side |
+| End-to-end tests | **62 passing** (28 Sep, §58); they pay on the sandbox, so cannot run until SkipCash turns it back on |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
-| Payments | SkipCash sandbox (§32); **orders paused** on the live site until the production keys (§58) |
+| Payments | **SkipCash production** on the live site, **orders open** since 29 Sep (§61); sandbox locally (§32) |
 | Hosting | Vercel — **live at plumpose.com** since 28 Sep (§54); plumpose.vercel.app redirects there (§58); **Pro ($20/month)** |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
@@ -31,14 +31,14 @@ Running locally at `http://localhost:3000` (this machine currently runs it on 30
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 16.3.3 (App Router), React 19.2.6 |
-| CMS / backend | Payload **3.90.1**, installed into the same app |
-| Database | PostgreSQL 16 in Docker (`plumpose-pg`, port **5434**) |
+| Framework | Next.js 16.3.6 (App Router), React 19.2.6 |
+| CMS / backend | Payload **3.90.2**, installed into the same app |
+| Database | PostgreSQL — **Neon** live (§33–§35); Docker `plumpose-pg`, port **5434**, for tests and offline work |
 | Commerce | `@payloadcms/plugin-ecommerce` |
 | Also | `plugin-form-builder`, `plugin-seo` |
 | Styling | TailwindCSS 4 + shadcn/ui |
-| Language | TypeScript 6 throughout |
-| Images | `sharp`, 7 responsive sizes per upload |
+| Language | TypeScript 5.7 throughout |
+| Images | `sharp`, 7 responsive sizes per upload; stored in Cloudflare R2, EU (§33, §36) |
 | Currency | **QAR** base, stored in minor units |
 
 ### Two things that cost time, recorded so they are not repeated
@@ -3446,3 +3446,83 @@ clipped row shrank into its narrower box (`Stars`: `w-max`, `shrink-0`); the
 rating sat on the price's line ("QAR 1,399.00★★★★"); the homepage's "In your
 words" left one or two reviews beside an empty column, and Spotted one photo
 at the left of an empty row — both now centred.
+
+## 61. SkipCash production live; orders open — 29 Sep 2026
+
+**The keys.** The client generated the production key in the SkipCash portal.
+The developer entered the four production values (Client ID, Key ID, Key
+Secret, Webhook Key) and `SKIPCASH_ENV=production` straight into Vercel's
+environment variables — never in chat, never in the repository — and
+redeployed. **Local `.env` stays on the sandbox**: the integration and e2e
+suites make payments through whatever keys it holds.
+
+**Orders open.** Site settings → Orders → Take orders, unticked in §58, was
+ticked on Neon and the storefront cache cleared. Checked on plumpose.com:
+checkout shows Pay with no "Orders open soon", and the sandbox test-card line
+is gone (it shows only when `skipcashConfig().isSandbox`), so the deploy reads
+`production` and all four keys.
+
+**First production payment page.** A checkout on plumpose.com reached
+SkipCash's production page, so the keys are accepted for creating a payment.
+Its QAR 1,349.05 checked against the cart's pricing snapshot on Neon: Al
+Shaheen Nights 1,399.00 + Al Wakrah delivery 20.00 − 5% wheel code 69.95 (off
+the piece, not the delivery). Not paid; it and two earlier tries (QAR 1,419.00
+each, no code) are left as pending transactions, which create no order. The
+merchant logo on that page is an empty frame: it comes from her SkipCash
+merchant profile — we send none — and is hers to upload.
+
+**Sandbox amounts, checked against SkipCash.** Every order on Neon asked of
+SkipCash's API by its payment id: all four match to the fils and carry our
+reference as SkipCash's Transaction ID — PLM-260926-MGXDJC and
+PLM-260927-N7L9TE 3,098.00 (two pieces + 300 abroad), PLM-260927-HVCWG6
+1,423.10 (1,399 + 160 embroidery + 20 Doha − 155.90, 10% off pieces and
+embroidery), PLM-260928-UUNJW4 1,699.00. Production runs the same code with a
+different base URL and keys; `confirmOrder` refuses any order whose paid amount
+or currency differs from the transaction.
+
+**Emails, rendered from the live orders** (`toOrderView` + the builders, not
+sent). Customer confirmation and seller alert both correct: code in the
+subject, lines with embroidery, the money breakdown, address, gift note, links
+to plumpose.com. The alert goes to Site settings' contact email
+(info@plumpose.com — "New-order alerts go to" is empty) with Reply-To the
+customer. Orders 2–4 sent both; order 1's alert failed on 26 Sep, before the
+domain was verified in Resend (§41). Could be better, not wrong: the address
+shows the customer's fields unlabeled ("885", "9"), and the phone as typed,
+without +974.
+
+**Still to do.**
+
+- One real low-value purchase (a one-use fixed-amount code), refunded in the
+  portal and marked Refunded — the only proof of a paid production payment
+  coming back.
+- Confirm the portal's Production webhook and return URLs (README → Payments).
+- **The SkipCash variables also apply to Preview deploys**, which use the live
+  database: a checkout on a preview link would charge a real card. Limit them
+  to Production and give Preview the sandbox values.
+- SkipCash's **sandbox** answers "Private key or online payment is disabled"
+  since 29 Sep: local payments, `pnpm test:e2e` and one integration spec fail
+  until SkipCash turns it back on.
+- Apple Pay: asked in the client request, not answered.
+
+## 62. Google Search Console; unoffered sizes out of stock for Google — 29 Sep 2026
+
+**Search Console.** Domain property `plumpose.com`, verified by a TXT record at
+`@` in Squarespace (`google-site-verification=…` — never remove it); MX, the
+Vercel A/CNAME and the Resend records checked unchanged afterwards. Sitemap
+submitted as the full address `https://plumpose.com/sitemap.xml` (a Domain
+property rejects the bare `sitemap.xml`); 14 URLs. Homepage already indexed;
+the product page "Discovered – currently not indexed" (found, not yet
+crawled); indexing requested for both.
+
+**XS and XL told Google "InStock".** The product page's ProductGroup ignored
+"Offer this size" (§60): the piece is made to order, so every size came out
+InStock. An unoffered size is now `OutOfStock`, as on the page ("not
+available"). Checked on the local build: S, M, L InStock; XS, XL OutOfStock.
+
+**Delivery stays out of the product markup**, as decided in §39: Qatar's fees
+vary by city, which `shippingDetails` cannot state truthfully. Search Console's
+Merchant listings may warn "Missing field shippingDetails" — a warning, not an
+error; the place for delivery rates is Merchant Center's shipping settings.
+
+
+Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 288 of 289 (the sandbox spec, §61); `pnpm build`.

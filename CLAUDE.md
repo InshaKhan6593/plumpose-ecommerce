@@ -84,7 +84,10 @@ free: never reserves stock, never consumes a code.
 
 **Payments** — `src/payments/skipcash/`, **SkipCash**, on by
 `PAYMENT_PROVIDER=skipcash` with the four keys; `SKIPCASH_ENV` picks sandbox
-or production (anything but exactly `production` is the sandbox). A redirect
+or production (anything but exactly `production` is the sandbox). **The live
+site runs on production since 29 Sep 2026** (BUILD-LOG §61): the keys are
+Vercel variables only. Local `.env` stays on the sandbox — never put the
+production keys there; the test suites pay through whatever it holds. A redirect
 flow (BUILD-LOG §32):
 
 - `protocol.ts` — pure: both HMAC signatures (fixed field order — the brittle
@@ -125,7 +128,8 @@ before codes. Track order takes the code as typed. Fulfilment has Cancelled and
 Refunded: she refunds in SkipCash first, then `statusFollowsClosure` sets the
 locked `status` and the customer is emailed once. **Site settings → Orders →
 Take orders** pauses checkout (the server refuses to start a payment too);
-it is paused on the live site until SkipCash production (BUILD-LOG §57–§58).
+ticked on the live site since 29 Sep, when SkipCash production went in
+(BUILD-LOG §58, §61).
 
 **Data model** — personalisation on cart and order lines (snapshots, not
 relationships, so old orders still read correctly when options are renamed);
@@ -144,7 +148,8 @@ client's reference recording (`../brand-assets/reference/`):
   guideline), fixed nav, announcement from Site settings. Over the film, in
   white, on the homepage only.
 - Homepage (`src/components/home/`) — full-screen film hero ("Wear your
-  world", the coffee film EK3A2455), a curtain, her philosophy words on one
+  world", her fountain film, played once — §54; the coffee film EK3A2455 is
+  kept in R2 to switch back to), a curtain, her philosophy words on one
   screen, The Print (the card opens below the heading: pinned on desktop, not
   on phones), a pinned scrubbed 01–04 sequence, the product band. Default copy
   is in `content.ts` (see "Page text" below).
@@ -159,10 +164,14 @@ client's reference recording (`../brand-assets/reference/`):
 
 ## What is NOT built
 
-- **SkipCash production.** Built and running on the sandbox keys, with orders
-  paused on the live site. Going live is new keys, `SKIPCASH_ENV=production`,
-  the webhook and return URLs in the portal (BUILD-LOG §32), then ticking Site
-  settings → Orders → Take orders.
+- **SkipCash production — the last checks** (BUILD-LOG §61). Keys in and
+  orders open since 29 Sep; still to do: one real low-value purchase refunded
+  in the portal, the portal's webhook and return URLs confirmed, the merchant
+  logo on SkipCash's page (her portal profile, not our code), and the SkipCash
+  variables limited to Production — they still apply to Preview deploys, so a
+  preview checkout would charge a real card. SkipCash switched the **sandbox**
+  off on 29 Sep ("Private key or online payment is disabled"): local payments,
+  `pnpm test:e2e` and one integration spec fail until they turn it back on.
 - **Content-page copy is partly placeholder.** Every block in
   `src/content/pages.ts` is marked LEGACY (her old site), PLACEHOLDER (ours, to
   confirm) or hers (her corrections of 27 Sep 2026, BUILD-LOG §40). The SAMPLE
@@ -176,8 +185,8 @@ client's reference recording (`../brand-assets/reference/`):
   Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
   use). Handover: she creates a Pro team, the developer joins as its one paid
   seat, the project is transferred in; Neon, R2 and Resend move separately.
-- **plumpose.com points at Vercel since 28 Sep 2026** (BUILD-LOG §54) —
-  while checkout is still on the SkipCash sandbox. Squarespace DNS: `@` A and
+- **plumpose.com points at Vercel since 28 Sep 2026** (BUILD-LOG §54);
+  plumpose.vercel.app redirects there (§58). Squarespace DNS: `@` A and
   `www` CNAME are Vercel's; never touch the MX (her Google Workspace email).
 - Storage (Cloudflare R2, §33/§36), production migrations (§33) and email from
   plumpose.com (§41) are built and no longer on this list.
@@ -215,8 +224,8 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (281)                                                                                         |
-| `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page                                                           |
+| `pnpm test:int`                               | Integration tests (289)                                                                                         |
+| `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page (off since 29 Sep, see above)                             |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |
 | `npx tsx scripts/shoot-storefront.ts [paths]` | Storefront at desktop + phone, full page + first screen, console errors                                         |
@@ -405,7 +414,7 @@ From Git Bash, prefix commands taking a leading-slash argument with
   could not scroll (BUILD-LOG §38). `MotionProvider` also restarts Lenis on
   every navigation as a backstop.
 - **Each Vercel deploy has its own permanent address** and keeps running as
-  it was. Test on https://plumpose.vercel.app (always the newest); a
+  it was. Test on https://plumpose.com (always the newest); a
   `plumpose-<hash>-….vercel.app` link is a snapshot.
 - **Check the admin on a visible screen.** Payload draws a group's fields only
   once it is in view (`RenderIfInViewport`); in a hidden browser pane an

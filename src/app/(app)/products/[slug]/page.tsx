@@ -170,11 +170,15 @@ export default async function ProductPage({ params }: Args) {
   const pageUrl = `${getServerSideURL()}/products/${product.slug}`
   // The full text for structured data; only the meta description is kept short.
   const description = product.meta?.description || plainText(product.description)
-  const availability = (inStock: boolean) =>
-    inStock || product.madeToOrder ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
-  const offer = (priceMinor: number, inStock: boolean) => ({
+  // A size with "Offer this size" unticked shows crossed out and cannot be
+  // bought, even made to order — so it is out of stock here too (§60).
+  const availability = (inStock: boolean, offered: boolean) =>
+    offered && (inStock || product.madeToOrder)
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock'
+  const offer = (priceMinor: number, inStock: boolean, offered = true) => ({
     '@type': 'Offer',
-    availability: availability(inStock),
+    availability: availability(inStock, offered),
     hasMerchantReturnPolicy: { ...RETURN_POLICY, merchantReturnDays: settings.returnWindowDays ?? 14 },
     price: toMajor(priceMinor).toFixed(2),
     priceCurrency: 'QAR',
@@ -221,7 +225,11 @@ export default async function ProductPage({ params }: Args) {
             '@type': 'Product',
             name: size ? `${product.title} — ${size}` : product.title,
             ...(size ? { size } : {}),
-            offers: offer(variant.priceInQAR ?? price, (variant.inventory ?? 0) > 0),
+            offers: offer(
+              variant.priceInQAR ?? price,
+              (variant.inventory ?? 0) > 0,
+              variant.offered !== false,
+            ),
           }
         }),
         name: product.title,
