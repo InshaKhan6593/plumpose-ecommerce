@@ -12,9 +12,11 @@ import React from 'react'
 
 import type { Media, Order, Product, Variant, VariantOption } from '@/payload-types'
 
+import { TrackPurchase } from '@/components/analytics/TrackPurchase'
 import { ClearBag } from '@/components/checkout/ClearBag'
 import { customerEmailOf } from '@/email/orderEmails'
-import { formatQar } from '@/lib/pricing/money'
+import { orderCode } from '@/hooks/orderReference'
+import { formatQar, toMajor } from '@/lib/pricing/money'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { cn } from '@/utilities/cn'
@@ -117,7 +119,38 @@ export default async function OrderPage({
 
   return (
     <div className="mx-auto max-w-3xl px-5 pt-14 pb-28 md:pt-20">
-      {justPlaced ? <ClearBag /> : null}
+      {justPlaced ? (
+        <>
+          <ClearBag />
+          <TrackPurchase
+            coupon={order.discountCode ?? undefined}
+            items={(order.items ?? []).map((item) => {
+              const product = typeof item.product === 'object' ? (item.product as Product) : null
+              const variant = typeof item.variant === 'object' ? (item.variant as Variant) : null
+              // The line keeps no price of its own; the size's (or piece's) price is
+              // what was charged for it, before embroidery and discounts.
+              const unit = variant?.priceInQAR ?? product?.priceInQAR
+              return {
+                item_id: product?.slug ?? String(product?.id ?? ''),
+                item_name: product?.title ?? 'plumpose piece',
+                ...(variant?.options?.length
+                  ? {
+                      item_variant: variant.options
+                        .map((o) => (typeof o === 'object' ? (o as VariantOption).label : null))
+                        .filter(Boolean)
+                        .join(' / '),
+                    }
+                  : {}),
+                ...(typeof unit === 'number' ? { price: toMajor(unit) } : {}),
+                quantity: item.quantity,
+              }
+            })}
+            shipping={toMajor(order.shippingQar ?? 0)}
+            transactionId={orderCode(order)}
+            value={toMajor(order.amount ?? 0)}
+          />
+        </>
+      ) : null}
 
       <header className="text-center">
         {justPlaced ? (

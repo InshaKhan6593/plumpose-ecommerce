@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
 import { LocalePicker } from '@/components/locale/LocalePicker'
@@ -92,6 +93,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <LocalePicker />
           </MotionProvider>
         </Providers>
+        {/* Off unless NEXT_PUBLIC_GA_ID is set — Production on Vercel only. */}
+        {process.env.NEXT_PUBLIC_GA_ID ? <GoogleAnalytics /> : null}
       </body>
     </html>
   )

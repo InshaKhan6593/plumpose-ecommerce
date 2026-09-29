@@ -3541,3 +3541,40 @@ silk — three points"), stock (Sizes & stock), and reviews, Spotted and Press.
 Page text has still never been saved on Neon; her first Save stores today's
 wording, and from then on wording changes in the admin, not in the code.
 
+## 63. Google Analytics 4, without tokens — 29 Sep 2026
+
+Property "plumpose.com" (time zone Qatar, currency QAR), created under the
+developer's Google account with Search Console (§62); Measurement ID
+`G-RFWFK07F4V`. No cookie banner (decided with the developer; her privacy
+page already mentions analytics cookies).
+
+**On only where `NEXT_PUBLIC_GA_ID` is set** — Vercel, Production only — so
+development, tests and preview deploys send nothing. `GoogleAnalytics`
+(`src/components/analytics/`) loads gtag.js after hydration and sends its own
+page views on each route change.
+
+**No token reaches Google.** Order pages (`?token=`), password resets
+(`?token=`) and the SkipCash return (`?id=`) carry secrets in the address.
+`analyticsUrl()` keeps only campaign parameters (`utm_*`, `gclid`, `gbraid`,
+`wbraid`, `fbclid`) and drops the rest. Checked by recording every hit
+(`/g/collect`) in a browser: Google's own automatic events (scroll,
+engagement) read the address from the browser, so the cleaned address is
+`set` for all events — and set in the tag's very first call, because the
+purchase event fires before the first page view. Google's "Page changes based
+on browser history events" (Enhanced measurement → Page views) **must be
+off**: it counted each navigation twice and sent the raw previous address,
+token included, as the referrer.
+
+**Purchase.** On arrival from payment (`placed=1`) the order page sends
+`purchase` in QAR: `transaction_id` is the order code, value the amount paid,
+shipping, the code used, and one item per line (the size's price — lines keep
+no price of their own). Once per order per browser (`localStorage`); Analytics
+also drops a repeated `transaction_id`. Checked on the local database with a
+dummy ID: QAR 1,419 = 1,399 + 20, size M, no second event on reload.
+
+Local runs carry `debug_mode` (DebugView, developer traffic). Launch entries
+`plumpose-ga` (the real ID, live database) and `plumpose-local-ga-test` (a
+dummy ID, local database) are in the workspace's `.claude/launch.json`.
+
+Checked: `tsc` 0 errors; lint 0 errors; `analytics-url.int.spec.ts` (5).
+
