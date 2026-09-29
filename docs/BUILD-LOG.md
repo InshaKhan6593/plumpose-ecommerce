@@ -3496,7 +3496,7 @@ without +974.
   portal and marked Refunded — the only proof of a paid production payment
   coming back.
 - Confirm the portal's Production webhook and return URLs (README → Payments).
-- **The SkipCash variables also apply to Preview deploys**, which use the live
+- ~~**The SkipCash variables also apply to Preview deploys**~~ — done, §64. They used the live
   database: a checkout on a preview link would charge a real card. Limit them
   to Production and give Preview the sandbox values.
 - SkipCash's **sandbox** answers "Private key or online payment is disabled"
@@ -3586,4 +3586,28 @@ nature) and redeployed. That redeploy, run without the build cache, failed in
 plumpose.com: gtag.js loads with the ID, no `debug_mode`, page views reach
 `/g/collect` with the query stripped; Realtime showed the visits. Redact data
 (URL query `token`, `id`, `email`; Email on) tested in GA: `token=(redacted)`.
+
+## 64. Preview deploys on the SkipCash sandbox — 29 Sep 2026
+
+The five `SKIPCASH_*` variables applied to Production **and Preview**, and
+preview deploys use the live database — a checkout on a preview link would
+have charged a real card. Now each exists twice on Vercel:
+
+| | Production | Preview |
+|---|---|---|
+| `SKIPCASH_ENV` | `production` | `sandbox` |
+| `SKIPCASH_CLIENT_ID`, `_KEY_ID`, `_KEY_SECRET`, `_WEBHOOK_KEY` | the production keys | the sandbox keys (as in local `.env`) |
+
+Done through Vercel's API, not by deleting and re-adding: the production
+values were entered by the developer and are nowhere else, so each existing
+variable only had its target narrowed to Production (`PATCH …/env/{id}`),
+checked afterwards by length and a hash of the value, never printed — all
+unchanged. The Preview copies were added from the local `.env`, first checked
+to differ from production. `PAYMENT_PROVIDER` stays on both. The running
+deployment is unaffected (variables apply to new builds); the next production
+build reads the same values.
+
+Note: SkipCash's sandbox is switched off on their side since 29 Sep (§61), so a
+preview checkout currently fails with "Private key or online payment is
+disabled" — which is safe: it cannot take money.
 

@@ -86,8 +86,11 @@ free: never reserves stock, never consumes a code.
 `PAYMENT_PROVIDER=skipcash` with the four keys; `SKIPCASH_ENV` picks sandbox
 or production (anything but exactly `production` is the sandbox). **The live
 site runs on production since 29 Sep 2026** (BUILD-LOG §61): the keys are
-Vercel variables only. Local `.env` stays on the sandbox — never put the
-production keys there; the test suites pay through whatever it holds. A redirect
+Vercel variables only — the five `SKIPCASH_*` exist **twice** on Vercel,
+Production (the real keys) and Preview (the sandbox keys, `SKIPCASH_ENV=sandbox`),
+so a preview link never takes real money (§64). Never widen one to both. Local
+`.env` stays on the sandbox — never put the production keys there; the test
+suites pay through whatever it holds. A redirect
 flow (BUILD-LOG §32):
 
 - `protocol.ts` — pure: both HMAC signatures (fixed field order — the brittle
@@ -179,9 +182,7 @@ client's reference recording (`../brand-assets/reference/`):
 - **SkipCash production — the last checks** (BUILD-LOG §61). Keys in and
   orders open since 29 Sep; still to do: one real low-value purchase refunded
   in the portal, the portal's webhook and return URLs confirmed, the merchant
-  logo on SkipCash's page (her portal profile, not our code), and the SkipCash
-  variables limited to Production — they still apply to Preview deploys, so a
-  preview checkout would charge a real card. SkipCash switched the **sandbox**
+  logo on SkipCash's page (her portal profile, not our code). SkipCash switched the **sandbox**
   off on 29 Sep ("Private key or online payment is disabled"): local payments,
   `pnpm test:e2e` and one integration spec fail until they turn it back on.
 - **Remaining copy and content are hers, in the admin — not a development
