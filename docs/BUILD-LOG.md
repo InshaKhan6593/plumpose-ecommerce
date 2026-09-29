@@ -3654,5 +3654,7 @@ Uploaded, redeployed, checked live.
 
 **Backdrop.** The radial gradient between two near-blacks (#232323 → #0e0e0e)
 was drawn with visible dithering — a grainy, speckled surround. Now one flat
-`#121212` (html and body); sampled flat across the screen. Uploaded, live.
+`#121212` (html and body); sampled flat across the screen. Uploaded, live. The book's drop shadow
+(`.shadow`, a 90 px blur) then read as a blurred dark shape behind it on the
+flat backdrop; removed — the backdrop is one colour up to the page's edge.
 
