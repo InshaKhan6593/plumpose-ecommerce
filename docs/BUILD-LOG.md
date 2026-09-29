@@ -3616,3 +3616,29 @@ Note: SkipCash's sandbox is switched off on their side since 29 Sep (§61), so a
 preview checkout currently fails with "Private key or online payment is
 disabled" — which is safe: it cannot take money.
 
+## 65. The catalogue on computers — 29 Sep 2026
+
+`/catalogue` (her flip-book, `catalogue.html` in R2 under `video/`, fetched at
+build — not in the repository) looked broken on laptops; §60 had fixed phones
+only. Three faults, measured with Playwright at 1280×720, 1440×900, 1920×1080
+and 1024×768:
+
+- **Squashed to a square.** Width `min(760px, 94vw)` with `max-height:84vh`
+  and an aspect ratio gave 760×756 on a 1440×900 laptop instead of a 1:1.38
+  page — photos cropped, text pages lopsided. The width now also follows the
+  height: `calc((100svh - 150px) / ratio)` → 543×750.
+- **A blank sheet beside the book.** A turned page stays rotated −180° to the
+  left of the book, its blank back showing as an empty cream rectangle (phones
+  hid it by clipping). A turned page is now visible only while it is turning,
+  hidden on `transitionend`; turning back shows it again before it moves.
+- **Words cut off on short screens** (pages 3 and 5 at 1280×720): type was
+  sized from the screen's width, the book from its height. Type is now sized
+  from the book (`container-type:inline-size`, `cqw`), and, as on phones, a
+  split page's text takes its own height and the photograph the rest.
+
+All in one `@media (min-width:561px)` block plus the page-turn script; phones
+unchanged (367×550, as before). No page overflows at any of the five sizes;
+no sideways scroll. Uploaded with `films.ts upload`, redeployed, checked live
+(543×750, turned pages hidden). The previous file is kept outside the
+repository if it is ever needed.
+
