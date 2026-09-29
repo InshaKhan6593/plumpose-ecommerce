@@ -13,6 +13,7 @@ import { CATEGORY_LABELS } from '@/content/pages'
 import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/made-for-you' },
@@ -57,6 +58,7 @@ export default async function MadeForYouPage({ searchParams }: Props) {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Made for you', path: '/made-for-you' }]} />
       <PageShell className="pt-14 md:pt-20">
         <PageHeading intro={MADE_FOR_YOU.intro} title={MADE_FOR_YOU.heading} />
 

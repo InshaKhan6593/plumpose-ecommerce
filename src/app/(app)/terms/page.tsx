@@ -4,6 +4,7 @@ import React from 'react'
 
 import { LegalPage } from '@/components/editorial/LegalPage'
 import { TERMS_PAGE } from '@/content/pages'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/terms' },
@@ -14,5 +15,10 @@ export const metadata: Metadata = {
 
 /** Terms & Conditions — hers (TERMS_PAGE in src/content/pages.ts). */
 export default function TermsPage() {
-  return <LegalPage {...TERMS_PAGE} />
+  return (
+    <>
+      <BreadcrumbJsonLd trail={[{ name: 'Terms & conditions', path: '/terms' }]} />
+      <LegalPage {...TERMS_PAGE} />
+    </>
+  )
 }

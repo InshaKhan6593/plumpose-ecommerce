@@ -4,6 +4,7 @@ import React from 'react'
 
 import { LegalPage } from '@/components/editorial/LegalPage'
 import { PRIVACY_PAGE } from '@/content/pages'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
@@ -14,5 +15,10 @@ export const metadata: Metadata = {
 
 /** Privacy — hers, in full (PRIVACY_PAGE in src/content/pages.ts). */
 export default function PrivacyPage() {
-  return <LegalPage {...PRIVACY_PAGE} />
+  return (
+    <>
+      <BreadcrumbJsonLd trail={[{ name: 'Privacy policy', path: '/privacy' }]} />
+      <LegalPage {...PRIVACY_PAGE} />
+    </>
+  )
 }

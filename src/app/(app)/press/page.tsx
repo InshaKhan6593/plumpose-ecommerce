@@ -11,6 +11,7 @@ import { Media } from '@/components/Media'
 import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/press' },
@@ -50,6 +51,7 @@ export default async function PressPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Press', path: '/press' }]} />
       <PageShell className="pt-14 md:pt-20">
         <PageHeading intro={PRESS_PAGE.intro} title={PRESS_PAGE.heading} />
 

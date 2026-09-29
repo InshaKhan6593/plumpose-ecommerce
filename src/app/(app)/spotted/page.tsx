@@ -14,6 +14,7 @@ import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { loadPageMedia } from '@/utilities/pageMedia'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/spotted' },
@@ -61,6 +62,7 @@ export default async function SpottedPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Spotted', path: '/spotted' }]} />
       <PageShell className="pt-14 md:pt-20">
         <PageHeading intro={SPOTTED_PAGE.intro} title={SPOTTED_PAGE.heading} />
 

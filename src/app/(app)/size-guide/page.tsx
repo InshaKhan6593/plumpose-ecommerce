@@ -5,6 +5,7 @@ import React from 'react'
 import { ButtonLink, ClosingBand, PageHeading, PageShell, SectionLabel } from '@/components/editorial'
 import { SIZE_GUIDE } from '@/content/pages'
 import { Reveal } from '@/motion/Reveal'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/size-guide' },
@@ -33,6 +34,7 @@ export default function SizeGuidePage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Size guide', path: '/size-guide' }]} />
       <PageShell className="pt-16 md:pt-24">
         <PageHeading intro={SIZE_GUIDE.intro} label={SIZE_GUIDE.label} title={SIZE_GUIDE.heading} />
 

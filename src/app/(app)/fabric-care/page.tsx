@@ -9,6 +9,7 @@ import { FabricBlock } from '@/components/editorial/FabricBlock'
 import { CARE_PAGE } from '@/content/pages'
 import { Reveal } from '@/motion/Reveal'
 import { loadPageMedia } from '@/utilities/pageMedia'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/fabric-care' },
@@ -30,6 +31,7 @@ export default async function FabricCarePage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Wash & care', path: '/fabric-care' }]} />
       <PageShell className="pt-16 md:pt-24">
         <PageHeading intro={CARE_PAGE.intro} label={CARE_PAGE.label} title={CARE_PAGE.heading} />
       </PageShell>

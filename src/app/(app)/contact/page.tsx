@@ -9,6 +9,7 @@ import { ContactForm } from '@/components/editorial/ContactForm'
 import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
@@ -71,6 +72,7 @@ export default async function ContactPage({ searchParams }: Props) {
 
   return (
     <PageShell className="pt-14 md:pt-20">
+      <BreadcrumbJsonLd trail={[{ name: 'Contact', path: '/contact' }]} />
       <div className="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-28">
         <div>
           <PageHeading align="left" intro={CONTACT_PAGE.intro} title={CONTACT_PAGE.heading} />

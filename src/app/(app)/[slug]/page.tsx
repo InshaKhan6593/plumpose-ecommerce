@@ -11,6 +11,7 @@ import React from 'react'
 
 import type { Page } from '@/payload-types'
 import { notFound } from 'next/navigation'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -63,6 +64,7 @@ export default async function Page({ params }: Args) {
 
   return (
     <article className="pt-16 pb-24">
+      <BreadcrumbJsonLd trail={[{ name: page.title, path: `/${page.slug}` }]} />
       <RenderHero {...hero} />
       <RenderBlocks blocks={layout} />
     </article>

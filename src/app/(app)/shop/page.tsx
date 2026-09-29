@@ -11,6 +11,7 @@ import type { Category, Product } from '@/payload-types'
 import { ProductCard } from '@/components/shop/ProductCard'
 import { Reveal } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
@@ -107,6 +108,7 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-[90rem] px-4 pt-14 md:px-7 md:pt-20">
+      <BreadcrumbJsonLd trail={[{ name: 'Shop', path: '/shop' }]} />
       <Reveal className="text-center">
         <h1 className="serif-display text-[clamp(3rem,6vw,5.5rem)]" data-reveal-lines>
           {q ? `“${q}”` : (active?.title ?? 'The collection')}

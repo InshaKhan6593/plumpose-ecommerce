@@ -11,6 +11,7 @@ import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { loadPageMedia } from '@/utilities/pageMedia'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/our-story' },
@@ -97,6 +98,7 @@ export default async function OurStoryPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Our story', path: '/our-story' }]} />
       <StoryOpener
         film={{
           mp4: '/video/story-pillow.mp4',

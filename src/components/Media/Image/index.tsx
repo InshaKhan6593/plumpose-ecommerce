@@ -61,7 +61,8 @@ export const Image: React.FC<MediaProps> = (props) => {
       onClick={onClick}
       onLoad={onLoadFromProps}
       priority={priority}
-      quality={90}
+      // 80, not 90: about 40% lighter, indistinguishable on her photographs (BUILD-LOG §68).
+      quality={80}
       sizes={sizes}
       src={src}
       width={!fill ? width || widthFromProps : undefined}

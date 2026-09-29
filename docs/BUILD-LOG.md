@@ -3714,3 +3714,42 @@ signed-in recorder to its own account (the homepage instead), and a role tag's
 ElevenLabs key (free tier, 4,864 characters for the three); final takes 23, 19
 and 18 lines voiced, 1920×1080 with audio, in `../recordings/`.
 
+## 68. Lighter photographs; breadcrumbs and sitemap dates for search — 30 Sep 2026
+
+The three development items left from the plumpose.com audit (§58).
+
+**Photographs at quality 80** (`Media/Image` and `images.qualities`, was 90) —
+the audit's "shop and product on a slow phone: 6–7.6 s". Measured through the
+site's own image optimiser (WebP), against quality 100 as the reference:
+
+| | q90 | q80 | q75 |
+|---|---|---|---|
+| window, 828 px | 132 KB, SSIM .989 | 77 KB, .980 | 63 KB, .976 |
+| print close-up, 828 px | 274 KB, .989 | 172 KB, .976 | 144 KB, .969 |
+| armchair, 1920 px | 375 KB, .991 | 217 KB, .980 | 174 KB, .973 |
+
+About 40 % lighter at 80. Compared by eye at 2× on the print close-up (the
+hardest — the silk's weave) and a portrait: no visible difference at 80; 75
+starts to soften the weave, so not taken. Every photograph on the site goes
+through the one component, so this covers all of them.
+
+**Breadcrumbs** (`components/seo/BreadcrumbJsonLd.tsx`) — BreadcrumbList
+structured data on every content page: Shop, Our story, Made for you and each
+project (Home › Made for you › project), FAQ, Shipping & returns, Wash & care
+(the footer's name for /fabric-care), Size guide, Press, Spotted, Contact,
+Terms, Privacy, and extra pages. Nothing is drawn. The product page keeps its
+own (Home › Shop › piece), which Search Console passes (§62).
+
+**Sitemap dates for the fixed pages** — each is the newest change to what it
+shows: the homepage (Page text, Site settings, newest product), Shop (newest
+product), Made for you (Page text, newest project), FAQ (newest FAQ — not Site
+settings: changing the returns days re-dates the FAQs it rewrites), Shipping &
+returns (Page text, Site settings, delivery tables), Press, Spotted, Contact.
+Pages whose words are only in the code — Wash & care, Size guide, Terms,
+Privacy, and Our story until Page text is saved — carry no date rather than a
+made-up one: a deploy is not a change to them.
+
+Checked on the live data locally: the sitemap's dates, and the breadcrumbs on
+/faq, /terms, /shop and /contact. `tsc` 0; lint 0 errors; `pnpm test:int` 297
+of 298 (the sandbox spec, §61); `pnpm build`.
+

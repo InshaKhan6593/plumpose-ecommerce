@@ -19,6 +19,7 @@ import { formatQar } from '@/lib/pricing/money'
 import { rateCard } from '@/lib/pricing/shipping'
 import { Reveal } from '@/motion/Reveal'
 import { getCachedGlobal } from '@/utilities/getGlobals'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/shipping-returns' },
@@ -83,6 +84,7 @@ export default async function ShippingReturnsPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'Shipping & returns', path: '/shipping-returns' }]} />
       <PageShell className="pt-14 md:pt-20">
         <PageHeading intro={SHIPPING_PAGE.intro} title={SHIPPING_PAGE.heading} />
 

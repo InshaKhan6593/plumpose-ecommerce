@@ -11,6 +11,7 @@ import { RichText } from '@/components/RichText'
 import { getPageText } from '@/content/getPageText'
 import { Reveal } from '@/motion/Reveal'
 import { plainText } from '@/utilities/plainText'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/faq' },
@@ -59,6 +60,7 @@ export default async function FaqPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd trail={[{ name: 'FAQ', path: '/faq' }]} />
       <PageShell className="pt-14 md:pt-20">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-24">
           <aside className="lg:sticky lg:top-32 lg:self-start">

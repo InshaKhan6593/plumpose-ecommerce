@@ -15,6 +15,7 @@ import { getPageText } from '@/content/getPageText'
 import { Reveal, RevealImage } from '@/motion/Reveal'
 import { cn } from '@/utilities/cn'
 import { isPlaceholderSlug } from '@/utilities/placeholders'
+import { BreadcrumbJsonLd } from '@/components/seo/BreadcrumbJsonLd'
 
 type Args = { params: Promise<{ slug: string }> }
 
@@ -62,6 +63,12 @@ export default async function ProjectPage({ params }: Args) {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        trail={[
+          { name: 'Made for you', path: '/made-for-you' },
+          { name: project.title, path: `/made-for-you/${project.slug}` },
+        ]}
+      />
       {cover ? (
         <RevealImage
           className="relative mx-4 aspect-[4/5] overflow-hidden bg-paper-3 md:mx-7 md:aspect-[21/9]"

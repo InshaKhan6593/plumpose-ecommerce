@@ -43,7 +43,8 @@ const nextConfig: NextConfig = {
         pathname: '/api/media/file/**',
       },
     ],
-    qualities: [90, 100],
+    // 80: ~40% lighter than 90 with no visible difference, checked on the print close-up (BUILD-LOG §68).
+    qualities: [80, 100],
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
         const url = new URL(item)
