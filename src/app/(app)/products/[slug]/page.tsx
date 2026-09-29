@@ -184,14 +184,15 @@ export default async function ProductPage({ params }: Args) {
     priceCurrency: 'QAR',
     url: pageUrl,
   })
+  // Absolute: Google refuses a relative image in structured data.
+  const imageUrls = images
+    .map((image) => image.url)
+    .filter((url): url is string => Boolean(url))
+    .map((url) => new URL(url, getServerSideURL()).href)
   const shared = {
     brand: { '@type': 'Brand', name: 'plumpose' },
     ...(description ? { description } : {}),
-    // Absolute: Google refuses a relative image in structured data.
-    image: images
-      .map((image) => image.url)
-      .filter((url): url is string => Boolean(url))
-      .map((url) => new URL(url, getServerSideURL()).href),
+    image: imageUrls,
     ...(product.colour ? { color: product.colour } : {}),
     ...(product.composition ? { material: product.composition } : {}),
     // Approved reviews only, so the stars a search result shows are real ones.
@@ -221,9 +222,14 @@ export default async function ProductPage({ params }: Args) {
         ...shared,
         hasVariant: sized.map((variant) => {
           const size = optionLabels(variant)
+          // Merchant listings reads each size as its own product: without an
+          // image it is invalid, and the group's is not inherited. Sizes share
+          // the piece's photographs.
           return {
             '@type': 'Product',
             name: size ? `${product.title} — ${size}` : product.title,
+            ...(description ? { description } : {}),
+            image: imageUrls,
             ...(size ? { size } : {}),
             offers: offer(
               variant.priceInQAR ?? price,

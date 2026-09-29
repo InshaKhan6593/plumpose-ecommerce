@@ -3526,3 +3526,10 @@ error; the place for delivery rates is Merchant Center's shipping settings.
 
 
 Checked: `tsc` 0 errors; lint 0 errors; `pnpm test:int` 288 of 289 (the sandbox spec, §61); `pnpm build`.
+
+**Merchant listings: 5 invalid items** (Search Console's live test, same day).
+Each size is read as its own product, and Google does not inherit the group's
+`image`: "Missing field image" was critical on all five. Every size now carries
+the piece's photographs and description (the latter was a non-critical
+warning). The one warning left is `shippingDetails`, on purpose (above).
+
