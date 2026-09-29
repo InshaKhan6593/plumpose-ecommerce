@@ -58,7 +58,7 @@ colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
 **Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is open on the live site since SkipCash production went in (29 Sep 2026).
 
-Payments run on **SkipCash production** since 29 Sep 2026 (BUILD-LOG §61); local development stays on the sandbox. 294 integration tests (293 pass; the other needs SkipCash's sandbox, which they switched off on 29 Sep) and 62 end-to-end tests (all passed on 28 Sep; they too need the sandbox).
+Payments run on **SkipCash production** since 29 Sep 2026 (BUILD-LOG §61); local development stays on the sandbox. 298 integration tests (297 pass; the other needs SkipCash's sandbox, which they switched off on 29 Sep) and 62 end-to-end tests (all passed on 28 Sep; they too need the sandbox).
 
 **Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). Live at
 https://plumpose.com since 28 Sep 2026 (plumpose.vercel.app redirects there).

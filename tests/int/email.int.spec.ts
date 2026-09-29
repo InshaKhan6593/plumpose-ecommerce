@@ -6,6 +6,7 @@ import { isEmailEnabled, isUndeliverable, parseFrom } from '@/email/config'
 import { esc } from '@/email/layout'
 import {
   customerConfirmation,
+  displayPhone,
   ownerNotification,
   shippedNotification,
   toOrderView,
@@ -92,6 +93,49 @@ describe('order view', () => {
 
   it('writes the country out in full', () => {
     expect(view.address).toContain('Qatar')
+  })
+
+  it("labels the typed address lines with checkout's own labels", () => {
+    const qatar = toOrderView(
+      {
+        ...order,
+        shippingAddress: { ...order.shippingAddress, addressLine1: '885', addressLine2: '9' },
+      } as unknown as Order,
+      { adminUrl: '', footer: {}, leadTime: '', orderUrl: '' },
+    )
+    expect(qatar.address).toContain('Street and building: 885')
+    expect(qatar.address).toContain('Zone, apartment: 9')
+
+    const abroad = toOrderView(
+      {
+        ...order,
+        shippingAddress: { ...order.shippingAddress, addressLine2: 'Flat 4', country: 'GB' },
+      } as unknown as Order,
+      { adminUrl: '', footer: {}, leadTime: '', orderUrl: '' },
+    )
+    expect(abroad.address).toContain('Apartment, area: Flat 4')
+    // An empty second line leaves no bare label behind.
+    expect(view.address.some((line) => line.startsWith('Zone'))).toBe(false)
+  })
+})
+
+describe('displayPhone — the number as the owner taps it', () => {
+  it('gives a Qatari number its code and grouping', () => {
+    expect(displayPhone('33501133', 'QA')).toBe('+974 3350 1133')
+    expect(displayPhone('3350 1133', 'QA')).toBe('+974 3350 1133')
+    expect(displayPhone('+97433501133', 'QA')).toBe('+974 3350 1133')
+    expect(displayPhone('0097433501133', 'GB')).toBe('+974 3350 1133')
+  })
+
+  it('keeps a code the customer typed', () => {
+    expect(displayPhone('+44 7700 900123', 'GB')).toBe('+447700900123')
+  })
+
+  it('never guesses +974 for a number that is not Qatari', () => {
+    // A Pakistani mobile with a Qatar delivery address: shown as typed.
+    expect(displayPhone('03241452724', 'QA')).toBe('03241452724')
+    expect(displayPhone('07700 900123', 'GB')).toBe('07700 900123')
+    expect(displayPhone('', 'QA')).toBe('')
   })
 
   it('degrades rather than throws when relationships are not populated', () => {

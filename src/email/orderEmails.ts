@@ -144,12 +144,16 @@ export const toOrderView = (
     }
   })
 
+  const inQatar = (address.country ?? '').toUpperCase() === 'QA'
+
   return {
+    // The two free-typed lines carry checkout's own labels, so whoever packs or
+    // delivers knows which number is which ("885" is the street and building).
     address: [
       customerName,
       address.company,
-      address.addressLine1,
-      address.addressLine2,
+      labelled('Street and building', address.addressLine1),
+      labelled(inQatar ? 'Zone, apartment' : 'Apartment, area', address.addressLine2),
       [address.city, address.state, address.postalCode].filter(Boolean).join(', '),
       countryName(address.country),
     ].filter((part): part is string => Boolean(part && String(part).trim())),
@@ -167,7 +171,7 @@ export const toOrderView = (
     leadTime: ctx.leadTime,
     lines,
     orderUrl: ctx.orderUrl,
-    phone: address.phone ?? '',
+    phone: displayPhone(address.phone, address.country),
     shippingLabel: order.shippingLabel ?? '',
     totals: {
       discount: order.discountTotalQar ?? 0,
@@ -178,6 +182,34 @@ export const toOrderView = (
     },
     trackingNumber: order.trackingNumber ?? '',
   }
+}
+
+const labelled = (label: string, value: null | string | undefined): string =>
+  value && value.trim() ? `${label}: ${value.trim()}` : ''
+
+/**
+ * A phone as the owner can tap it. A Qatari number (8 digits, delivery in
+ * Qatar) gets +974 and the usual grouping — "+974 3350 1133". A number typed
+ * with its own "+" or "00" keeps its code. Anything else is shown as typed:
+ * guessing a code would turn a foreign mobile with a Qatar address into a
+ * wrong +974 number, which `skipcashPhone()` may do for the gateway but an
+ * email to a person must not.
+ */
+export const displayPhone = (raw: null | string | undefined, country: null | string | undefined): string => {
+  const typed = (raw ?? '').trim()
+  const digits = typed.replace(/\D/g, '')
+  if (!digits) return ''
+
+  const international = typed.startsWith('+') ? digits : digits.startsWith('00') ? digits.slice(2) : ''
+  const qatari =
+    international.startsWith('974') && international.length === 11
+      ? international.slice(3)
+      : !international && (country ?? '').toUpperCase() === 'QA' && digits.length === 8
+        ? digits
+        : ''
+  if (qatari) return `+974 ${qatari.slice(0, 4)} ${qatari.slice(4)}`
+  if (international) return `+${international}`
+  return typed
 }
 
 /* ------------------------------------------------------------ fragments -- */
@@ -350,7 +382,11 @@ export const ownerNotification = (view: OrderView): EmailContent => {
   const contact = [
     esc(view.customerName),
     `<a href="mailto:${esc(view.customerEmail)}" style="color:${palette.ink};">${esc(view.customerEmail)}</a>`,
-    view.phone ? esc(view.phone) : '',
+    view.phone
+      ? view.phone.startsWith('+')
+        ? `<a href="tel:${esc(view.phone.replace(/[^\d+]/g, ''))}" style="color:${palette.ink};">${esc(view.phone)}</a>`
+        : esc(view.phone)
+      : '',
   ]
     .filter(Boolean)
     .join('<br>')

@@ -142,7 +142,10 @@ the money breakdown on orders; `discountUses`, `spinEntries`, `webhookLog`.
 create, "on its way" when fulfilment becomes Shipped, a "Resend confirmation"
 button on the order, branded password reset. Sent **after** the response (so
 after the transaction commits), re-reading the order without `req`; each email
-stamps its own date on the order so it is sent once.
+stamps its own date on the order so it is sent once. The address lines carry
+checkout's labels ("Street and building: 885", "Zone, apartment: 9") and the
+phone goes through `displayPhone()`: +974 only for an 8-digit Qatari number,
+never guessed for anything else (BUILD-LOG §66).
 
 **Analytics** — `src/components/analytics/`, Google Analytics 4
 (`G-RFWFK07F4V`), on only where `NEXT_PUBLIC_GA_ID` is set: a Vercel
@@ -238,7 +241,7 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (294)                                                                                         |
+| `pnpm test:int`                               | Integration tests (298)                                                                                         |
 | `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page (off since 29 Sep, see above)                             |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |

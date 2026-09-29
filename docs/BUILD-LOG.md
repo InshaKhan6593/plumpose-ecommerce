@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **293 of 294 passing** (29 Sep, §63) — the one failure is SkipCash's sandbox, switched off on their side |
+| Integration tests | **297 of 298 passing** (29 Sep, §66) — the one failure is SkipCash's sandbox, switched off on their side |
 | End-to-end tests | **62 passing** (28 Sep, §58); they pay on the sandbox, so cannot run until SkipCash turns it back on |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -3657,4 +3657,26 @@ was drawn with visible dithering — a grainy, speckled surround. Now one flat
 `#121212` (html and body); sampled flat across the screen. Uploaded, live. The book's drop shadow
 (`.shadow`, a 90 px blur) then read as a blurred dark shape behind it on the
 flat backdrop; removed — the backdrop is one colour up to the page's edge.
+
+## 66. Order emails: labelled address, a phone she can tap — 29 Sep 2026
+
+Her real order read "885 / 9 / Doha / Qatar" and "33501133": no way to tell the
+street from the zone, and a number without its code. In every order email
+(`toOrderView`, so confirmation, new-order alert, shipped, cancelled and
+refunded alike) the two typed lines now carry checkout's own labels —
+"Street and building: …", and "Zone, apartment: …" in Qatar or "Apartment,
+area: …" elsewhere; an empty line leaves no bare label.
+
+The phone goes through `displayPhone()`: an 8-digit number with a Qatar
+delivery, or one typed with +974 / 00974, reads "+974 3350 1133"; any other
+number typed with "+" or "00" keeps its code; anything else is shown as typed.
+It deliberately does not reuse `skipcashPhone()`, which prefixes the delivery
+country's code and would turn a Pakistani mobile with a Qatar address
+("03241452724", a real test checkout) into a wrong +974 number. In the owner's
+alert a "+" number is a `tel:` link.
+
+Rendered from her order on Neon (not sent): "Street and building: 885",
+"Zone, apartment: 9", "+974 3350 1133". Checked: `tsc` 0; lint 0;
+`email.int.spec.ts` 24 (4 new); `pnpm test:int` 297 of 298 (the sandbox spec,
+§61); `pnpm build`.
 
