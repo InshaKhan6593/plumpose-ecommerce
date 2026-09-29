@@ -3586,6 +3586,11 @@ nature) and redeployed. That redeploy, run without the build cache, failed in
 plumpose.com: gtag.js loads with the ID, no `debug_mode`, page views reach
 `/g/collect` with the query stripped; Realtime showed the visits. Redact data
 (URL query `token`, `id`, `email`; Email on) tested in GA: `token=(redacted)`.
+"Page changes based on browser history events" unticked and saved (Enhanced
+measurement → Page views; "Page loads" stays on, and `send_page_view: false`
+keeps it from sending its own). Scrolls, outbound clicks, site search and form
+interactions left on — they read the `set` address and are covered by the
+redaction. **All three GA settings done.**
 
 ## 64. Preview deploys on the SkipCash sandbox — 29 Sep 2026
 
