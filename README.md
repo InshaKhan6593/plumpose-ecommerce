@@ -38,7 +38,10 @@ in Doha**, not made there: never write "hand-finished in Doha".
 **Search.** Canonicals, branded titles and descriptions, Product / ProductGroup,
 Organization and breadcrumb structured data, real 404s, a sitemap without
 demo or sample records (BUILD-LOG §39). An SEO audit scored 54, then 70 after
-the fixes; on plumpose.com it scored 69, and ~76 with the §58 fixes.
+the fixes; on plumpose.com it scored 69, and ~76 with the §58 fixes. Google
+Search Console is verified and the sitemap submitted; the product page passes
+Product snippets and Merchant listings (§62). **Google Analytics 4** counts
+visits and sales in QAR, with private order links kept out of it (§63).
 
 **Accounts.** Sign in, create an account, password reset on the storefront,
 orders, saved addresses (Qatar city picker; they pre-fill checkout), details.
@@ -55,7 +58,7 @@ colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
 **Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is open on the live site since SkipCash production went in (29 Sep 2026).
 
-Payments run on **SkipCash production** since 29 Sep 2026 (BUILD-LOG §61); local development stays on the sandbox. 289 integration tests (288 pass; the other needs SkipCash's sandbox, which they switched off on 29 Sep) and 62 end-to-end tests (all passed on 28 Sep; they too need the sandbox).
+Payments run on **SkipCash production** since 29 Sep 2026 (BUILD-LOG §61); local development stays on the sandbox. 294 integration tests (293 pass; the other needs SkipCash's sandbox, which they switched off on 29 Sep) and 62 end-to-end tests (all passed on 28 Sep; they too need the sandbox).
 
 **Hosting.** Vercel, and only Vercel (decided 26 Sep 2026). Live at
 https://plumpose.com since 28 Sep 2026 (plumpose.vercel.app redirects there).

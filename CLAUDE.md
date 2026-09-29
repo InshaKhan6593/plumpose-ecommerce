@@ -141,6 +141,18 @@ button on the order, branded password reset. Sent **after** the response (so
 after the transaction commits), re-reading the order without `req`; each email
 stamps its own date on the order so it is sent once.
 
+**Analytics** — `src/components/analytics/`, Google Analytics 4
+(`G-RFWFK07F4V`), on only where `NEXT_PUBLIC_GA_ID` is set: a Vercel
+**Production** variable, so dev, tests and previews send nothing (launch entry
+`plumpose-ga` to try it locally, in DebugView). Page views and `purchase` (on
+`/order/[id]?placed=1`, QAR) are sent by our code, every address through
+`analyticsUrl()` — **order and reset tokens must never reach Google**; the
+cleaned address is `set` for all events, first thing. In the GA stream,
+"Page changes based on browser history events" stays **off**, and Redact data
+strips `token`, `id`, `email` as a second net (BUILD-LOG §63). Search Console:
+Domain property, verified by a TXT record in Squarespace — never remove it
+(§62). Both are under the developer's Google account; the client is added.
+
 **Storefront** — built from the approved mockups (`../docs/mockups/`) and the
 client's reference recording (`../brand-assets/reference/`):
 
@@ -225,7 +237,7 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (289)                                                                                         |
+| `pnpm test:int`                               | Integration tests (294)                                                                                         |
 | `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page (off since 29 Sep, see above)                             |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |
@@ -414,6 +426,10 @@ From Git Bash, prefix commands taking a leading-slash argument with
   `/checkout`, whose header has no bag — and the `else` never ran, so checkout
   could not scroll (BUILD-LOG §38). `MotionProvider` also restarts Lenis on
   every navigation as a backstop.
+- **Redeploy on Vercel with the build cache.** Unticking "Use existing Build
+  Cache" failed a build on 29 Sep: `next/font/google` could not fetch Jost
+  ("next/font/google queries have exactly one entry"). The code was fine; a
+  redeploy with the cache went through, and the live site never changed.
 - **Each Vercel deploy has its own permanent address** and keeps running as
   it was. Test on https://plumpose.com (always the newest); a
   `plumpose-<hash>-….vercel.app` link is a snapshot.

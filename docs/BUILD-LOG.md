@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 29 Sep 2026 — SkipCash production live and orders open; the amounts and emails checked against the live records (§61)
+**Last updated:** 29 Sep 2026 — SkipCash production live, orders open (§61); Search Console and the product data (§62); Google Analytics 4 (§63)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **288 of 289 passing** (29 Sep, §62) — the one failure is SkipCash's sandbox, switched off on their side |
+| Integration tests | **293 of 294 passing** (29 Sep, §63) — the one failure is SkipCash's sandbox, switched off on their side |
 | End-to-end tests | **62 passing** (28 Sep, §58); they pay on the sandbox, so cannot run until SkipCash turns it back on |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -3577,4 +3577,13 @@ Local runs carry `debug_mode` (DebugView, developer traffic). Launch entries
 dummy ID, local database) are in the workspace's `.claude/launch.json`.
 
 Checked: `tsc` 0 errors; lint 0 errors; `analytics-url.int.spec.ts` (5).
+
+**Live, same day.** `NEXT_PUBLIC_GA_ID` added on Vercel (type Config,
+Production only — Vercel warns about the public prefix; the ID is public by
+nature) and redeployed. That redeploy, run without the build cache, failed in
+`next/font/google` fetching Jost; a redeploy with the cache went through
+(`vercel redeploy`), the live site untouched meanwhile. Checked on
+plumpose.com: gtag.js loads with the ID, no `debug_mode`, page views reach
+`/g/collect` with the query stripped; Realtime showed the visits. Redact data
+(URL query `token`, `id`, `email`; Email on) tested in GA: `token=(redacted)`.
 
