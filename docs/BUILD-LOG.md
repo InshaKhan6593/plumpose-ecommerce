@@ -3680,3 +3680,37 @@ Rendered from her order on Neon (not sent): "Street and building: 885",
 `email.int.spec.ts` 24 (4 new); `pnpm test:int` 297 of 298 (the sandbox spec,
 §61); `pnpm build`.
 
+## 67. Tutorials 14–16: embroidery options, currencies, customers & staff — 30 Sep 2026
+
+The three admin screens she can use that had no video. All thirteen earlier
+videos were checked against every admin change since they were recorded; none
+is out of date (02 and 04 were re-recorded after the last ones, §60).
+
+- **14 Embroidery options** (Shop settings → Personalisation, 2 min 29 s): the
+  four kinds, the order (drag handles), Active, Hex, Note — shown only under a
+  *style's* name in the drawer, so the video says so — and that a new
+  **symbol** is drawn by the developer (the motif drawing is read-only). On
+  camera: a thread colour, Champagne, appears last in the drawer's threads.
+- **15 Currencies** (2 min 13 s): price set by hand, today's rate, difference,
+  rate updated, Refresh exchange rates (never touches a hand-set price; the
+  daily job runs at 03:00 UTC), decimals and step (the pound's step is 5). On
+  camera: GBP 285 → 295, then £295 on the piece after choosing pounds in the
+  picker. The website keeps the currency list up to five minutes
+  (`/api/locale/options`, `max-age=300`), so the video says "within five
+  minutes", and the take clears the recording browser's cache off camera.
+  Off camera the rates are fetched first; on the demo database they were empty.
+- **16 Customers & staff** (Users, 2 min 14 s): roles, a customer's account,
+  Force unlock (5 wrong passwords → 15 minutes), Change password, and a helper
+  given Admin — and taken away again. **Staff cannot open the admin**
+  (`users.access.admin` is `checkRole(['admin'])`): the role is kept for a
+  future assistant, and the video tells her not to use it yet. Guest checkout
+  makes no account, so "customers make an account when they sign up".
+
+Each was run silent first and checked frame by frame; fixes the takes found:
+threads on the list's second page (`?limit=25`), the drawer showing Cream
+beside the new swatch (Champagne is now clicked), the sign-up page sending the
+signed-in recorder to its own account (the homepage instead), and a role tag's
+× (the tag is itself a button that opens the list). Narrated with a new
+ElevenLabs key (free tier, 4,864 characters for the three); final takes 23, 19
+and 18 lines voiced, 1920×1080 with audio, in `../recordings/`.
+
