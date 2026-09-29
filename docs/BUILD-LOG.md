@@ -1,7 +1,7 @@
 # plumpose — Build Log
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
-**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Content-page copy partly placeholder (§17).
+**Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
 **Last updated:** 29 Sep 2026 — SkipCash production live and orders open; the amounts and emails checked against the live records (§61)
 
 This is the running record of what has actually been built, tested and
@@ -3532,4 +3532,12 @@ Each size is read as its own product, and Google does not inherit the group's
 `image`: "Missing field image" was critical on all five. Every size now carries
 the piece's photographs and description (the latter was a non-critical
 warning). The one warning left is `shippingDetails`, on purpose (above).
+
+**Her content is hers, in the admin** (decided with the developer, 29 Sep).
+Everything still open on her side needs no code: the sale-items policy (Page
+text → Shipping & returns → "Refunds, exchanges, damaged items"), the returns
+window (Site settings → Returns), the seams line (Page text → Our Story → "The
+silk — three points"), stock (Sizes & stock), and reviews, Spotted and Press.
+Page text has still never been saved on Neon; her first Save stores today's
+wording, and from then on wording changes in the admin, not in the code.
 

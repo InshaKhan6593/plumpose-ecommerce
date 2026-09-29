@@ -31,8 +31,8 @@ order's private link.
 **Content pages.** Our Story (with the café film and her illustration films),
 FAQ, Shipping & Returns, Made for You with project pages, Press, Spotted,
 Contact (enquiry form) and Track order. Her corrections of 27 Sep 2026 are in;
-some copy is still placeholder until she confirms it — see
-[docs/BUILD-LOG.md](docs/BUILD-LOG.md) §17 and §40. The pieces are **designed
+any wording still to confirm is hers to change in the admin (Page text, Site
+settings) — see [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §40 and §62. The pieces are **designed
 in Doha**, not made there: never write "hand-finished in Doha".
 
 **Search.** Canonicals, branded titles and descriptions, Product / ProductGroup,

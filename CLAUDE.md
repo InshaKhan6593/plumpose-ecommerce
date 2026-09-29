@@ -172,15 +172,16 @@ client's reference recording (`../brand-assets/reference/`):
   preview checkout would charge a real card. SkipCash switched the **sandbox**
   off on 29 Sep ("Private key or online payment is disabled"): local payments,
   `pnpm test:e2e` and one integration spec fail until they turn it back on.
-- **Content-page copy is partly placeholder.** Every block in
-  `src/content/pages.ts` is marked LEGACY (her old site), PLACEHOLDER (ours, to
-  confirm) or hers (her corrections of 27 Sep 2026, BUILD-LOG §40). The SAMPLE
-  Made for You projects and the demo catalogue were removed from Neon on
-  27 Sep; `isPlaceholderSlug()` keeps any `demo-`/`sample-` record out of search
-  (§39). Her legal pages, size guide, shipping/returns and care text arrived
-  28 Sep (§54); the wording follows her ready-to-ship text (§58). Waiting on
-  her: the sale-items policy, and confirming the returns window (Site settings
-  → Returns, 14 for now).
+- **Remaining copy and content are hers, in the admin — not a development
+  task** (decided 29 Sep, BUILD-LOG §62). The sale-items policy (Page text →
+  Shipping & returns → "Refunds, exchanges, damaged items"), the returns window
+  (Site settings → Returns, 14 for now), the seams line on Our Story (Page text
+  → Our Story → "The silk — three points"), real stock (Sizes & stock), and
+  reviews / Spotted / Press as they come. Blocks in `src/content/pages.ts` are
+  still marked LEGACY / PLACEHOLDER / hers (§40); her legal pages, size guide,
+  shipping/returns and care text arrived 28 Sep (§54). The SAMPLE projects and
+  the demo catalogue are off Neon; `isPlaceholderSlug()` keeps any
+  `demo-`/`sample-` record out of search (§39).
 - **Vercel Pro, in her name.** Hosting is **Vercel, decided 26 Sep 2026** — no
   Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
   use). Handover: she creates a Pro team, the developer joins as its one paid
@@ -434,10 +435,13 @@ From Git Bash, prefix commands taking a leading-slash argument with
   2026, BUILD-LOG §40). "Hand-finished" is right; "hand-finished in Doha",
   "made in Doha" and "cut and finished in Doha" are wrong, in copy, titles,
   descriptions, emails and schema alike.
-- **Page text has never been saved on Neon**, so the pages show the defaults
-  in `content.ts` / `pages.ts`: change her words there, not in the global
-  (saving it would freeze today's defaults). After deploying new defaults,
-  clear the data cache, which survives deploys:
+- **Page text: the admin takes over at her first Save.** Until then the pages
+  show the defaults in `content.ts` / `pages.ts`; the first Save stores all of
+  today's wording in the global, and from then on **wording is changed in the
+  admin, not the code** — a code default no longer shows once a saved value
+  covers it (it stays only as the fallback for an empty field). Check whether
+  she has saved before touching copy in the code. After deploying new
+  defaults, clear the data cache, which survives deploys:
   `POST /api/storefront/refresh` with `{"layout":true,"tags":["global_pageText","global_siteSettings"]}`
   and header `X-Storefront-Refresh: <HMAC-SHA256 of "plumpose storefront refresh" keyed with PAYLOAD_SECRET>`.
 
