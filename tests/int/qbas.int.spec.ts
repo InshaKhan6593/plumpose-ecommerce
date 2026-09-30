@@ -422,6 +422,20 @@ describe('against the database', () => {
     expect((await call(endpoint('/:id/courier/book').handler, { id: order.id })).status).toBe(200)
   })
 
+  it('cancelling after QBAS said "picked up" takes the order back to the atelier', async () => {
+    const order = await newOrder()
+    await call(endpoint('/:id/courier/book').handler, { id: order.id })
+    statusAnswer = 'SCANNED_BY_DRIVER_AND_IN_CAR'
+    await call(endpoint('/:id/courier/check').handler, { id: order.id })
+    expect((await reload(order.id)).fulfilment).toBe('shipped')
+
+    await call(endpoint('/:id/courier/cancel').handler, { id: order.id })
+    const after = await reload(order.id)
+    expect(after.courier?.status).toBe('CANCELLED')
+    expect(after.fulfilment).toBe('inAtelier')
+    expect(after.trackingNumber ?? null).toBeNull()
+  })
+
   it('the webhook needs its secret, and is logged either way', async () => {
     const order = await newOrder({ courier: { barcode: 'QBSHOOK1' }, trackingNumber: 'QBSHOOK1' })
     const body = { barcode: 'QBSHOOK1', invoiceNumber: 'x', newStatus: 'OUT_FOR_DELIVERY', time: Date.now() }

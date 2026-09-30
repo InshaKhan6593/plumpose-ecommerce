@@ -3852,9 +3852,21 @@ zone field and its search ("38" → "Zone 38 · Al Saad"), a UK customer told
 Qatar only, Shipping & returns, the Courier panel unconnected and booked, the
 customer's Delivery updates.
 
-**Not yet.** QBAS has never been called for real — the first booking is the
-test, made by the developer pressing Send to QBAS with her login set (tell QBAS
-first; cancel it afterwards). Still from QBAS: how the "API Keys" page's key is
-used (the document only knows email + password), the vehicle id, a test
-system if any, and entering the webhook address. Saved addresses do not carry
+**First real booking, 1 Oct** (the developer, local order 152, her login in
+the local `.env`): Send to QBAS → shipment **100531529534** in her QBAS app,
+"3rd Party (Integration)"; email + password, service 281 and **no vehicle id**
+accepted. Print label → QBAS's own AWB: Al Gharrafa 51 → Al Saad 38, Prepaid,
+COD 0, جاف, "Clothing", the order code as reference. Check now → QBAS answered
+**SCANNED_BY_DRIVER_AND_IN_CAR ("Picked") two minutes after booking**, with no
+driver — so the order became Shipped. Cancel booking → Cancelled in QBAS too.
+Two fixes from it: the label printed only `addressLine1` ("Flat 4" was lost), so
+the apartment now rides on the first line; and cancelling now takes a Shipped
+order back to In the atelier and clears the tracking number (24 tests).
+**Asked of QBAS:** is "Picked" set automatically for integration shipments,
+and which status means the driver really has it? If automatic, "on its way"
+must key on a later status, or customers are emailed before collection.
+
+**Not yet.** Still from QBAS: the answer above, how the "API Keys" page's key
+is used (the document only knows email + password), and entering the webhook
+address. Saved addresses do not carry
 a zone yet: a returning customer picks it again at checkout.

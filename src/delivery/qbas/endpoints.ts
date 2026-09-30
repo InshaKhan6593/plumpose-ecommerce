@@ -266,12 +266,21 @@ const cancel: Endpoint = {
       return json({ message }, 502)
     }
     const { order: updated } = await applyCourierStatus(req.payload, order, { code: 'CANCELLED' }, req)
-    // The tracking number was QBAS's: it no longer tracks anything.
+    /*
+     * The tracking number was QBAS's: it no longer tracks anything. And if
+     * QBAS had already moved the order to Shipped (the first real test showed
+     * "Picked up" two minutes after booking), cancelling is her decision to
+     * take it back: the order returns to In the atelier, so the customer's
+     * page does not say "On its way" for a parcel that is not.
+     */
     const cleared =
-      updated.trackingNumber === barcode && updated.fulfilment !== 'shipped'
+      updated.trackingNumber === barcode || updated.fulfilment === 'shipped'
         ? ((await req.payload.update({
             collection: 'orders',
-            data: { trackingNumber: null },
+            data: {
+              ...(updated.trackingNumber === barcode ? { trackingNumber: null } : {}),
+              ...(updated.fulfilment === 'shipped' ? { fulfilment: 'inAtelier' } : {}),
+            },
             depth: 0,
             id: order.id,
             overrideAccess: true,
