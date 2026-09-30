@@ -126,7 +126,7 @@ describe('the booking request', () => {
     })
     expect(body.pkg.vehicleTypeId).toBeUndefined()
     expect(body.destinationAddress).toEqual({
-      addressLine1: 'Building 885, Street 9',
+      addressLine1: 'Building 885, Street 9, Flat 4',
       addressLine2: 'Flat 4',
       cityId: AL_SAAD,
     })

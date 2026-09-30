@@ -169,11 +169,15 @@ export const shipmentRequest = (
   const firstName = (address.firstName ?? '').trim()
   const lastName = (address.lastName ?? '').trim()
   const code = orderCode(order)
+  const street = (address.addressLine1 ?? '').trim()
+  const apartment = (address.addressLine2 ?? '').trim()
 
   return {
     destinationAddress: {
-      addressLine1: (address.addressLine1 ?? '').trim(),
-      ...(address.addressLine2?.trim() ? { addressLine2: address.addressLine2.trim() } : {}),
+      // QBAS's label prints addressLine1 only — the first real booking dropped
+      // "Flat 4" — so the apartment rides on the first line too.
+      addressLine1: [street, apartment].filter(Boolean).join(', '),
+      ...(apartment ? { addressLine2: apartment } : {}),
       cityId: zone.id,
     },
     email: config.email,
