@@ -568,7 +568,7 @@ export async function seed(payload: Payload): Promise<void> {
     [
       'Which payment methods do you accept?',
       'orders',
-      'Visa, Mastercard and American Express. Your card details are entered on a secure banking page — plumpose never sees or stores them.',
+      'We accept debit cards, credit cards, Apple Pay (on iOS), Google Pay (on Android devices) and Amex.',
     ],
     [
       'Can I send my order as a gift?',
