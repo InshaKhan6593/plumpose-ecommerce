@@ -122,7 +122,9 @@ QBAS Hub runs on LogesTechs (company-id 553). On the order's sidebar, the
 QBAS** (books the pickup, fills the tracking number), Print label, Check now,
 Cancel booking. **She presses it — never automatic** (embroidery takes days).
 Updates arrive by webhook (`/api/delivery/qbas/webhook?key=QBAS_WEBHOOK_SECRET`)
-and a half-hourly Vercel Cron check; all go through `applyCourierStatus()`,
+a daily Vercel Cron check (Hobby allows no more — every 30 minutes once on Pro)
+and the customer's order page when opened (if the last check is over 10
+minutes old); all go through `applyCourierStatus()`,
 which **moves Fulfilment forward only** (collected → Shipped, which sends the
 existing email; delivered → Delivered) and never reopens a closed order. The
 customer reads the updates on `/order/[id]`. The API signs in with **her QBAS

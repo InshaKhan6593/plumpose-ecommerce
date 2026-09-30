@@ -5,7 +5,9 @@ import type { Order } from '@/payload-types'
 import { sendCourierAlert } from '@/email/courierAlert'
 import { runAfterResponse } from '@/email/sendOrderEmail'
 
-import { courierStatus, needsAttention } from './protocol'
+import { packageStatus } from './api'
+import { qbasConfig } from './config'
+import { courierStatus, isFinal, needsAttention } from './protocol'
 
 /**
  * Recording a parcel's status on its order — from the booking, QBAS's
@@ -96,6 +98,32 @@ export const applyCourierStatus = async (
   }
 
   return { changed, order: updated }
+}
+
+/**
+ * Asks QBAS about a parcel when its last news is older than `maxAgeMs` —
+ * for the customer's order page, so it is current whenever they look even
+ * without QBAS's webhook. Vercel's Hobby plan runs a scheduled check only
+ * once a day. Quiet on failure (a 4-second limit): the page shows what it has.
+ */
+export const refreshIfStale = async (
+  payload: Payload,
+  order: Order,
+  maxAgeMs = 10 * 60_000,
+): Promise<Order> => {
+  const courier = order.courier
+  if (!courier?.barcode || isFinal(courierStatus(courier.status).stage)) return order
+  const last = courier.checkedAt ? Date.parse(courier.checkedAt) : 0
+  if (Date.now() - last < maxAgeMs) return order
+  try {
+    const status = await Promise.race([
+      packageStatus(qbasConfig(), courier.barcode),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('slow')), 4_000)),
+    ])
+    return (await applyCourierStatus(payload, order, status)).order
+  } catch {
+    return order
+  }
 }
 
 /** An order by its QBAS tracking number — how a webhook finds its order. */

@@ -34,9 +34,11 @@ import {
  *
  * From QBAS: `POST /api/delivery/qbas/webhook?key=…` — its status updates,
  * authenticated by the secret in the address (QBAS signs nothing). And
- * `GET /api/delivery/qbas/check`, Vercel Cron every half hour with
- * `CRON_SECRET`: asks QBAS about every parcel still on its way, so the order
- * moves even if a webhook never comes.
+ * `GET /api/delivery/qbas/check`, Vercel Cron with `CRON_SECRET`: asks QBAS
+ * about every parcel still on its way, so the order moves even if a webhook
+ * never comes. Daily while the project is on Vercel Hobby (which refuses
+ * anything more often); every 30 minutes once it is on Pro (change the
+ * schedule in vercel.json). The customer's order page also asks, when it is opened.
  */
 
 const json = (body: unknown, status = 200) =>
@@ -393,7 +395,7 @@ export const qbasWebhookEndpoint: Endpoint = {
 const fromCron = (req: PayloadRequest): boolean =>
   sameSecret(req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '', process.env.CRON_SECRET ?? '')
 
-/** Every parcel still on its way, asked about — Vercel Cron, every half hour. */
+/** Every parcel still on its way, asked about — Vercel Cron (see above). */
 export const qbasCheckEndpoint: Endpoint = {
   handler: async (req) => {
     if (!fromCron(req)) return json({ error: 'Only the scheduled job can run this.' }, 403)

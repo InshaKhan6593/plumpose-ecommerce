@@ -3825,7 +3825,7 @@ tracking number back.
   /api/delivery/qbas/webhook?key=<QBAS_WEBHOOK_SECRET>` (QBAS signs nothing: the
   key is the proof; every call is logged to `webhookLog`, the status re-read
   from QBAS where possible, the webhook's note and postponed date kept); `GET
-  /api/delivery/qbas/check` — **Vercel Cron every 30 minutes** with
+  /api/delivery/qbas/check` — **Vercel Cron** (daily on Hobby, see below) with
   `CRON_SECRET`, asks QBAS about every parcel not yet delivered, returned or
   cancelled, so orders move even before QBAS sets up the webhook.
 
@@ -3871,15 +3871,24 @@ must key on a later status, or customers are emailed before collection.
 **Production only** — a preview link must never book a real pickup —
 `QBAS_SENDER_PHONE`, `QBAS_SENDER_ADDRESS`, `QBAS_SENDER_ZONE_ID` (570481),
 `QBAS_SERVICE_TYPE_ID` (281) and `QBAS_WEBHOOK_SECRET` (new, only on Vercel);
-`CRON_SECRET` was already there for the half-hourly check. `QBAS_EMAIL` and
+`CRON_SECRET` was already there for the scheduled check. `QBAS_EMAIL` and
 `QBAS_PASSWORD` are entered by the developer, never in chat or the repository;
 until both are there the Courier panel says QBAS is not connected. Every
 Shipping zone unticked on Neon after the deploy: the live site delivers
 within Qatar only.
 
+**Vercel refused the first deploy**: the project is still on **Hobby**, which
+allows a cron job once a day, not `*/30`. The check is daily (04:00 UTC) until
+she is on Pro — then put `*/30 * * * *` back in `vercel.json`. Meanwhile the
+customer's order page asks QBAS itself when opened, if the last check is over
+10 minutes old (`refreshIfStale`, 4-second limit, quiet on failure), and the
+webhook, once QBAS enters it, makes updates immediate. Also found: pushing
+`main` does **not** deploy — every production deploy so far was `vercel deploy
+--prod` from this folder (`.vercelignore` keeps `.env` and her media out).
+
 **Not yet.** From QBAS: the answer above ("Picked" two minutes after booking);
 entering the webhook address — `https://plumpose.com/api/delivery/qbas/webhook?key=`
-+ `QBAS_WEBHOOK_SECRET` (until then the half-hourly check carries the updates);
++ `QBAS_WEBHOOK_SECRET` (until then the daily check and the order page carry the updates);
 and how the "API Keys" page's key is used (the document only knows email +
 password — and if she changes her QBAS password, bookings stop until
 `QBAS_PASSWORD` on Vercel is changed too). From her: packed weight and boxes

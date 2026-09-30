@@ -4,6 +4,6 @@
   "regions": ["fra1"],
   "crons": [
     { "path": "/api/currencies/refresh-rates", "schedule": "0 3 * * *" },
-    { "path": "/api/delivery/qbas/check", "schedule": "*/30 * * * *" }
+    { "path": "/api/delivery/qbas/check", "schedule": "0 4 * * *" }
   ]
 }

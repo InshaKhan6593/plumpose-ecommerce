@@ -15,6 +15,7 @@ import type { Media, Order, Product, Variant, VariantOption } from '@/payload-ty
 import { TrackPurchase } from '@/components/analytics/TrackPurchase'
 import { ClearBag } from '@/components/checkout/ClearBag'
 import { qbasZone, zoneLabel } from '@/data/qbasZones'
+import { refreshIfStale } from '@/delivery/qbas/apply'
 import { courierStatus } from '@/delivery/qbas/protocol'
 import { customerEmailOf } from '@/email/orderEmails'
 import { orderCode } from '@/hooks/orderReference'
@@ -92,8 +93,17 @@ export default async function OrderPage({
     pagination: false,
     where: { and: [{ id: { equals: orderId } }, { or: access }] },
   })
-  const order = found.docs[0] as Order | undefined
-  if (!order) notFound()
+  const found0 = found.docs[0] as Order | undefined
+  if (!found0) notFound()
+  // A parcel with QBAS: its latest status, if the last is over 10 minutes old (@/delivery/qbas/apply).
+  // Only what the courier changes: the rest keeps its populated relationships.
+  const fresh = found0.courier?.barcode ? await refreshIfStale(payload, found0) : found0
+  const order: Order = {
+    ...found0,
+    courier: fresh.courier,
+    fulfilment: fresh.fulfilment,
+    trackingNumber: fresh.trackingNumber,
+  }
 
   const settings = await getCachedGlobal('siteSettings', 0)()
 
