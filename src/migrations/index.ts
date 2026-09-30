@@ -11,6 +11,7 @@ import * as migration_20260928_151659_order_cancel_refund from './20260928_15165
 import * as migration_20260928_151900_ready_to_ship_wording from './20260928_151900_ready_to_ship_wording';
 import * as migration_20260929_090000_size_offered from './20260929_090000_size_offered';
 import * as migration_20260930_194111_qbas_courier from './20260930_194111_qbas_courier';
+import * as migration_20260930_222330_shipping_zone_fees from './20260930_222330_shipping_zone_fees';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20260930_194111_qbas_courier.up,
     down: migration_20260930_194111_qbas_courier.down,
-    name: '20260930_194111_qbas_courier'
+    name: '20260930_194111_qbas_courier',
+  },
+  {
+    up: migration_20260930_222330_shipping_zone_fees.up,
+    down: migration_20260930_222330_shipping_zone_fees.down,
+    name: '20260930_222330_shipping_zone_fees'
   },
 ];

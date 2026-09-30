@@ -74,6 +74,15 @@ export default async function ShippingReturnsPage() {
   for (const city of card.qatarCities)
     byFee.set(city.feeQar, [...(byFee.get(city.feeQar) ?? []), city.name])
   const qatarRows = [...byFee.entries()].sort(([a], [b]) => a - b)
+  // Zones she priced on their own — "Shagra, Khawr Al Udayd (Al Wakrah) QAR 50" — grouped the same way.
+  const byZoneFee = new Map<number, string[]>()
+  for (const city of card.qatarCities)
+    for (const { feeQar, zone } of city.zoneFees)
+      byZoneFee.set(feeQar, [
+        ...(byZoneFee.get(feeQar) ?? []),
+        `${zone.name || `Zone ${zone.zone}`} (${city.name})`,
+      ])
+  const zoneRows = [...byZoneFee.entries()].sort(([a], [b]) => a - b)
   const intlRows = [...card.zones].sort((a, b) => a.feeQar - b.feeQar)
 
   const personalisedReturnable = Boolean(settings.personalisationReturnable)
@@ -145,6 +154,28 @@ export default async function ShippingReturnsPage() {
                   ))}
                 </tbody>
               </table>
+              {zoneRows.length ? (
+                <>
+                  <p className="mt-6 text-[0.8125rem] text-ink-soft" data-reveal>
+                    These areas have a price of their own:
+                  </p>
+                  <table className="mt-2 w-full text-left" data-reveal>
+                    <caption className="sr-only">Areas of Qatar with their own delivery price</caption>
+                    <tbody>
+                      {zoneRows.map(([fee, names]) => (
+                        <tr className="border-b border-line align-top" key={fee}>
+                          <th className="py-4 pr-6 text-[0.9375rem] font-normal" scope="row">
+                            {names.join(', ')}
+                          </th>
+                          <td className="py-4 text-right text-[0.9375rem] whitespace-nowrap tabular-nums">
+                            {formatQar(fee)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              ) : null}
             </Reveal>
 
             {/* Every zone abroad switched off (Shipping zones → Active): say so, not an empty table. */}

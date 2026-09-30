@@ -181,6 +181,7 @@ export const createSkipcashAdapter = (
       countryCode,
       customerEmail,
       req,
+      zoneId: details.zoneId,
     })
 
     if (!priced.ok) throw new Error(priced.refusal.message)

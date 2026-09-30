@@ -143,12 +143,19 @@ export const priceCart = async (args: {
   /** ISO-2 from the shipping address. */
   countryCode: string
   req: PayloadRequest
+  /**
+   * Qatar only — the courier's zone, already checked by `readCheckoutDetails`
+   * (on QBAS's list; its city is the one on the cart). A zone she priced on
+   * its own is charged at that price.
+   */
+  zoneId?: null | number
 }): Promise<CartPricingResult> => {
   const lines = await linesFromCart(args.cart, args.req)
 
   const destination = {
     cityKey: args.cart.shippingCityKey,
     countryCode: args.countryCode,
+    zoneId: args.zoneId ?? null,
   }
 
   let discount: null | ValidatedDiscount = null

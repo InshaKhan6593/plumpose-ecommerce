@@ -21,8 +21,9 @@ import {
 } from '@/delivery/qbas/protocol'
 import { courierAlert } from '@/email/courierAlert'
 import { toOrderView } from '@/email/orderEmails'
-import { deliveryFor } from '@/lib/pricing/shipping'
+import { deliveryFor, rateCard } from '@/lib/pricing/shipping'
 import { readCheckoutDetails } from '@/payments/checkout'
+import { loadPricingContext } from '@/payments/priceCart'
 import { orderTotalsFromSnapshot } from '@/payments/finaliseOrder'
 
 /**
@@ -97,6 +98,64 @@ describe('each zone’s city — which sets the fee', () => {
     }
     expect(readCheckoutDetails(tampered).cityKey).toBe('al-khor')
     expect(readCheckoutDetails({ ...tampered, shippingZoneId: null }).cityKey).toBe('doha')
+  })
+})
+
+const SHAGRA = 570530 // Zone 94 · Shagra, Al Wakrah
+const AL_WAKRAH_TOWN = 570528 // Zone 90 · Al Wakrah
+const toMinorFee = (qar: number) => Math.round(qar * 100)
+
+describe('a zone priced on its own (Qatar delivery → a city → zones)', () => {
+  const tables = {
+    cities: [
+      { active: true, feeQar: 20, key: 'doha', name: 'Doha' },
+      {
+        active: true,
+        feeQar: 20,
+        key: 'al-wakrah',
+        name: 'Al Wakrah',
+        zoneFees: [{ feeQar: 50, zone: SHAGRA }],
+      },
+    ],
+    countries: [{ blockedReason: null, code: 'QA', name: 'Qatar', zoneKey: 'qatar' }],
+    zones: [],
+  } as never
+  const quote = (cityKey: string, zoneId?: number) =>
+    deliveryFor({ cityKey, countryCode: 'QA', zoneId }, tables, {})
+
+  it('charges the zone its own price, and says where', () => {
+    expect(quote('al-wakrah', SHAGRA)).toMatchObject({
+      ok: true,
+      quote: { cityName: 'Al Wakrah', feeQar: 5000, label: 'Delivery to Shagra, Al Wakrah' },
+    })
+  })
+
+  it('charges every other zone of the city the city’s price', () => {
+    expect(quote('al-wakrah', AL_WAKRAH_TOWN)).toMatchObject({
+      quote: { feeQar: 2000, label: 'Delivery to Al Wakrah' },
+    })
+    expect(quote('al-wakrah')).toMatchObject({ quote: { feeQar: 2000 } })
+  })
+
+  it('never lends the price to another city', () => {
+    expect(quote('doha', SHAGRA)).toMatchObject({ quote: { feeQar: 2000 } })
+  })
+
+  it('the zone decides the city, so the price cannot be undercut from the browser', () => {
+    const details = readCheckoutDetails({
+      shippingAddress: { country: 'QA' },
+      shippingCityKey: 'doha',
+      shippingZoneId: SHAGRA,
+    })
+    expect(details.cityKey).toBe('al-wakrah')
+    expect(quote(details.cityKey!, details.zoneId!)).toMatchObject({ quote: { feeQar: 5000 } })
+  })
+
+  it('shows the zone on the rate card beside its city', () => {
+    const card = rateCard(tables, {})
+    const wakrah = card.qatarCities.find((c) => c.key === 'al-wakrah')!
+    expect(wakrah.feeQar).toBe(2000)
+    expect(wakrah.zoneFees).toEqual([{ feeQar: 5000, zone: qbasZone(SHAGRA) }])
   })
 })
 
@@ -520,5 +579,65 @@ describe('against the database', () => {
     expect(asked.some((u) => u.includes('QBSCRON1'))).toBe(true)
     expect(asked.some((u) => u.includes('QBSCRON2'))).toBe(false)
     expect((await reload(open.id)).courier?.status).toBe('SCANNED_BY_DRIVER_AND_IN_CAR')
+  })
+  it('a zone she prices under a city is checked in the admin and read back for payment', async () => {
+    const found = await payload.find({
+      collection: 'shippingCities',
+      limit: 1,
+      overrideAccess: true,
+      where: { key: { equals: 'al-wakrah' } },
+    })
+    const city =
+      found.docs[0] ??
+      (await payload.create({
+        collection: 'shippingCities',
+        data: { feeQar: 20, name: 'Al Wakrah' },
+        overrideAccess: true,
+      }))
+    const before = city.zoneFees ?? []
+    const setZones = (zoneFees: Array<{ feeQar: number; zone: number }>) =>
+      payload.update({
+        collection: 'shippingCities',
+        data: { zoneFees },
+        id: city.id,
+        overrideAccess: true,
+      })
+
+    try {
+      // Another city's zone, a zone not on QBAS's list, the same zone twice: refused.
+      await expect(setZones([{ feeQar: 50, zone: AL_SAAD }])).rejects.toThrow(/Zone/)
+      await expect(setZones([{ feeQar: 50, zone: 12345 }])).rejects.toThrow(/Zone/)
+      await expect(
+        setZones([
+          { feeQar: 50, zone: SHAGRA },
+          { feeQar: 60, zone: SHAGRA },
+        ]),
+      ).rejects.toThrow(/Zone/)
+
+      await setZones([{ feeQar: 50, zone: SHAGRA }])
+
+      const req = await createLocalReq({}, payload)
+      const context = await loadPricingContext(req)
+      // A database without the seed has no countries; Qatar is all this needs.
+      if (!context.shipping.countries.some((c) => c.code === 'QA'))
+        context.shipping.countries.push({ code: 'QA', name: 'Qatar', zoneKey: 'qatar' } as never)
+      // Read back from the database exactly as payment reads it (loadPricingContext).
+      const at = (zoneId: null | number) =>
+        deliveryFor(
+          { cityKey: 'al-wakrah', countryCode: 'QA', zoneId },
+          context.shipping,
+          context.settings,
+        )
+
+      expect(at(SHAGRA)).toMatchObject({ ok: true, quote: { feeQar: 5000 } })
+      expect(at(AL_WAKRAH_TOWN)).toMatchObject({
+        ok: true,
+        quote: { feeQar: toMinorFee(city.feeQar) },
+      })
+      expect(at(null)).toMatchObject({ ok: true, quote: { feeQar: toMinorFee(city.feeQar) } })
+    } finally {
+      if (found.docs[0]) await setZones(before.map(({ feeQar, zone }) => ({ feeQar, zone })))
+      else await payload.delete({ collection: 'shippingCities', id: city.id, overrideAccess: true })
+    }
   })
 })

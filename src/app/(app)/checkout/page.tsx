@@ -52,7 +52,7 @@ export default async function Checkout({
       depth: 0,
       limit: 100,
       pagination: false,
-      select: { feeQar: true, key: true, name: true },
+      select: { feeQar: true, key: true, name: true, zoneFees: true },
       sort: '_order',
       where: { active: { not_equals: false } },
     }),
@@ -95,7 +95,16 @@ export default async function Checkout({
 
   const cityList: CheckoutCity[] = cities.docs
     .filter((c) => c.key)
-    .map((c) => ({ feeQar: c.feeQar, key: c.key as string, name: c.name }))
+    .map((c) => ({
+      feeQar: c.feeQar,
+      key: c.key as string,
+      name: c.name,
+      zoneFees: Object.fromEntries(
+        (c.zoneFees ?? [])
+          .filter((row) => typeof row.zone === 'number' && typeof row.feeQar === 'number')
+          .map((row) => [String(row.zone), row.feeQar]),
+      ),
+    }))
 
   // The saved address, in the form's shape. In Qatar the city is matched to its delivery key by name.
   const latest = addresses?.docs[0]

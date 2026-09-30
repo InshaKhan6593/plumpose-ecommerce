@@ -1,5 +1,7 @@
 import type { Country, ShippingCity, ShippingZone, SiteSetting } from '@/payload-types'
 
+import { qbasZone } from '@/data/qbasZones'
+
 import { type Minor, toMinor } from './money'
 
 /**
@@ -34,6 +36,12 @@ export type Destination = {
   countryCode: string
   /** Qatar only: which city was chosen. Ignored elsewhere. */
   cityKey?: null | string
+  /**
+   * Qatar only: the courier's zone (a QBAS id, @/data/qbasZones). A zone she
+   * has priced on its own under the city (Qatar delivery → "Zones with a
+   * different price") pays that price; any other zone pays the city's.
+   */
+  zoneId?: null | number
 }
 
 export type DeliveryQuote = {
@@ -62,6 +70,16 @@ export type ShippingTables = {
 }
 
 const contactLine = 'Please email info@plumpose.com and we will do what we can.'
+
+/** The price she set for one zone of a city, if she set one. Major units, as stored. */
+export const zoneFeeFor = (
+  city: Pick<ShippingCity, 'zoneFees'>,
+  zoneId: null | number | undefined,
+): null | number => {
+  if (!zoneId) return null
+  const row = (city.zoneFees ?? []).find((r) => Number(r.zone) === zoneId)
+  return row && typeof row.feeQar === 'number' ? row.feeQar : null
+}
 
 /** True when no zone abroad is switched on: the shop delivers within Qatar only. */
 export const qatarOnly = (zones: Pick<ShippingZone, 'active'>[]): boolean =>
@@ -140,12 +158,18 @@ export const deliveryFor = (
       }
     }
 
+    // Only a zone of this city: its own price is never reached through another city.
+    const zoneFee = zoneFeeFor(city, destination.zoneId)
+    const zone = zoneFee === null ? undefined : qbasZone(destination.zoneId)
+
     return {
       ok: true,
       quote: {
         cityName: city.name,
-        feeQar: toMinor(city.feeQar),
-        label: `Delivery to ${city.name}`,
+        feeQar: toMinor(zone ? zoneFee : city.feeQar),
+        label: zone
+          ? `Delivery to ${zone.name || `zone ${zone.zone}`}, ${city.name}`
+          : `Delivery to ${city.name}`,
         zoneKey: QATAR_ZONE_KEY,
       },
     }
@@ -227,7 +251,18 @@ export const rateCard = (tables: ShippingTables, settings: Partial<SiteSetting>)
       : null,
     qatarCities: tables.cities
       .filter((c) => c.active !== false)
-      .map((c) => ({ name: c.name, feeQar: toMinor(c.feeQar), key: c.key })),
+      .map((c) => ({
+        name: c.name,
+        feeQar: toMinor(c.feeQar),
+        key: c.key,
+        /** The zones she priced on their own — shown beside the city, never hidden. */
+        zoneFees: (c.zoneFees ?? []).flatMap((row) => {
+          const zone = qbasZone(row.zone)
+          return zone && typeof row.feeQar === 'number'
+            ? [{ feeQar: toMinor(row.feeQar), zone }]
+            : []
+        }),
+      })),
     zones: tables.zones
       .filter((z) => z.active !== false)
       .map((z) => ({

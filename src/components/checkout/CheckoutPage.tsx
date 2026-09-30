@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 
-import { formatQar } from '@/lib/pricing/money'
+import { formatQar, toMinor } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
 import { CountryCombobox } from '@/components/forms/CountryCombobox'
 import { cityKeyForZone, QBAS_ZONES, zoneLabel } from '@/data/qbasZones'
@@ -37,7 +37,13 @@ export type CheckoutCountry = {
   /** Its delivery zone is switched off (Shipping zones → Active): the whole message to show. */
   unavailable?: null | string
 }
-export type CheckoutCity = { feeQar: number; key: string; name: string }
+export type CheckoutCity = {
+  feeQar: number
+  key: string
+  name: string
+  /** Zones she priced on their own (QBAS id → fee in riyals); the rest pay `feeQar`. */
+  zoneFees?: Record<string, number>
+}
 /** A signed-in customer's most recent saved address, already in the form's shape. */
 export type CheckoutSavedAddress = Partial<
   Pick<
@@ -250,7 +256,16 @@ export function CheckoutPage({
   const inQatar = form.country === QATAR
   const blocked = country?.blockedReason ?? country?.unavailable ?? null
   // Only the chosen city's zones; a city of hers with none on QBAS's list asks for none.
-  const zoneOptions = inQatar && form.cityKey ? (ZONES_BY_CITY[form.cityKey] ?? []) : []
+  // A zone priced on its own says so in the list ("— QAR 50"); the total comes from /api/quote.
+  const cityZoneFees = cities.find((c) => c.key === form.cityKey)?.zoneFees
+  const zoneOptions =
+    inQatar && form.cityKey
+      ? (ZONES_BY_CITY[form.cityKey] ?? []).map((z) =>
+          cityZoneFees?.[z.code] === undefined
+            ? z
+            : { ...z, note: `— ${formatQar(toMinor(cityZoneFees[z.code]))}` },
+        )
+      : []
   const email = user?.email ?? form.email.trim()
   const emailValid = EMAIL.test(email)
 

@@ -2027,6 +2027,19 @@ export interface ShippingCity {
    */
   feeQar: number;
   /**
+   * Only for zones that should cost something different from the fee above — every other zone in this city pays that fee. Add or remove one at any time.
+   */
+  zoneFees?:
+    | {
+        zone: number;
+        /**
+         * In riyals: type 50 for QAR 50.
+         */
+        feeQar: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Untick to stop delivering here: it leaves the checkout list and the Shipping page.
    */
   active?: boolean | null;
@@ -2809,6 +2822,13 @@ export interface ShippingCitiesSelect<T extends boolean = true> {
   name?: T;
   key?: T;
   feeQar?: T;
+  zoneFees?:
+    | T
+    | {
+        zone?: T;
+        feeQar?: T;
+        id?: T;
+      };
   active?: T;
   updatedAt?: T;
   createdAt?: T;

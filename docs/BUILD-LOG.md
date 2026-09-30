@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 1 Oct 2026 — QBAS, the Qatar courier, and delivery within Qatar only (§69)
+**Last updated:** 1 Oct 2026 — a price of its own for any Qatar zone (§70)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,7 +16,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **320 of 321 passing** (1 Oct, §69) — the one failure is SkipCash's sandbox, switched off on their side |
+| Integration tests | **331 in the suite** (1 Oct, §70): 6 new for zone prices; `qbas` and `pricing` 67 of 67. The full run's 11 failures are the environment — see §70 |
 | End-to-end tests | **62 passing** (28 Sep, §58); they pay on the sandbox, so cannot run until SkipCash turns it back on |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
@@ -3913,3 +3913,52 @@ password — and if she changes her QBAS password, bookings stop until
 (QBAS prices per kg; we send 1 kg, 1 box), and whether checkout should take a
 second phone and delivery instructions. Saved addresses do not carry
 a zone yet: a returning customer picks it again at checkout.
+
+## 70. A price of its own for any Qatar zone — 1 Oct 2026
+
+Her question: QBAS's zone list carries no prices (the spreadsheet is ids,
+names and QBAS regions; the API reports QBAS's `cost` only after a booking —
+§69), so how can the site follow what QBAS charges her? Decided with the
+developer: **she keeps pricing by city, and can give any zone a price of its
+own** — the far places (Shagra 94, Al Kharrara 95, Khawr Al Udayd 98 in Al
+Wakrah; Mebaireek 81, Al Karaana 83, Abu Samra 96, Sawda Natheel 97 in Al
+Rayyan) take the city's QAR 20 until she does. Customers keep paying her
+prices, never QBAS's.
+
+**Admin.** Qatar delivery → a city → **Zones with a different price**: a zone
+(only that city's QBAS zones are listed, "Zone 94 · Shagra";
+`components/admin/CityZoneField.tsx`) and a fee in riyals. The row reads
+"Zone 94 · Shagra — QAR 50". The server refuses a zone of another city, one
+not on QBAS's list, and the same zone twice. She can add or remove zones at
+any time; an empty list changes nothing.
+
+**Pricing.** `deliveryFor()` takes the zone (`Destination.zoneId`) and charges
+its own price when her city lists it (`zoneFeeFor`), labelled "Delivery to
+Shagra, Al Wakrah"; otherwise the city's. Only the zone's own city can give
+its price, and the server still takes the city from the zone. The zone id
+reaches the engine from `/api/quote` and, at payment, `priceCart({ zoneId })`
+from `readCheckoutDetails` — not from the cart (the adapter's cart is
+trimmed, §32), so no cart column. Checkout's zone list shows "— QAR 50" beside
+such a zone; Shipping & returns lists them under the city table ("These
+areas have a price of their own"); `deliveryRange` counts them, so "from QAR
+20 to …" cannot hide a dearer zone.
+
+**Data.** Migration `20260930_222330_shipping_zone_fees`: one table,
+`shipping_cities_zone_fees` (zone, fee). Up, down, up on a fresh database.
+**Not yet run on Neon** — run it (through `DATABASE_URL_DIRECT`) before
+deploying this code.
+
+Checked: `tsc` 0; lint 0 errors; `qbas.int.spec.ts` 33 (6 new: the zone's
+price, the city's for other zones, never through another city, the browser
+cannot undercut it, the rate card, the admin's refusals and the price read
+back from the database) and `pricing.int.spec.ts` 34, all passing. In the
+browser on a local database: the city screen, its zone list (Al Wakrah's six
+zones only), a zone added and saved from the admin, both shown on Shipping &
+returns. The full `pnpm test:int` in this environment: 320 of 331; the 11
+failures (`pricing-live`, `admin-simplified`, `reviews`, `sale-price`, the
+sandbox spec) fail identically without this change — no seed photos, no
+product, dummy SkipCash keys.
+
+Tutorial 05 "Delivery prices" does not show the new list; re-record it or add
+a short one when she starts using it.
+

@@ -185,6 +185,7 @@ export const quoteEndpoint: Endpoint = {
     const destination = {
       cityKey: zone ? cityKeyForZone(zone) : asText(body.city, 40),
       countryCode,
+      zoneId: zone?.id ?? null,
     }
     /*
      * The same destination as the priced order, city included: without the

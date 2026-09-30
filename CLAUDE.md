@@ -24,7 +24,7 @@ it is more detailed than this file and it is where findings get written down.
 | Field                                                            | Stored   | Means                   |
 | ---------------------------------------------------------------- | -------- | ----------------------- |
 | `products.priceInQAR`, `variants.priceInQAR`, `orders.amount`    | `139900` | QAR 1399.00 — **minor** |
-| `shippingCities.feeQar`, `shippingZones.feeQar`                  | `20`     | QAR 20 — **major**      |
+| `shippingCities.feeQar` (+ `.zoneFees[].feeQar`), `shippingZones.feeQar` | `20` | QAR 20 — **major** |
 | `siteSettings.personalisationFeeQar`, `freeShippingThresholdQar` | `160`    | QAR 160 — **major**     |
 | `discountCodes.value`, `minSpendQar`                             | `100`    | QAR 100 — **major**     |
 
@@ -132,7 +132,10 @@ email + password** (`QBAS_*` env, Vercel only in production) — there is no
 test system: a booking from any environment is a real pickup. Zones:
 `src/data/qbasZones.ts` (QBAS city ids). Checkout: city first, then only that
 city's zones; **in Qatar the zone decides the fee's city on the server**
-(`cityKeyForZone`) — a city from the browser cannot undercut it.
+(`cityKeyForZone`) — a city from the browser cannot undercut it. A zone she
+lists under its city (Qatar delivery → "Zones with a different price") pays
+that price instead of the city's (`zoneFeeFor`, BUILD-LOG §70); the zone id
+travels quote → `readCheckoutDetails` → `priceCart({ zoneId })`.
 
 **Checkout** — `/checkout` (`components/checkout/CheckoutPage.tsx`): contact,
 delivery (blocked countries say why; Qatar city picker), gift note, discount
@@ -498,3 +501,13 @@ From Git Bash, prefix commands taking a leading-slash argument with
   address" not "Slug", "Sizes & stock" not "Variants". Keep it that way.
 - The client is not technical. Anything she can break by mistake should either
   be guarded or not be in front of her.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

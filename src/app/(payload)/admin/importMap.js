@@ -21,6 +21,8 @@ import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c08
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { SwatchCell as SwatchCell_1da33bf475e4da58fbd8f748f1d42521 } from '@/components/admin/SwatchCell'
+import { CityZoneField as CityZoneField_8d40250de96b9206208bef670d178c53 } from '@/components/admin/CityZoneField'
+import { CityZoneRowLabel as CityZoneRowLabel_347b72aa3aa07cef5b0b36da15d1c428 } from '@/components/admin/CityZoneRowLabel'
 import { RefreshRatesButton as RefreshRatesButton_b0110b7a86a36f77fd1abe2690fbf9fe } from '@/components/admin/RefreshRatesButton'
 import { MarkEnquiryRead as MarkEnquiryRead_459c947d99afee5f4b3eb20a211bce82 } from '@/components/admin/MarkEnquiryRead'
 import { VariantOptionsSelector as VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
@@ -67,6 +69,8 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@/components/admin/SwatchCell#SwatchCell": SwatchCell_1da33bf475e4da58fbd8f748f1d42521,
+  "@/components/admin/CityZoneField#CityZoneField": CityZoneField_8d40250de96b9206208bef670d178c53,
+  "@/components/admin/CityZoneRowLabel#CityZoneRowLabel": CityZoneRowLabel_347b72aa3aa07cef5b0b36da15d1c428,
   "@/components/admin/RefreshRatesButton#RefreshRatesButton": RefreshRatesButton_b0110b7a86a36f77fd1abe2690fbf9fe,
   "@/components/admin/MarkEnquiryRead#MarkEnquiryRead": MarkEnquiryRead_459c947d99afee5f4b3eb20a211bce82,
   "@payloadcms/plugin-ecommerce/rsc#VariantOptionsSelector": VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb,

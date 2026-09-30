@@ -39,7 +39,13 @@ export const deliveryRange = async (
     }),
   ])
 
-  const qatar = cities.docs.map((city) => toMinor(city.feeQar))
+  // A zone priced on its own counts too: "from QAR 20" must not hide a dearer far zone.
+  const qatar = cities.docs.flatMap((city) => [
+    toMinor(city.feeQar),
+    ...(city.zoneFees ?? []).flatMap((row) =>
+      typeof row.feeQar === 'number' ? [toMinor(row.feeQar)] : [],
+    ),
+  ])
   const surcharge = settings.intlSurchargePct ?? 0
   const intl = zones.docs.map((zone) => Math.round(toMinor(zone.feeQar) * (1 + surcharge / 100)))
 
