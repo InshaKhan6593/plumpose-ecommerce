@@ -13,6 +13,7 @@ import {
   type ValidatedDiscount,
 } from '@/lib/pricing/priceOrder'
 import { stockSummary } from '@/lib/pricing/stock'
+import { cityKeyForZone, qbasZone } from '@/data/qbasZones'
 
 /**
  * `POST /api/quote` — price a bag (P6, P8).
@@ -48,6 +49,8 @@ type QuoteRequest = {
   discountCode?: unknown
   email?: unknown
   items?: unknown
+  /** Qatar: the courier's zone (@/data/qbasZones). When given, it decides the city. */
+  zone?: unknown
 }
 
 const json = (body: unknown, status = 200): Response =>
@@ -176,7 +179,13 @@ export const quoteEndpoint: Endpoint = {
      * price once without it to get that figure, then price again with it.
      * Cheap — the engine is pure and touches no database.
      */
-    const destination = { cityKey: asText(body.city, 40), countryCode: asText(body.country, 2) }
+    const countryCode = asText(body.country, 2)
+    // In Qatar the zone decides the city, and so the fee (@/data/qbasZones), whatever city was sent.
+    const zone = countryCode.toUpperCase() === 'QA' ? qbasZone(body.zone) : undefined
+    const destination = {
+      cityKey: zone ? cityKeyForZone(zone) : asText(body.city, 40),
+      countryCode,
+    }
     /*
      * The same destination as the priced order, city included: without the
      * city a Qatar order does not price, the goods total came out 0, and every

@@ -11,7 +11,7 @@ import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 import { formatQar } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
 import { CountryCombobox } from '@/components/forms/CountryCombobox'
-import { QBAS_ZONES, zoneLabel } from '@/data/qbasZones'
+import { cityKeyForZone, QBAS_ZONES, zoneLabel } from '@/data/qbasZones'
 import { WHEEL_CODE_KEY } from '@/components/spin/RewardWheel'
 import { useLenis } from '@/motion/MotionProvider'
 import { useLocale, useMoney } from '@/providers/Locale'
@@ -129,8 +129,15 @@ const EMPTY: Form = {
   zoneId: '',
 }
 
-/** Every Qatar zone, as the zone field lists them: "Zone 38 · Al Saad". */
-const ZONE_OPTIONS = QBAS_ZONES.map((z) => ({ code: String(z.id), name: zoneLabel(z) }))
+/** Each city's zones, as the zone field lists them once the city is chosen: "Zone 38 · Al Saad". */
+const ZONES_BY_CITY = QBAS_ZONES.reduce<Record<string, Array<{ code: string; name: string }>>>(
+  (all, z) => {
+    const city = cityKeyForZone(z)
+    ;(all[city] ??= []).push({ code: String(z.id), name: zoneLabel(z) })
+    return all
+  },
+  {},
+)
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
@@ -242,6 +249,8 @@ export function CheckoutPage({
   const country = countries.find((c) => c.code === form.country)
   const inQatar = form.country === QATAR
   const blocked = country?.blockedReason ?? country?.unavailable ?? null
+  // Only the chosen city's zones; a city of hers with none on QBAS's list asks for none.
+  const zoneOptions = inQatar && form.cityKey ? (ZONES_BY_CITY[form.cityKey] ?? []) : []
   const email = user?.email ?? form.email.trim()
   const emailValid = EMAIL.test(email)
 
@@ -269,7 +278,11 @@ export function CheckoutPage({
       fetch('/api/quote', {
         body: JSON.stringify({
           ...(destinationReady
-            ? { city: inQatar ? form.cityKey : undefined, country: form.country }
+            ? {
+                city: inQatar ? form.cityKey : undefined,
+                country: form.country,
+                zone: inQatar && form.zoneId ? Number(form.zoneId) : undefined,
+              }
             : {}),
           discountCode: appliedCode || undefined,
           email: emailValid ? email : undefined,
@@ -307,7 +320,15 @@ export function CheckoutPage({
       controller.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsKey, destinationReady, form.country, form.cityKey, appliedCode, emailValid ? email : ''])
+  }, [
+    itemsKey,
+    destinationReady,
+    form.country,
+    form.cityKey,
+    form.zoneId,
+    appliedCode,
+    emailValid ? email : '',
+  ])
 
   const quote = quoteState.status === 'ok' ? quoteState.quote : null
   const lineQuotes = quote && quote.lines.length === items.length ? quote.lines : null
@@ -325,7 +346,7 @@ export function CheckoutPage({
       next.phone = 'Enter a phone number the courier can call.'
     if (!form.country) next.country = 'Choose where this is going.'
     if (inQatar && !form.cityKey) next.cityKey = 'Choose your city.'
-    if (inQatar && !form.zoneId)
+    if (inQatar && form.cityKey && zoneOptions.length && !form.zoneId)
       next.zoneId = 'Choose your zone — the number on your building’s blue plate.'
     if (!inQatar && !form.city.trim()) next.city = 'Enter your city.'
     if (!form.addressLine1.trim()) next.addressLine1 = 'Enter the street and building.'
@@ -455,10 +476,10 @@ export function CheckoutPage({
       {!ordersOpen
         ? 'Orders open soon'
         : submitting
-        ? 'Opening secure payment…'
-        : total && withTotal
-          ? `Pay ${total}`
-          : 'Pay securely'}
+          ? 'Opening secure payment…'
+          : total && withTotal
+            ? `Pay ${total}`
+            : 'Pay securely'}
     </button>
   )
 
@@ -487,8 +508,8 @@ export function CheckoutPage({
           role="status"
         >
           <span className="text-ink">Orders open soon.</span> We are putting the final touches to
-          checkout. Leave your email at the foot of the page and we will tell you the moment
-          they open — your bag will keep until then.
+          checkout. Leave your email at the foot of the page and we will tell you the moment they
+          open — your bag will keep until then.
         </p>
       ) : !paymentsReady ? (
         <p
@@ -610,19 +631,31 @@ export function CheckoutPage({
                     id="cityKey"
                     name="cityKey"
                     noMatch="No city matches"
-                    onChange={(key) => set('cityKey', key)}
+                    onChange={(key) => {
+                      set('cityKey', key)
+                      // A zone from another city goes; a city with one zone takes it.
+                      const own = ZONES_BY_CITY[key] ?? []
+                      set(
+                        'zoneId',
+                        own.length === 1
+                          ? own[0].code
+                          : own.some((z) => z.code === form.zoneId)
+                            ? form.zoneId
+                            : '',
+                      )
+                    }}
                     placeholder="Choose your city"
                     value={form.cityKey}
                   />
                 </Field>
               ) : null}
-              {inQatar ? (
+              {inQatar && zoneOptions.length ? (
                 <Field className="col-span-2" error={errors.zoneId} id="zoneId" label="Zone">
                   <CountryCombobox
                     aria-describedby="zoneId-hint"
                     aria-invalid={Boolean(errors.zoneId)}
                     className={inputClass}
-                    countries={ZONE_OPTIONS}
+                    countries={zoneOptions}
                     id="zoneId"
                     name="zoneId"
                     noMatch="No zone matches"
@@ -631,8 +664,8 @@ export function CheckoutPage({
                     value={form.zoneId}
                   />
                   <p className="mt-2 text-xs text-ink-soft" id="zoneId-hint">
-                    The zone number on your building’s blue plate — it tells the courier where
-                    to go.
+                    The zone number on your building’s blue plate — it tells the courier where to
+                    go.
                   </p>
                 </Field>
               ) : null}
@@ -1018,7 +1051,6 @@ function Field({
     </div>
   )
 }
-
 
 function Row({ label, muted, value }: { label: string; muted?: boolean; value: string }) {
   return (

@@ -2,7 +2,7 @@ import type { Payload, TypedUser } from 'payload'
 
 import { createLocalReq } from 'payload'
 
-import { qbasZone } from '@/data/qbasZones'
+import { cityKeyForZone, qbasZone } from '@/data/qbasZones'
 
 /**
  * The parts of a checkout that do not depend on the gateway.
@@ -67,6 +67,7 @@ export const readCheckoutDetails = (data: unknown): CheckoutDetails => {
 
   const gift = body.gift === true
   const country = text(address.country, 2).toUpperCase()
+  const zone = country === 'QA' ? qbasZone(body.shippingZoneId) : undefined
 
   return {
     address: {
@@ -79,11 +80,12 @@ export const readCheckoutDetails = (data: unknown): CheckoutDetails => {
       phone: text(address.phone, 30),
       postalCode: text(address.postalCode, 20),
     },
-    cityKey: text(body.shippingCityKey, 60) || null,
+    // In Qatar the zone decides the city, so the fee charged is the zone's (@/data/qbasZones).
+    cityKey: (zone && cityKeyForZone(zone)) || text(body.shippingCityKey, 60) || null,
     discountCode: text(body.discountCode, 40).toUpperCase() || null,
     gift,
     giftNote: gift ? text(body.giftNote, GIFT_NOTE_MAX) : '',
-    zoneId: country === 'QA' ? (qbasZone(body.shippingZoneId)?.id ?? null) : null,
+    zoneId: zone?.id ?? null,
   }
 }
 

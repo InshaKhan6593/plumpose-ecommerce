@@ -191,3 +191,40 @@ export const qbasZone = (id: unknown): QbasZone | undefined => {
 /** "Zone 38 · Al Saad" — how a customer finds theirs: by the number on the plate. */
 export const zoneLabel = (zone: Pick<QbasZone, 'name' | 'zone'>): string =>
   zone.name ? `Zone ${zone.zone} · ${zone.name}` : `Zone ${zone.zone}`
+
+/* ------------------------------------------------------ zone → her city -- */
+
+/**
+ * Which of her delivery cities (Shop settings → Qatar delivery) a zone is in.
+ * Checkout lists only the chosen city's zones, and the server takes the fee's
+ * city from the zone, so the price and the courier's area cannot disagree. By QBAS's
+ * own area (ALRAYAN B → Al Rayyan …), which follows Qatar's municipalities, as
+ * her city table does; the places she prices on their own are named by zone.
+ *
+ * Far corners take their municipality's fee, as her table has always meant:
+ * Mebaireek, Al Karaana, Abu Samra, Sawda Natheel (Al Rayyan, QAR 20) and
+ * Al Kharrara, Shagra, Khawr Al Udayd (Al Wakrah, QAR 20). Hers to confirm.
+ */
+const AREA_CITY: Array<[prefix: string, cityKey: string]> = [
+  ['DOHA', 'doha'],
+  ['المعمورة', 'doha'], // Al Maamoura 43: QBAS labels this area in Arabic
+  ['ALRAYAN', 'al-rayyan'],
+  ['ALWAKRA', 'al-wakrah'],
+  ['UMSALAL', 'umm-salal'],
+  ['ALDAAYAN', 'al-daayen'],
+  ['ALKHOR', 'al-khor'],
+  ['ALSHAMAL', 'al-shamal'],
+  ['ALSHIHANIA', 'al-shahaniya'],
+]
+
+const ZONE_CITY: Record<number, string> = {
+  570463: 'ras-laffan', // Ras Laffan 75
+  570526: 'dukhan', // Dukhan 86
+  570610: 'mesaieed', // Mesaieed 92
+  570611: 'mesaieed', // Mesaieed Industrial Area 93
+}
+
+export const cityKeyForZone = (zone: Pick<QbasZone, 'area' | 'id'>): string =>
+  ZONE_CITY[zone.id] ??
+  AREA_CITY.find(([prefix]) => zone.area.replace(/\s+/g, '').startsWith(prefix))?.[1] ??
+  ''

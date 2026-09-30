@@ -5,7 +5,7 @@ import { createLocalReq, getPayload } from 'payload'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import config from '@/payload.config'
-import { QBAS_ZONES, qbasZone, zoneLabel } from '@/data/qbasZones'
+import { cityKeyForZone, QBAS_ZONES, qbasZone, zoneLabel } from '@/data/qbasZones'
 import { applyCourierStatus } from '@/delivery/qbas/apply'
 import { qbasConfig, qbasMissing } from '@/delivery/qbas/config'
 import {
@@ -64,6 +64,39 @@ describe('the zone list', () => {
     expect(zoneLabel(qbasZone(AL_SAAD)!)).toBe('Zone 38 · Al Saad')
     expect(zoneLabel(qbasZone(570581)!)).toBe('Zone 50')
     expect(qbasZone(570528)).toMatchObject({ name: 'Al Wakrah', zone: 90 })
+  })
+})
+
+describe('each zone’s city — which sets the fee', () => {
+  const CITIES = [
+    'al-daayen', 'al-khor', 'al-rayyan', 'al-shahaniya', 'al-shamal', 'al-wakrah',
+    'doha', 'dukhan', 'mesaieed', 'ras-laffan', 'umm-salal',
+  ]
+
+  it('puts every zone in one of her eleven cities', () => {
+    for (const zone of QBAS_ZONES) expect(CITIES).toContain(cityKeyForZone(zone))
+    expect(new Set(QBAS_ZONES.map(cityKeyForZone)).size).toBe(11)
+  })
+
+  it('gives the places she prices on their own their own city', () => {
+    const city = (id: number) => cityKeyForZone(qbasZone(id)!)
+    expect(city(570610)).toBe('mesaieed') // Mesaieed 92
+    expect(city(570463)).toBe('ras-laffan') // Ras Laffan 75
+    expect(city(570526)).toBe('dukhan') // Dukhan 86
+    expect(city(570462)).toBe('al-khor') // Al Thakhira 75 — "Al Khor & Al Dhakhira"
+    expect(city(570451)).toBe('al-daayen') // Lusail 69
+    expect(city(927138)).toBe('doha') // Al Maamoura 43, an Arabic-named area
+    expect(city(AL_SAAD)).toBe('doha')
+  })
+
+  it('decides the city at payment, whatever city the browser sent', () => {
+    const tampered = {
+      shippingAddress: { country: 'QA' },
+      shippingCityKey: 'doha',
+      shippingZoneId: 570461, // Al Khor City 74 — QAR 50, not Doha's 20
+    }
+    expect(readCheckoutDetails(tampered).cityKey).toBe('al-khor')
+    expect(readCheckoutDetails({ ...tampered, shippingZoneId: null }).cityKey).toBe('doha')
   })
 })
 

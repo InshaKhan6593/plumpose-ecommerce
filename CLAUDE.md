@@ -130,7 +130,9 @@ existing email; delivered → Delivered) and never reopens a closed order. The
 customer reads the updates on `/order/[id]`. The API signs in with **her QBAS
 email + password** (`QBAS_*` env, Vercel only in production) — there is no
 test system: a booking from any environment is a real pickup. Zones:
-`src/data/qbasZones.ts` (QBAS city ids; checkout asks for one in Qatar).
+`src/data/qbasZones.ts` (QBAS city ids). Checkout: city first, then only that
+city's zones; **in Qatar the zone decides the fee's city on the server**
+(`cityKeyForZone`) — a city from the browser cannot undercut it.
 
 **Checkout** — `/checkout` (`components/checkout/CheckoutPage.tsx`): contact,
 delivery (blocked countries say why; Qatar city picker), gift note, discount

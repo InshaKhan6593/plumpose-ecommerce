@@ -3886,6 +3886,24 @@ webhook, once QBAS enters it, makes updates immediate. Also found: pushing
 `main` does **not** deploy — every production deploy so far was `vercel deploy
 --prod` from this folder (`.vercelignore` keeps `.env` and her media out).
 
+**City first, then that city's zones (1 Oct, the developer's call).** City
+and zone were independent, so "Doha" (QAR 20) with an Al Khor zone (QAR 50)
+could be paid for. Now each zone belongs to one of her eleven cities
+(`cityKeyForZone`, `data/qbasZones.ts`): by QBAS's own area (DOHA A/B/C and
+Al Maamoura's Arabic-named area → Doha, ALRAYAN → Al Rayyan, ALWAKRA → Al
+Wakrah, UMSALAL, ALDAAYAN, ALKHOR, ALSHAMAL, ALSHIHANIA), with Mesaieed 92/93,
+Ras Laffan 75 and Dukhan 86 named — the places she prices on their own; Al
+Thakhira falls in "Al Khor & Al Dhakhira". Every zone maps; Doha has 66, Al
+Rayyan 41, Al Daayen 16. Checkout shows the Zone field once a city is chosen,
+listing only its zones; a city with one zone takes it at once (Ras Laffan,
+Dukhan). **The server takes the fee's city from the zone** (`/api/quote` and
+`readCheckoutDetails`), so a city sent from the browser cannot undercut it.
+For her to confirm: far corners take their municipality's fee — Mebaireek,
+Al Karaana, Abu Samra, Sawda Natheel (Al Rayyan, QAR 20); Al Kharrara,
+Shagra, Khawr Al Udayd (Al Wakrah, QAR 20). Checked in the browser: Doha → 66
+zones and no Al Khor; Ras Laffan → its zone chosen, "Delivery to Ras Laffan
+QAR 50.00". Tests 27; `pnpm test:int` 324 of 325 (the sandbox spec).
+
 **Not yet.** From QBAS: the answer above ("Picked" two minutes after booking);
 entering the webhook address — `https://plumpose.com/api/delivery/qbas/webhook?key=`
 + `QBAS_WEBHOOK_SECRET` (until then the daily check and the order page carry the updates);
