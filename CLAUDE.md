@@ -212,12 +212,13 @@ client's reference recording (`../brand-assets/reference/`):
   shipping/returns and care text arrived 28 Sep (§54). The SAMPLE projects and
   the demo catalogue are off Neon; `isPlaceholderSlug()` keeps any
   `demo-`/`sample-` record out of search (§39).
-- **QBAS — the first real booking** (BUILD-LOG §69). Built and tested with QBAS
-  pretended; never called for real. Still needed: her login and pickup details
-  as Vercel variables, the migration on Neon, QBAS entering the webhook
-  address, and from QBAS how its "API Keys" key is used and the vehicle id.
-  **Delivery abroad is switched off** (every Shipping zone unticked) — her
-  choice for now; ticking a zone brings it back.
+- **QBAS — live since 1 Oct, the last pieces** (BUILD-LOG §69). A real booking,
+  label, check and cancel worked. Open: QBAS reported "Picked" two minutes after
+  booking with no driver (asked — if automatic, "on its way" must key on a later
+  status); QBAS entering the webhook address; how their "API Keys" key is used.
+  **If she changes her QBAS password, change `QBAS_PASSWORD` on Vercel** or
+  bookings stop. **Delivery abroad is switched off** (every Shipping zone
+  unticked) — her choice for now; ticking a zone brings it back.
 - **Vercel Pro, in her name.** Hosting is **Vercel, decided 26 Sep 2026** — no
   Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
   use). Handover: she creates a Pro team, the developer joins as its one paid

@@ -3866,7 +3866,23 @@ order back to In the atelier and clears the tracking number (24 tests).
 and which status means the driver really has it? If automatic, "on its way"
 must key on a later status, or customers are emailed before collection.
 
-**Not yet.** Still from QBAS: the answer above, how the "API Keys" page's key
-is used (the document only knows email + password), and entering the webhook
-address. Saved addresses do not carry
+**Live, 1 Oct.** Migration `20260930_194111_qbas_courier` run on Neon
+(through `DATABASE_URL_DIRECT`; it was the only one pending). On Vercel,
+**Production only** — a preview link must never book a real pickup —
+`QBAS_SENDER_PHONE`, `QBAS_SENDER_ADDRESS`, `QBAS_SENDER_ZONE_ID` (570481),
+`QBAS_SERVICE_TYPE_ID` (281) and `QBAS_WEBHOOK_SECRET` (new, only on Vercel);
+`CRON_SECRET` was already there for the half-hourly check. `QBAS_EMAIL` and
+`QBAS_PASSWORD` are entered by the developer, never in chat or the repository;
+until both are there the Courier panel says QBAS is not connected. Every
+Shipping zone unticked on Neon after the deploy: the live site delivers
+within Qatar only.
+
+**Not yet.** From QBAS: the answer above ("Picked" two minutes after booking);
+entering the webhook address — `https://plumpose.com/api/delivery/qbas/webhook?key=`
++ `QBAS_WEBHOOK_SECRET` (until then the half-hourly check carries the updates);
+and how the "API Keys" page's key is used (the document only knows email +
+password — and if she changes her QBAS password, bookings stop until
+`QBAS_PASSWORD` on Vercel is changed too). From her: packed weight and boxes
+(QBAS prices per kg; we send 1 kg, 1 box), and whether checkout should take a
+second phone and delivery instructions. Saved addresses do not carry
 a zone yet: a returning customer picks it again at checkout.
