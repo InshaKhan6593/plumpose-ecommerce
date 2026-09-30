@@ -1,5 +1,6 @@
 import type { Order, Product, Variant, VariantOption } from '@/payload-types'
 
+import { qbasZone, zoneLabel } from '@/data/qbasZones'
 import { orderCode } from '@/hooks/orderReference'
 import { formatQar, type Minor } from '@/lib/pricing/money'
 
@@ -145,6 +146,8 @@ export const toOrderView = (
   })
 
   const inQatar = (address.country ?? '').toUpperCase() === 'QA'
+  // Orders since the zone field (Oct 2026) carry it on its own; the second line is then the apartment.
+  const zone = inQatar ? qbasZone(order.deliveryZone) : undefined
 
   return {
     // The two free-typed lines carry checkout's own labels, so whoever packs or
@@ -153,7 +156,11 @@ export const toOrderView = (
       customerName,
       address.company,
       labelled('Street and building', address.addressLine1),
-      labelled(inQatar ? 'Zone, apartment' : 'Apartment, area', address.addressLine2),
+      zone ? zoneLabel(zone) : '',
+      labelled(
+        zone ? 'Apartment, floor' : inQatar ? 'Zone, apartment' : 'Apartment, area',
+        address.addressLine2,
+      ),
       [address.city, address.state, address.postalCode].filter(Boolean).join(', '),
       countryName(address.country),
     ].filter((part): part is string => Boolean(part && String(part).trim())),

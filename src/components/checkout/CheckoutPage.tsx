@@ -11,6 +11,7 @@ import type { Media, Product, Variant, VariantOption } from '@/payload-types'
 import { formatQar } from '@/lib/pricing/money'
 import { useAuth } from '@/providers/Auth'
 import { CountryCombobox } from '@/components/forms/CountryCombobox'
+import { QBAS_ZONES, zoneLabel } from '@/data/qbasZones'
 import { WHEEL_CODE_KEY } from '@/components/spin/RewardWheel'
 import { useLenis } from '@/motion/MotionProvider'
 import { useLocale, useMoney } from '@/providers/Locale'
@@ -29,7 +30,13 @@ import { cn } from '@/utilities/cn'
  * from a cancelled or refused payment does not mean typing it all again.
  */
 
-export type CheckoutCountry = { blockedReason: null | string; code: string; name: string }
+export type CheckoutCountry = {
+  blockedReason: null | string
+  code: string
+  name: string
+  /** Its delivery zone is switched off (Shipping zones → Active): the whole message to show. */
+  unavailable?: null | string
+}
 export type CheckoutCity = { feeQar: number; key: string; name: string }
 /** A signed-in customer's most recent saved address, already in the form's shape. */
 export type CheckoutSavedAddress = Partial<
@@ -44,6 +51,7 @@ export type CheckoutSavedAddress = Partial<
     | 'lastName'
     | 'phone'
     | 'postalCode'
+    | 'zoneId'
   >
 >
 
@@ -94,6 +102,8 @@ type Form = {
   lastName: string
   phone: string
   postalCode: string
+  /** Qatar only: the courier's zone (QBAS city id), see @/data/qbasZones. */
+  zoneId: string
 }
 
 type FieldName = keyof Form
@@ -116,7 +126,11 @@ const EMPTY: Form = {
   lastName: '',
   phone: '',
   postalCode: '',
+  zoneId: '',
 }
+
+/** Every Qatar zone, as the zone field lists them: "Zone 38 · Al Saad". */
+const ZONE_OPTIONS = QBAS_ZONES.map((z) => ({ code: String(z.id), name: zoneLabel(z) }))
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
@@ -227,7 +241,7 @@ export function CheckoutPage({
 
   const country = countries.find((c) => c.code === form.country)
   const inQatar = form.country === QATAR
-  const blocked = country?.blockedReason ?? null
+  const blocked = country?.blockedReason ?? country?.unavailable ?? null
   const email = user?.email ?? form.email.trim()
   const emailValid = EMAIL.test(email)
 
@@ -311,6 +325,8 @@ export function CheckoutPage({
       next.phone = 'Enter a phone number the courier can call.'
     if (!form.country) next.country = 'Choose where this is going.'
     if (inQatar && !form.cityKey) next.cityKey = 'Choose your city.'
+    if (inQatar && !form.zoneId)
+      next.zoneId = 'Choose your zone — the number on your building’s blue plate.'
     if (!inQatar && !form.city.trim()) next.city = 'Enter your city.'
     if (!form.addressLine1.trim()) next.addressLine1 = 'Enter the street and building.'
     return next
@@ -368,6 +384,7 @@ export function CheckoutPage({
           giftNote: form.gift ? form.giftNote.trim() : '',
           shippingAddress: address,
           shippingCityKey: inQatar ? form.cityKey : null,
+          shippingZoneId: inQatar && form.zoneId ? Number(form.zoneId) : null,
         },
       })) as { redirectURL?: string }
 
@@ -538,13 +555,14 @@ export function CheckoutPage({
                   countries={countries.map((c) => ({
                     code: c.code,
                     name: c.name,
-                    note: c.blockedReason ? '— unavailable' : undefined,
+                    note: c.blockedReason || c.unavailable ? '— unavailable' : undefined,
                   }))}
                   id="country"
                   name="country"
                   onChange={(code) => {
                     set('country', code)
                     set('cityKey', '')
+                    set('zoneId', '')
                   }}
                   value={form.country}
                 />
@@ -554,7 +572,7 @@ export function CheckoutPage({
                     id="country-blocked"
                     role="alert"
                   >
-                    We cannot deliver to {country?.name}. {blocked}
+                    {country?.unavailable ?? `We cannot deliver to ${country?.name}. ${blocked}`}
                   </p>
                 ) : null}
               </Field>
@@ -598,6 +616,26 @@ export function CheckoutPage({
                   />
                 </Field>
               ) : null}
+              {inQatar ? (
+                <Field className="col-span-2" error={errors.zoneId} id="zoneId" label="Zone">
+                  <CountryCombobox
+                    aria-describedby="zoneId-hint"
+                    aria-invalid={Boolean(errors.zoneId)}
+                    className={inputClass}
+                    countries={ZONE_OPTIONS}
+                    id="zoneId"
+                    name="zoneId"
+                    noMatch="No zone matches"
+                    onChange={(id) => set('zoneId', id)}
+                    placeholder="Zone number or area"
+                    value={form.zoneId}
+                  />
+                  <p className="mt-2 text-xs text-ink-soft" id="zoneId-hint">
+                    The zone number on your building’s blue plate — it tells the courier where
+                    to go.
+                  </p>
+                </Field>
+              ) : null}
 
               <Field
                 className="col-span-2"
@@ -619,7 +657,7 @@ export function CheckoutPage({
               <Field
                 className="col-span-2"
                 id="addressLine2"
-                label={inQatar ? 'Zone, apartment (optional)' : 'Apartment, area (optional)'}
+                label={inQatar ? 'Apartment, floor (optional)' : 'Apartment, area (optional)'}
               >
                 <input
                   autoComplete="address-line2"

@@ -44,6 +44,8 @@ export type PricingSnapshot = {
     address: CheckoutAddress
     gift: boolean
     giftNote: string
+    /** Qatar: the courier's zone the customer chose. Older snapshots have none. */
+    zoneId?: null | number
   }
   discountCode: string
   discountTotal: Minor
@@ -91,6 +93,7 @@ export const orderTotalsFromSnapshot = (snapshot: unknown): Record<string, unkno
           gift: snapshot.delivery.gift,
           giftNote: snapshot.delivery.gift ? snapshot.delivery.giftNote || undefined : undefined,
           shippingAddress: snapshot.delivery.address,
+          ...(snapshot.delivery.zoneId ? { deliveryZone: snapshot.delivery.zoneId } : {}),
         }
       : {}),
   }

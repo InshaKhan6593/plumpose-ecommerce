@@ -147,6 +147,28 @@ export default async function ShippingReturnsPage() {
               </table>
             </Reveal>
 
+            {/* Every zone abroad switched off (Shipping zones → Active): say so, not an empty table. */}
+            {!intlRows.length ? (
+              <Reveal as="section">
+                <SectionLabel>{SHIPPING_PAGE.delivery.intlHeading}</SectionLabel>
+                <p className="mt-4 text-[0.9375rem] leading-[1.8] text-ink-soft" data-reveal>
+                  We are delivering within Qatar only for now.
+                  {settings.contactEmail ? (
+                    <>
+                      {' '}
+                      For delivery abroad, email{' '}
+                      <a
+                        className="text-ink underline underline-offset-4"
+                        href={`mailto:${settings.contactEmail}`}
+                      >
+                        {settings.contactEmail}
+                      </a>{' '}
+                      and we will help.
+                    </>
+                  ) : null}
+                </p>
+              </Reveal>
+            ) : (
             <Reveal as="section">
               <SectionLabel>{SHIPPING_PAGE.delivery.intlHeading}</SectionLabel>
               <p className="mt-4 text-[0.8125rem] text-ink-soft" data-reveal>
@@ -168,6 +190,7 @@ export default async function ShippingReturnsPage() {
                 </tbody>
               </table>
             </Reveal>
+            )}
           </div>
 
           <Reveal className="mt-12 grid gap-6 text-[0.9375rem] leading-[1.8] text-ink-soft md:grid-cols-2 md:gap-12">

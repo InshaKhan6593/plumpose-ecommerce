@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 29 Sep 2026 — SkipCash production live, orders open (§61); Search Console and the product data (§62); Google Analytics 4 (§63)
+**Last updated:** 1 Oct 2026 — QBAS, the Qatar courier, and delivery within Qatar only (§69)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -16,12 +16,13 @@ verified. The requirements and scope document is kept outside this repository.
 | Collections | 18 (13 visible to the client, 5 hidden) |
 | Type errors | **0** |
 | Admin config audit | **No problems** |
-| Integration tests | **297 of 298 passing** (29 Sep, §66) — the one failure is SkipCash's sandbox, switched off on their side |
+| Integration tests | **320 of 321 passing** (1 Oct, §69) — the one failure is SkipCash's sandbox, switched off on their side |
 | End-to-end tests | **62 passing** (28 Sep, §58); they pay on the sandbox, so cannot run until SkipCash turns it back on |
 | Storefront | **Every page** — homepage, shop, product, bag, checkout, order, content pages (§15–§17) and the account area (§19) |
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
 | Payments | **SkipCash production** on the live site, **orders open** since 29 Sep (§61); sandbox locally (§32) |
 | Hosting | Vercel — **live at plumpose.com** since 28 Sep (§54); plumpose.vercel.app redirects there (§58); **Pro ($20/month)** |
+| Delivery | Qatar only for now; **QBAS** courier booked from the order, tracked on the order page (§69) |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
 
@@ -3753,3 +3754,107 @@ Checked on the live data locally: the sitemap's dates, and the breadcrumbs on
 /faq, /terms, /shop and /contact. `tsc` 0; lint 0 errors; `pnpm test:int` 297
 of 298 (the sandbox spec, §61); `pnpm build`.
 
+## 69. QBAS, the Qatar courier; delivery within Qatar only — 30 Sep – 1 Oct 2026
+
+Her request: connect the courier she uses, **QBAS Hub** (qbashub.com). QBAS runs
+on **LogesTechs** (qbas.logestechs.com, company-id **553**). She sent their API
+document (9 Jun 2026), the webhook document (v3) and their zone list
+(QBAS_HUB_villages.xlsx). Her account was new (0 packages).
+
+**Delivery abroad is off, for now** (her decision). Every zone abroad can be
+switched off with Shipping zones → Active; a switched-off zone is its own
+refusal, `notDelivering`, not "We could not work out delivery". With every zone
+off: *"We are delivering within Qatar only for now. For United Kingdom, please
+email info@plumpose.com and we will help."* Checkout marks those countries
+"— unavailable" and says so as soon as one is chosen; Shipping & returns shows
+the same sentence in place of an empty table; the homepage and product page
+already drop "worldwide from…" with no zone on (`deliveryRange`). She turns a
+zone back on and it is live at once, at its old price.
+
+**The zone.** QBAS needs a zone from its own list for every address — its
+"cities" are Qatar's numbered zones (161, e.g. "AL SAAD 38"), `cityId` in the
+API. `src/data/qbasZones.ts` is her spreadsheet, tidied ("Zone 38 · Al Saad");
+QBAS's public lookup (`GET /addresses/cities?search=`, company-id 553) returns
+the same ids — Al Gharrafa 51 is 570481. Two rows fixed by their Arabic
+(570528 is Al Wakrah, zone 90, not a second Al Wukair 91). Checkout asks for
+the zone after the city (required in Qatar, searchable by number or name; the
+free-text line is now "Apartment, floor"); it travels form →
+`readCheckoutDetails` (dropped unless on the list and in Qatar) → the pricing
+snapshot → `order.deliveryZone`. The city still sets the fee.
+
+**What her account holds** (checked in the portal, read only, nothing saved):
+service type **جاف (Dry) = 281**, and مبرد (Refrigerated); Dry's one vehicle is
+"المبرد" (id not readable from the portal — `QBAS_VEHICLE_TYPE_ID`, sent only
+when set). The calculator prices every route at 0 QAR — her price list is not
+loaded; irrelevant to the site, because **customers keep paying the site's own
+delivery rates** (her decision). The portal's dropdowns open only from their ▾
+icon: clicking the text showed an empty list, and an earlier note that the
+account had no services was wrong.
+
+**Booking is by hand, one button** (her decision — embroidery takes days, a
+driver must not come early). The order's sidebar has a **Courier** panel
+(`components/admin/CourierPanel.tsx`): the zone (the customer's, changeable
+until booked), **Send to QBAS**, then **Print label**, **Check now**, **Cancel
+booking**, and what QBAS has reported. Outside Qatar it says QBAS delivers in
+Qatar only. Each action reloads the page, so a stale form cannot save the old
+tracking number back.
+
+`src/delivery/qbas/`:
+
+- `config.ts` — every setting from the environment (`.env.example`): her login,
+  the pickup phone, address and zone are not in the repository.
+- `protocol.ts` — the booking request (`REGULAR`, `cod: 0`, amount paid as
+  `declaredValue`, the order code as `invoiceNumber`, both `receiverName` and
+  first/last name since the document disagrees with its example; phones as
+  8 digits for Qatar), and every documented status → a stage, her words and the
+  customer's words. Unknown codes show as written and move nothing.
+- `api.ts` — book (`POST /ship/request/by-email`, email + password in the body —
+  the API has no key), cancel (`PUT /guests/553/packages/cancel`, same login),
+  label (`POST /guests/553/packages/pdf`) and status
+  (`GET /guests/packages/status`), both by barcode, no login. 20-second timeout;
+  errors in her words, never echoing the password.
+- `apply.ts` — one way in for every update (booking, webhook, check): the
+  timeline gains an entry only on a change; **Fulfilment follows the parcel
+  forward, never back** — collected / out for delivery → Shipped (the customer's
+  existing "on its way" email, with the QBAS tracking number), delivered →
+  Delivered; a Cancelled or Refunded order is never reopened. Failed, postponed,
+  returned, damaged or lost → **an email to her** (`email/courierAlert.ts`,
+  where new-order alerts go), once per status.
+- `endpoints.ts` — `/api/orders/:id/courier` (+ `/zone`, `/book`, `/label`,
+  `/check`, `/cancel`), admin and staff only; `POST
+  /api/delivery/qbas/webhook?key=<QBAS_WEBHOOK_SECRET>` (QBAS signs nothing: the
+  key is the proof; every call is logged to `webhookLog`, the status re-read
+  from QBAS where possible, the webhook's note and postponed date kept); `GET
+  /api/delivery/qbas/check` — **Vercel Cron every 30 minutes** with
+  `CRON_SECRET`, asks QBAS about every parcel not yet delivered, returned or
+  cancelled, so orders move even before QBAS sets up the webhook.
+
+**The customer's side.** The order page — the one Track order emails a link to
+— keeps its four steps and gains **Delivery updates**: newest first, in Doha
+time, in plain words ("Collected by the courier", "Out for delivery",
+"Delivery rescheduled — New date 3 Oct"); repeats that read the same are shown
+once; the tracking number reads "· delivered by QBAS". The address, there and
+in every order email, carries the zone ("Zone 38 · Al Saad").
+
+**Data.** Migration `20260930_194111_qbas_courier`: `orders.delivery_zone`, the
+`courier_*` columns and `orders_courier_events`. Generated, then trimmed: the
+generator also re-added the Cancelled/Refunded values and email dates that
+`20260928_151659` already made (its snapshot never recorded them) — run on
+Neon, those lines would have failed. Up, down, up on a fresh database.
+
+Checked: `tsc` 0; lint 0 errors; `qbas.int.spec.ts` 23 (QBAS pretended by a
+fake `fetch`: booking, refusal twice, Qatar/zone/staff guards, forward-only
+fulfilment, closed orders, alert once, label, check, cancel and re-book,
+webhook key and log, the webhook preferring QBAS's own answer, the cron's
+guard and its skipping of finished parcels); `pnpm test:int` 320 of 321 (the
+sandbox spec, §61); `pnpm build`. In the browser on the local database: the
+zone field and its search ("38" → "Zone 38 · Al Saad"), a UK customer told
+Qatar only, Shipping & returns, the Courier panel unconnected and booked, the
+customer's Delivery updates.
+
+**Not yet.** QBAS has never been called for real — the first booking is the
+test, made by the developer pressing Send to QBAS with her login set (tell QBAS
+first; cancel it afterwards). Still from QBAS: how the "API Keys" page's key is
+used (the document only knows email + password), the vehicle id, a test
+system if any, and entering the webhook address. Saved addresses do not carry
+a zone yet: a returning customer picks it again at checkout.

@@ -42,6 +42,7 @@ import { localeEndpoint, localeOptionsEndpoint } from '@/endpoints/locale'
 import { ordersExportEndpoint, subscribersExportEndpoint } from '@/endpoints/exports'
 import { storefrontRefreshEndpoint } from '@/hooks/revalidateStorefront'
 import { quoteEndpoint } from '@/endpoints/quote'
+import { qbasCheckEndpoint, qbasWebhookEndpoint } from '@/delivery/qbas/endpoints'
 import { spinEndpoint, wheelEndpoint } from '@/endpoints/spin'
 import { PageText } from '@/globals/PageText'
 import { SiteSettings } from '@/globals/SiteSettings'
@@ -198,6 +199,8 @@ export default buildConfig({
     ordersExportEndpoint,
     subscribersExportEndpoint,
     storefrontRefreshEndpoint,
+    qbasWebhookEndpoint,
+    qbasCheckEndpoint,
   ],
   /*
    * Site settings only. The template's Header and Footer globals were removed:

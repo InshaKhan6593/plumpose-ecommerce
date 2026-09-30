@@ -56,6 +56,8 @@ orders and subscribers, reviews with approval and replies, customer Spotted
 submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
 colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
+**Delivery.** Qatar only for now (delivery abroad is switched off in Shipping zones). Checkout asks for the customer's **zone**. Qatar orders are sent to **QBAS**, the courier, from the order screen ("Send to QBAS"): the pickup is booked, the tracking number and label come back, and QBAS's updates move the order along and appear on the customer's order page. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §69.
+
 **Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is open on the live site since SkipCash production went in (29 Sep 2026).
 
 Payments run on **SkipCash production** since 29 Sep 2026 (BUILD-LOG §61); local development stays on the sandbox. 298 integration tests (297 pass; the other needs SkipCash's sandbox, which they switched off on 29 Sep) and 62 end-to-end tests (all passed on 28 Sep; they too need the sandbox).
@@ -83,6 +85,7 @@ See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) for detail and
 | Payments      | SkipCash (production; sandbox locally) — see below |
 | Hosting       | Vercel — Pro ($20/month) for the live shop  |
 | Media         | Cloudflare R2 (EU)                          |
+| Courier       | QBAS Hub (LogesTechs API), Qatar            |
 
 Base currency is **QAR**, stored in minor units — `139900` is QAR 1,399.00.
 

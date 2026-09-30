@@ -32,6 +32,7 @@ import { PriceCell as PriceCell_5f4598cde5ccff61871e267c42cb1c7e } from '@/compo
 import { ReadOnlyMoneyField as ReadOnlyMoneyField_f640ede693715f85b3f90094bd3b61b9 } from '@/components/admin/ReadOnlyMoneyField'
 import { PlacementLabel as PlacementLabel_88ce32223484a41d1abd46858136faaa } from '@/components/admin/PlacementLabel'
 import { OrderItemLabel as OrderItemLabel_7acf055c6ba164a0d9afd88addcb02e1 } from '@/components/admin/OrderItemLabel'
+import { CourierPanel as CourierPanel_366f8d561a5d0b027df0b5b0da54725a } from '@/components/admin/CourierPanel'
 import { ResendConfirmation as ResendConfirmation_6791d7b469d34035194ed804b2fc0fc4 } from '@/components/admin/ResendConfirmation'
 import { AdminIcon as AdminIcon_5fee7b1d7887f8ee4c45775348e4cb18 } from '@/components/AdminBrand'
 import { AdminLogo as AdminLogo_5fee7b1d7887f8ee4c45775348e4cb18 } from '@/components/AdminBrand'
@@ -77,6 +78,7 @@ export const importMap = {
   "@/components/admin/ReadOnlyMoneyField#ReadOnlyMoneyField": ReadOnlyMoneyField_f640ede693715f85b3f90094bd3b61b9,
   "@/components/admin/PlacementLabel#PlacementLabel": PlacementLabel_88ce32223484a41d1abd46858136faaa,
   "@/components/admin/OrderItemLabel#OrderItemLabel": OrderItemLabel_7acf055c6ba164a0d9afd88addcb02e1,
+  "@/components/admin/CourierPanel#CourierPanel": CourierPanel_366f8d561a5d0b027df0b5b0da54725a,
   "@/components/admin/ResendConfirmation#ResendConfirmation": ResendConfirmation_6791d7b469d34035194ed804b2fc0fc4,
   "@/components/AdminBrand#AdminIcon": AdminIcon_5fee7b1d7887f8ee4c45775348e4cb18,
   "@/components/AdminBrand#AdminLogo": AdminLogo_5fee7b1d7887f8ee4c45775348e4cb18,

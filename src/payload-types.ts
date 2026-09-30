@@ -1230,6 +1230,26 @@ export interface Order {
    * The total as it read on their screen, e.g. "£355". Kept so the receipt and the order email match the page they paid from.
    */
   displayTotal?: string | null;
+  deliveryZone?: number | null;
+  courier?: {
+    barcode?: string | null;
+    packageId?: number | null;
+    status?: string | null;
+    statusAt?: string | null;
+    bookedAt?: string | null;
+    checkedAt?: string | null;
+    cost?: number | null;
+    error?: string | null;
+    alertedStatus?: string | null;
+    events?:
+      | {
+          code: string;
+          notes?: string | null;
+          at: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
   /**
    * Internal only. Never shown to the customer.
    */
@@ -1270,6 +1290,9 @@ export interface Order {
    * Setting this to Shipped emails the customer — add the tracking number first. Cancelled or Refunded: refund the payment in the SkipCash portal first; the customer is then emailed. Stock is not added back — do that in Sizes & stock if the piece returns.
    */
   fulfilment?: ('unfulfilled' | 'inAtelier' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') | null;
+  /**
+   * Filled in by "Send to QBAS" for Qatar orders. Type it for anything you ship yourself.
+   */
   trackingNumber?: string | null;
   confirmationEmailSentAt?: string | null;
   notificationEmailSentAt?: string | null;
@@ -3193,6 +3216,28 @@ export interface OrdersSelect<T extends boolean = true> {
   freeShippingApplied?: T;
   displayCurrency?: T;
   displayTotal?: T;
+  deliveryZone?: T;
+  courier?:
+    | T
+    | {
+        barcode?: T;
+        packageId?: T;
+        status?: T;
+        statusAt?: T;
+        bookedAt?: T;
+        checkedAt?: T;
+        cost?: T;
+        error?: T;
+        alertedStatus?: T;
+        events?:
+          | T
+          | {
+              code?: T;
+              notes?: T;
+              at?: T;
+              id?: T;
+            };
+      };
   adminNotes?: T;
   gift?: T;
   giftNote?: T;

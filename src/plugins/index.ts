@@ -33,6 +33,8 @@ import { plumposeCartItemMatcher } from '@/lib/cart/itemMatcher'
 import { DECLINE_EVENTS, declineReason, paymentOutcome } from '@/lib/payments/outcome'
 import { enquirySummary } from '@/lib/enquiries/summary'
 import { orderTotalsFields } from '@/fields/orderTotals'
+import { courierFields } from '@/fields/courier'
+import { orderCourierEndpoints } from '@/delivery/qbas/endpoints'
 import { orderReferenceField } from '@/hooks/orderReference'
 import { lockFields } from '@/fields/lockFields'
 import { mapFieldsDeep } from '@/fields/mapFieldsDeep'
@@ -421,7 +423,12 @@ export const plugins: Plugin[] = [
          */
         disableBulkEdit: true,
         disableDuplicate: true,
-        endpoints: [...(defaultCollection.endpoints || []), resendConfirmationEndpoint],
+        endpoints: [
+          ...(defaultCollection.endpoints || []),
+          resendConfirmationEndpoint,
+          // The Courier panel: Send to QBAS, label, check, cancel — see @/delivery/qbas/endpoints.
+          ...orderCourierEndpoints,
+        ],
         hooks: {
           ...defaultCollection.hooks,
           afterChange: [
@@ -512,8 +519,12 @@ export const plugins: Plugin[] = [
           {
             name: 'trackingNumber',
             type: 'text',
-            admin: { position: 'sidebar' },
+            admin: {
+              description: 'Filled in by "Send to QBAS" for Qatar orders. Type it for anything you ship yourself.',
+              position: 'sidebar',
+            },
           },
+          ...courierFields,
           {
             name: 'adminNotes',
             type: 'textarea',

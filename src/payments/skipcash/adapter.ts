@@ -193,7 +193,12 @@ export const createSkipcashAdapter = (
     }
 
     const snapshot: PricingSnapshot = {
-      delivery: { address: details.address, gift: details.gift, giftNote: details.giftNote },
+      delivery: {
+        address: details.address,
+        gift: details.gift,
+        giftNote: details.giftNote,
+        zoneId: details.zoneId,
+      },
       discountCode: priced.order.discountCode,
       discountTotal: priced.order.discountTotal,
       freeShippingApplied: priced.order.freeShippingApplied,

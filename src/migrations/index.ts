@@ -10,6 +10,7 @@ import * as migration_20260928_151157_orders_open from './20260928_151157_orders
 import * as migration_20260928_151659_order_cancel_refund from './20260928_151659_order_cancel_refund';
 import * as migration_20260928_151900_ready_to_ship_wording from './20260928_151900_ready_to_ship_wording';
 import * as migration_20260929_090000_size_offered from './20260929_090000_size_offered';
+import * as migration_20260930_194111_qbas_courier from './20260930_194111_qbas_courier';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20260929_090000_size_offered.up,
     down: migration_20260929_090000_size_offered.down,
-    name: '20260929_090000_size_offered'
+    name: '20260929_090000_size_offered',
+  },
+  {
+    up: migration_20260930_194111_qbas_courier.up,
+    down: migration_20260930_194111_qbas_courier.down,
+    name: '20260930_194111_qbas_courier'
   },
 ];

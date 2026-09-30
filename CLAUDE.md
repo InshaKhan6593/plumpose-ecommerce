@@ -116,6 +116,20 @@ transaction**: SkipCash keeps the link open and reports the refusal under a
 _copy_ with a new payment id, so transactions are matched by our reference,
 not by SkipCash's id.
 
+**Courier: QBAS** — `src/delivery/qbas/`, Qatar orders only (BUILD-LOG §69).
+QBAS Hub runs on LogesTechs (company-id 553). On the order's sidebar, the
+**Courier** panel (`components/admin/CourierPanel.tsx`): the zone, **Send to
+QBAS** (books the pickup, fills the tracking number), Print label, Check now,
+Cancel booking. **She presses it — never automatic** (embroidery takes days).
+Updates arrive by webhook (`/api/delivery/qbas/webhook?key=QBAS_WEBHOOK_SECRET`)
+and a half-hourly Vercel Cron check; all go through `applyCourierStatus()`,
+which **moves Fulfilment forward only** (collected → Shipped, which sends the
+existing email; delivered → Delivered) and never reopens a closed order. The
+customer reads the updates on `/order/[id]`. The API signs in with **her QBAS
+email + password** (`QBAS_*` env, Vercel only in production) — there is no
+test system: a booking from any environment is a real pickup. Zones:
+`src/data/qbasZones.ts` (QBAS city ids; checkout asks for one in Qatar).
+
 **Checkout** — `/checkout` (`components/checkout/CheckoutPage.tsx`): contact,
 delivery (blocked countries say why; Qatar city picker), gift note, discount
 code; priced live by `/api/quote`; the draft survives a cancelled payment in
@@ -198,6 +212,12 @@ client's reference recording (`../brand-assets/reference/`):
   shipping/returns and care text arrived 28 Sep (§54). The SAMPLE projects and
   the demo catalogue are off Neon; `isPlaceholderSlug()` keeps any
   `demo-`/`sample-` record out of search (§39).
+- **QBAS — the first real booking** (BUILD-LOG §69). Built and tested with QBAS
+  pretended; never called for real. Still needed: her login and pickup details
+  as Vercel variables, the migration on Neon, QBAS entering the webhook
+  address, and from QBAS how its "API Keys" key is used and the vehicle id.
+  **Delivery abroad is switched off** (every Shipping zone unticked) — her
+  choice for now; ticking a zone brings it back.
 - **Vercel Pro, in her name.** Hosting is **Vercel, decided 26 Sep 2026** — no
   Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
   use). Handover: she creates a Pro team, the developer joins as its one paid
@@ -241,7 +261,7 @@ all keyed on `isLocalDatabase()` (`src/utilities/database.ts`), not NODE_ENV:
 
 | Command                                       | Purpose                                                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:int`                               | Integration tests (298)                                                                                         |
+| `pnpm test:int`                               | Integration tests (321)                                                                                         |
 | `pnpm test:e2e`                               | Playwright — pays for real on SkipCash's sandbox page (off since 29 Sep, see above)                             |
 | `pnpm audit:admin`                            | Flags admin config gaps — run after adding a collection                                                         |
 | `pnpm shoot:admin`                            | Screenshot all 16 admin screens                                                                                 |

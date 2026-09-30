@@ -2,5 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm build:deploy",
   "regions": ["fra1"],
-  "crons": [{ "path": "/api/currencies/refresh-rates", "schedule": "0 3 * * *" }]
+  "crons": [
+    { "path": "/api/currencies/refresh-rates", "schedule": "0 3 * * *" },
+    { "path": "/api/delivery/qbas/check", "schedule": "*/30 * * * *" }
+  ]
 }

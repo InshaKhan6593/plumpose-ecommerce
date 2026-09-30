@@ -9,7 +9,7 @@ import {
   type CheckoutCountry,
   type CheckoutSavedAddress,
 } from '@/components/checkout/CheckoutPage'
-import { QATAR_COUNTRY_CODE } from '@/lib/pricing/shipping'
+import { deliveryPausedMessage, QATAR_COUNTRY_CODE } from '@/lib/pricing/shipping'
 import { isSkipcashEnabled, skipcashConfig } from '@/payments/skipcash/api'
 
 export const dynamic = 'force-dynamic'
@@ -38,13 +38,13 @@ export default async function Checkout({
   // Read fresh (the page is dynamic): pausing orders must take effect on the next visit.
   const settings = await payload.findGlobal({ depth: 0, slug: 'siteSettings' })
 
-  const [countries, cities, addresses] = await Promise.all([
+  const [countries, cities, addresses, zones] = await Promise.all([
     payload.find({
       collection: 'countries',
       depth: 0,
       limit: 500,
       pagination: false,
-      select: { blockedReason: true, code: true, name: true },
+      select: { blockedReason: true, code: true, name: true, zoneKey: true },
       sort: 'name',
     }),
     payload.find({
@@ -68,11 +68,29 @@ export default async function Checkout({
           where: { customer: { equals: user.id } },
         })
       : null,
+    payload.find({
+      collection: 'shippingZones',
+      depth: 0,
+      limit: 200,
+      pagination: false,
+      select: { active: true, key: true },
+    }),
   ])
+
+  // A zone she has switched off: its countries are told so at once, not at Pay (see deliveryFor).
+  const switchedOff = new Set(zones.docs.filter((z) => z.active === false).map((z) => z.key))
 
   // Qatar first — most orders are local — then everyone else alphabetically.
   const countryList: CheckoutCountry[] = countries.docs
-    .map((c) => ({ blockedReason: c.blockedReason ?? null, code: c.code, name: c.name }))
+    .map((c) => ({
+      blockedReason: c.blockedReason ?? null,
+      code: c.code,
+      name: c.name,
+      unavailable:
+        !c.blockedReason && c.zoneKey && switchedOff.has(c.zoneKey)
+          ? deliveryPausedMessage(c.name, zones.docs)
+          : null,
+    }))
     .sort((a, b) => Number(b.code === QATAR_COUNTRY_CODE) - Number(a.code === QATAR_COUNTRY_CODE))
 
   const cityList: CheckoutCity[] = cities.docs

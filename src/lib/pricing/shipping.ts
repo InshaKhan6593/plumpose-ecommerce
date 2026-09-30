@@ -49,7 +49,7 @@ export type DeliveryRefusal = {
   /** True when the country is deliberately closed, as opposed to unknown. */
   blocked: boolean
   message: string
-  reason: 'blockedCountry' | 'unknownCity' | 'unknownCountry' | 'unknownZone'
+  reason: 'blockedCountry' | 'notDelivering' | 'unknownCity' | 'unknownCountry' | 'unknownZone'
 }
 
 export type DeliveryResult =
@@ -62,6 +62,19 @@ export type ShippingTables = {
 }
 
 const contactLine = 'Please email info@plumpose.com and we will do what we can.'
+
+/** True when no zone abroad is switched on: the shop delivers within Qatar only. */
+export const qatarOnly = (zones: Pick<ShippingZone, 'active'>[]): boolean =>
+  !zones.some((z) => z.active !== false)
+
+/** What a customer is told for a country whose zone is switched off. */
+export const deliveryPausedMessage = (
+  countryName: string,
+  zones: Pick<ShippingZone, 'active'>[],
+): string =>
+  qatarOnly(zones)
+    ? `We are delivering within Qatar only for now. For ${countryName}, please email info@plumpose.com and we will help.`
+    : `We are not delivering to ${countryName} at the moment. Please email info@plumpose.com and we will help.`
 
 /**
  * Prices delivery to a destination.
@@ -139,6 +152,22 @@ export const deliveryFor = (
   }
 
   const zone = tables.zones.find((z) => z.key === country.zoneKey && z.active !== false)
+
+  /**
+   * A zone she has switched off (Shipping zones → Active) is a choice, not a
+   * fault: say so, and when every zone abroad is off, say plainly that the
+   * shop delivers within Qatar only for now.
+   */
+  if (!zone && tables.zones.some((z) => z.key === country.zoneKey)) {
+    return {
+      ok: false,
+      refusal: {
+        blocked: true,
+        message: deliveryPausedMessage(country.name, tables.zones),
+        reason: 'notDelivering',
+      },
+    }
+  }
 
   if (!zone) {
     return {

@@ -2,6 +2,8 @@ import type { Payload, TypedUser } from 'payload'
 
 import { createLocalReq } from 'payload'
 
+import { qbasZone } from '@/data/qbasZones'
+
 /**
  * The parts of a checkout that do not depend on the gateway.
  *
@@ -35,6 +37,12 @@ export type CheckoutDetails = {
   discountCode: null | string
   gift: boolean
   giftNote: string
+  /**
+   * Qatar only — the courier's zone (a QBAS city id from @/data/qbasZones).
+   * Anything not on the list, or sent for another country, is dropped: she
+   * can still choose it on the order before booking the courier.
+   */
+  zoneId: null | number
 }
 
 /** Longest gift note the card takes. Mirrored by the form's `maxLength`. */
@@ -58,13 +66,14 @@ export const readCheckoutDetails = (data: unknown): CheckoutDetails => {
   ) as Record<string, unknown>
 
   const gift = body.gift === true
+  const country = text(address.country, 2).toUpperCase()
 
   return {
     address: {
       addressLine1: text(address.addressLine1, 120),
       addressLine2: text(address.addressLine2, 120),
       city: text(address.city, 80),
-      country: text(address.country, 2).toUpperCase(),
+      country,
       firstName: text(address.firstName, 60),
       lastName: text(address.lastName, 60),
       phone: text(address.phone, 30),
@@ -74,6 +83,7 @@ export const readCheckoutDetails = (data: unknown): CheckoutDetails => {
     discountCode: text(body.discountCode, 40).toUpperCase() || null,
     gift,
     giftNote: gift ? text(body.giftNote, GIFT_NOTE_MAX) : '',
+    zoneId: country === 'QA' ? (qbasZone(body.shippingZoneId)?.id ?? null) : null,
   }
 }
 

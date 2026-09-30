@@ -14,6 +14,8 @@ import type { Media, Order, Product, Variant, VariantOption } from '@/payload-ty
 
 import { TrackPurchase } from '@/components/analytics/TrackPurchase'
 import { ClearBag } from '@/components/checkout/ClearBag'
+import { qbasZone, zoneLabel } from '@/data/qbasZones'
+import { courierStatus } from '@/delivery/qbas/protocol'
 import { customerEmailOf } from '@/email/orderEmails'
 import { orderCode } from '@/hooks/orderReference'
 import { formatQar, toMajor } from '@/lib/pricing/money'
@@ -116,6 +118,18 @@ export default async function OrderPage({
   const hasEmbroidery = (order.personalisationTotalQar ?? 0) > 0
   const justPlaced = placed === '1'
   const email = customerEmailOf(order)
+  const zone = qbasZone(order.deliveryZone)
+
+  /*
+   * What the courier has reported, newest first, in the customer's words.
+   * Consecutive entries that read the same to them ("At the courier's hub"
+   * three times as the parcel moves between shelves) show once.
+   */
+  const updates = (order.courier?.events ?? [])
+    .map((e) => ({ at: e.at, label: courierStatus(e.code).customer, notes: e.notes ?? '' }))
+    .filter((e, i, all) => i === 0 || e.label !== all[i - 1].label)
+    .reverse()
+  const showNotes = (label: string) => label === 'Delivery rescheduled'
 
   return (
     <div className="mx-auto max-w-3xl px-5 pt-14 pb-28 md:pt-20">
@@ -270,11 +284,39 @@ export default async function OrderPage({
           <p className="mt-8 text-center text-sm text-ink-soft">
             Tracking number{' '}
             <span className="caps text-ink tracking-[0.14em]">{order.trackingNumber}</span>
+            {order.courier?.barcode === order.trackingNumber ? ' · delivered by QBAS' : null}
           </p>
         ) : hasEmbroidery && settings.personalisationLeadTime && stepIndex < 2 ? (
           <p className="mt-8 text-center text-sm text-ink-soft">
             Hand embroidery takes {settings.personalisationLeadTime} before your order ships.
           </p>
+        ) : null}
+        {updates.length ? (
+          <div className="mx-auto mt-10 max-w-md">
+            <h2 className="caps text-center text-[0.625rem] text-ink-soft">Delivery updates</h2>
+            <ol className="mt-5 border-l border-line pl-6">
+              {updates.map((u, i) => (
+                <li className="relative pb-5 last:pb-0" key={`${u.at}-${i}`}>
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'absolute top-[7px] -left-[28px] size-[7px] rounded-full border',
+                      i === 0 ? 'border-ink bg-ink' : 'border-ink-faint bg-background',
+                    )}
+                  />
+                  <p className={cn('text-[0.9375rem]', i === 0 ? 'text-ink' : 'text-ink-soft')}>
+                    {u.label}
+                    {showNotes(u.label) && u.notes ? (
+                      <span className="text-ink-soft"> — {u.notes}</span>
+                    ) : null}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    {qatarTime(u.at)}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
         ) : null}
       </section>
       )}
@@ -363,6 +405,12 @@ export default async function OrderPage({
               {[address.firstName, address.lastName].filter(Boolean).join(' ')}
               <br />
               {address.addressLine1}
+              {zone ? (
+                <>
+                  <br />
+                  {zoneLabel(zone)}
+                </>
+              ) : null}
               {address.addressLine2 ? (
                 <>
                   <br />
@@ -421,6 +469,17 @@ export default async function OrderPage({
     </div>
   )
 }
+
+/** Delivery updates in Doha time — the server runs on UTC. "2 October, 14:05". */
+const qatarTime = (iso: string): string =>
+  new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    hour: '2-digit',
+    hourCycle: 'h23',
+    minute: '2-digit',
+    month: 'long',
+    timeZone: 'Asia/Qatar',
+  }).format(new Date(iso))
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
