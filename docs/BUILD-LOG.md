@@ -3962,3 +3962,36 @@ product, dummy SkipCash keys.
 Tutorial 05 "Delivery prices" does not show the new list; re-record it or add
 a short one when she starts using it.
 
+
+## 71. The order screen: the zone locked, the admin's own pop-ups, products closed — 1 Oct 2026
+
+The developer's review of the order screen.
+
+**The zone is locked.** The Courier panel showed the zone as an open list, so
+one slip sent the driver elsewhere. It now reads "Zone 38 · Al Saad — The
+customer chose this zone at checkout" with **Change zone**; only then does the
+list open, with "Keep Zone 38 · Al Saad" to back out. Choosing a zone asks
+first, naming both zones and that the customer paid delivery for theirs. An
+order with no zone opens on the list, as before. The list is the admin's own
+searchable select (`ReactSelect`), searched by what she reads: "51" finds
+zone 51 only — searching the hidden QBAS ids also found Zone 24 (570551) and
+Lusail (570451).
+
+**No more browser confirm boxes.** `window.confirm` (grey, titled with the
+site's address) is replaced on the order screen by the admin's own pop-up,
+`useAdminConfirm()` (`components/admin/useAdminConfirm.tsx`, Payload's
+`ConfirmationModal`): Send to QBAS ("Only send it when the piece is packed and
+ready"), Cancel booking ("Keep the booking"), Change zone and Resend
+confirmation. The customer's "Remove this address?" on the storefront is
+still the browser's.
+
+**Products closed.** An order's product lines open collapsed
+(`initCollapsed: true`); the heading already reads "Al Shaheen Nights — Silk
+Pyjama Set — M × 1 · Embroidery: …".
+
+Checked on the local database (dev admin): the locked zone, Change zone →
+search "51" → seven zone-51 areas only → the pop-up → Go back leaves the zone
+→ Change zone saves and locks again; Send to QBAS's pop-up opened and was
+closed with Go back (never confirmed — that is a real pickup); the product
+line collapsed. `tsc` 0, lint 0 errors. Tutorial 04 "Handle an order" shows
+the old list and browser boxes — re-record it.

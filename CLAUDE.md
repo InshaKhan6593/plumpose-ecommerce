@@ -118,7 +118,8 @@ not by SkipCash's id.
 
 **Courier: QBAS** — `src/delivery/qbas/`, Qatar orders only (BUILD-LOG §69).
 QBAS Hub runs on LogesTechs (company-id 553). On the order's sidebar, the
-**Courier** panel (`components/admin/CourierPanel.tsx`): the zone, **Send to
+**Courier** panel (`components/admin/CourierPanel.tsx`): the customer's zone,
+locked behind **Change zone** (§71), **Send to
 QBAS** (books the pickup, fills the tracking number), Print label, Check now,
 Cancel booking. **She presses it — never automatic** (embroidery takes days).
 Updates arrive by webhook (`/api/delivery/qbas/webhook?key=QBAS_WEBHOOK_SECRET`)
@@ -501,6 +502,9 @@ From Git Bash, prefix commands taking a leading-slash argument with
   address" not "Slug", "Sizes & stock" not "Variants". Keep it that way.
 - The client is not technical. Anything she can break by mistake should either
   be guarded or not be in front of her.
+- **Ask with the admin's own pop-up, never `window.confirm`** — use
+  `useAdminConfirm()` (`components/admin/useAdminConfirm.tsx`, §71). The
+  browser's grey box, titled with the site's address, reads as an error.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

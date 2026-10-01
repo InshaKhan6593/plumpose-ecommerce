@@ -108,7 +108,8 @@ const tidyOrderFields = (fields: Field[]): Field[] =>
             ...field.admin?.components,
             RowLabel: '@/components/admin/OrderItemLabel#OrderItemLabel',
           },
-          initCollapsed: false,
+          // Closed: the heading already reads "Piece — M × 1 · Embroidery: …".
+          initCollapsed: true,
         },
       }
     }

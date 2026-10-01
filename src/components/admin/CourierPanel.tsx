@@ -1,14 +1,16 @@
 'use client'
 
-import { Button, toast, useDocumentInfo } from '@payloadcms/ui'
+import { Button, ReactSelect, toast, useDocumentInfo } from '@payloadcms/ui'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { QBAS_ZONES, zoneLabel } from '@/data/qbasZones'
 
+import { useAdminConfirm } from './useAdminConfirm'
+
 /**
  * "Courier" on the order's sidebar — QBAS, for orders delivered in Qatar.
  *
- * Choose the zone (the customer's choice at checkout is already there), then
+ * Check the zone (the customer's choice at checkout, locked behind "Change zone"), then
  * **Send to QBAS**: the pickup is booked, the tracking number fills in, and
  * the label can be printed. From then on QBAS's updates move the order along
  * by themselves (see @/delivery/qbas/apply); **Check now** asks straight away,
@@ -30,7 +32,7 @@ type View = {
   zone: null | { id: number; label: string }
 }
 
-const OPTIONS = QBAS_ZONES.map((z) => ({ id: z.id, label: zoneLabel(z) }))
+const OPTIONS = QBAS_ZONES.map((z) => ({ label: zoneLabel(z), value: String(z.id) }))
 
 const when = (iso: null | string | undefined) =>
   iso
@@ -54,6 +56,9 @@ export const CourierPanel: React.FC = () => {
   const { id } = useDocumentInfo()
   const [view, setView] = useState<null | View>(null)
   const [busy, setBusy] = useState<null | string>(null)
+  // The customer's zone is locked behind "Change zone": a slip of the list would send the driver elsewhere.
+  const [changingZone, setChangingZone] = useState(false)
+  const { ask, modal } = useAdminConfirm('courier-confirm')
 
   const load = useCallback(async () => {
     if (!id) return
@@ -170,14 +175,18 @@ export const CourierPanel: React.FC = () => {
               buttonStyle="error"
               disabled={Boolean(busy)}
               margin={false}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Cancel the QBAS booking ${view.barcode}? The driver will not collect it. You can send the order again afterwards.`,
-                  )
-                )
-                  void act('cancel')
-              }}
+              onClick={() =>
+                ask({
+                  body: `QBAS booking ${view.barcode} will be cancelled and the driver will not collect the parcel. You can send the order to QBAS again afterwards.`,
+                  cancelLabel: 'Keep the booking',
+                  confirmingLabel: 'Cancelling…',
+                  confirmLabel: 'Cancel booking',
+                  heading: 'Cancel the QBAS booking?',
+                  onConfirm: async () => {
+                    await act('cancel')
+                  },
+                })
+              }
               size="small"
             >
               {busy === 'cancel' ? 'Cancelling…' : 'Cancel booking'}
@@ -189,28 +198,70 @@ export const CourierPanel: React.FC = () => {
           <label className="field-label" htmlFor="courier-zone" style={{ display: 'block', marginTop: 8 }}>
             Delivery zone
           </label>
-          <select
-            disabled={Boolean(busy)}
-            id="courier-zone"
-            onChange={(e) => void act('zone', { zoneId: Number(e.target.value) })}
-            style={{
-              background: 'var(--theme-input-bg)',
-              border: '1px solid var(--theme-elevation-150)',
-              color: 'var(--theme-text)',
-              padding: '8px',
-              width: '100%',
-            }}
-            value={view.zone?.id ?? ''}
-          >
-            <option disabled value="">
-              Choose the zone…
-            </option>
-            {OPTIONS.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          {view.zone && !changingZone ? (
+            <>
+              <p style={{ fontSize: 13, margin: '4px 0 0' }}>{view.zone.label}</p>
+              <p style={{ ...small, marginTop: 2 }}>The customer chose this zone at checkout.</p>
+              <div style={row}>
+                <Button
+                  buttonStyle="secondary"
+                  disabled={Boolean(busy)}
+                  margin={false}
+                  onClick={() => setChangingZone(true)}
+                  size="small"
+                >
+                  Change zone
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <ReactSelect
+                disabled={Boolean(busy)}
+                // By what she reads, not the hidden QBAS id: "51" must not find 570451 (Lusail, zone 69).
+                filterOption={(option, search) =>
+                  option.label.toLowerCase().includes(search.trim().toLowerCase())
+                }
+                inputId="courier-zone"
+                isClearable={false}
+                isSearchable
+                noOptionsMessage={() => 'No zone matches — try the number or the name.'}
+                onChange={(option) => {
+                  const picked = Array.isArray(option) ? option[0] : option
+                  const next = OPTIONS.find((o) => o.value === picked?.value)
+                  if (!next || next.value === String(view.zone?.id)) return
+                  ask({
+                    body: view.zone
+                      ? `The customer chose ${view.zone.label} at checkout, and paid delivery for it. Only change it if you have checked the address with them — QBAS will deliver to ${next.label}.`
+                      : `QBAS will deliver this order to ${next.label}.`,
+                    confirmLabel: 'Change zone',
+                    heading: view.zone
+                      ? `Change the zone to ${next.label}?`
+                      : `Set the zone to ${next.label}?`,
+                    onConfirm: async () => {
+                      await act('zone', { zoneId: Number(next.value) })
+                    },
+                  })
+                }}
+                options={OPTIONS}
+                placeholder="Type a zone number or area…"
+                value={OPTIONS.find((o) => o.value === String(view.zone?.id))}
+              />
+              {view.zone ? (
+                <div style={row}>
+                  <Button
+                    buttonStyle="secondary"
+                    disabled={Boolean(busy)}
+                    margin={false}
+                    onClick={() => setChangingZone(false)}
+                    size="small"
+                  >
+                    Keep {view.zone.label}
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          )}
           {!view.zone ? (
             <p style={{ ...small, marginTop: 6 }}>
               This order has no zone — ask the customer, or find it from the address.
@@ -233,14 +284,17 @@ export const CourierPanel: React.FC = () => {
               buttonStyle="primary"
               disabled={!canSend}
               margin={false}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Book a QBAS pickup for this order, to ${view.zone?.label}? A driver will come to collect the parcel.`,
-                  )
-                )
-                  void act('book')
-              }}
+              onClick={() =>
+                ask({
+                  body: `A QBAS driver will come to your atelier to collect this parcel, for delivery to ${view.zone?.label}. Only send it when the piece is packed and ready.`,
+                  confirmingLabel: 'Booking…',
+                  confirmLabel: 'Send to QBAS',
+                  heading: 'Book a QBAS pickup?',
+                  onConfirm: async () => {
+                    await act('book')
+                  },
+                })
+              }
               size="small"
             >
               {busy === 'book' ? 'Booking…' : view.barcode ? 'Send to QBAS again' : 'Send to QBAS'}
@@ -270,6 +324,7 @@ export const CourierPanel: React.FC = () => {
           </ol>
         </details>
       ) : null}
+      {modal}
     </div>
   )
 }

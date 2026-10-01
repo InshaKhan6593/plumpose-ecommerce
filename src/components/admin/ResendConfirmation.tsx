@@ -4,6 +4,8 @@ import { Button, toast, useDocumentInfo, useFormFields } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
+import { useAdminConfirm } from './useAdminConfirm'
+
 /**
  * "Resend confirmation" on the order screen (A6).
  *
@@ -16,12 +18,11 @@ export const ResendConfirmation: React.FC = () => {
   const email = useFormFields(([fields]) => fields.customerEmail?.value) as string | undefined
   const router = useRouter()
   const [sending, setSending] = useState(false)
+  const { ask, modal } = useAdminConfirm('resend-confirmation')
 
   if (!id) return null
 
   const send = async () => {
-    if (!window.confirm(`Send the order confirmation to ${email || 'the customer'} again?`)) return
-
     setSending(true)
     try {
       const res = await fetch(`/api/orders/${id}/resend-confirmation`, {
@@ -49,11 +50,20 @@ export const ResendConfirmation: React.FC = () => {
         buttonStyle="secondary"
         disabled={sending}
         margin={false}
-        onClick={send}
+        onClick={() =>
+          ask({
+            body: `The order confirmation email goes to ${email || 'the customer'} again — the same email they received when they paid.`,
+            confirmingLabel: 'Sending…',
+            confirmLabel: 'Send it again',
+            heading: 'Resend the confirmation?',
+            onConfirm: send,
+          })
+        }
         size="medium"
       >
         {sending ? 'Sending…' : 'Resend confirmation'}
       </Button>
+      {modal}
     </div>
   )
 }
