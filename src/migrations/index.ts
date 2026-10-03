@@ -12,6 +12,7 @@ import * as migration_20260928_151900_ready_to_ship_wording from './20260928_151
 import * as migration_20260929_090000_size_offered from './20260929_090000_size_offered';
 import * as migration_20260930_194111_qbas_courier from './20260930_194111_qbas_courier';
 import * as migration_20260930_222330_shipping_zone_fees from './20260930_222330_shipping_zone_fees';
+import * as migration_20261003_113258_courier_driver_proof from './20261003_113258_courier_driver_proof';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20260930_222330_shipping_zone_fees.up,
     down: migration_20260930_222330_shipping_zone_fees.down,
-    name: '20260930_222330_shipping_zone_fees'
+    name: '20260930_222330_shipping_zone_fees',
+  },
+  {
+    up: migration_20261003_113258_courier_driver_proof.up,
+    down: migration_20261003_113258_courier_driver_proof.down,
+    name: '20261003_113258_courier_driver_proof'
   },
 ];

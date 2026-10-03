@@ -1246,6 +1246,9 @@ export interface Order {
           code: string;
           notes?: string | null;
           at: string;
+          driverName?: string | null;
+          driverPhone?: string | null;
+          attachmentUrls?: string | null;
           id?: string | null;
         }[]
       | null;
@@ -3255,6 +3258,9 @@ export interface OrdersSelect<T extends boolean = true> {
               code?: T;
               notes?: T;
               at?: T;
+              driverName?: T;
+              driverPhone?: T;
+              attachmentUrls?: T;
               id?: T;
             };
       };

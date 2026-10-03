@@ -25,7 +25,14 @@ type View = {
   barcode: null | string
   booked: boolean
   error: null | string
-  events: Array<{ at: string; label: string; notes: string }>
+  events: Array<{
+    at: string
+    attachmentUrls: string[]
+    driverName: string
+    driverPhone: string
+    label: string
+    notes: string
+  }>
   missing: string[]
   problems: string[]
   status: null | { code: string; label: string; stage: string }
@@ -319,6 +326,17 @@ export const CourierPanel: React.FC = () => {
               <li key={`${e.at}-${i}`} style={{ ...small, marginBottom: 4 }}>
                 <span style={{ color: 'var(--theme-text)' }}>{e.label}</span> · {when(e.at)}
                 {e.notes ? ` — ${e.notes}` : ''}
+                {e.driverName || e.driverPhone
+                  ? ` · Driver: ${[e.driverName, e.driverPhone].filter(Boolean).join(', ')}`
+                  : ''}
+                {e.attachmentUrls.map((url, n) => (
+                  <React.Fragment key={url}>
+                    {' · '}
+                    <a href={url} rel="noopener noreferrer" target="_blank">
+                      {e.attachmentUrls.length > 1 ? `Proof photo ${n + 1}` : 'Proof photo'}
+                    </a>
+                  </React.Fragment>
+                ))}
               </li>
             ))}
           </ol>

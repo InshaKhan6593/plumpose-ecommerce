@@ -54,6 +54,11 @@ export const courierFields: Field[] = [
           { name: 'code', type: 'text', required: true },
           { name: 'notes', type: 'text' },
           { name: 'at', type: 'date', required: true },
+          /** From QBAS's webhook, when it names them: who has the parcel, and the proof photos. */
+          { name: 'driverName', type: 'text' },
+          { name: 'driverPhone', type: 'text' },
+          /** Proof-of-delivery photo addresses (https only), one per line. */
+          { name: 'attachmentUrls', type: 'textarea' },
         ],
       },
     ],

@@ -84,7 +84,14 @@ export const courierView = (order: Order) => {
     checkedAt: courier.checkedAt ?? null,
     error: courier.error ?? null,
     events: (courier.events ?? [])
-      .map((e) => ({ at: e.at, label: courierStatus(e.code).admin, notes: e.notes ?? '' }))
+      .map((e) => ({
+        at: e.at,
+        attachmentUrls: (e.attachmentUrls ?? '').split('\n').filter(Boolean),
+        driverName: e.driverName ?? '',
+        driverPhone: e.driverPhone ?? '',
+        label: courierStatus(e.code).admin,
+        notes: e.notes ?? '',
+      }))
       .reverse(),
     missing: qbasMissing(),
     problems: bookingProblems(order),
@@ -184,7 +191,15 @@ const book: Endpoint = {
           cost: booking.cost,
           error: null,
           // A re-booking after a cancellation keeps the old trail: it is what happened.
-          events: (order.courier?.events ?? []).map(({ at, code, id, notes }) => ({ at, code, id, notes })),
+          events: (order.courier?.events ?? []).map(({ at, attachmentUrls, code, driverName, driverPhone, id, notes }) => ({
+            at,
+            attachmentUrls,
+            code,
+            driverName,
+            driverPhone,
+            id,
+            notes,
+          })),
           packageId: booking.packageId,
         },
         deliveryZone: zone.id,
@@ -368,12 +383,21 @@ export const qbasWebhookEndpoint: Endpoint = {
       .filter(Boolean)
       .join(' · ')
     const time = Number(body.time)
+    // Proof-of-delivery photos: https addresses only, whatever else is sent is dropped.
+    const attachmentUrls = (Array.isArray(body.attachmentUrls) ? body.attachmentUrls : [])
+      .map((u) => String(u).trim())
+      .filter((u) => /^https:\/\/\S+$/.test(u))
+      .slice(0, 5)
+      .join('\n')
     const { changed } = await applyCourierStatus(
       req.payload,
       order,
       {
         at: Number.isFinite(time) && time > 0 ? new Date(time) : undefined,
+        attachmentUrls,
         code,
+        driverName: String(body.driverName ?? ''),
+        driverPhone: String(body.driverPhone ?? ''),
         notes: code === claimed ? notes : '',
       },
       req,

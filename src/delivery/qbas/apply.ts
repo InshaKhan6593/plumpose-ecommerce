@@ -27,9 +27,25 @@ import { courierStatus, isFinal, needsAttention } from './protocol'
 
 export type StatusUpdate = {
   at?: Date | string
+  attachmentUrls?: string
   code: string
+  driverName?: string
+  driverPhone?: string
   notes?: string
 }
+
+type StoredEvent = NonNullable<NonNullable<Order['courier']>['events']>[number]
+
+/** The fields of a stored timeline entry we write back, so none is lost on the next update. */
+const keepEvent = ({ at, attachmentUrls, code, driverName, driverPhone, id, notes }: StoredEvent) => ({
+  at,
+  attachmentUrls,
+  code,
+  driverName,
+  driverPhone,
+  id,
+  notes,
+})
 
 const RANK: Record<string, number> = { delivered: 3, inAtelier: 1, shipped: 2, unfulfilled: 0 }
 
@@ -43,14 +59,35 @@ export const applyCourierStatus = async (
   if (!info.code) return { changed: false, order }
 
   const courier = order.courier ?? {}
-  const events = (courier.events ?? []).map(({ at, code, id, notes }) => ({ at, code, id, notes }))
+  const events = (courier.events ?? []).map(keepEvent)
   const last = events[events.length - 1]
   const notes = (update.notes ?? '').trim().slice(0, 300)
   const now = new Date().toISOString()
   const at = update.at ? new Date(update.at).toISOString() : now
 
-  const changed = !last || last.code !== info.code || Boolean(notes && notes !== (last.notes ?? ''))
-  const nextEvents = changed ? [...events, { at, code: info.code, notes: notes || undefined }] : events
+  const driverName = (update.driverName ?? '').trim().slice(0, 100)
+  const driverPhone = (update.driverPhone ?? '').trim().slice(0, 40)
+  const attachmentUrls = (update.attachmentUrls ?? '').trim().slice(0, 2000)
+
+  const changed =
+    !last ||
+    last.code !== info.code ||
+    Boolean(notes && notes !== (last.notes ?? '')) ||
+    // The proof photo often arrives with a status QBAS has already reported.
+    Boolean(attachmentUrls && attachmentUrls !== (last.attachmentUrls ?? ''))
+  const nextEvents = changed
+    ? [
+        ...events,
+        {
+          at,
+          attachmentUrls: attachmentUrls || undefined,
+          code: info.code,
+          driverName: driverName || undefined,
+          driverPhone: driverPhone || undefined,
+          notes: notes || undefined,
+        },
+      ]
+    : events
 
   const current = order.fulfilment ?? 'unfulfilled'
   const closed = current === 'cancelled' || current === 'refunded'
