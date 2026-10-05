@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 1 Oct 2026 — a price of its own for any Qatar zone (§70)
+**Last updated:** 5 Oct 2026 — SkipCash production checked; delivery abroad back on, sent by her (§72)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -22,7 +22,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
 | Payments | **SkipCash production** on the live site, **orders open** since 29 Sep (§61); sandbox locally (§32) |
 | Hosting | Vercel — **live at plumpose.com** since 28 Sep (§54); plumpose.vercel.app redirects there (§58); **Pro ($20/month)** |
-| Delivery | Qatar only for now; **QBAS** courier booked from the order, tracked on the order page (§69) |
+| Delivery | Qatar by **QBAS**, booked from the order, tracked on the order page (§69); abroad by zone, **sent by her** (§72) |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
 
@@ -3995,3 +3995,38 @@ search "51" → seven zone-51 areas only → the pop-up → Go back leaves the z
 closed with Go back (never confirmed — that is a real pickup); the product
 line collapsed. `tsc` 0, lint 0 errors. Tutorial 04 "Handle an order" shows
 the old list and browser boxes — re-record it.
+
+## 72. SkipCash production checked; delivery abroad back on, sent by her — 5 Oct 2026
+
+**SkipCash production, the last checks done** (§61): one real low-value
+purchase made and refunded in the portal, and the portal's Production webhook
+and return URLs confirmed. Left on her side: the merchant logo on SkipCash's
+page (her portal profile). The sandbox is still to be checked — local
+payments, `pnpm test:e2e` and the sandbox spec need it.
+
+**Delivery abroad: on, and she sends it herself** (her decision, through the
+developer). QBAS stays Qatar only; there is no courier integration abroad and
+she has not said which carrier she uses. Decided: **every zone switched on**
+at its saved price (Shipping zones → Active), and **free delivery over the
+threshold applies everywhere**, as before.
+
+No code change: everything was already built and only switched off (§69).
+Checked in the code on `main`:
+
+- Ticking a zone opens checkout for its countries at once (`deliveryFor()`,
+  the zone's fee plus `intlSurchargePct`, 0 today); Shipping & returns shows the
+  international table instead of "Qatar only"; the homepage and product page
+  show "worldwide from…" again (`deliveryRange`).
+- An order abroad: the Courier panel says *"QBAS delivers within Qatar only.
+  Ship this order yourself, type its tracking number above, then set
+  Fulfilment to Shipped."* Shipped is refused without a tracking number, and
+  sends the "on its way" email with it; the order page shows it (without
+  "· delivered by QBAS"). The daily QBAS check and the order page's refresh
+  touch only orders with a QBAS booking.
+- Prices to confirm with her: seeded as UAE QAR 150 up to the rest of the
+  world QAR 300 (§4); whatever Shipping zones holds now is what is charged.
+
+**To do on the live site:** tick every Shipping zone on Neon (the admin, or
+the database), then check a UK checkout on plumpose.com prices and reaches
+SkipCash's page.
+

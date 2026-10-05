@@ -204,11 +204,11 @@ client's reference recording (`../brand-assets/reference/`):
 
 ## What is NOT built
 
-- **SkipCash production — the last checks** (BUILD-LOG §61). Keys in and
-  orders open since 29 Sep; still to do: one real low-value purchase refunded
-  in the portal, the portal's webhook and return URLs confirmed, the merchant
-  logo on SkipCash's page (her portal profile, not our code). SkipCash switched the **sandbox**
-  off on 29 Sep ("Private key or online payment is disabled"): local payments,
+- **SkipCash production — checked** (BUILD-LOG §61, §72). A real low-value
+  purchase was refunded in the portal and the portal's webhook and return URLs
+  are confirmed (5 Oct). Left: the merchant logo on SkipCash's page (her
+  portal profile, not our code). SkipCash switched the **sandbox** off on
+  29 Sep ("Private key or online payment is disabled"): local payments,
   `pnpm test:e2e` and one integration spec fail until they turn it back on.
 - **Remaining copy and content are hers, in the admin — not a development
   task** (decided 29 Sep, BUILD-LOG §62). The sale-items policy (Page text →
@@ -225,8 +225,14 @@ client's reference recording (`../brand-assets/reference/`):
   booking with no driver (asked — if automatic, "on its way" must key on a later
   status); QBAS entering the webhook address; how their "API Keys" key is used.
   **If she changes her QBAS password, change `QBAS_PASSWORD` on Vercel** or
-  bookings stop. **Delivery abroad is switched off** (every Shipping zone
-  unticked) — her choice for now; ticking a zone brings it back.
+  bookings stop.
+- **Delivery abroad — she ships it herself, no courier integration**
+  (BUILD-LOG §72). Every Shipping zone is to be ticked on, at its saved price;
+  free delivery over the threshold applies abroad too. On an order abroad the
+  Courier panel tells her to ship it herself: she types the tracking number,
+  then sets Fulfilment to Shipped (refused without a number), which sends the
+  "on its way" email. No carrier name or tracking link — she has not said
+  which carrier she uses.
 - **Vercel Pro, in her name.** Hosting is **Vercel, decided 26 Sep 2026** — no
   Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
   use). Handover: she creates a Pro team, the developer joins as its one paid

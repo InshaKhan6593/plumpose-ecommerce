@@ -56,7 +56,7 @@ orders and subscribers, reviews with approval and replies, customer Spotted
 submissions, an enquiries inbox, editable page text, a sitemap, sale prices,
 colours and patterns, exchange-rate checks — see BUILD-LOG §29.
 
-**Delivery.** Qatar only for now (delivery abroad is switched off in Shipping zones). Checkout asks for the customer's **zone**. Delivery is priced per city, and she can give any zone its own price under its city (e.g. a far zone such as Shagra), in the admin (§70). Qatar orders are sent to **QBAS**, the courier, from the order screen ("Send to QBAS"): the pickup is booked, the tracking number and label come back, and QBAS's updates move the order along and appear on the customer's order page. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §69.
+**Delivery.** Qatar and abroad. Abroad is priced per Shipping zone and she sends those orders herself: she types the tracking number on the order and marks it Shipped (BUILD-LOG §72). In Qatar, checkout asks for the customer's **zone**. Delivery is priced per city, and she can give any zone its own price under its city (e.g. a far zone such as Shagra), in the admin (§70). Qatar orders are sent to **QBAS**, the courier, from the order screen ("Send to QBAS"): the pickup is booked, the tracking number and label come back, and QBAS's updates move the order along and appear on the customer's order page. See [docs/BUILD-LOG.md](docs/BUILD-LOG.md) §69.
 
 **Orders.** Known by a code (PLM-260928-7K4QX2), the same as the SkipCash Transaction ID. She can mark one Cancelled or Refunded after refunding in SkipCash, and the customer is emailed. Checkout can be paused in Site settings → Orders; it is open on the live site since SkipCash production went in (29 Sep 2026).
 
