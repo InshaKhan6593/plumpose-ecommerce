@@ -102,6 +102,12 @@ export default buildConfig({
     dateFormat: 'd MMMM yyyy',
     meta: {
       description: 'plumpose — manage products, orders and the site.',
+      // Her "p", not Payload's logo, on the admin's browser tab (public/, BUILD-LOG §74).
+      icons: [
+        { rel: 'icon', sizes: '48x48', url: '/favicon.ico' },
+        { rel: 'icon', type: 'image/svg+xml', url: '/favicon.svg' },
+        { rel: 'apple-touch-icon', url: '/apple-touch-icon.png' },
+      ],
       titleSuffix: ' · plumpose',
     },
     /** The brand is light. A dark admin would look like a different product. */

@@ -234,8 +234,8 @@ client's reference recording (`../brand-assets/reference/`):
   "on its way" email. No carrier name or tracking link — she has not said
   which carrier she uses.
 - **Waiting on the developer's machine** (no Vercel or R2 keys in the cloud
-  sessions): `vercel deploy --prod` for the §72–§73 changes (darker soft grey
-  `#6e675e`, the locale button's name); the phone hero poster re-made at 720
+  sessions): `vercel deploy --prod` for the §72–§74 changes (darker soft grey
+  `#6e675e`, the locale button's name, her "p" favicon); the phone hero poster re-made at 720
   wide (`pnpm films:fetch`, the poster line of `encode-videos.sh`,
   `pnpm films:upload`); every Shipping zone ticked on Neon (§72). Then
   re-run Lighthouse in Incognito — the 5 Oct reports ran with extensions (§73).
@@ -416,7 +416,9 @@ From Git Bash, prefix commands taking a leading-slash argument with
   view before asserting it is visible; compare admin text case-insensitively
   (labels are CSS-uppercased).
 - **`robots.ts` must sit at the app root** (`src/app/robots.ts`), not inside
-  a route group — Next ignores it there. Sitemaps may be nested.
+  a route group — Next ignores it there. Sitemaps may be nested. **The
+  favicon is the same**: one in `(app)/` was never served (404 on every
+  visit, BUILD-LOG §74); the icons live in `public/` (her "p" monogram).
 - **A hidden collection has no admin screen** (`admin.hidden` → 404 at
   `/admin/collections/<slug>`). Its data is still there through the API.
 - **Removing a field in dev can hang the server**: the schema push stops at a

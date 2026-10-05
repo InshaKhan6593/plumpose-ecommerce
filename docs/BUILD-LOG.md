@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 5 Oct 2026 — Lighthouse fixes: contrast, a label, a lighter phone poster (§73)
+**Last updated:** 5 Oct 2026 — her "p" as the favicon; the old one was never served (§74)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -4064,4 +4064,31 @@ density; legacy JavaScript (14 KiB) and render-blocking CSS (20 KB) are the
 framework's; speed index counts the homepage's deliberate reveals.
 
 Checked: `tsc` 0; lint 0 errors on the changed file.
+
+## 74. Her "p" as the favicon — the old one was never served — 5 Oct 2026
+
+The live site's logs showed favicon errors. On plumpose.com `/favicon.ico` and
+`/favicon.svg` both answered **404**: the layout linked them, but the only
+`favicon.ico` was in `src/app/(app)/`, and Next serves the favicon file only
+from the app root, never from inside a route group (like `robots.ts`); there
+was never a `favicon.svg`. That file was also the upstream template's icon,
+not hers. Browsers ask for `/favicon.ico` on every visit, so every visit
+logged a 404.
+
+Her logo file (`PlumposeeLogo.pdf`, page 2: the "p" monogram) is a vector
+path, so the icons are drawn from it, not traced:
+
+- `public/favicon.svg`: the "p" alone, ink, turning cream in a dark browser
+  theme (`prefers-color-scheme`), so it never disappears on a dark tab.
+- `public/favicon.ico` (16, 32 and 48) and `public/apple-touch-icon.png`
+  (180, more margin, because iOS rounds the corners): ink "p" on the paper
+  cream `#f6f4f0`. Rendered in Chromium from the SVG; the 16 px still reads as
+  a "p".
+- `src/app/(app)/favicon.ico` (the template's) removed; the layout links all
+  three; the admin's tab shows her "p" too (`admin.meta.icons`; Payload's own
+  logo before).
+
+Checked: `tsc` 0; lint 0 errors; a local Next server serves all three (200,
+right types). The audit's own list (§73) had no favicon entry: Lighthouse
+leaves a missing favicon out of its console errors.
 
