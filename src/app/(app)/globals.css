@@ -52,7 +52,8 @@
   --color-paper: #ffffff;
   --color-paper-2: #f6f4f0;
   --color-ink: #1b1815;
-  --color-ink-soft: #7a736a;
+  /* #7a736a until 5 Oct 2026: 3.87:1 on paper-3, under WCAG's 4.5. Now 4.62 there, 5.08 on paper-2. */
+  --color-ink-soft: #6e675e;
   --color-ink-faint: #a9a299;
   --color-line: rgba(27, 24, 21, 0.16);
   --color-line-soft: rgba(27, 24, 21, 0.09);
@@ -267,7 +268,7 @@ html.lenis body {
   --secondary: #eee9e1;
   --secondary-foreground: #1b1815;
   --muted: #eee9e1;
-  --muted-foreground: #7a736a;     /* --ink-soft */
+  --muted-foreground: #6e675e;     /* --ink-soft */
   --accent: #eee9e1;
   --accent-foreground: #1b1815;
   --destructive: oklch(57.7% 0.245 27.325deg);

@@ -194,7 +194,8 @@ export function LocaleButton({
   if (!enabled) return <span className={className}>{text}</span>
   return (
     <button
-      aria-label={`Country and currency: ${country?.name ?? 'Qatar'}, ${code}. Change`}
+      // Starts with the words on screen, so voice control ("click Qatar") finds it.
+      aria-label={`${text} — ${variant === 'code' ? `${country?.name ?? 'Qatar'}, ` : ''}change country and currency`}
       className={cn('transition-opacity hover:opacity-60', className)}
       onClick={openPicker}
       type="button"
