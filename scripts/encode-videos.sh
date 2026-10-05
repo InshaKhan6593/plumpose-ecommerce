@@ -73,7 +73,10 @@ enc_mp4 hero-intro-wide "$INTRO" "$HLG,crop=1080:608:0:540,$SLOW" 20 4500
 enc_mp4 hero-intro-mobile "$INTRO" "$HLG,$SLOW" 23 3000
 # Its poster is what a phone paints first (the LCP): at the default -q:v 2 it
 # was 353 KB; -q:v 5 is 218 KB and indistinguishable on a phone (SSIM 0.990).
-ffmpeg -hide_banner -loglevel error -y -i "$OUT/hero-intro-mobile.mp4" -frames:v 1 -q:v 5 "$OUT/hero-intro-mobile-poster.jpg"
+# Scaled to 720 wide (5 Oct 2026): Lighthouse found the full-size frame shown at
+# ~720 device pixels on a phone, and its download was most of the LCP. The film
+# itself keeps its size; the poster only shows until the film starts.
+ffmpeg -hide_banner -loglevel error -y -i "$OUT/hero-intro-mobile.mp4" -frames:v 1 -vf "scale=720:-2:flags=lanczos" -q:v 5 "$OUT/hero-intro-mobile-poster.jpg"
 
 
 

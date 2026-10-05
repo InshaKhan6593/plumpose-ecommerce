@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 1 Oct 2026 — a price of its own for any Qatar zone (§70)
+**Last updated:** 5 Oct 2026 — Lighthouse fixes: contrast, a label, a lighter phone poster (§73)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -22,7 +22,7 @@ verified. The requirements and scope document is kept outside this repository.
 | Email | Built (§14); sends from `orders@plumpose.com` — domain verified 27 Sep (§41) |
 | Payments | **SkipCash production** on the live site, **orders open** since 29 Sep (§61); sandbox locally (§32) |
 | Hosting | Vercel — **live at plumpose.com** since 28 Sep (§54); plumpose.vercel.app redirects there (§58); **Pro ($20/month)** |
-| Delivery | Qatar only for now; **QBAS** courier booked from the order, tracked on the order page (§69) |
+| Delivery | Qatar by **QBAS**, booked from the order, tracked on the order page (§69); abroad by zone, **sent by her** (§72) |
 
 Running locally at `http://localhost:3000` (this machine currently runs it on 3001 via `.claude/launch.json`, because another project holds 3000).
 
@@ -3995,3 +3995,73 @@ search "51" → seven zone-51 areas only → the pop-up → Go back leaves the z
 closed with Go back (never confirmed — that is a real pickup); the product
 line collapsed. `tsc` 0, lint 0 errors. Tutorial 04 "Handle an order" shows
 the old list and browser boxes — re-record it.
+
+## 72. SkipCash production checked; delivery abroad back on, sent by her — 5 Oct 2026
+
+**SkipCash production, the last checks done** (§61): one real low-value
+purchase made and refunded in the portal, and the portal's Production webhook
+and return URLs confirmed. Left on her side: the merchant logo on SkipCash's
+page (her portal profile). The sandbox is still to be checked — local
+payments, `pnpm test:e2e` and the sandbox spec need it.
+
+**Delivery abroad: on, and she sends it herself** (her decision, through the
+developer). QBAS stays Qatar only; there is no courier integration abroad and
+she has not said which carrier she uses. Decided: **every zone switched on**
+at its saved price (Shipping zones → Active), and **free delivery over the
+threshold applies everywhere**, as before.
+
+No code change: everything was already built and only switched off (§69).
+Checked in the code on `main`:
+
+- Ticking a zone opens checkout for its countries at once (`deliveryFor()`,
+  the zone's fee plus `intlSurchargePct`, 0 today); Shipping & returns shows the
+  international table instead of "Qatar only"; the homepage and product page
+  show "worldwide from…" again (`deliveryRange`).
+- An order abroad: the Courier panel says *"QBAS delivers within Qatar only.
+  Ship this order yourself, type its tracking number above, then set
+  Fulfilment to Shipped."* Shipped is refused without a tracking number, and
+  sends the "on its way" email with it; the order page shows it (without
+  "· delivered by QBAS"). The daily QBAS check and the order page's refresh
+  touch only orders with a QBAS booking.
+- Prices to confirm with her: seeded as UAE QAR 150 up to the rest of the
+  world QAR 300 (§4); whatever Shipping zones holds now is what is charged.
+
+**To do on the live site:** tick every Shipping zone on Neon (the admin, or
+the database), then check a UK checkout on plumpose.com prices and reaches
+SkipCash's page.
+
+## 73. Lighthouse on plumpose.com: contrast, a label, the phone poster — 5 Oct 2026
+
+Two Lighthouse 13.4 reports of the homepage (phone 71 / 96 / 96 / 100,
+desktop 93 / 97 / 96 / 100 — performance, accessibility, best practices,
+SEO). Both were run in a Chrome profile with extensions, and Lighthouse said
+so: the console error ("Invalid Sentry Dsn") is an extension's, about 630 of
+the 709 KiB "unused JavaScript" is extension code, and ~1.8 s of the phone's
+6.7 s script time. Re-run in Incognito or on pagespeed.web.dev before reading
+the performance score.
+
+Fixed:
+
+- **Contrast** (24 flags: footer links, the steps' "01 / 04" and body text).
+  `--color-ink-soft` `#7a736a` was 3.87:1 on paper-3 (the footer) and 4.25 on
+  paper-2; now `#6e675e`, 4.62 and 5.08 (and `--muted-foreground` with it). A
+  shade darker, same hue. The admin and emails keep the old grey: emails sit
+  on white (4.68), the admin is hers alone.
+- **Label not matching the words on screen** — the footer's "Pakistan · PKR"
+  button was named "Country and currency: Pakistan, PKR. Change". Its name now
+  starts with what it shows ("Pakistan · PKR — change country and currency";
+  the header's "PKR" adds the country after it).
+- **The phone poster** (`hero-intro-mobile-poster.jpg`, the phone's LCP) was
+  the film's full 961×1920 frame, 224 KB, shown at ~720 device pixels; its
+  download was 1.27 s of the 3.5 s LCP. `encode-videos.sh` now scales it to
+  720 wide (checked on a test clip: 720×1440). **Not live until re-encoded and
+  uploaded** — on the developer's machine, `sh scripts/encode-videos.sh` (or
+  the poster line alone) then `pnpm films:upload`.
+
+Left as they are: "Our story ↗" (white, 1.09:1) sits on the film, which
+Lighthouse cannot see; the 640 px product photos are right at a phone's pixel
+density; legacy JavaScript (14 KiB) and render-blocking CSS (20 KB) are the
+framework's; speed index counts the homepage's deliberate reveals.
+
+Checked: `tsc` 0; lint 0 errors on the changed file.
+
