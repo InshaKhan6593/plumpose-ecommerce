@@ -233,6 +233,12 @@ client's reference recording (`../brand-assets/reference/`):
   then sets Fulfilment to Shipped (refused without a number), which sends the
   "on its way" email. No carrier name or tracking link — she has not said
   which carrier she uses.
+- **Waiting on the developer's machine** (no Vercel or R2 keys in the cloud
+  sessions): `vercel deploy --prod` for the §72–§73 changes (darker soft grey
+  `#6e675e`, the locale button's name); the phone hero poster re-made at 720
+  wide (`pnpm films:fetch`, the poster line of `encode-videos.sh`,
+  `pnpm films:upload`); every Shipping zone ticked on Neon (§72). Then
+  re-run Lighthouse in Incognito — the 5 Oct reports ran with extensions (§73).
 - **Vercel Pro, in her name.** Hosting is **Vercel, decided 26 Sep 2026** — no
   Netlify. The shop needs **Pro, $20/month** (Hobby does not allow commercial
   use). Handover: she creates a Pro team, the developer joins as its one paid
