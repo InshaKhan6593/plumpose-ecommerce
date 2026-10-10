@@ -123,7 +123,7 @@ locked behind **Change zone** (§71), **Send to
 QBAS** (books the pickup, fills the tracking number), Print label, Check now,
 Cancel booking. **She presses it — never automatic** (embroidery takes days).
 Updates arrive by webhook (`/api/delivery/qbas/webhook?key=QBAS_WEBHOOK_SECRET`)
-a daily Vercel Cron check (Hobby allows no more — every 30 minutes once on Pro)
+a Vercel Cron check every 30 minutes (Pro, since 10 Oct)
 and the customer's order page when opened (if the last check is over 10
 minutes old); all go through `applyCourierStatus()`,
 which **moves Fulfilment forward only** (collected → Shipped, which sends the
