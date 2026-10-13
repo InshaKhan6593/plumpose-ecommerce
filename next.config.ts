@@ -43,6 +43,14 @@ const nextConfig: NextConfig = {
         pathname: '/api/media/file/**',
       },
     ],
+    /*
+     * A resized photograph is kept for 31 days, by the host and by the
+     * visitor's browser. At Next's default of 4 hours a visitor back after a
+     * few days fetched every photo again, and the host re-made any it had
+     * dropped — 2.8 s for The Print, measured on plumpose.com. A replaced photo
+     * still shows at once: its address carries the upload's date (Media/Image).
+     */
+    minimumCacheTTL: 2678400,
     // 80: ~40% lighter than 90 with no visible difference, checked on the print close-up (BUILD-LOG §68).
     qualities: [80, 100],
     remotePatterns: [

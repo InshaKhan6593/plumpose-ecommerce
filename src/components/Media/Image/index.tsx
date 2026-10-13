@@ -34,13 +34,28 @@ export const Image: React.FC<MediaProps> = (props) => {
   let src: StaticImageData | string = srcFromProps || ''
 
   if (!src && resource && typeof resource === 'object') {
-    const { alt: altFromResource, height: fullHeight, url, width: fullWidth } = resource
+    const {
+      alt: altFromResource,
+      height: fullHeight,
+      updatedAt,
+      url,
+      width: fullWidth,
+    } = resource
 
     width = widthFromProps ?? fullWidth
     height = heightFromProps ?? fullHeight
     alt = altFromResource
 
-    src = `${process.env.NEXT_PUBLIC_SERVER_URL}${url}`
+    /*
+     * The date of the upload in the address: resized photographs are cached for
+     * 31 days (next.config.ts), and a photo she replaces under the same file
+     * name would otherwise keep showing the old one for as long.
+     */
+    const version = updatedAt ? Date.parse(updatedAt) : NaN
+    const versioned =
+      url && Number.isFinite(version) ? `${url}${url.includes('?') ? '&' : '?'}v=${version}` : url
+
+    src = `${process.env.NEXT_PUBLIC_SERVER_URL}${versioned}`
   }
 
   // NOTE: this is used by the browser to determine which image to download at different screen sizes

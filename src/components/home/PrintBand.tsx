@@ -53,9 +53,12 @@ export function PrintBand({
    * The print is not in the page until it has loaded, or the band is within
    * 2.5 screens. Merely lazy, Chrome fetched it at once on a slow phone
    * connection — 473 KB beside the hero poster, which it held back (BUILD-LOG
-   * §58). Until then the frame is its paper colour.
+   * §58). Until it has arrived the frame shows a small, blurred copy of it
+   * (about 10 KB, in the page from the start) — never an empty frame, which is
+   * what a visitor saw while the full picture was on its way.
    */
   const [pictureReady, setPictureReady] = useState(false)
+  const [pictureLoaded, setPictureLoaded] = useState(false)
   useEffect(() => {
     const ready = () => setPictureReady(true)
     const stopLoad = afterPageLoad(ready)
@@ -167,6 +170,9 @@ export function PrintBand({
 
   if (!image) return null
 
+  const position =
+    (image.width ?? 0) > (image.height ?? 0) ? 'object-cover' : 'object-cover object-[50%_22%]'
+
   return (
     <section
       aria-label={copy.label}
@@ -182,15 +188,26 @@ export function PrintBand({
             A portrait photo in this landscape frame keeps the shark's head,
             which sits high in the shot; a landscape photo is simply centred.
           */}
+          {/* Taken out once the picture is in: a blurred layer under a moving one costs frames. */}
+          {pictureLoaded ? null : (
+            <div aria-hidden className="absolute inset-0 scale-110 blur-2xl">
+              <Media
+                className="absolute inset-0"
+                fill
+                imgClassName={position}
+                loading="eager"
+                resource={image}
+                // Not its size on screen: it asks for the smallest copy, which the blur hides.
+                size="96px"
+              />
+            </div>
+          )}
           {pictureReady ? (
             <Media
               className="absolute inset-0"
               fill
-              imgClassName={
-                (image.width ?? 0) > (image.height ?? 0)
-                  ? 'object-cover'
-                  : 'object-cover object-[50%_22%]'
-              }
+              imgClassName={position}
+              onLoad={() => setPictureLoaded(true)}
               resource={image}
               size="100vw"
             />

@@ -2,7 +2,7 @@
 
 **Project:** [`plumpose/`](../plumpose) — Next.js + Payload CMS store
 **Phase reached:** Backend, email and the whole storefront — shop, checkout, content pages, accounts — are built. Payments are SkipCash — **production on the live site since 29 Sep** (§61), the sandbox locally; Stripe removed (§32). Remaining wording and content are hers, in the admin (§62).
-**Last updated:** 5 Oct 2026 — her "p" as the favicon; the old one was never served (§74)
+**Last updated:** 13 Oct 2026 — photographs cached for 31 days; The Print never an empty frame (§75)
 
 This is the running record of what has actually been built, tested and
 verified. The requirements and scope document is kept outside this repository.
@@ -4092,3 +4092,31 @@ Checked: `tsc` 0; lint 0 errors; a local Next server serves all three (200,
 right types). The audit's own list (§73) had no favicon entry: Lighthouse
 leaves a missing favicon out of its console errors.
 
+
+## 75. The Print slow to appear on a visit days later — 13 Oct 2026
+
+Her developer's report: back on the site after some days, the picture in The
+Print takes time to appear. Measured on plumpose.com (`brand-02-print-macro`,
+387 KB as WebP): 0.6–1.1 s when the host still holds the resized copy, **2.8 s
+when it has to re-make it** (the original alone takes ~2 s through the media
+route). Resized photographs were kept for Next's default of **4 hours**
+(`max-age=14400`), by the host and by the browser, so a visitor back after a
+few days fetched everything again; and the picture is not asked for until the
+page has loaded (§58), with an empty paper-coloured frame until it arrives.
+
+Fixed:
+
+- `images.minimumCacheTTL` is **31 days** (`next.config.ts`), for every
+  photograph.
+- Every photo's address carries its upload date (`&v=…`, from `updatedAt`, in
+  `Media/Image`), so a photo she replaces under the same file name shows at
+  once and is not held back by the long cache. The first deploy re-makes every
+  resized photo once, because every address changes.
+- The Print's frame shows a small blurred copy (the 96–256 px size, ~10–17 KB,
+  in the page from the start) until the full picture has loaded, then drops it.
+
+Checked: `tsc` 0; lint clean on the three files; on the dev server the
+versioned address serves the original and every resized width, and the page
+carries the small copy and swaps to the full one. **Not checked locally:** the
+31-day header itself (dev always answers `max-age=0`) — confirm on
+plumpose.com after deploying (`cache-control` on a `/_next/image` response).
