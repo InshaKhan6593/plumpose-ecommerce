@@ -124,7 +124,18 @@ const unitPriceFor = (product: Product, variant?: null | Variant): Minor => {
 const priceLine = (input: PriceLineInput, rules: PersonalisationRules): PricedLine => {
   const quantity = Math.max(1, Math.floor(input.quantity || 1))
   const unitPrice = unitPriceFor(input.product, input.variant)
-  const personalisation = normalisePersonalisationList(input.personalisation, rules)
+  /*
+   * A piece with "Offer hand embroidery" unticked takes none, whatever the
+   * browser sends: the product page only hides the drawer, and a bag filled
+   * before she unticked it still carries its placements. Dropped, not refused,
+   * like any other embroidery we do not offer — the bag then shows and charges
+   * the piece alone. Only an explicit `false` counts: a record from before the
+   * field has no value, and must not lose embroidery a customer chose.
+   */
+  const personalisation =
+    input.product.personalisationEnabled === false
+      ? []
+      : normalisePersonalisationList(input.personalisation, rules)
 
   return {
     personalisation,

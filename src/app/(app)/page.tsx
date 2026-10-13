@@ -45,7 +45,7 @@ export default async function HomePage() {
   const settings = await getCachedGlobal('siteSettings', 0)()
   const { featuredProductId, HOME: copy } = await getPageText()
 
-  const [media, products, reviews, spotted, threads, range] = await Promise.all([
+  const [media, products, reviews, spotted, threads, embroidered, range] = await Promise.all([
     payload.find({
       collection: 'media',
       depth: 0,
@@ -87,8 +87,24 @@ export default async function HomePage() {
       collection: 'personalisationOptions',
       where: { and: [{ type: { equals: 'thread' } }, { active: { not_equals: false } }] },
     }),
+    // Pieces with "Offer hand embroidery" ticked — the footer's link asks the same.
+    payload.count({
+      collection: 'products',
+      overrideAccess: false,
+      where: {
+        and: [{ _status: { equals: 'published' } }, { personalisationEnabled: { equals: true } }],
+      },
+    }),
     deliveryRange(payload, settings),
   ])
+
+  /*
+   * While no piece offers hand embroidery (she unticks it on the piece), the
+   * homepage does not speak of it either: the thread-colours figure and the
+   * "Add hand embroidery" step go, and come back when she ticks it again. Her
+   * note, 13 Oct 2026 — she had switched it off and the figure still showed.
+   */
+  const offersEmbroidery = embroidered.totalDocs > 0
 
   const byFile = new Map(media.docs.map((doc) => [doc.filename, doc as Media]))
   /** Test shots win while TEST_SHOTS=on (docs/TEST-SHOTS.md); the real photograph otherwise. */
@@ -125,7 +141,7 @@ export default async function HomePage() {
   // every order ("not correct"); she asked for "100% hand finished" instead.
   const facts: PrintFact[] = [
     { label: 'Hand finished', value: '100%' },
-    ...(threads.totalDocs
+    ...(offersEmbroidery && threads.totalDocs
       ? [{ label: 'Embroidery thread colours', value: String(threads.totalDocs) }]
       : []),
   ]
@@ -136,16 +152,20 @@ export default async function HomePage() {
       image: image('window'),
       title: 'Choose your size',
     },
-    {
-      body: [
-        'Initials or a symbol, stitched by hand',
-        threads.totalDocs ? ` in one of ${threads.totalDocs} thread colours` : '',
-        // No price here, at her request — the product page shows it.
-        '.',
-      ].join(''),
-      image: image('piping'),
-      title: 'Add hand embroidery',
-    },
+    ...(offersEmbroidery
+      ? [
+          {
+            body: [
+              'Initials or a symbol, stitched by hand',
+              threads.totalDocs ? ` in one of ${threads.totalDocs} thread colours` : '',
+              // No price here, at her request — the product page shows it.
+              '.',
+            ].join(''),
+            image: image('piping'),
+            title: 'Add hand embroidery',
+          },
+        ]
+      : []),
     {
       // Not "in Doha": the pieces are designed there, not finished there (her corrections).
       body: '',

@@ -4120,3 +4120,54 @@ versioned address serves the original and every resized width, and the page
 carries the small copy and swaps to the full one. **Not checked locally:** the
 31-day header itself (dev always answers `max-age=0`) — confirm on
 plumpose.com after deploying (`cache-control` on a `/_next/image` response).
+
+Deployed the same day (`e0dd925`): plumpose.com answers
+`max-age=2678400`, the homepage carries the small copy and 41 dated addresses.
+
+## 76. "Offer hand embroidery" unticked is now enforced at the price — 13 Oct 2026
+
+Her question: how to hide personalisation while she is not ready to take
+personalised orders for Al Shaheen Nights. It was already there — the piece's
+**Fabric & Care → Offer hand embroidery** (`personalisationEnabled`) — but only
+the product page read it: `priceOrder()` never did, so a request made by hand,
+or a bag filled before she unticked it, was still priced and paid with its
+placements.
+
+`priceLine()` now gives a piece with the box unticked no embroidery, dropped
+like any other embroidery we do not offer. Only an explicit `false` counts, so
+a record with no value keeps what the customer chose. The quote, the bag (which
+shows the engine's lines) and the payment all follow, since they share it.
+
+Checked: one new spec (`pricing`, 35 of 35); on a local server against Docker,
+`/api/quote` for the piece with one pocket placement to Doha — ticked QAR
+1,579, unticked QAR 1,419 with no embroidery on the line; the product page
+loses the embroidery section, the "cannot be returned" line and the
+description's "with optional hand embroidery", and gets them back when ticked.
+
+Still hers when she unticks it: the homepage steps, FAQ, Made for You and the
+wheel's free-embroidery prize speak of embroidery in their own text (Page
+text, Reward wheel).
+
+**The footer's "Personalisation" link** (her request the same day, after
+unticking it): while no piece offers embroidery it now goes to **Made for
+You**, not the shop. The link is fixed in code (`SiteFooter`), not an admin
+setting. Checked on the local server: a piece offering it →
+`/products/al-shaheen-nights#personalisation`; none → `/made-for-you`.
+
+**The homepage** (her screenshot of "5 Embroidery thread colours", the same
+day): while no published piece offers embroidery, The Print's thread-colours
+figure and the steps' "Add hand embroidery" go (`page.tsx`, the footer's own
+question), and the steps count 01–03. Both return when she ticks a piece.
+Checked on the local server, both ways; the three-step sequence was read in
+the page, not watched scrolling. The FAQ, Made for You and Our Story keep
+their own wording about embroidery — hers, in Page text.
+
+**Deleting a wheel prize said "Something went wrong"** (her report, on Free
+embroidery). Every spin keeps its prize (`spin_entries.segment_id`, NOT NULL,
+with `ON DELETE set null`), so the database refuses to delete a prize that has
+been spun. `SpinSegments` now has the same `beforeDelete` guard as Discount
+codes: *"A visitor has already landed on this prize, so it is kept with the
+record of their spin. Untick Active to take it off the wheel."* Checked through
+the local admin API: a spun prize → 400 with that message; the same prize with
+its spin removed → deleted. The cause on the live site is read from the
+schema, not seen in its logs.

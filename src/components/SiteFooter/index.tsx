@@ -18,6 +18,9 @@ export async function SiteFooter() {
 
   // Embroidery lives on the piece itself (her corrections, 27 Sep 2026), so
   // "Personalisation" opens the first piece that offers it, at its drawer.
+  // While no piece offers it (she unticks "Offer hand embroidery"), the link
+  // goes to Made for You, where embroidery is by enquiry — her request, 13 Oct
+  // 2026. It went to the shop, which has nothing to say about it.
   const payload = await getPayload({ config: configPromise })
   const embroidered = (
     await payload.find({
@@ -34,7 +37,7 @@ export async function SiteFooter() {
   ).docs[0]
   const personalisationHref = embroidered?.slug
     ? `/products/${embroidered.slug}#personalisation`
-    : '/shop'
+    : '/made-for-you'
 
   const whatsappHref = settings.whatsappNumber
     ? `https://wa.me/${settings.whatsappNumber.replace(/[^\d]/g, '')}`

@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { APIError } from 'payload'
+
 import { adminOnly } from '@/access/adminOnly'
 
 /**
@@ -19,6 +21,31 @@ export const SpinSegments: CollectionConfig = {
     description: 'Prizes on the first-visit wheel. Weight controls how often each is won.',
     group: 'Shop',
     useAsTitle: 'label',
+  },
+  hooks: {
+    /**
+     * Every spin keeps the prize it landed on (spinEntries.segment, required),
+     * so the database refused to delete a prize that had been spun, and the
+     * admin said only "Something went wrong" (her report, 13 Oct 2026).
+     */
+    beforeDelete: [
+      async ({ id, req }) => {
+        const spins = await req.payload.count({
+          collection: 'spinEntries',
+          overrideAccess: true,
+          req,
+          where: { segment: { equals: id } },
+        })
+        if (spins.totalDocs > 0) {
+          throw new APIError(
+            'A visitor has already landed on this prize, so it is kept with the record of their spin. Untick Active to take it off the wheel.',
+            400,
+            null,
+            true,
+          )
+        }
+      },
+    ],
   },
   access: {
     create: adminOnly,

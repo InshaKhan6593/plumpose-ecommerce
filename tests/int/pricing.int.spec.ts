@@ -278,6 +278,34 @@ describe('priceOrder', () => {
     expect(result.order.total).toBe(279800 + 64000 + 2000)
   })
 
+  it('takes no embroidery for a piece with "Offer hand embroidery" unticked', () => {
+    const plain = { ...product, personalisationEnabled: false } as Product
+    const embroidery = [{ lettering: 'AK', placement: 'pocket', style: 'text' }]
+    const result = priceOrder(
+      {
+        destination: doha,
+        lines: [
+          { personalisation: embroidery, product: plain, quantity: 1, variant: variantM },
+          // A second piece that does offer it keeps its own.
+          {
+            personalisation: embroidery,
+            product: { ...product, id: 9, personalisationEnabled: true } as Product,
+            quantity: 1,
+          },
+        ],
+      },
+      context,
+    )
+    if (!result.ok) throw new Error('expected a priced order')
+
+    expect(result.order.lines[0].personalisation).toEqual([])
+    expect(result.order.lines[0].personalisationTotal).toBe(0)
+    expect(result.order.lines[1].personalisation).toHaveLength(1)
+    // Two pieces + one placement + delivery: QAR 1,399 x 2 + 160 + 20
+    expect(result.order.personalisationTotal).toBe(16000)
+    expect(result.order.total).toBe(279800 + 16000 + 2000)
+  })
+
   it('is not fooled by the mixed money units across collections', () => {
     // The regression this guards: 139900 + 20 + 160 would be QAR 1,400.80.
     const result = priceOrder(
